@@ -13,6 +13,16 @@
 
 <body>
 
+    <!-- Agrega tu div con la imagen aquí -->
+    <div class="header-image">
+        <img class="image" src="/static/media/logoAU_v2.png" alt="Asesoria Urbana" style="padding-block: 1.30vh;">
+        <img class="image" src="/static/media/secplaBlack.png" alt="Asesoria Urbana" style="padding-block: 1.30vh;">
+        <img class="image" src="{% static 'media/version-positivo-caluga-municipalidad.png' %}" alt="Municipalidad">
+
+
+
+    </div>
+
     <div class="cardMain">
         {% block content %}
         <!-- Aquí irá el contenido específico de cada página -->
@@ -45,15 +55,24 @@
             <div class="g4"></div>
             <div class="g5"></div>
             <div class="interactive"></div>
-
         </div>
-
-
     </div>
 
     <script src="{% static 'js/background.js' %}"></script>
     <script src="{% static 'js/menu.js' %}"></script>
+    <script>
+        // Esperar a que todo el contenido esté cargado
+        window.addEventListener('load', function () {
+            var headerImage = document.querySelector('.header-image');
+            var cardMain = document.querySelector('.cardMain');
 
+            // Obtener la altura de la imagen de encabezado
+            var headerHeight = headerImage.offsetHeight;
+
+            // Establecer el margen superior de .cardMain
+            cardMain.style.marginTop = headerHeight + 'px';
+        });
+    </script>
 </body>
 
 </html>
