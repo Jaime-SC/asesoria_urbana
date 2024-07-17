@@ -1,32 +1,32 @@
 /* static/css/styles.css */
 
 @font-face {
-  font-family: 'HelveticaNeue';
-  src: url('/static/fonts/HelveticaNeueBold.otf') format('opentype');
+  font-family: "HelveticaNeue";
+  src: url("/static/fonts/HelveticaNeueBold.otf") format("opentype");
   font-weight: bold;
   font-style: normal;
 }
 
 /* Helvetica Neue Roman */
 @font-face {
-  font-family: 'HelveticaNeue';
-  src: url('/static/fonts/HelveticaNeueRoman.otf') format('opentype');
+  font-family: "HelveticaNeue";
+  src: url("/static/fonts/HelveticaNeueRoman.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
 }
 
 /* Helvetica Neue Bold Italic */
 @font-face {
-  font-family: 'HelveticaNeue';
-  src: url('/static/fonts/HelveticaNeueBoldItalic.otf') format('opentype');
+  font-family: "HelveticaNeue";
+  src: url("/static/fonts/HelveticaNeueBoldItalic.otf") format("opentype");
   font-weight: bold;
   font-style: italic;
 }
 
 /* Helvetica Neue Italic */
 @font-face {
-  font-family: 'HelveticaNeue';
-  src: url('/static/fonts/HelveticaNeueItalic.ttf') format('truetype');
+  font-family: "HelveticaNeue";
+  src: url("/static/fonts/HelveticaNeueItalic.ttf") format("truetype");
   font-weight: normal;
   font-style: italic;
 }
@@ -35,7 +35,7 @@ body {
   display: grid;
   justify-items: center;
   align-items: end;
-  font-family: 'HelveticaNeue';
+  font-family: "HelveticaNeue";
 }
 
 /* Ahora puedes usar la fuente en tu CSS */
@@ -45,9 +45,9 @@ h1 {
   font-size: xx-large;
 }
 
-.image {
+.imagelogo {
+  margin: 10px 0px 10px 5px;
   height: 3cm;
-  margin: 1.5vh 1.5vh 1.5vh 0;
 }
 
 .header-image {
@@ -62,62 +62,70 @@ h1 {
 .cardMain {
   position: absolute;
   z-index: 10;
-  width: 85%;
-  height: 80%;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 50px;
+  width: 98%;
+  height: 97%;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px;
-  display: grid;
-  align-items: center;
-  justify-items: center;
-  align-content: center;
-  grid-template-columns: 0.25fr 1fr;
-  grid-template-rows: 1fr;
-  gap: 0px 0px;
-  grid-template-areas: ". contentMenu";
-  align-self: start;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
 }
 
+.head {
+  display: flex;
+  justify-content: space-between;
+  /* Centra horizontalmente todos los hijos dentro de .head */
+  align-items: center;
+  /* Centra verticalmente todos los hijos dentro de .head */
+  position: relative;
+}
+
+.logo,
+.user {
+  display: flex;
+  align-items: center;
+  /* Asegura que el contenido dentro de .logo y .user esté centrado verticalmente */
+}
+
+.tittle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
 .contentMenu {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr 1fr;
+  display: flex;
   gap: 0px 0px;
-  grid-template-areas:
-    "."
-    ".";
-  grid-area: contentMenu;
-  width: 100%;
-  height: 100%;
+  flex-direction: column;
+  width: -webkit-fill-available;
 }
 
 .menu {
-  align-content: center;
-  width: 100%;
-  height: 100%;
+  align-content: start;
+
   background: rgba(0, 0, 0, 0);
-  /* Fondo transparente */
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0);
   z-index: 1000;
   transition: background 0.3s;
 }
 
 .menu ul {
-  height: 100%;
   list-style-type: none;
   padding: 0;
   margin: 0;
+  /* height: -webkit-fill-available; */
+  display: flex;
+  flex-direction: column;
+  width: max-content;
 }
 
 .menu li {
-  /* margin: 20px 0; */
-  height: 25%;
+  height: -webkit-fill-available;
 }
 
 .menu a {
-  align-content: center;
-  text-align-last: center;
+  align-content: center;  
   height: 100%;
   text-decoration: none;
   color: #fff;
@@ -125,12 +133,11 @@ h1 {
   display: block;
 
   transition: background 0.3s, color 0.3s, border-color 0.3s;
-  font-size: x-large;
+  font-size: large;
 
   /* Bordes en todos los lados */
   border: 3px solid rgba(255, 255, 255, 0.1);
   /* Bordes translúcidos */
-
 }
 
 /* Efecto hover */
@@ -162,5 +169,14 @@ h1 {
   /* Bordes brillantes al hacer hover */
   box-shadow: 0 4px 10px rgba(0, 255, 255, 0.5);
   /* Sombra para efecto sofisticado */
+}
 
+.contenido {
+  display: flex;
+  flex-direction: row;
+  height: -webkit-fill-available;
+}
+
+#description {
+  height: -webkit-fill-available;
 }

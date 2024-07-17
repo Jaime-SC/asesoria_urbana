@@ -4,6 +4,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const descriptionDiv = document.getElementById('description');
     const contentMenu = document.querySelector('.contentMenu');
     const cardMain = document.querySelector('.cardMain');
+    const ulMenu = document.querySelector('.ulMenu');
+    const contenido = document.querySelector('.contenido');
+    
+
 
     let currentActiveContent = null; // Para almacenar el contenido actualmente activo
 
@@ -66,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Evento para cerrar el hover al hacer clic fuera de cardMain
     document.addEventListener('click', function(event) {
-        if (!cardMain.contains(event.target)) {
+        if (!ulMenu.contains(event.target) && !contentMenu.contains(event.target)) {
             currentActiveContent = null; // Limpiar contenido activo
 
             // Cambiar el fondo a transparente con una transición
