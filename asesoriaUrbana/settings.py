@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sass_processor',
     'principal',
+    'bnup',
+    'patente_alcohol',
+    'informe_terreno',
 ]
 
 MIDDLEWARE = [

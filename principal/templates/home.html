@@ -1,85 +1,26 @@
 {% extends 'base.html' %} {% block title %}
   Asesoria Urbana
 {% endblock %} {% block content %}
-  
   <div class="contenido">
     <div class="menu">
       <ul class="ulMenu">
         <li>
-          <a href="#" data-content="BNUP">BNUP</a>
+          <a href="#" data-content="Inicio">Inicio</a>
         </li>
         <li>
-          <a href="#" data-content="PATENTE DE ALCOHOL">Patente de Alchol</a>
+          <a href="{% url 'bnup_form' %}" data-content="BNUP">BNUP</a>
         </li>
         <li>
-          <a href="#" data-content="OTROS">Informe de Terreno</a>
+          <a href="{% url 'patente_form' %}" data-content="PatenteAlcohol">Patente de Alcohol</a>
         </li>
         <li>
-          <a href="#" data-content="PORTAL DE TRANSPARENCIA">Portal de Transparencia</a>
+          <a href="{% url 'informe_form' %}" data-content="InformeTerreno">Informe de Terreno</a>
+        </li>
+        <li>
+          <a href="#" data-content="PortalTransparencia">Portal de Transparencia</a>
         </li>
       </ul>
     </div>
-    <div class="contentMenu" style="border-radius: 0px 0px 10px 0">
-      <div id="title">
-        <h1>Asesoría Urbana</h1>
-      </div>
-      <div id="description">
-        <p style="font-weight: bold;">¿Quiénes son?</p>
-        <br />
-
-        <p>Tiene como objetivo asesorar al Alcalde y al Concejo en la promoción del Desarrollo Urbano. Artículo 56° Departamento de Asesoría Urbana.</p>
-        <br />
-
-        <p style="font-weight: bold;">Las funciones generales del Departamento son:</p>
-        <br />
-
-        <ul style="margin-left: 20px">
-          <li>Estudiar y elaborar el Plan Regulador Comunal, y mantenerlo actualizado, promoviendo las modificaciones necesarias, y preparar los planes seccionales para su aplicación.</li>
-          <br />
-          <li>Informar técnicamente las proposiciones sobre Planificación Urbana Intercomunal, formuladas a la Municipalidad por la Secretaría Regional Ministerial de Vivienda y Urbanismo.</li>
-          <br />
-          <li>Proponer al Alcalde y al Concejo proyectos de Ordenamiento Territorial, compatibilizados con los Planes de Desarrollo Comunal y Desarrollo Regional, proyectos de remodelación y conservación de espacios públicos y vialidad, para promover al Desarrollo Urbano de la comuna.</li>
-          <br />
-          <li>Informar técnicamente las proposiciones sobre Planificación Urbana Intercomunal formuladas al Municipio por la Secretaria Regional Ministerial de Vivienda y Urbanismo.</li>
-          <br />
-          <li>Generar y/o gestionar la elaboración de un Plan de Ordenamiento Territorial para la comuna.</li>
-          <br />
-          <li>Definir y estructurar las definiciones de uso de suelo rural y urbano.</li>
-          <br />
-          <li>La Dirección de Vivienda, Barrio y Territorio será colaboradora y/o proponente en el proceso de actualización del Plan Regulador Comunal.</li>
-        </ul>
-
-        <br />
-        <p style="font-weight: bold;">¿Cómo contactarlos?</p>
-        <br />
-
-        <p>Puedes visitar su sitio web o contactarlos directamente a través de sus canales de atención al público.</p>
-        <br />
-
-        <p style="font-weight: bold;">¿Recursos adicionales?</p>
-        <br />
-
-        <p>
-          Sitio web SECPLA:
-          <a href="https://www.munivalpo.cl/repositorio/Municipio/secpla.aspx" target="_blank" style="
-          font-weight: bold;
-          color: crimson;">https://www.munivalpo.cl/repositorio/Municipio/secpla.aspx</a>
-        </p>
-        <br />
-        <p>
-          Ley General de Urbanismo y Construcciones (LGUC):
-          <a href="https://www.leychile.cl/navegar?idNorma=13560" target="_blank" style="
-          font-weight: bold;
-          color: crimson;">https://www.leychile.cl/navegar?idNorma=13560</a>
-        </p>
-        <br />
-        <p>
-          Ordenanza General de Urbanismo y Construcciones (OGUC):
-          <a href="https://www.leychile.cl/navegar?idNorma=8201" target="_blank" style="
-          font-weight: bold;
-          color: crimson;">https://www.leychile.cl/navegar?idNorma=8201</a>
-        </p>
-      </div>
-    </div>
+    <div class="contentMenu" id="contentMenu" style="border-radius: 0px 0px 10px 0"></div>
   </div>
 {% endblock %}
