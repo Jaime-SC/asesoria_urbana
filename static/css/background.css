@@ -1,6 +1,6 @@
 :root {
-  --color-bg1: rgb(220, 220, 220);
-  --color-bg2: rgb(250, 250, 250);
+  --color-bg1: rgb(20, 20, 20);
+  --color-bg2: rgb(0, 0, 0);
   --color1: 247, 234, 83;   
   --color2: 231, 60, 69;
   --color3: 247, 234, 83;
@@ -18,7 +18,7 @@
   list-style: none;
   text-decoration: none;
   box-sizing: border-box;
-  color: #fff;
+  color: #000000;
   background: transparent;
   border: none;
 }

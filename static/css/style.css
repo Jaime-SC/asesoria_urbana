@@ -47,7 +47,7 @@ h1 {
 
 .imagelogo {
   margin: 10px 0px 10px 5px;
-  height: 3cm;
+  height: 3cm; 
 }
 
 .header-image {
@@ -64,12 +64,12 @@ h1 {
   z-index: 10;
   width: 98%;
   height: 97%;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(255, 255, 255, 0.60);
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px;
   align-self: center;
   display: flex;
-  flex-direction: column;
+  flex-direction: column;    
 }
 
 .head {
@@ -99,6 +99,8 @@ h1 {
   gap: 0px 0px;
   flex-direction: column;
   width: -webkit-fill-available;
+  font-family: 'Trebuchet MS', 'HelveticaNeue';
+  font-size: 16px;
 }
 
 .menu {
@@ -127,8 +129,9 @@ h1 {
 .menu a {
   align-content: center;  
   height: 100%;
+  width: 240px;
   text-decoration: none;
-  color: #fff;
+  color: #000000;
   padding: 10px 15px;
   display: block;
 
@@ -136,17 +139,17 @@ h1 {
   font-size: large;
 
   /* Bordes en todos los lados */
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
   /* Bordes translúcidos */
 }
 
 /* Efecto hover */
 .menu a:hover {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.5);
   /* Fondo más brillante al pasar el ratón */
-  color: aquamarine;
+  color: aquamarin;
   /* Cambia el color del texto al pasar el ratón */
-  border-color: rgba(0, 255, 255, 0.7);
+  /* border-color: rgba(0, 255, 255, 0.7); */
   /* Bordes brillantes al hacer hover */
   box-shadow: 0 4px 10px rgba(0, 255, 255, 0.5);
   /* Sombra para efecto sofisticado */
@@ -161,9 +164,10 @@ h1 {
 }
 
 .menu a.active {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.5);
   /* Fondo más brillante al pasar el ratón */
-  color: aquamarine;
+  /* color: aquamarine; */
+  font-weight: bold;
   /* Cambia el color del texto al pasar el ratón */
   border-color: rgba(0, 255, 255, 0.7);
   /* Bordes brillantes al hacer hover */
@@ -179,4 +183,5 @@ h1 {
 
 #description {
   height: -webkit-fill-available;
+  margin: 20px 0px 0px 20px;
 }
