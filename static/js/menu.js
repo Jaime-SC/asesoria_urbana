@@ -9,73 +9,56 @@ document.addEventListener('DOMContentLoaded', function () {
     element.classList.add('selected');
   }
 
+  function loadContent(url, callback) {
+    fetch(url)
+      .then((response) => response.text())
+      .then((data) => {
+        document.getElementById('contentMenu').innerHTML = data;
+        if (callback) callback(); // Llamar al callback si se proporciona
+      })
+      .catch((error) => console.error(`Error al cargar ${url}:`, error));
+  }
+
   document.querySelector('a[data-content="BNUP"]').addEventListener('click', function (event) {
     event.preventDefault(); // Prevenir el comportamiento predeterminado
     highlightMenuOption(this); // Resaltar la opción seleccionada
 
-    fetch('/bnup/')
-      .then((response) => response.text())
-      .then((data) => {
-        document.getElementById('contentMenu').innerHTML = data;
-      })
-      .catch((error) => console.error('Error al cargar BNUP:', error));
+    loadContent('/bnup/', function () {
+      // Llamar a la función updateBNUPFields después de cargar el contenido
+      updateBNUPFields();
+    });
   });
 
   document.querySelector('a[data-content="PatenteAlcohol"]').addEventListener('click', function (event) {
     event.preventDefault(); // Prevenir el comportamiento predeterminado
     highlightMenuOption(this); // Resaltar la opción seleccionada
 
-    fetch('/patente_alcohol/')
-      .then((response) => response.text())
-      .then((data) => {
-        document.getElementById('contentMenu').innerHTML = data;
-      })
-      .catch((error) => console.error('Error al cargar Patente de Alcohol:', error));
+    loadContent('/patente_alcohol/');
   });
 
   document.querySelector('a[data-content="InformeTerreno"]').addEventListener('click', function (event) {
     event.preventDefault(); // Prevenir el comportamiento predeterminado
     highlightMenuOption(this); // Resaltar la opción seleccionada
 
-    fetch('/informe_terreno/')
-      .then((response) => response.text())
-      .then((data) => {
-        document.getElementById('contentMenu').innerHTML = data;
-      })
-      .catch((error) => console.error('Error al cargar Informe de Terreno:', error));
+    loadContent('/informe_terreno/');
   });
 
   document.querySelector('a[data-content="Inicio"]').addEventListener('click', function (event) {
     event.preventDefault(); // Prevenir el comportamiento predeterminado
     highlightMenuOption(this); // Resaltar la opción seleccionada
 
-    fetch('/inicio/')
-      .then((response) => response.text())
-      .then((data) => {
-        document.getElementById('contentMenu').innerHTML = data;
-      })
-      .catch((error) => console.error('Error al cargar Inicio:', error));
+    loadContent('/inicio/');
   });
 
   document.querySelector('a[data-content="PortalTransparencia"]').addEventListener('click', function (event) {
     event.preventDefault(); // Prevenir el comportamiento predeterminado
     highlightMenuOption(this); // Resaltar la opción seleccionada
 
-    fetch('/portal_transparencia/')
-      .then((response) => response.text())
-      .then((data) => {
-        document.getElementById('contentMenu').innerHTML = data;
-      })
-      .catch((error) => console.error('Error al cargar Portal de Transparencia:', error));
+    loadContent('/portal_transparencia/');
   });
 
   // Cargar el contenido de 'Inicio' al cargar la página y resaltar la opción 'Inicio'
-  fetch('/inicio/')
-    .then((response) => response.text())
-    .then((data) => {
-      document.getElementById('contentMenu').innerHTML = data;
-      highlightMenuOption(document.querySelector('a[data-content="Inicio"]')); // Resaltar la opción 'Inicio'
-    })
-    .catch((error) => console.error('Error al cargar Inicio:', error));
+  loadContent('/inicio/', function () {
+    highlightMenuOption(document.querySelector('a[data-content="Inicio"]')); // Resaltar la opción 'Inicio'
+  });
 });
-

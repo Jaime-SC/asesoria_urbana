@@ -1,88 +1,149 @@
-<form class="formBNUP">
-  <div class="divBNUPform">
-    <label for="recepcion">Tipo de Recepción:</label>
-    <select name="recepcion" id="recepcion" required>
-      <option value="">Seleccionar</option>
-      <option value="correo">Correo</option>
-      <option value="memo">Memo</option>
-    </select><br />
-  </div>
-  <div class="divBNUPform">
-    <div id="correo-section">
-      <label for="email">Correo Electrónico:</label>
-      <input type="email" name="email" id="email" required /><br />
+<div class="cardContent">
+  <div class="card-details">
+    <div class="form-container">
+      <form id="bnupForm">
+        <h2>Formulario de Solicitud de BNUP</h2>
+        <div class="form-group" id>
+          <label>Tipo de Recepción</label>
+          <div class="checkbox-options">
+            <div class="radio-group">
+              <label for="memo">Memo</label>
+              <input type="radio" id="memo" name="recepcion" value="memo" required />
+              <label for="correo">Correo</label>
+              <input type="radio" id="correo" name="recepcion" value="correo" checked required />
+            </div>
+            <div id="memoFields" class="form-group" style="display: none; margin-left: 15px;">
+              <label for="num_memo">Número de Memo:</label>
+              <input type="number" name="num_memo" id="num_memo" required />
+            </div>
+            <div id="correoFields" class="form-group" style="margin-left: 15px;">
+              <label for="correoSolicitante">Correo</label>
+              <input type="email" id="correoSolicitante" placeholder="Ingresar mail" required />
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="depto_solicitante" style="margin-top: 15px;">Departamento Solicitante</label>
+          <input type="text" id="depto_solicitante" id="depto_solicitante" required />
+        </div>
+        <div class="form-group">
+          <label for="nombreSolicitante" style="margin-top: 15px;">Nombre del Solicitante</label>
+          <input type="text" id="nombreSolicitante" placeholder="Nombre y apellido" required />
+        </div>
+        <div style="display: flex;justify-content: space-between;">
+          <div class="form-group">
+            <label for="numeroIngreso">Numero de Ingreso</label>
+            <input style="width: 100px;" type="number" id="numeroIngreso" required />
+          </div>
+          <div class="form-group">
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="funcionarioAsignado">Funcionario asignado a la solicitud de BNUP</label>
+          <select id="funcionarioAsignado" required>
+            <option value="" disabled selected>Seleccione un Funcionario</option>
+            <option value="alan">Alan Brito</option>
+            <option value="susana">Susana Oria</option>
+            <option value="armando">Armando Casas</option>
+            <!-- Agrega más opciones de funcionarios aquí -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="descripcion">Descripcion</label>
+          <textarea id="descripcion" placeholder="Enter description" rows="4" style="height: 90px;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </form>
+    </div>
+    <div class="container-tableInfo">
+      <div class="container" style="margin-bottom: 20px;">
+        <input type="text" id="searchInput" placeholder="Buscar..." />
+
+        <table id="dataTable" class="table table-bordered">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Recepción</th>
+              <th onclick="sortTable(1)">Número Memo/Correo</th>
+              <th onclick="sortTable(2)">Depto Solicitante</th>
+              <th onclick="sortTable(3)">Nombre Solicitante</th>
+              <th onclick="sortTable(4)">Número de Ingreso</th>
+              <th onclick="sortTable(5)">Fecha</th>
+              <th onclick="sortTable(6)">Funcionario Asignado</th>
+              <th onclick="sortTable(7)">Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Memo</td>
+              <td>12345</td>
+              <td>Departamento A</td>
+              <td>Juan Pérez</td>
+              <td>0001</td>
+              <td>2024-07-01</td>
+              <td>Funcionario 1</td>
+              <td>Descripción del caso 1</td>
+            </tr>
+            <tr>
+              <td>Correo</td>
+              <td>correo@example.com</td>
+              <td>Departamento B</td>
+              <td>María Gómez</td>
+              <td>0002</td>
+              <td>2024-07-02</td>
+              <td>Funcionario 2</td>
+              <td>Descripción del caso 2</td>
+            </tr>
+            <tr>
+              <td>Memo</td>
+              <td>67890</td>
+              <td>Departamento C</td>
+              <td>Carlos Fernández</td>
+              <td>0003</td>
+              <td>2024-07-03</td>
+              <td>Funcionario 3</td>
+              <td>Descripción del caso 3</td>
+            </tr>
+            <tr>
+              <td>Correo</td>
+              <td>correo2@example.com</td>
+              <td>Departamento D</td>
+              <td>Ana Martínez</td>
+              <td>0004</td>
+              <td>2024-07-04</td>
+              <td>Funcionario 4</td>
+              <td>Descripción del caso 4</td>
+            </tr>
+            <tr>
+              <td>Memo</td>
+              <td>54321</td>
+              <td>Departamento E</td>
+              <td>Pedro López</td>
+              <td>0005</td>
+              <td>2024-07-05</td>
+              <td>Funcionario 5</td>
+              <td>Descripción del caso 5</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div id="pagination"></div>
+      </div>
+      <div class="container">
+        <div id="statistics" class="mb-4">
+          <h3>Estadísticas</h3>
+          <p>Total de Registros: <span id="totalRecords">0</span></p>
+          <p>Memo: <span id="countMemo">0</span></p>
+          <p>Correo: <span id="countCorreo">0</span></p>
+          <p>Departamentos:</p>
+          <ul id="deptList"></ul>
+          <p>Fecha Más Reciente: <span id="latestDate">N/A</span></p>
+          <p>Fecha Más Antigua: <span id="oldestDate">N/A</span></p>
+          <p>Funcionario Asignado:</p>
+          <ul id="funcionarioList"></ul>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div class="divBNUPform">
-    <div id="memo-section">
-      <label for="num_memo">Número de Memo:</label>
-      <input type="number" name="num_memo" id="num_memo" /><br />
-      <label for="depto_solicitante">Departamento Solicitante:</label>
-      <input type="text" name="depto_solicitante" id="depto_solicitante" required /><br />
-    </div>
-  </div>
-  <div class="divBNUPform">
-    <label for="solicitante">Solicitante:</label>
-    <input type="text" name="solicitante" id="solicitante" required /><br />
-  </div>
-
-  <div class="divBNUPform">
-    <label for="num_ingreso">Número de Ingreso:</label>
-    <input type="number" name="num_ingreso" id="num_ingreso" value="5" required /><br />
-  </div>
-
-  <div class="divBNUPform">
-    <label for="fecha">Fecha:</label>
-    <input type="date" name="fecha" id="fecha" required /><br />
-  </div>
-
-  <div class="divBNUPform">
-    <label for="asignar">Asignar a:</label>
-    <select name="asignar" id="asignar" required></select><br />
-  </div>
-
-  <div class="divBNUPform">
-    <label for="descripcion">Descripción:</label>
-    <textarea name="descripcion" id="descripcion" placeholder="Descripción" required></textarea><br />
-  </div>
-
-  <button type="submit">Enviar</button>
-</form>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var recepcionSelect = document.getElementById('recepcion')
-    var correoSection = document.getElementById('correo-section')
-    var memoSection = document.getElementById('memo-section')
-  
-    if (!recepcionSelect || !correoSection || !memoSection) {
-      console.error('Error: No se pudo encontrar uno o más elementos.')
-      return
-    }
-  
-    console.log('Script cargado correctamente')
-    console.log('Elementos encontrados:', {
-      recepcionSelect: recepcionSelect,
-      correoSection: correoSection,
-      memoSection: memoSection
-    })
-    documente.addEventListener('DOMContentLoaded', function () {
-      recepcionSelect.addEventListener('change', function () {
-        console.log('Opción seleccionada: ', this.value)
-        if (this.value === 'correo') {
-          console.log('Mostrar sección de correo')
-          correoSection.style.display = 'block'
-          memoSection.style.display = 'none'
-        } else if (this.value === 'memo') {
-          console.log('Mostrar sección de memo')
-          correoSection.style.display = 'none'
-          memoSection.style.display = 'block'
-        } else {
-          console.log('Ocultar ambas secciones')
-          correoSection.style.display = 'none'
-          memoSection.style.display = 'none'
-        }
-      })
-    })
-  })
-</script>
+</div>
