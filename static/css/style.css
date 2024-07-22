@@ -450,7 +450,14 @@ button:hover {
 }
 
 
-
+.card {
+  background-color: #C9E8F4;
+  padding: 20px;
+height: 240px;
+  width: min-content;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
 
 
 
@@ -484,7 +491,17 @@ button:hover {
   color: #333;
 }
 
-canvas {
+/* canvas {
   width: 100% !important;
   height: 300px !important;
+} */
+
+.divContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
+
+/* #barChart, #pieChart, #lineChart {
+  height: 250px !important;
+} */

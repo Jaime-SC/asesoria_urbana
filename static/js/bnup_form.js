@@ -197,3 +197,124 @@ function setupPagination() {
 
 
 
+document.addEventListener("DOMContentLoaded", function () {
+    const recepcionData = {
+        memo: 0,
+        correo: 0
+    };
+
+    const funcionarioData = {};
+
+    const fechaData = {};
+
+    const tableRows = document.querySelectorAll("#dataTable tbody tr");
+
+    tableRows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        const recepcionType = cells[0].innerText;
+        const funcionario = cells[6].innerText;
+        const fecha = cells[5].innerText.split("-")[1]; // Mes de la fecha
+
+        // Contar tipos de recepción
+        if (recepcionType === "Memo") {
+            recepcionData.memo += 1;
+        } else if (recepcionType === "Correo") {
+            recepcionData.correo += 1;
+        }
+
+        // Contar solicitudes por funcionario
+        if (funcionario in funcionarioData) {
+            funcionarioData[funcionario] += 1;
+        } else {
+            funcionarioData[funcionario] = 1;
+        }
+
+        // Contar solicitudes por mes
+        if (fecha in fechaData) {
+            fechaData[fecha] += 1;
+        } else {
+            fechaData[fecha] = 1;
+        }
+    });
+
+    // Gráfico de tipos de recepción
+    const recepcionCtx = document.getElementById('recepcionChart').getContext('2d');
+    new Chart(recepcionCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Memo', 'Correo'],
+            datasets: [{
+                data: [recepcionData.memo, recepcionData.correo],
+                backgroundColor: ['#FF6384', '#36A2EB'],
+                hoverBackgroundColor: ['#FF6384', '#36A2EB']
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: 'Tipos de Recepción'
+            }
+        }
+    });
+
+    // Gráfico de solicitudes por funcionario
+    const funcionarioCtx = document.getElementById('funcionarioChart').getContext('2d');
+    new Chart(funcionarioCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(funcionarioData),
+            datasets: [{
+                label: 'Solicitudes',
+                data: Object.values(funcionarioData),
+                backgroundColor: '#FFCE56',
+                hoverBackgroundColor: '#FFCE56'
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: 'Solicitudes por Funcionario'
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+
+    // Gráfico de solicitudes por mes
+    const fechaCtx = document.getElementById('fechaChart').getContext('2d');
+    new Chart(fechaCtx, {
+        type: 'line',
+        data: {
+            labels: Object.keys(fechaData),
+            datasets: [{
+                label: 'Solicitudes',
+                data: Object.values(fechaData),
+                fill: false,
+                borderColor: '#4BC0C0',
+                backgroundColor: '#4BC0C0',
+                pointBorderColor: '#4BC0C0',
+                pointBackgroundColor: '#4BC0C0',
+                pointHoverBackgroundColor: '#4BC0C0',
+                pointHoverBorderColor: '#4BC0C0'
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: 'Solicitudes por Mes'
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+});

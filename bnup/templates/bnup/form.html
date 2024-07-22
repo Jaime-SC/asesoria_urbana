@@ -130,18 +130,15 @@
 
         <div id="pagination"></div>
       </div>
-      <div class="container">
-        <div id="statistics" class="mb-4">
-          <h3>Estadísticas</h3>
-          <p>Total de Registros: <span id="totalRecords">0</span></p>
-          <p>Memo: <span id="countMemo">0</span></p>
-          <p>Correo: <span id="countCorreo">0</span></p>
-          <p>Departamentos:</p>
-          <ul id="deptList"></ul>
-          <p>Fecha Más Reciente: <span id="latestDate">N/A</span></p>
-          <p>Fecha Más Antigua: <span id="oldestDate">N/A</span></p>
-          <p>Funcionario Asignado:</p>
-          <ul id="funcionarioList"></ul>
+      <div class="divContainer">
+        <div class="card">
+          <canvas id="barChart"></canvas>
+        </div>
+        <div class="card">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="card">
+          <canvas id="lineChart"></canvas>
         </div>
       </div>
     </div>
