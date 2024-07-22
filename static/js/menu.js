@@ -28,12 +28,15 @@ document.addEventListener('DOMContentLoaded', function () {
     new Chart(barCtx, {
       type: 'bar',
       data: {
-        labels: ['Memo', 'Correo'],
+
+        labels: ['Funcionario 1', 'Funcionario 2', 'Funcionario 3'],
+
         datasets: [{
           label: '# de Recepciones',
-          data: [12, 19],
-          backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
-          borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+          data: [1, 2, 2],
+          backgroundColor: ['rgba(45, 148, 173, 0.5)', 'rgba(247, 234, 83, 0.5)', 'rgba(180, 49, 55, 0.5)'],
+          borderColor: ['rgba(45, 148, 173, 1)', 'rgba(247, 234, 83, 1)', 'rgba(180, 49, 55, 1)'],
+
           borderWidth: 1
         }]
       },
@@ -65,9 +68,13 @@ document.addEventListener('DOMContentLoaded', function () {
         datasets: [{
           label: '# de Recepciones',
           data: [12, 19],
-          backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
-          borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+
+
+          backgroundColor: ['rgba(45, 148, 173, 0.5)', 'rgba(247, 234, 83, 0.5)'],
+          borderColor: ['rgba(45, 148, 173, 1)', 'rgba(247, 234, 83, 1)'],
+
           borderWidth: 1
+
         }]
       },
       options: {
