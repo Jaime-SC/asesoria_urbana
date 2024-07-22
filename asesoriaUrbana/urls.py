@@ -28,6 +28,8 @@ urlpatterns = [
     path('patente_alcohol/', include('patente_alcohol.urls')),  # Incluir URLs de la aplicación patente_alcohol
     path('informe_terreno/', include('informe_terreno.urls')),
     path('portal_transparencia/', views.portal_transparencia, name='portal_transparencia'),
+    path('mapoteca/', views.mapoteca, name='mapoteca'),
+
 
 ]
 

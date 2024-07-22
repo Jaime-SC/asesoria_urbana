@@ -9,3 +9,6 @@ def inicio(request):
 
 def portal_transparencia(request):
     return render(request, 'portal_transparencia.html')
+
+def mapoteca(request):
+    return render(request, 'mapoteca.html')

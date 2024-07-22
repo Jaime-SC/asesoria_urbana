@@ -156,6 +156,12 @@ document.addEventListener('DOMContentLoaded', function () {
     loadContent('/portal_transparencia/');
   });
 
+  document.querySelector('a[data-content="mapoteca"]').addEventListener('click', function (event) {
+    event.preventDefault();
+    highlightMenuOption(this);
+    loadContent('/mapoteca/');
+  });
+
   loadContent('/inicio/', function () {
     highlightMenuOption(document.querySelector('a[data-content="Inicio"]'));
   });
