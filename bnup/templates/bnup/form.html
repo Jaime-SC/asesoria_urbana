@@ -1,198 +1,64 @@
 <div class="cardContent">
   <div class="card-details">
     <div class="form-container">
-      <form id="bnupForm">
+      <!-- Asegúrate de que el formulario envía datos a la URL correcta -->
+      <form id="bnupForm" method="post" action="{% url 'bnup_form' %}">
+        {% csrf_token %}
         <h2>Solicitud de BNUP</h2>
-        <div class="form-group" id>
-          <label>Tipo de Recepción</label>
-          <div class="checkbox-options">
+        <div class="form-group" style="
+        display: flex;">
+          <div>
+            <label>Tipo de Recepción</label>
             <div class="radio-group">
-              <label for="memo">Memo</label>
-              <input type="radio" id="memo" name="recepcion" value="memo" required />
-              <label for="correo">Correo</label>
-              <input type="radio" id="correo" name="recepcion" value="correo" checked required />
+              <label for="memo"><input type="radio" id="memo" name="tipo_recepcion" value="1" checked />Memo</label>
+              <label for="correo"><input type="radio" id="correo" name="tipo_recepcion" value="2" />Correo</label>
             </div>
-            <div id="memoFields" class="form-group" style="display: none; margin-left: 15px;">
-              <label for="num_memo">Ingrese N° de Memo:</label>
-              <input type="number" name="num_memo" id="num_memo" required />
-            </div>
-            <div id="correoFields" class="form-group" style="margin-left: 15px;">
-              <label for="correoSolicitante">Ingrese Correo:</label>
-              <input type="email" id="correoSolicitante" required />
-            </div>
+          </div>
+          <div id="memoFields" class="form-group" style="display: none;">
+            <label for="num_memo">Ingrese N° de Memo:</label>
+            <input type="number" name="num_memo" id="num_memo" />
+          </div>
+          <div id="correoFields" class="form-group" style="display: none;">
+            <label for="correoSolicitante">Ingrese Correo:</label>
+            <input type="email" name="correo_solicitante" id="correoSolicitante" />
           </div>
         </div>
         <div class="form-group">
-          <label for="depto_solicitante" style="margin-top: 15px;">Departamento Solicitante</label>
-          <input type="text" id="depto_solicitante" id="depto_solicitante" required />
-        </div>
-        <div class="form-group">
-          <label for="nombreSolicitante" style="margin-top: 15px;">Nombre del Solicitante</label>
-          <input type="text" id="nombreSolicitante" placeholder="Nombre y apellido" required />
-        </div>
-        <div style="display: flex; gap: 5px;" >
-          <div class="form-group">
-            <label for="numeroIngreso">N° de Ingreso</label>
-            <input style="width: 100px;" type="number" id="numeroIngreso" required />
-          </div>
-          <div class="form-group">
-            <label for="fecha">Fecha</label>
-            <input type="date" id="fecha" required />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="funcionarioAsignado">Funcionario asignado a BNUP</label>
-          <select id="funcionarioAsignado" style="height: 40px;" required>
-            <option value="" disabled selected>Seleccione un Funcionario</option>
-            <option value="alan">Alan Brito</option>
-            <option value="susana">Susana Oria</option>
-            <option value="armando">Armando Casas</option>
-            <!-- Agrega más opciones de funcionarios aquí -->
+          <label for="depto_solicitante">Departamento Solicitante</label>
+          <select style="height: max-content;" name="depto_solicitante" id="depto_solicitante" required>
+            <option value="" disabled selected>Seleccione un Departamento</option>
+            {% for depto in departamentos %}
+              <option value="{{ depto.id }}">{{ depto.nombre }}</option>
+            {% endfor %}
           </select>
         </div>
         <div class="form-group">
-          <label for="descripcion">Descripcion</label>
-          <textarea id="descripcion" placeholder="Enter description" rows="4" style="height: 90px;"></textarea>
+          <label for="nombreSolicitante">Nombre del Solicitante</label>
+          <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" required />
+        </div>
+        <div class="form-group">
+          <label for="numeroIngreso">N° de Ingreso</label>
+          <input type="number" name="numero_ingreso" id="numeroIngreso" required />
+        </div>
+        <div class="form-group">
+          <label for="fecha">Fecha</label>
+          <input type="date" name="fecha_ingreso" id="fecha" required />
+        </div>
+        <div class="form-group">
+          <label for="funcionarioAsignado">Funcionario asignado a BNUP</label>
+          <select style="height: max-content;" name="funcionario_asignado" id="funcionarioAsignado" required>
+            <option value="" disabled selected>Seleccione un Funcionario</option>
+            {% for funcionario in funcionarios %}
+              <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <textarea name="descripcion" id="descripcion" placeholder="Ingrese la descripción" rows="4"></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Enviar</button>
       </form>
-    </div>
-    <div class="container-tableInfo">
-      <div class="container" style="margin-bottom: 20px;">
-        <div style="display: flex;flex-direction: row;align-items: center;justify-content: space-between;">
-          <h3>Recepcion por Memo</h3>
-          <input type="text" id="searchInput" placeholder="Buscar..." />
-        </div>
-
-        <table id="dataTable" class="table table-bordered">
-          <thead>
-            <tr>
-              {% comment %} <th onclick="sortTable(0)">Recepción</th> {% endcomment %}
-              <th onclick="sortTable(1)">N° Memo</th>
-              <th onclick="sortTable(2)">Depto Solicitante</th>
-              <th onclick="sortTable(3)">Nombre Solicitante</th>
-              <th onclick="sortTable(4)">N° de Ingreso</th>
-              <th onclick="sortTable(5)">Fecha</th>
-              <th onclick="sortTable(6)">Funcionario Asignado</th>
-              <th onclick="sortTable(7)">Descripción</th>
-              <th onclick="sortTable(8)">N° Salida</th>
-              <th onclick="sortTable(9)">Adjunto</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {% comment %} <td>Memo</td> {% endcomment %}
-              <td>12345</td>
-              <td>Departamento A</td>
-              <td>Juan Pérez</td>
-              <td>0001</td>
-              <td>2024-07-01</td>
-              <td>Funcionario 3</td>
-              <td>Descripción del caso 1</td>
-              <td>54321</td>
-              <td>
-                <span class="material-symbols-outlined">picture_as_pdf</span>
-              </td>
-            </tr>
-
-            <tr>
-              {% comment %} <td>Memo</td> {% endcomment %}
-              <td>67890</td>
-              <td>Departamento C</td>
-              <td>Carlos Fernández</td>
-              <td>0003</td>
-              <td>2024-07-03</td>
-              <td>Funcionario 3</td>
-              <td>Descripción del caso 3</td>
-              <td>67890</td>
-              <td>
-                <span class="material-symbols-outlined">picture_as_pdf</span>
-              </td>
-            </tr>
-
-            <tr>
-              {% comment %} <td>Memo</td> {% endcomment %}
-              <td>54321</td>
-              <td>Departamento E</td>
-              <td>Pedro López</td>
-              <td>0005</td>
-              <td>2024-07-05</td>
-              <td>Funcionario 2</td>
-              <td>Descripción del caso 5</td>
-              <td>12345</td>
-              <td>
-                <span class="material-symbols-outlined">picture_as_pdf</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div id="pagination"></div>
-      </div>
-
-      <div class="container" style="margin-bottom: 20px;">
-        <div style="display: flex;flex-direction: row;align-items: center;justify-content: space-between;">
-          <h3>Recepcion por Correo</h3>
-          <input type="text" id="searchInput" placeholder="Buscar..." />
-        </div>
-        <table id="dataTable" class="table table-bordered">
-          <thead>
-            <tr>
-              <th onclick="sortTable(1)">Correo</th>
-              <th onclick="sortTable(2)">Depto Solicitante</th>
-              <th onclick="sortTable(3)">Nombre Solicitante</th>
-              <th onclick="sortTable(4)">N° de Ingreso</th>
-              <th onclick="sortTable(5)">Fecha</th>
-              <th onclick="sortTable(6)">Funcionario Asignado</th>
-              <th onclick="sortTable(7)">Descripción</th>
-              <th onclick="sortTable(8)">N° Salida</th>
-              <th onclick="sortTable(9)">Adjunto</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>correo@example.com</td>
-              <td>Departamento B</td>
-              <td>María Gómez</td>
-              <td>0002</td>
-              <td>2024-07-02</td>
-              <td>Funcionario 2</td>
-              <td>Descripción del caso 2</td>
-              <td>91714</td>
-              <td>
-                <span class="material-symbols-outlined">picture_as_pdf</span>
-              </td>
-            </tr>
-
-            <tr>
-              <td>correo2@example.com</td>
-              <td>Departamento D</td>
-              <td>Ana Martínez</td>
-              <td>0004</td>
-              <td>2024-07-04</td>
-              <td>Funcionario 1</td>
-              <td>Descripción del caso 4</td>
-              <td>19762</td>
-              <td>
-                <span class="material-symbols-outlined">picture_as_pdf</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div id="pagination"></div>
-      </div>
-    </div>
-    <div class="divContainer" style="padding-top: 0px;">
-      <div class="card">
-        <canvas id="barChart"></canvas>
-      </div>
-      <div class="card">
-        <canvas id="pieChart"></canvas>
-      </div>
-      <div class="card" style="margin-bottom: 0px;">
-        <canvas id="lineChart"></canvas>
-      </div>
     </div>
   </div>
 </div>
