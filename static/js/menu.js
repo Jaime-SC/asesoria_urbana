@@ -38,5 +38,19 @@ document.addEventListener('DOMContentLoaded', function () {
   // Load the initial content and highlight the 'Inicio' option
   loadContent('/inicio/', function () {
     highlightMenuOption(document.querySelector('a[data-content="Inicio"]'));
+
+    // Check session storage for redirect to BNUP
+    if (sessionStorage.getItem('redirectToBNUP') === 'true') {
+      const bnupLink = document.querySelector('a[data-content="BNUP"]');
+      if (bnupLink) {
+        bnupLink.click(); // Simulate click on BNUP menu item
+      }
+      sessionStorage.removeItem('redirectToBNUP'); // Clear the flag
+    }
   });
+
+  // Check if the server set a flag to redirect to BNUP
+  if (window.redirectToBNUP) {
+    sessionStorage.setItem('redirectToBNUP', 'true');
+  }
 });

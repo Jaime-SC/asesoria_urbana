@@ -35,6 +35,7 @@ def bnup_form(request):
             )
             solicitud.save()
             messages.success(request, 'Solicitud creada con éxito.')
+            request.session['redirect_to_bnup'] = True  # Set a session flag
             return redirect('home')
         except Exception as e:
             print("Error al guardar la solicitud:", e)  # Depuración
@@ -53,3 +54,4 @@ def bnup_form(request):
         'solicitudes_memo': solicitudes_memo,
         'solicitudes_correo': solicitudes_correo
     })
+

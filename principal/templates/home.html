@@ -1,6 +1,8 @@
-{% extends 'base.html' %} {% block title %}
+{% extends 'base.html' %} 
+{% block title %}
   Asesoria Urbana
-{% endblock %} {% block content %}
+{% endblock %}
+{% block content %}
   <div class="contenido">
     <div class="menu">
       <ul class="ulMenu">
@@ -26,4 +28,9 @@
     </div>
     <div class="contentMenu" id="contentMenu" style="border-radius: 0px 0px 10px 0"></div>
   </div>
+  {% if redirect_to_bnup %}
+    <script>
+      window.redirectToBNUP = true;
+    </script>
+  {% endif %}
 {% endblock %}
