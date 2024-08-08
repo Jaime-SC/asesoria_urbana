@@ -379,14 +379,6 @@ button:hover {
   background-color: #FBF3A7;
 }
 
-
-
-.container-tableInfo {
-  display: flex;
-  flex-direction: column;
-}
-
-
 .container {
   background-color: #C9E8F4;
   padding: 20px;
@@ -396,79 +388,94 @@ button:hover {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+/* ESTILOS TABLA */
 
+.tableInfor_container {
+  display: flex;
+  flex-direction: column;
+  background-color: #C9E8F4;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: max-content;
+}
 
-
-
-
-
-
-
-
-/* Estilos para la tabla */
-#dataTable {
-  width: -webkit-fill-available;
+/* Estilos generales para la tabla */
+.tableInfor_container table {
+  width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  font-size: 15px;
+  margin-bottom: 20px;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-#dataTable th,
-#dataTable td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-#dataTable th {
-  background-color: #f2f2f2;
-  cursor: pointer;
-}
-
-#dataTable th:hover {
-  background-color: #ddd;
-}
-
-#dataTable tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-/* Estilos para el buscador */
-#searchInput {
-  width: min-content;
-  padding: 10px;
-
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-/* Estilos para la paginación */
-#pagination {
-  text-align: center;
-  margin-top: 10px;
-}
-
-#pagination a {
-  margin: 0 5px;
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  text-decoration: none;
-  color: #333;
-}
-
-#pagination a.active {
+/* Estilos para los encabezados */
+.tableInfor_container th {
   background-color: #4CAF50;
   color: white;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer; /* Indicar que es interactivo */
+  transition: background-color 0.3s;
 }
 
-#pagination a:hover {
+.tableInfor_container th:hover {
+  background-color: #45a049;
+}
+
+/* Estilos para las filas de la tabla */
+.tableInfor_container td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Alternar el color de fondo para las filas */
+.tableInfor_container tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Resaltar una fila cuando el mouse pasa sobre ella */
+.tableInfor_container tr:hover {
   background-color: #ddd;
 }
 
+/* Estilo para cuando no hay datos en la tabla */
+.tableInfor_container td[colspan] {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}
 
+/* Estilo para el título de las tablas */
+.tableInfor_container h3 {
+  margin-top: 30px;
+  color: #333;
+  font-weight: bold;
+  font-size: 1.2em;
+}
 
+/* Indicador para el estado no ordenado */
+.tableInfor_container th::after {
+  content: '⇅'; /* Indicador para el estado inicial (no ordenado) */
+  margin-left: 5px;
+  font-size: 0.8em;
+  color: #fff; /* Ajusta el color según sea necesario */
+  opacity: 0.6; /* Hacerlo menos prominente que el indicador de orden */
+}
 
+/* Indicadores de ordenamiento ascendente y descendente */
+.tableInfor_container th.ascending::after {
+  content: '▲'; /* Flecha hacia arriba para ascendente */
+  color: #fff; /* Cambia el color si es necesario */
+  opacity: 1;
+}
+
+.tableInfor_container th.descending::after {
+  content: '▼'; /* Flecha hacia abajo para descendente */
+  color: #fff; /* Cambia el color si es necesario */
+  opacity: 1;
+}
 
 
 
@@ -602,4 +609,14 @@ button:hover {
 
 .btn:hover {
   background-color: #0056b3;
+}
+
+.selected {
+  background: rgba(255, 255, 255, 0.5);
+  font-weight: bold;
+  /* Cambia el color del texto al pasar el ratón */
+  border-color: rgba(0, 255, 255, 0.7);
+  /* Bordes brillantes al hacer hover */
+  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.5);
+  /* Sombra para efecto sofisticado */
 }

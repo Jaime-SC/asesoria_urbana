@@ -1,12 +1,11 @@
 <div class="cardContent">
   <div class="card-details">
     <div class="form-container">
-      <!-- Asegúrate de que el formulario envía datos a la URL correcta -->
+      <!-- Formulario para ingresar nuevas solicitudes -->
       <form id="bnupForm" method="post" action="{% url 'bnup_form' %}">
         {% csrf_token %}
         <h2>Solicitud de BNUP</h2>
-        <div class="form-group" style="
-        display: flex;">
+        <div class="form-group" style="display: flex;">
           <div>
             <label>Tipo de Recepción</label>
             <div class="radio-group">
@@ -59,6 +58,76 @@
         </div>
         <button type="submit" class="btn btn-primary">Enviar</button>
       </form>
+    </div>
+    <div class="tableInfor_container">
+      <div>
+        <!-- Tabla de solicitudes por Memo -->
+        <h3>Solicitudes por Memo</h3>
+        <table id="tablaSolicitudesMemo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
+          <thead>
+            <tr>
+              <th data-type="number">N° Ingreso</th>
+              <th data-type="number">N° Memo</th>
+              <th data-type="string">Departamento</th>
+              <th data-type="string">Solicitante</th>
+              <th data-type="date">Fecha</th>
+              <th data-type="string">Funcionario Asignado</th>
+              {% comment %} <th data-type="string">Descripción</th> {% endcomment %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for solicitud in solicitudes_memo %}
+              <tr>
+                <td>{{ solicitud.numero_ingreso }}</td>
+                <td>{{ solicitud.numero_memo }}</td>
+                <td>{{ solicitud.depto_solicitante.nombre }}</td>
+                <td>{{ solicitud.nombre_solicitante }}</td>
+                <td>{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
+                <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+                {% comment %} <td>{{ solicitud.descripcion }}</td> {% endcomment %}
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7">No hay solicitudes por Memo</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <!-- Tabla de solicitudes por Correo -->
+        <h3>Solicitudes por Correo</h3>
+        <table id="tablaSolicitudesCorreo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
+          <thead>
+            <tr>
+              <th data-type="number">N° Ingreso</th>
+              <th data-type="string">Correo Solicitante</th>
+              <th data-type="string">Departamento</th>
+              <th data-type="string">Solicitante</th>
+              <th data-type="date">Fecha</th>
+              <th data-type="string">Funcionario Asignado</th>
+              {% comment %} <th data-type="string">Descripción</th> {% endcomment %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for solicitud in solicitudes_correo %}
+              <tr>
+                <td>{{ solicitud.numero_ingreso }}</td>
+                <td>{{ solicitud.correo_solicitante }}</td>
+                <td>{{ solicitud.depto_solicitante.nombre }}</td>
+                <td>{{ solicitud.nombre_solicitante }}</td>
+                <td>{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
+                <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+                {% comment %} <td>{{ solicitud.descripcion }}</td> {% endcomment %}
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7">No hay solicitudes por Correo</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

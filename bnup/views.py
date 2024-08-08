@@ -40,10 +40,16 @@ def bnup_form(request):
             print("Error al guardar la solicitud:", e)  # Depuración
             messages.error(request, f'Error al guardar la solicitud: {e}')
 
+    # Obtener las solicitudes por Memo y Correo
+    solicitudes_memo = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Memo')
+    solicitudes_correo = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Correo')
+
     departamentos = Departamento.objects.all()
     funcionarios = Funcionario.objects.all()
 
     return render(request, 'bnup/form.html', {
         'departamentos': departamentos,
-        'funcionarios': funcionarios
+        'funcionarios': funcionarios,
+        'solicitudes_memo': solicitudes_memo,
+        'solicitudes_correo': solicitudes_correo
     })
