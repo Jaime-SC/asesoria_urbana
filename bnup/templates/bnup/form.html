@@ -61,8 +61,12 @@
     </div>
     <div class="tableInfor_container">
       <div>
-        <!-- Tabla de solicitudes por Memo -->
-        <h3>Solicitudes por Memo</h3>
+        <div class="tittleTable">
+          <!-- Campo de búsqueda y tabla de solicitudes por Memo -->
+          <h3>Solicitudes por Memo</h3>
+          <input type="text" id="searchMemo" placeholder="Buscar en Memo..." class="search-input" />
+          <div id="paginationMemo" class="pagination"></div>
+        </div>
         <table id="tablaSolicitudesMemo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
@@ -71,8 +75,9 @@
               <th data-type="string">Departamento</th>
               <th data-type="string">Solicitante</th>
               <th data-type="date">Fecha</th>
-              <th data-type="string">Funcionario Asignado</th>
-              {% comment %} <th data-type="string">Descripción</th> {% endcomment %}
+              <th data-type="string">
+                Funcionario <br />Asignado
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -84,7 +89,6 @@
                 <td>{{ solicitud.nombre_solicitante }}</td>
                 <td>{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
-                {% comment %} <td>{{ solicitud.descripcion }}</td> {% endcomment %}
               </tr>
             {% empty %}
               <tr>
@@ -95,18 +99,25 @@
         </table>
       </div>
       <div>
-        <!-- Tabla de solicitudes por Correo -->
-        <h3>Solicitudes por Correo</h3>
+        <!-- Campo de búsqueda y tabla de solicitudes por Correo -->
+        <div class="tittleTable">
+          <h3>Solicitudes por Correo</h3>
+          <input type="text" id="searchCorreo" placeholder="Buscar en Correo..." class="search-input" />
+          <div id="paginationCorreo" class="pagination"></div>
+        </div>
         <table id="tablaSolicitudesCorreo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
               <th data-type="number">N° Ingreso</th>
-              <th data-type="string">Correo Solicitante</th>
+              <th data-type="string">
+                Correo <br />Solicitante
+              </th>
               <th data-type="string">Departamento</th>
               <th data-type="string">Solicitante</th>
               <th data-type="date">Fecha</th>
-              <th data-type="string">Funcionario Asignado</th>
-              {% comment %} <th data-type="string">Descripción</th> {% endcomment %}
+              <th data-type="string">
+                Funcionario <br />Asignado
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -118,7 +129,6 @@
                 <td>{{ solicitud.nombre_solicitante }}</td>
                 <td>{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
-                {% comment %} <td>{{ solicitud.descripcion }}</td> {% endcomment %}
               </tr>
             {% empty %}
               <tr>

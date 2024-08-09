@@ -391,8 +391,13 @@ button:hover {
 /* ESTILOS TABLA */
 
 .tableInfor_container {
-  display: flex;
-  flex-direction: column;
+  display: grid; 
+  grid-template-columns: 1fr; 
+  grid-template-rows: 1fr 1fr; 
+  gap: 0px 0px; 
+  grid-template-areas: 
+    "."
+    "."; 
   background-color: #C9E8F4;
   padding: 20px;
   border-radius: 10px;
@@ -402,7 +407,7 @@ button:hover {
 
 /* Estilos generales para la tabla */
 .tableInfor_container table {
-  width: 100%;
+  width: 850px;
   border-collapse: collapse;
   margin-bottom: 20px;
   font-family: 'Arial', sans-serif;
@@ -449,7 +454,6 @@ button:hover {
 
 /* Estilo para el título de las tablas */
 .tableInfor_container h3 {
-  margin-top: 30px;
   color: #333;
   font-weight: bold;
   font-size: 1.2em;
@@ -477,7 +481,75 @@ button:hover {
   opacity: 1;
 }
 
+.tittleTable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
+
+.pagination {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-btn {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: none;
+  background-color: #e0e0e0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-radius: 4px;
+  width: min-content;
+}
+
+.page-btn.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.page-btn:hover:not(.active) {
+  background-color: #ddd;
+}
+
+.page-btn:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.page-btn.highlight {
+  background-color: #ffcc00; /* Color de fondo amarillo */
+  color: white; /* Texto blanco */
+  font-weight: bold; /* Texto en negrita */
+}
+
+.search-container {
+  position: relative;
+  display: inline-block;
+}
+
+input[type="text"] {
+  padding-right: 30px; /* Espacio para el botón 'X' */
+}
+
+.clear-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: none; /* Se muestra solo cuando hay texto */
+}
+
+input[type="text"]:not(:placeholder-shown) + .clear-btn {
+  display: inline; /* Mostrar botón solo si el input no está vacío */
+}
 
 
 .containerSTATS {

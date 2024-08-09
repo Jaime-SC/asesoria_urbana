@@ -12,8 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(data => {
         document.getElementById('contentMenu').innerHTML = data;
         if (typeof callback === 'function') callback();
-        attachSortHandlers('tablaSolicitudesMemo'); // Attach sort handlers to new content
+
+        // Initialize sorting after loading new content
+        attachSortHandlers('tablaSolicitudesMemo');
         attachSortHandlers('tablaSolicitudesCorreo');
+
+        // Initialize pagination and search for both tables
+        paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
+        paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
+        
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
