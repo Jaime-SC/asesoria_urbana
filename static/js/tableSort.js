@@ -13,7 +13,8 @@ function sortTable(table, column, type, ascending) {
                 b = parseFloat(cellB) || 0;
                 break;
             case 'date':
-                a = cellA.split('/').reverse().join(''); // Parse date in 'dd/mm/yyyy' format
+                // Parse date in 'dd/mm/yyyy' format
+                a = cellA.split('/').reverse().join('');
                 b = cellB.split('/').reverse().join('');
                 break;
             default:
@@ -30,6 +31,15 @@ function sortTable(table, column, type, ascending) {
     rows.sort(compareFunction);
 
     rows.forEach(row => tbody.appendChild(row));
+
+    // After sorting, reset the pagination to start from the first page
+    updatePaginationAfterSort(table, column);
+}
+
+function updatePaginationAfterSort(table, column) {
+    const paginationId = table.id === 'tablaSolicitudesMemo' ? 'paginationMemo' : 'paginationCorreo';
+    const rowsPerPage = 5; // Set the number of rows per page
+    paginateTable(table.id, paginationId, rowsPerPage);
 }
 
 function attachSortHandlers(tableId) {
@@ -66,8 +76,8 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
 
-        rows.forEach(row => {
-            row.style.display = (filteredRows.includes(row) && filteredRows.indexOf(row) >= start && filteredRows.indexOf(row) < end) ? '' : 'none';
+        rows.forEach((row, index) => {
+            row.style.display = (filteredRows.includes(row) && index >= start && index < end) ? '' : 'none';
         });
     }
 
@@ -151,11 +161,6 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
             if (pageCount > 1) {
                 pagination.querySelector('.next').classList.add('highlight');
             } else {
-                pagination.querySelector('.next').classList.remove('highlight');
-            }
-
-            // Reset the next button highlight if search input is cleared
-            if (filter.length === 0) {
                 pagination.querySelector('.next').classList.remove('highlight');
             }
         });

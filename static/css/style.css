@@ -391,23 +391,23 @@ button:hover {
 /* ESTILOS TABLA */
 
 .tableInfor_container {
-  display: grid; 
-  grid-template-columns: 1fr; 
-  grid-template-rows: 1fr 1fr; 
-  gap: 0px 0px; 
-  grid-template-areas: 
-    "."
-    "."; 
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0px 0px;
+  grid-template-areas:
+      "."
+      ".";
   background-color: #C9E8F4;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: max-content;
+  width: -webkit-fill-available;
 }
 
 /* Estilos generales para la tabla */
 .tableInfor_container table {
-  width: 850px;
+  width: -webkit-fill-available;
   border-collapse: collapse;
   margin-bottom: 20px;
   font-family: 'Arial', sans-serif;
