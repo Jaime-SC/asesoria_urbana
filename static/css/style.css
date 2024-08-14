@@ -31,6 +31,20 @@
   font-style: italic;
 }
 
+@font-face {
+  font-family: "SpaceMonoNerdFontMono";
+  src: url("/static/fonts/SpaceMonoNerdFontMono.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "DaddyTimeMonoNerdFontMono";
+  src: url("/static/fonts/DaddyTimeMonoNerdFontMono.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
 body {
   display: grid;
   justify-items: center;
@@ -203,7 +217,7 @@ h1 {
   border-radius: 10px;
   background: #f5f5f5;
   position: relative;
-  padding: 1.8rem;
+  padding: 1rem;
   border: 2px solid #c3c6ce;
   -webkit-transition: 0.5s ease-out;
   transition: 0.5s ease-out;
@@ -279,6 +293,20 @@ h1 {
   width: max-content;
 }
 
+.stats-container {
+  background-color: #C9E8F4;
+  padding: 5px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: -webkit-fill-available;
+}
+
+.div-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 h2 {
   text-align: center;
   margin-bottom: 20px;
@@ -312,6 +340,11 @@ select {
   border: 1px solid #16233e;
   border-radius: 5px;
   box-sizing: border-box;
+}
+
+#searchCorreo,
+#searchMemo {
+  width: 550px;
 }
 
 .checkbox-options {
@@ -375,9 +408,6 @@ button {
   background-color: #FEFBE5;
 }
 
-button:hover {
-  background-color: #FBF3A7;
-}
 
 .container {
   background-color: #C9E8F4;
@@ -396,21 +426,22 @@ button:hover {
   grid-template-rows: 1fr 1fr;
   gap: 0px 0px;
   grid-template-areas:
-      "."
-      ".";
+    "."
+    ".";
   background-color: #C9E8F4;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   width: -webkit-fill-available;
+  align-content: space-between;
 }
 
 /* Estilos generales para la tabla */
 .tableInfor_container table {
   width: -webkit-fill-available;
   border-collapse: collapse;
-  margin-bottom: 20px;
-  font-family: 'Arial', sans-serif;
+  margin-block: 20px 0px;
+  font-family: "Chivo Mono", monospace;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -420,7 +451,8 @@ button:hover {
   color: white;
   padding: 10px;
   text-align: left;
-  cursor: pointer; /* Indicar que es interactivo */
+  cursor: pointer;
+  /* Indicar que es interactivo */
   transition: background-color 0.3s;
 }
 
@@ -434,6 +466,10 @@ button:hover {
   text-align: left;
   border-bottom: 1px solid #ddd;
 }
+
+/* .tableInfor_container .fechaTable {
+  font-family: "Lekton", monospace;
+} */
 
 /* Alternar el color de fondo para las filas */
 .tableInfor_container tr:nth-child(even) {
@@ -461,23 +497,30 @@ button:hover {
 
 /* Indicador para el estado no ordenado */
 .tableInfor_container th::after {
-  content: '⇅'; /* Indicador para el estado inicial (no ordenado) */
+  content: '⇅';
+  /* Indicador para el estado inicial (no ordenado) */
   margin-left: 5px;
   font-size: 0.8em;
-  color: #fff; /* Ajusta el color según sea necesario */
-  opacity: 0.6; /* Hacerlo menos prominente que el indicador de orden */
+  color: #fff;
+  /* Ajusta el color según sea necesario */
+  opacity: 0.6;
+  /* Hacerlo menos prominente que el indicador de orden */
 }
 
 /* Indicadores de ordenamiento ascendente y descendente */
 .tableInfor_container th.ascending::after {
-  content: '▲'; /* Flecha hacia arriba para ascendente */
-  color: #fff; /* Cambia el color si es necesario */
+  content: '▲';
+  /* Flecha hacia arriba para ascendente */
+  color: #fff;
+  /* Cambia el color si es necesario */
   opacity: 1;
 }
 
 .tableInfor_container th.descending::after {
-  content: '▼'; /* Flecha hacia abajo para descendente */
-  color: #fff; /* Cambia el color si es necesario */
+  content: '▼';
+  /* Flecha hacia abajo para descendente */
+  color: #fff;
+  /* Cambia el color si es necesario */
   opacity: 1;
 }
 
@@ -489,7 +532,6 @@ button:hover {
 
 
 .pagination {
-  margin-top: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -521,9 +563,12 @@ button:hover {
 }
 
 .page-btn.highlight {
-  background-color: #ffcc00; /* Color de fondo amarillo */
-  color: white; /* Texto blanco */
-  font-weight: bold; /* Texto en negrita */
+  background-color: #ffcc00;
+  /* Color de fondo amarillo */
+  color: white;
+  /* Texto blanco */
+  font-weight: bold;
+  /* Texto en negrita */
 }
 
 .search-container {
@@ -532,7 +577,8 @@ button:hover {
 }
 
 input[type="text"] {
-  padding-right: 30px; /* Espacio para el botón 'X' */
+  padding-right: 30px;
+  /* Espacio para el botón 'X' */
 }
 
 .clear-btn {
@@ -544,11 +590,13 @@ input[type="text"] {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  display: none; /* Se muestra solo cuando hay texto */
+  display: none;
+  /* Se muestra solo cuando hay texto */
 }
 
-input[type="text"]:not(:placeholder-shown) + .clear-btn {
-  display: inline; /* Mostrar botón solo si el input no está vacío */
+input[type="text"]:not(:placeholder-shown)+.clear-btn {
+  display: inline;
+  /* Mostrar botón solo si el input no está vacío */
 }
 
 
@@ -559,11 +607,7 @@ input[type="text"]:not(:placeholder-shown) + .clear-btn {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.stats-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
+
 
 .stat-card {
   background-color: #ffffff;
@@ -691,4 +735,68 @@ input[type="text"]:not(:placeholder-shown) + .clear-btn {
   /* Bordes brillantes al hacer hover */
   box-shadow: 0 4px 10px rgba(0, 255, 255, 0.5);
   /* Sombra para efecto sofisticado */
+}
+
+/* Estilos para los botones de estadísticas y volver atrás */
+.btn-stats, .btn-back {
+  padding: 5px;
+  border: unset;
+  border-radius: 10px;
+  color: #16233E;
+  z-index: 1;
+  background: #F7EA53;
+  position: relative;
+  font-weight: 1000;
+  font-size: 17px;
+  -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  transition: all 250ms;
+  overflow: hidden;
+  display: inline-flex;
+  font-family: 'Trebuchet MS', 'HelveticaNeue';
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-stats::before, .btn-back::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  border-radius: 10px;
+  background-color: #16233E;
+  z-index: -1;
+  -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  transition: all 250ms;
+}
+
+.btn-stats:hover, .btn-back:hover {
+  color: #e8e8e8;
+}
+
+.btn-stats:hover::before, .btn-back:hover::before {
+  width: 100%;
+}
+
+.btn-stats span, .btn-back span {
+  margin-right: 5px; /* Espacio entre el icono y el texto */
+  transition: inherit; /* Asegura que los iconos hereden la transición de color */
+}
+
+.btn-stats:hover span, .btn-back:hover span {
+  color: #e8e8e8; /* Cambia el color del ícono al color del texto al hacer hover */
+}
+
+
+.statistics {
+  padding: 20px;
+  text-align: center;
+}
+
+.statistics canvas {
+  margin: 20px auto;
+  max-width: 600px;
 }

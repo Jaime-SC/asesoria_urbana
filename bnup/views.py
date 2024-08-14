@@ -55,3 +55,15 @@ def bnup_form(request):
         'solicitudes_correo': solicitudes_correo
     })
 
+def statistics_view(request):
+    # Lógica para calcular estadísticas basadas en los datos
+    total_memos = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Memo').count()
+    total_correos = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Correo').count()
+    # Puedes agregar más lógica para calcular otras estadísticas
+
+    context = {
+        'total_memos': total_memos,
+        'total_correos': total_correos,
+        # Añadir más datos de estadísticas aquí
+    }
+    return render(request, 'bnup/statistics.html', context)

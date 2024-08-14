@@ -1,90 +1,107 @@
+// Función para ordenar la tabla según una columna específica
 function sortTable(table, column, type, ascending) {
+    // Obtener el cuerpo de la tabla y todas las filas
     const tbody = table.tBodies[0];
     const rows = Array.from(tbody.querySelectorAll('tr'));
 
+    // Función para comparar las filas basadas en el tipo de datos (número, fecha, texto)
     const compareFunction = (rowA, rowB) => {
-        const cellA = rowA.cells[column].innerText.trim();
-        const cellB = rowB.cells[column].innerText.trim();
+        const cellA = rowA.cells[column].innerText.trim(); // Obtener el valor de la celda de la fila A
+        const cellB = rowB.cells[column].innerText.trim(); // Obtener el valor de la celda de la fila B
 
         let a, b;
         switch (type) {
             case 'number':
-                a = parseFloat(cellA) || 0;
+                a = parseFloat(cellA) || 0; // Convertir a número
                 b = parseFloat(cellB) || 0;
                 break;
             case 'date':
-                // Parse date in 'dd/mm/yyyy' format
+                // Convertir la fecha al formato 'yyyy/mm/dd' para comparación
                 a = cellA.split('/').reverse().join('');
                 b = cellB.split('/').reverse().join('');
                 break;
             default:
-                a = cellA.toLowerCase();
+                a = cellA.toLowerCase(); // Convertir a minúsculas para comparación de texto
                 b = cellB.toLowerCase();
                 break;
         }
 
+        // Retornar la comparación, ajustando para orden ascendente o descendente
         if (a < b) return ascending ? -1 : 1;
         if (a > b) return ascending ? 1 : -1;
         return 0;
     };
 
+    // Ordenar las filas usando la función de comparación
     rows.sort(compareFunction);
 
+    // Reinsertar las filas ordenadas en el cuerpo de la tabla
     rows.forEach(row => tbody.appendChild(row));
 
-    // After sorting, reset the pagination to start from the first page
+    // Después de ordenar, resetear la paginación para empezar desde la primera página
     updatePaginationAfterSort(table, column);
 }
 
+// Función para actualizar la paginación después de ordenar la tabla
 function updatePaginationAfterSort(table, column) {
     const paginationId = table.id === 'tablaSolicitudesMemo' ? 'paginationMemo' : 'paginationCorreo';
-    const rowsPerPage = 5; // Set the number of rows per page
-    paginateTable(table.id, paginationId, rowsPerPage);
+    const rowsPerPage = 6; // Número de filas por página
+    paginateTable(table.id, paginationId, rowsPerPage); // Volver a paginar la tabla
 }
 
+// Función para adjuntar los controladores de eventos de ordenación a los encabezados de la tabla
 function attachSortHandlers(tableId) {
     const table = document.getElementById(tableId);
     if (!table) return;
 
     const headers = table.querySelectorAll('thead th');
     headers.forEach((header, index) => {
-        let ascending = true; // Start with ascending order
+        let ascending = true; // Empezar con el orden ascendente
         header.addEventListener('click', function () {
             const type = header.getAttribute('data-type');
 
-            // Clear previous sort indicators
+            // Limpiar los indicadores de ordenación anteriores
             headers.forEach(h => h.classList.remove('ascending', 'descending'));
 
-            // Sort the table and toggle the direction
+            // Ordenar la tabla y alternar la dirección
             sortTable(table, index, type, ascending);
             header.classList.add(ascending ? 'ascending' : 'descending');
-            ascending = !ascending; // Toggle the sort direction for next click
+            ascending = !ascending; // Alternar la dirección de ordenación para el siguiente clic
         });
     });
 }
 
+// Función para manejar la paginación de la tabla
 function paginateTable(tableId, paginationId, rowsPerPage) {
     const table = document.getElementById(tableId);
     const pagination = document.getElementById(paginationId);
-    if (!table || !pagination) return; // Exit if table or pagination element is not found
+    if (!table || !pagination) return; // Salir si la tabla o la paginación no se encuentran
 
     const rows = Array.from(table.querySelectorAll('tbody tr'));
     let currentPage = 1;
-    let filteredRows = rows; // Start with all rows visible
+    let filteredRows = rows; // Iniciar con todas las filas visibles
 
+    // Función para mostrar las filas de la página actual
     function displayRows(page) {
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
 
-        rows.forEach((row, index) => {
-            row.style.display = (filteredRows.includes(row) && index >= start && index < end) ? '' : 'none';
+        // Mostrar solo las filas filtradas
+        rows.forEach(row => {
+            row.style.display = 'none'; // Ocultar todas las filas inicialmente
+        });
+
+        filteredRows.slice(start, end).forEach(row => {
+            row.style.display = ''; // Mostrar solo las filas de la página actual
         });
     }
 
+    // Función para configurar los botones de paginación
     function setupPagination() {
         const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
-        pagination.innerHTML = ''; // Clear existing pagination
+        pagination.innerHTML = ''; // Limpiar la paginación existente
 
+        // Botón para ir a la página anterior
         const prevButton = document.createElement('button');
         prevButton.innerHTML = '<span class="material-symbols-outlined">arrow_back_2</span>';
         prevButton.className = 'page-btn prev';
@@ -98,6 +115,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         });
         pagination.appendChild(prevButton);
 
+        // Crear botones para cada página
         for (let i = 1; i <= pageCount; i++) {
             const pageButton = document.createElement('button');
             pageButton.textContent = i;
@@ -113,6 +131,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
             pagination.appendChild(pageButton);
         }
 
+        // Botón para ir a la página siguiente
         const nextButton = document.createElement('button');
         nextButton.innerHTML = '<span class="material-symbols-outlined">play_arrow</span>';
         nextButton.className = 'page-btn next';
@@ -127,6 +146,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         pagination.appendChild(nextButton);
     }
 
+    // Función para actualizar el estado de los botones de paginación
     function updatePaginationButtons() {
         const pageButtons = pagination.querySelectorAll('.page-btn');
         pageButtons.forEach(btn => btn.classList.remove('active', 'highlight'));
@@ -137,18 +157,22 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         pagination.querySelector('.next').disabled = currentPage === Math.ceil(filteredRows.length / rowsPerPage);
     }
 
+    // Función para actualizar la paginación después de una búsqueda
     function updatePaginationAfterSearch() {
-        currentPage = 1; // Reset to the first page after search
+        currentPage = 1; // Resetear a la primera página después de la búsqueda
         setupPagination();
         displayRows(currentPage);
     }
 
+    // Función para buscar en la tabla
     function searchTable(searchInputId) {
         const input = document.getElementById(searchInputId);
         if (!input) return;
 
         input.addEventListener('input', function () {
             const filter = input.value.toLowerCase();
+            
+            // Realizar búsqueda en todas las filas
             filteredRows = rows.filter(row => {
                 const cells = Array.from(row.getElementsByTagName('td'));
                 return cells.some(cell => cell.innerText.toLowerCase().includes(filter));
@@ -156,7 +180,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
 
             updatePaginationAfterSearch();
 
-            // Highlight the next button if there are more than one page of filtered results
+            // Resaltar el botón de siguiente si hay más de una página de resultados filtrados
             const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
             if (pageCount > 1) {
                 pagination.querySelector('.next').classList.add('highlight');
@@ -166,15 +190,17 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         });
     }
 
+    // Inicializar la búsqueda en la tabla
     searchTable(tableId === 'tablaSolicitudesMemo' ? 'searchMemo' : 'searchCorreo');
     displayRows(currentPage);
     setupPagination();
 }
 
+// Ejecutar las funciones de ordenación y paginación cuando el contenido esté cargado
 document.addEventListener('DOMContentLoaded', function () {
     attachSortHandlers('tablaSolicitudesMemo');
     attachSortHandlers('tablaSolicitudesCorreo');
 
-    paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
-    paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
+    paginateTable('tablaSolicitudesMemo', 'paginationMemo', 6);
+    paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 6);
 });

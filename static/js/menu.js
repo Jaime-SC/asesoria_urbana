@@ -18,9 +18,27 @@ document.addEventListener('DOMContentLoaded', function () {
         attachSortHandlers('tablaSolicitudesCorreo');
 
         // Initialize pagination and search for both tables
-        paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
-        paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
-        
+        paginateTable('tablaSolicitudesMemo', 'paginationMemo', 6);
+        paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 6);
+
+        // Add event listener for the statistics button after content is loaded
+        const statsButton = document.getElementById('statisticsButton');
+        if (statsButton) {
+          statsButton.addEventListener('click', function () {
+            loadContent('/bnup/statistics/'); // Load statistics content dynamically
+          });
+        }
+
+        // Add event listener for the back button to BNUP after content is loaded
+        const backButton = document.getElementById('backToBNUP');
+        if (backButton) {
+          backButton.addEventListener('click', function () {
+            const bnupLink = document.querySelector('a[data-content="BNUP"]');
+            if (bnupLink) {
+              bnupLink.click(); // Simulate click on BNUP menu item
+            }
+          });
+        }
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
