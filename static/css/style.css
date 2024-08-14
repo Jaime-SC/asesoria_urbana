@@ -794,9 +794,37 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 .statistics {
   padding: 20px;
   text-align: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto; /* Centra la sección de estadísticas */
+}
+
+.tittleStatistics {
+  display: flex;
+  justify-content: space-between; /* Coloca el título a la izquierda y el botón a la derecha */
+  align-items: center; /* Centra verticalmente el contenido */
+  margin-bottom: 20px; /* Espacio debajo del título */
+}
+
+.divStatistics {
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  gap: 20px; /* Espacio entre los gráficos */
+}
+
+.containerStatistics {
+  background-color: #C9E8F4;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .statistics canvas {
-  margin: 20px auto;
-  max-width: 600px;
+  max-width: 100%;
+  height: auto;
+  margin-top: 20px;
 }
+

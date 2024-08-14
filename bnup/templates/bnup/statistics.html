@@ -1,11 +1,37 @@
 <div class="cardContent">
   <div class="card-details">
     <div class="statistics">
-      <h2>Estadísticas de Solicitudes</h2>
-      <p>Total de solicitudes por Memo: {{ total_memos }}</p>
-      <p>Total de solicitudes por Correo: {{ total_correos }}</p>
-      <!-- Agregar más estadísticas aquí -->
-      <button id="backToBNUP" class="btn-back"><span class="material-symbols-outlined">arrow_back</span> Volver a BNUP</button>
+      <div class="tittleStatistics">
+        <h2>Estadísticas de Solicitudes</h2>
+        <button id="backToBNUP" class="btn-back"><span class="material-symbols-outlined">arrow_back</span> Volver a BNUP</button>
+      </div>
+      <div class="divStatistics">
+        <!-- Gráfico de solicitudes por departamento -->
+        <div class="containerStatistics">
+          <p id="solicitudesPorDepto" style="display:none;">{{ solicitudes_por_depto|safe }}</p>
+          <canvas id="deptoChart"></canvas>
+        </div>
+        <!-- Gráfico de solicitudes por funcionario -->
+        <div class="containerStatistics">
+          <p id="solicitudesPorFuncionario" style="display:none;">{{ solicitudes_por_funcionario|safe }}</p>
+          <canvas id="funcionarioChart"></canvas>
+        </div>
+        <!-- Gráfico de solicitudes por fecha -->
+        <div class="containerStatistics">
+          <p id="solicitudesPorFecha" style="display:none;">{{ solicitudes_por_fecha|safe }}</p>
+          <canvas id="fechaChart"></canvas>
+        </div>
+        <!-- Gráfico de solicitudes por tipo -->
+        <div class="containerStatistics">
+          <p id="solicitudesPorTipo" style="display:none;">{{ solicitudes_por_tipo|safe }}</p>
+          <canvas id="tipoChart"></canvas>
+        </div>
+        <!-- Gráfico del promedio de número de ingreso por departamento -->
+        <div class="containerStatistics">
+          <p id="promedioPorDepto" style="display:none;">{{ promedio_por_depto|safe }}</p>
+          <canvas id="promedioChart"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 </div>

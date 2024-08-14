@@ -180,13 +180,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
 
             updatePaginationAfterSearch();
 
-            // Resaltar el botón de siguiente si hay más de una página de resultados filtrados
-            const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
-            if (pageCount > 1) {
-                pagination.querySelector('.next').classList.add('highlight');
-            } else {
-                pagination.querySelector('.next').classList.remove('highlight');
-            }
+            
         });
     }
 

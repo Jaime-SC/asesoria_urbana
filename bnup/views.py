@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect
 from .models import SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
 from django.contrib import messages
+from django.db.models import Count, Avg
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
 def bnup_form(request):
     if request.method == 'POST':
@@ -56,14 +59,18 @@ def bnup_form(request):
     })
 
 def statistics_view(request):
-    # Lógica para calcular estadísticas basadas en los datos
-    total_memos = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Memo').count()
-    total_correos = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Correo').count()
-    # Puedes agregar más lógica para calcular otras estadísticas
+    # Cálculo de estadísticas basadas en los datos
+    solicitudes_por_depto = SolicitudBNUP.objects.values('depto_solicitante__nombre').annotate(total=Count('id'))
+    solicitudes_por_funcionario = SolicitudBNUP.objects.values('funcionario_asignado__nombre').annotate(total=Count('id'))
+    solicitudes_por_fecha = SolicitudBNUP.objects.extra(select={'fecha': 'DATE(fecha_ingreso)'}).values('fecha').annotate(total=Count('id'))
+    solicitudes_por_tipo = SolicitudBNUP.objects.values('tipo_recepcion__tipo').annotate(total=Count('id'))
+    promedio_por_depto = SolicitudBNUP.objects.values('depto_solicitante__nombre').annotate(promedio=Avg('numero_ingreso'))
 
-    context = {
-        'total_memos': total_memos,
-        'total_correos': total_correos,
-        # Añadir más datos de estadísticas aquí
+    context = {        
+        'solicitudes_por_depto': json.dumps({item['depto_solicitante__nombre']: item['total'] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
+        'solicitudes_por_funcionario': json.dumps({item['funcionario_asignado__nombre']: item['total'] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),
+        'solicitudes_por_fecha': json.dumps({item['fecha'].strftime('%Y-%m-%d'): item['total'] for item in solicitudes_por_fecha}, cls=DjangoJSONEncoder),
+        'solicitudes_por_tipo': json.dumps({item['tipo_recepcion__tipo']: item['total'] for item in solicitudes_por_tipo}, cls=DjangoJSONEncoder),
+        'promedio_por_depto': json.dumps({item['depto_solicitante__nombre']: round(item['promedio'], 2) for item in promedio_por_depto}, cls=DjangoJSONEncoder),
     }
     return render(request, 'bnup/statistics.html', context)
