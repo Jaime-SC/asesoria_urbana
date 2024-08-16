@@ -59,18 +59,35 @@ def bnup_form(request):
     })
 
 def statistics_view(request):
-    # Cálculo de estadísticas basadas en los datos
+    # Lógica para calcular estadísticas basadas en los datos
+    
     solicitudes_por_depto = SolicitudBNUP.objects.values('depto_solicitante__nombre').annotate(total=Count('id'))
-    solicitudes_por_funcionario = SolicitudBNUP.objects.values('funcionario_asignado__nombre').annotate(total=Count('id'))
-    solicitudes_por_fecha = SolicitudBNUP.objects.extra(select={'fecha': 'DATE(fecha_ingreso)'}).values('fecha').annotate(total=Count('id'))
-    solicitudes_por_tipo = SolicitudBNUP.objects.values('tipo_recepcion__tipo').annotate(total=Count('id'))
-    promedio_por_depto = SolicitudBNUP.objects.values('depto_solicitante__nombre').annotate(promedio=Avg('numero_ingreso'))
+    solicitudes_por_funcionario = SolicitudBNUP.objects.values('funcionario_asignado__nombre').annotate(total=Count('id'))    
+    solicitudes_por_tipo = SolicitudBNUP.objects.values('tipo_recepcion__tipo').annotate(total=Count('id'))    
+    solicitudes_por_anio = SolicitudBNUP.objects.extra(select={'anio': "EXTRACT(YEAR FROM fecha_ingreso)"}).values('anio').annotate(total=Count('id'))
+
+    # Nueva estadística: Solicitudes por mes
+    solicitudes_por_mes = SolicitudBNUP.objects.extra(select={'mes': "EXTRACT(MONTH FROM fecha_ingreso)"}).values('mes').annotate(total=Count('id'))
+
+    # Nueva estadística 1
+    solicitudes_por_dia_semana = SolicitudBNUP.objects.extra(select={'dia_semana': "EXTRACT(DOW FROM fecha_ingreso)"}).values('dia_semana').annotate(total=Count('id'))
+
+    # Nueva estadística: Solicitudes por Año y Mes
+    # solicitudes_por_anio_mes = SolicitudBNUP.objects.extra(select={'anio_mes': "TO_CHAR(fecha_ingreso, 'YYYY-MM')"}).values('anio_mes').annotate(total=Count('id'))
+
+    
+
+
+
 
     context = {        
         'solicitudes_por_depto': json.dumps({item['depto_solicitante__nombre']: item['total'] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
-        'solicitudes_por_funcionario': json.dumps({item['funcionario_asignado__nombre']: item['total'] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),
-        'solicitudes_por_fecha': json.dumps({item['fecha'].strftime('%Y-%m-%d'): item['total'] for item in solicitudes_por_fecha}, cls=DjangoJSONEncoder),
+        'solicitudes_por_funcionario': json.dumps({item['funcionario_asignado__nombre']: item['total'] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),        
         'solicitudes_por_tipo': json.dumps({item['tipo_recepcion__tipo']: item['total'] for item in solicitudes_por_tipo}, cls=DjangoJSONEncoder),
-        'promedio_por_depto': json.dumps({item['depto_solicitante__nombre']: round(item['promedio'], 2) for item in promedio_por_depto}, cls=DjangoJSONEncoder),
+        'solicitudes_por_anio': json.dumps({str(int(item['anio'])): item['total'] for item in solicitudes_por_anio}, cls=DjangoJSONEncoder),
+        'solicitudes_por_mes': json.dumps({str(int(item['mes'])): item['total'] for item in solicitudes_por_mes}, cls=DjangoJSONEncoder),
+        'solicitudes_por_dia_semana': json.dumps({str(int(item['dia_semana'])): item['total'] for item in solicitudes_por_dia_semana}, cls=DjangoJSONEncoder),
+        
+        # 'solicitudes_por_anio_mes': json.dumps({item['anio_mes']: item['total'] for item in solicitudes_por_anio_mes}, cls=DjangoJSONEncoder),
     }
     return render(request, 'bnup/statistics.html', context)

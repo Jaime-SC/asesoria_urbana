@@ -2,10 +2,15 @@
   <div class="card-details">
     <div class="statistics">
       <div class="tittleStatistics">
-        <h2>Estadísticas de Solicitudes</h2>
         <button id="backToBNUP" class="btn-back"><span class="material-symbols-outlined">arrow_back</span> Volver a BNUP</button>
+        <h2>Estadísticas de Solicitudes</h2>
       </div>
       <div class="divStatistics">
+        <!-- Gráfico de solicitudes por tipo de recepción -->
+        <div class="containerStatistics">
+          <p id="solicitudesPorTipo" style="display:none;">{{ solicitudes_por_tipo|safe }}</p>
+          <canvas id="tipoChart"></canvas>
+        </div>
         <!-- Gráfico de solicitudes por departamento -->
         <div class="containerStatistics">
           <p id="solicitudesPorDepto" style="display:none;">{{ solicitudes_por_depto|safe }}</p>
@@ -16,21 +21,30 @@
           <p id="solicitudesPorFuncionario" style="display:none;">{{ solicitudes_por_funcionario|safe }}</p>
           <canvas id="funcionarioChart"></canvas>
         </div>
-        <!-- Gráfico de solicitudes por fecha -->
+        <!-- Gráfico de solicitudes por día de la semana -->
         <div class="containerStatistics">
-          <p id="solicitudesPorFecha" style="display:none;">{{ solicitudes_por_fecha|safe }}</p>
-          <canvas id="fechaChart"></canvas>
+          <p id="solicitudesPorDiaSemana" style="display:none;">{{ solicitudes_por_dia_semana|safe }}</p>
+          <canvas id="diaSemanaChart"></canvas>
         </div>
-        <!-- Gráfico de solicitudes por tipo -->
+        <!-- Gráfico de solicitudes por mes -->
         <div class="containerStatistics">
-          <p id="solicitudesPorTipo" style="display:none;">{{ solicitudes_por_tipo|safe }}</p>
-          <canvas id="tipoChart"></canvas>
+          <p id="solicitudesPorMes" style="display:none;">{{ solicitudes_por_mes|safe }}</p>
+          <canvas id="mesChart"></canvas>
         </div>
-        <!-- Gráfico del promedio de número de ingreso por departamento -->
+
+        <!-- Gráfico de solicitudes por año -->
         <div class="containerStatistics">
-          <p id="promedioPorDepto" style="display:none;">{{ promedio_por_depto|safe }}</p>
-          <canvas id="promedioChart"></canvas>
+          <p id="solicitudesPorAnio" style="display:none;">{{ solicitudes_por_anio|safe }}</p>
+          <canvas id="anioChart"></canvas>
         </div>
+
+        <!-- Gráfico de solicitudes por año y mes -->
+        <!--  
+        <div class="containerStatistics">
+          <p id="solicitudesPorAnioMes" style="display:none;">{{ solicitudes_por_anio_mes|safe }}</p>
+          <canvas id="anioMesChart"></canvas>
+        </div>
+        -->
       </div>
     </div>
   </div>
