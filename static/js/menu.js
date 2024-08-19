@@ -3,9 +3,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function highlightMenuOption(selectedElement) {
     document.querySelectorAll('a[data-content]').forEach(item => {
-      item.classList.remove('selected'); // Elimina la clase 'selected' de todos los elementos del menú
+      item.classList.remove('selected', 'selected-login'); // Elimina la clase 'selected' y 'selected-login' de todos los elementos del menú
     });
-    selectedElement.classList.add('selected'); // Agrega la clase 'selected' al elemento seleccionado
+
+    if (selectedElement.getAttribute('data-content') === 'login') {
+      selectedElement.classList.add('selected-login'); // Aplica la clase 'selected-login' si es la opción de login
+    } else {
+      selectedElement.classList.add('selected'); // Aplica la clase 'selected' para otras opciones
+    }
   }
 
   function loadContent(url, callback) {
@@ -46,8 +51,24 @@ document.addEventListener('DOMContentLoaded', function () {
             }
           });
         }
+
+        const backToInicioButton = document.getElementById('backToInicio');
+        if (backToInicioButton) {
+          backToInicioButton.addEventListener('click', function () {
+            loadContent('/inicio/', function() {
+              removeSelectedLogin(); // Remover la clase 'selected-login' cuando se regresa al inicio
+            }); // Cargar el contenido de inicio.html dinámicamente
+          });
+        }
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
+  }
+
+  function removeSelectedLogin() {
+    const loginLink = document.querySelector('a[data-content="login"]');
+    if (loginLink) {
+      loginLink.classList.remove('selected-login'); // Remueve la clase 'selected-login' del enlace de login
+    }
   }
 
   function changeCardDetailsBgColor(color) {
@@ -78,7 +99,8 @@ document.addEventListener('DOMContentLoaded', function () {
     'InformeTerreno': '/informe_terreno/',
     'Inicio': '/inicio/',
     'PortalTransparencia': '/portal_transparencia/',
-    'mapoteca': '/mapoteca/'
+    'mapoteca': '/mapoteca/',
+    'login': '/login/' // Añadir la ruta para el login
   };
 
   Object.entries(menuItems).forEach(([key, url]) => {
@@ -103,5 +125,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (window.redirectToBNUP) {
     sessionStorage.setItem('redirectToBNUP', 'true');
+  }
+
+  // Agregar evento para cargar la página de login dinámicamente
+  const loginLink = document.querySelector('a[data-content="login"]');
+  if (loginLink) {
+    loginLink.addEventListener('click', function (event) {
+      event.preventDefault();
+      loadContent('/login/'); // Cargar el contenido de login.html
+    });
   }
 });

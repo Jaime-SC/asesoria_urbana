@@ -334,6 +334,7 @@ input[type="text"],
 input[type="date"],
 input[type="number"],
 input[type="email"],
+input[type="password"],
 textarea,
 select {
   width: 100%;
@@ -741,6 +742,17 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   /* Sombra para efecto sofisticado */
 }
 
+.selected-login {  
+  background: rgba(0, 255, 255, 0.5);
+  font-weight: bold;
+  /* Cambia el color del texto al pasar el ratón */
+  border-color: rgba(0, 255, 255, 0.7);
+  /* Bordes brillantes al hacer hover */
+  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.5);
+  padding: 5px;
+  border-radius: 10px;
+}
+
 /* Estilos para los botones de estadísticas y volver atrás */
 .btn-stats, .btn-back {
   padding: 5px;
@@ -875,4 +887,12 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   height: 100%;
   font-size: 20px;
   font-weight: 900;
+}
+
+.login-container {
+  display: flex;
+  height: -webkit-fill-available;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }

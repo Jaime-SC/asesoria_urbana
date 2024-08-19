@@ -16,3 +16,6 @@ def portal_transparencia(request):
 
 def mapoteca(request):
     return render(request, 'mapoteca.html')
+
+def login(request):
+    return render(request, 'login.html')

@@ -30,6 +30,9 @@ urlpatterns = [
     path('portal_transparencia/', views.portal_transparencia, name='portal_transparencia'),
     path('mapoteca/', views.mapoteca, name='mapoteca'),
 
+    path('login/', views.login, name='login'),
+
+
 
 ]
 

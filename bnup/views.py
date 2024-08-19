@@ -75,11 +75,6 @@ def statistics_view(request):
     # Nueva estadística: Solicitudes por Año y Mes
     # solicitudes_por_anio_mes = SolicitudBNUP.objects.extra(select={'anio_mes': "TO_CHAR(fecha_ingreso, 'YYYY-MM')"}).values('anio_mes').annotate(total=Count('id'))
 
-    
-
-
-
-
     context = {        
         'solicitudes_por_depto': json.dumps({item['depto_solicitante__nombre']: item['total'] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
         'solicitudes_por_funcionario': json.dumps({item['funcionario_asignado__nombre']: item['total'] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),        
