@@ -35,7 +35,19 @@
 
         <h1 class="tittle">Departamento de Asesoría Urbana</h1>
 
-        <a class="user" href="{% url 'login' %}" data-content="login"><span class="material-symbols-outlined">badge</span><p>Login</p></a>
+        <div class="user">
+          {% if user.is_authenticated %}
+            <span class="material-symbols-outlined">account_circle</span>
+            <p>{{ user.username }}</p>
+            <a href="{% url 'logout' %}">Cerrar Sesión</a>
+          {% else %}
+            <a class="user" href="{% url 'login' %}" data-content="login">
+              <span class="material-symbols-outlined">badge</span>
+              <p>login</p>
+            </a>
+          {% endif %}
+        </div>
+        
 
       </div>
       {% block content %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %} 
 {% block title %}
-  Asesoria Urbana
+  Asesoría Urbana
 {% endblock %}
 {% block content %}
   <div class="contenido">
@@ -28,6 +28,57 @@
     </div>
     <div class="contentMenu" id="contentMenu" style="border-radius: 0px 0px 10px 0"></div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const showAlert = '{{ request.session.show_sweetalert|default_if_none:"" }}';
+
+      // Mostrar alertas de SweetAlert si es necesario
+      if (showAlert === 'login_success') {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Has iniciado sesión correctamente.',
+          showConfirmButton: false,
+          timer: 2000
+        });
+      } else if (showAlert === 'logout_success') {
+        Swal.fire({
+          icon: 'info',
+          title: '¡Éxito!',
+          text: 'Has cerrado sesión correctamente.',
+          showConfirmButton: false,
+          timer: 2000
+        });
+      }
+
+      // Marcar la opción "Inicio" como seleccionada y cargar su contenido
+      const inicioLink = document.querySelector('a[data-content="Inicio"]');
+      if (inicioLink) {
+        inicioLink.classList.add('selected');  // Añade la clase 'selected' para resaltar la opción "Inicio"
+        // Cargar el contenido de la página de inicio de forma dinámica
+        fetch('/inicio/')
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById('contentMenu').innerHTML = data;
+          });
+      }
+
+      // Limpiar la señal de la sesión para evitar que la alerta se muestre nuevamente al actualizar
+      {% if request.session.show_sweetalert %}
+        fetch("{% url 'home' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+          },
+          body: JSON.stringify({ clear_sweetalert: true })
+        });
+      {% endif %}
+    });
+  </script>
+
   {% if redirect_to_bnup %}
     <script>
       window.redirectToBNUP = true;

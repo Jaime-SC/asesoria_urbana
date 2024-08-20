@@ -31,6 +31,7 @@ urlpatterns = [
     path('mapoteca/', views.mapoteca, name='mapoteca'),
 
     path('login/', views.login, name='login'),
+    path('logout/', views.logout, name='logout'),  # Nueva ruta para cerrar sesión
 
 
 
