@@ -17,6 +17,7 @@ def bnup_form(request):
         fecha_ingreso = request.POST.get('fecha_ingreso')
         funcionario_asignado_id = request.POST.get('funcionario_asignado')
         descripcion = request.POST.get('descripcion')
+        archivo_adjunto = request.FILES.get('archivo_adjunto_ingreso')  # Obtener el archivo adjunto desde request.FILES
 
         # Verificar que el ID de tipo de recepción es válido
         try:
@@ -34,9 +35,11 @@ def bnup_form(request):
                 numero_ingreso=numero_ingreso,
                 fecha_ingreso=fecha_ingreso,
                 funcionario_asignado=funcionario_asignado,
-                descripcion=descripcion
+                descripcion=descripcion,
+                archivo_adjunto_ingreso=archivo_adjunto  # Guardar el archivo adjunto
             )
-            solicitud.save()            
+            solicitud.save()
+            messages.success(request, 'Solicitud creada con éxito.')
             request.session['redirect_to_bnup'] = True  # Set a session flag
             return redirect('home')
         except Exception as e:

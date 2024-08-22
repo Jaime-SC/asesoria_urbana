@@ -6,7 +6,7 @@
 
       <div class="form-container">
         <!-- Formulario para ingresar nuevas solicitudes -->
-        <form id="bnupForm" method="post" action="{% url 'bnup_form' %}">
+        <form id="bnupForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
           {% csrf_token %}
           <h2>Solicitud de BNUP</h2>
           <div class="form-group" style="display: flex;">
@@ -26,6 +26,17 @@
               <input type="email" name="correo_solicitante" id="correoSolicitante" />
             </div>
           </div>
+          <div class="form-group" style="display: flex;">
+            <div>
+              <label for="numeroIngreso">N° de Ingreso</label>
+              <input type="number" name="numero_ingreso" id="numeroIngreso" required />
+            </div>
+            <div>
+              <label>Adjuntar archivo</label>
+              <label for="archivo_adjunto" class="custom-file-label">Seleccionar archivo</label>
+              <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="custom-file-input" />
+            </div>
+          </div>          
           <div class="form-group">
             <label for="depto_solicitante">Departamento Solicitante</label>
             <select style="height: max-content;" name="depto_solicitante" id="depto_solicitante" required>
@@ -38,10 +49,6 @@
           <div class="form-group">
             <label for="nombreSolicitante">Nombre del Solicitante</label>
             <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" required />
-          </div>
-          <div class="form-group">
-            <label for="numeroIngreso">N° de Ingreso</label>
-            <input type="number" name="numero_ingreso" id="numeroIngreso" required />
           </div>
           <div class="form-group">
             <label for="fecha">Fecha</label>
@@ -80,7 +87,10 @@
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
-              <th class="shadow" data-type="string">Funcionario <br />Asignado</th>
+              <th class="shadow" data-type="string">
+                Funcionario <br />Asignado
+              </th>
+              <th class="shadow" data-type="string">Archivo Adjunto</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -92,6 +102,13 @@
                 <td>{{ solicitud.nombre_solicitante }}</td>
                 <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+                <td>
+                  {% if solicitud.archivo_adjunto_ingreso %}
+                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank">Ver archivo</a>
+                  {% else %}
+                    Sin archivo
+                  {% endif %}
+                </td>
               </tr>
             {% empty %}
               <tr>
@@ -121,6 +138,7 @@
               <th class="shadow" data-type="string">
                 Funcionario <br />Asignado
               </th>
+              <th class="shadow" data-type="string">Archivo Adjunto</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -132,6 +150,13 @@
                 <td>{{ solicitud.nombre_solicitante }}</td>
                 <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+                <td>
+                  {% if solicitud.archivo_adjunto_ingreso %}
+                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank">Ver archivo</a>
+                  {% else %}
+                    Sin archivo
+                  {% endif %}
+                </td>
               </tr>
             {% empty %}
               <tr>

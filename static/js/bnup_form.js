@@ -28,3 +28,15 @@ document.addEventListener('DOMContentLoaded', function () {
         updateBNUPFields();
     }
 });
+
+$(document).ready(function() {
+    $("#archivo_adjunto").fileinput({
+        showUpload: false, // Oculta el botón de subir archivos (solo selecciona archivos)
+        showPreview: false, // Oculta la previsualización de la imagen
+        browseClass: "btn btn-primary", // Estilo del botón de selección
+        browseLabel: "Seleccionar archivo",
+        removeLabel: "Eliminar",
+        removeClass: "btn btn-danger",
+        language: "es", // Establece el idioma a español
+    });
+});

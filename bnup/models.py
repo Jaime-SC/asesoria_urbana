@@ -28,6 +28,7 @@ class SolicitudBNUP(models.Model):
     fecha_ingreso = models.DateField()
     funcionario_asignado = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
     descripcion = models.TextField(null=True, blank=True)
+    archivo_adjunto_ingreso = models.FileField(upload_to='archivos_adjuntos/', null=True, blank=True)  # Nuevo campo
 
     def __str__(self):
         return f"{self.nombre_solicitante} - {self.tipo_recepcion.tipo}"
