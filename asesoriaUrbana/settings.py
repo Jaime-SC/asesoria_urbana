@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-5(wfab=m_naze95+ul1w4v^1oe(1peg_h=8dk4#bsohf963$4c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '8afd-200-50-126-98.ng']
+ALLOWED_HOSTS = ['*', '8afd-200-50-126-98.ng','192.168.12.80']
 
 
 # Application definition
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',    
+    'django.contrib.staticfiles',
     'principal',
     'bnup',
     'patente_alcohol',
@@ -82,8 +82,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'asesoria_urbana',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
+        'USER': 'asesoria_urbana',
+        'PASSWORD': 'asesoria_urbana_2024',
         'HOST': 'localhost',
         'PORT': '5432',
     }
