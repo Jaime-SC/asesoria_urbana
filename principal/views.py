@@ -33,7 +33,7 @@ def login(request):
 
         if user is not None:
             auth_login(request, user)
-            messages.success(request, 'Has iniciado sesión correctamente.')
+            # messages.success(request, 'Has iniciado sesión correctamente.')
             request.session['show_sweetalert'] = 'login_success'
             return redirect('home')
         else:
@@ -43,7 +43,7 @@ def login(request):
 
 def logout(request):
     auth_logout(request)
-    messages.success(request, 'Has cerrado sesión correctamente.')
+    # messages.success(request, 'Has cerrado sesión correctamente.')
     request.session['show_sweetalert'] = 'logout_success'
     return redirect('home')
 

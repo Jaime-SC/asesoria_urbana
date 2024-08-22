@@ -896,3 +896,82 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   justify-content: center;
   align-items: center;
 }
+
+
+/* From Uiverse.io by vinodjangid07 */ 
+.buttonLogin {
+  width: 140px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 10px;
+  background: #f7ea53;
+  border-radius: 10px;
+  color: #16233E;
+  font-weight: 600;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  transition-duration: .2s;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.116);
+}
+
+.buttonLogout {
+  background: #E73C45;
+  color: ghostwhite;
+
+}
+
+.buttonLogout:hover {
+  background: #f9857f !important;  
+}
+
+.bell {
+  width: 13px;
+}
+
+.bell path {
+  fill: rgb(255, 255, 255);
+}
+
+.buttonLogin:hover {
+  background: #fef191;
+}
+
+.buttonLogin:active {
+  transform: scale(0.97);
+  transition-duration: .2s;
+}
+
+.buttonLogin:hover .bell {
+  animation: bellRing 0.9s both;
+}
+
+/* bell ringing animation keyframes*/
+@keyframes bellRing {
+  0%,
+  100% {
+    transform-origin: top;
+  }
+
+  15% {
+    transform: rotateZ(10deg);
+  }
+
+  30% {
+    transform: rotateZ(-10deg);
+  }
+
+  45% {
+    transform: rotateZ(5deg);
+  }
+
+  60% {
+    transform: rotateZ(-5deg);
+  }
+
+  75% {
+    transform: rotateZ(2deg);
+  }
+}

@@ -9,9 +9,11 @@
         <li>
           <a href="#" data-content="Inicio">Inicio</a>
         </li>
-        <li>
-          <a href="{% url 'bnup_form' %}" data-content="BNUP">BNUP</a>
-        </li>
+        {% if user.is_authenticated %}
+          <li>
+            <a href="{% url 'bnup_form' %}" data-content="BNUP">BNUP</a>
+          </li>
+        {% endif %}
         <li>
           <a href="{% url 'patente_form' %}" data-content="PatenteAlcohol">Patente de Alcohol</a>
         </li>

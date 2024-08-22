@@ -104,11 +104,14 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   Object.entries(menuItems).forEach(([key, url]) => {
-    document.querySelector(`a[data-content="${key}"]`).addEventListener('click', function (event) {
-      event.preventDefault();
-      highlightMenuOption(this);
-      loadContent(url, key === 'BNUP' ? updateBNUPFields : null);
-    });
+    const menuLink = document.querySelector(`a[data-content="${key}"]`);
+    if (menuLink) {
+      menuLink.addEventListener('click', function (event) {
+        event.preventDefault();
+        highlightMenuOption(this);
+        loadContent(url, key === 'BNUP' ? updateBNUPFields : null);
+      });
+    }
   });
 
   loadContent('/inicio/', function () {
