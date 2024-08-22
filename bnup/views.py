@@ -36,8 +36,7 @@ def bnup_form(request):
                 funcionario_asignado=funcionario_asignado,
                 descripcion=descripcion
             )
-            solicitud.save()
-            messages.success(request, 'Solicitud creada con éxito.')
+            solicitud.save()            
             request.session['redirect_to_bnup'] = True  # Set a session flag
             return redirect('home')
         except Exception as e:
