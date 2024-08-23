@@ -1,15 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
-  let originalBgColor = ''; // Cambia 'const' a 'let' para permitir la reasignación
+  let originalBgColor = '';
 
   function highlightMenuOption(selectedElement) {
     document.querySelectorAll('a[data-content]').forEach(item => {
-      item.classList.remove('selected', 'selected-login'); // Elimina la clase 'selected' y 'selected-login' de todos los elementos del menú
+      item.classList.remove('selected', 'selected-login');
     });
 
     if (selectedElement.getAttribute('data-content') === 'login') {
-      selectedElement.classList.add('selected-login'); // Aplica la clase 'selected-login' si es la opción de login
+      selectedElement.classList.add('selected-login');
     } else {
-      selectedElement.classList.add('selected'); // Aplica la clase 'selected' para otras opciones
+      selectedElement.classList.add('selected');
     }
   }
 
@@ -20,13 +20,14 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('contentMenu').innerHTML = data;
         if (typeof callback === 'function') callback();
 
+        // Asegúrate de que el contenido ha sido cargado antes de inicializar los elementos
+        initializeFileModal();
+
         attachSortHandlers('tablaSolicitudesMemo');
         attachSortHandlers('tablaSolicitudesCorreo');
-
         paginateTable('tablaSolicitudesMemo', 'paginationMemo', 6);
         paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 6);
 
-        // Cambiar el fondo al color deseado si es la página de estadísticas
         if (url.includes('/bnup/statistics/')) {
           changeCardDetailsBgColor('#C9E8F4');
         } else {
@@ -37,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (statsButton) {
           statsButton.addEventListener('click', function () {
             loadContent('/bnup/statistics/', function () {
-              loadStatisticsScript(); // Carga el archivo statisticsChart.js
+              loadStatisticsScript();
             });
           });
         }
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
           backButton.addEventListener('click', function () {
             const bnupLink = document.querySelector('a[data-content="BNUP"]');
             if (bnupLink) {
-              bnupLink.click(); // Simula un clic en el ítem de menú BNUP
+              bnupLink.click();
             }
           });
         }
@@ -55,41 +56,94 @@ document.addEventListener('DOMContentLoaded', function () {
         const backToInicioButton = document.getElementById('backToInicio');
         if (backToInicioButton) {
           backToInicioButton.addEventListener('click', function () {
-            loadContent('/inicio/', function() {
-              removeSelectedLogin(); // Remover la clase 'selected-login' cuando se regresa al inicio
-            }); // Cargar el contenido de inicio.html dinámicamente
+            loadContent('/inicio/', function () {
+              removeSelectedLogin();
+            });
           });
         }
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
 
+  function initializeFileModal() {
+    const modalButton = document.getElementById('openFileModal');
+    const closeModalButton = document.querySelector('.close');
+    const fileModalInput = document.getElementById('fileModalInput');
+    const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
+
+    if (modalButton) {
+      modalButton.onclick = function () {
+        document.getElementById('fileModal').style.display = 'block';
+      };
+    }
+
+    if (closeModalButton) {
+      closeModalButton.onclick = function () {
+        document.getElementById('fileModal').style.display = 'none';
+      };
+    }
+
+    window.onclick = function (event) {
+      if (event.target === document.getElementById('fileModal')) {
+        document.getElementById('fileModal').style.display = 'none';
+      }
+    };
+
+    if (fileModalInput) {
+      fileModalInput.onchange = function () {
+        archivoAdjuntoInput.files = fileModalInput.files; // Pasar los archivos seleccionados en el modal al input oculto en el formulario
+        document.getElementById('fileModal').style.display = 'none'; // Cerrar el modal después de seleccionar el archivo
+      };
+
+      $(fileModalInput).fileinput({
+        showUpload: false,
+        showRemove: true, // Mantén este botón visible
+        showPreview: true,
+        showCaption: false,
+        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo', // Icono para "Seleccionar archivo"
+        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar', // Icono para "Eliminar"
+        mainClass: 'input-group-sm',
+        fileActionSettings: {
+          showRemove: true, // Mantén el botón de eliminación principal
+          showZoom: false,
+          showDrag: false,
+          showDelete: false, // Asegúrate de que no haya un botón de cierre adicional
+        },
+        layoutTemplates: {
+          close: '', // Remueve el botón de cierre adicional
+          indicator: '', // Remueve el indicador de estado de subida
+          actionCancel: '' // Remueve el botón de cancelar (oculta el botón de cancelar)
+        }
+      });
+    }
+}
+
   function removeSelectedLogin() {
     const loginLink = document.querySelector('a[data-content="login"]');
     if (loginLink) {
-      loginLink.classList.remove('selected-login'); // Remueve la clase 'selected-login' del enlace de login
+      loginLink.classList.remove('selected-login');
     }
   }
 
   function changeCardDetailsBgColor(color) {
     const cardDetails = document.querySelector('.cardContent');
     if (cardDetails) {
-      originalBgColor = cardDetails.style.backgroundColor || ''; // Guarda el color original
-      cardDetails.style.backgroundColor = color; // Cambia al nuevo color
+      originalBgColor = cardDetails.style.backgroundColor || '';
+      cardDetails.style.backgroundColor = color;
     }
   }
 
   function resetCardDetailsBgColor() {
     const cardDetails = document.querySelector('.cardContent');
     if (cardDetails) {
-      cardDetails.style.backgroundColor = originalBgColor; // Restaura el color original
+      cardDetails.style.backgroundColor = originalBgColor;
     }
   }
 
   function loadStatisticsScript() {
     const script = document.createElement('script');
     script.src = '/static/js/statisticsChart.js';
-    script.onload = createCharts; // Llama a createCharts después de cargar el script
+    script.onload = createCharts;
     document.head.appendChild(script);
   }
 
@@ -100,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
     'Inicio': '/inicio/',
     'PortalTransparencia': '/portal_transparencia/',
     'mapoteca': '/mapoteca/',
-    'login': '/login/' // Añadir la ruta para el login
+    'login': '/login/'
   };
 
   Object.entries(menuItems).forEach(([key, url]) => {
@@ -130,12 +184,11 @@ document.addEventListener('DOMContentLoaded', function () {
     sessionStorage.setItem('redirectToBNUP', 'true');
   }
 
-  // Agregar evento para cargar la página de login dinámicamente
   const loginLink = document.querySelector('a[data-content="login"]');
   if (loginLink) {
     loginLink.addEventListener('click', function (event) {
       event.preventDefault();
-      loadContent('/login/'); // Cargar el contenido de login.html
+      loadContent('/login/');
     });
   }
 });

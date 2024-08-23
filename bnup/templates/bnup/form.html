@@ -23,7 +23,7 @@
             </div>
             <div id="correoFields" class="form-group" style="display: none;">
               <label for="correoSolicitante">Ingrese Correo:</label>
-              <input type="email" name="correo_solicitante" id="correoSolicitante" />
+              <input type="email" name="correo_solicitante" id="correoSolicitante"/>
             </div>
           </div>
           <div class="form-group" style="display: flex;">
@@ -31,12 +31,12 @@
               <label for="numeroIngreso">N° de Ingreso</label>
               <input type="number" name="numero_ingreso" id="numeroIngreso" required />
             </div>
-            <div>
-              <label>Adjuntar archivo</label>
-              <label for="archivo_adjunto" class="custom-file-label">Seleccionar archivo</label>
-              <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="custom-file-input" />
+            <div class="btn-container">
+              <button type="button" id="openFileModal" class="btn">Adjuntar archivo</button>
+              <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" /> <!-- Mantén el input en el formulario pero oculto -->
             </div>
-          </div>          
+          </div>
+
           <div class="form-group">
             <label for="depto_solicitante">Departamento Solicitante</label>
             <select style="height: max-content;" name="depto_solicitante" id="depto_solicitante" required>
@@ -166,6 +166,21 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="fileModal" class="modal">
+  <div class="modal-content">
+    <div>
+      <div style="display: flex;justify-content: space-between;align-items: center;">
+        <label for="archivo_adjunto">Adjuntar archivo</label>
+        <span class="close"><span class="material-symbols-outlined">
+          close
+          </span></span>
+        
+      </div>
+      <input type="file" id="fileModalInput" class="file" />
     </div>
   </div>
 </div>
