@@ -7,7 +7,21 @@ import json
 
 def bnup_form(request):
     if request.method == 'POST':
-        # Extraer datos del formulario
+        # Verifica si es una actualización de salida
+        if 'numero_salida' in request.POST and 'archivo_adjunto_salida' in request.FILES:
+            solicitud_id = request.POST.get('solicitud_id')
+            numero_salida = request.POST.get('numero_salida')
+            archivo_adjunto_salida = request.FILES.get('archivo_adjunto_salida')
+            
+            solicitud = SolicitudBNUP.objects.get(id=solicitud_id)
+            solicitud.numero_salida = numero_salida
+            solicitud.archivo_adjunto_salida = archivo_adjunto_salida
+            solicitud.save()
+            messages.success(request, 'Salida registrada con éxito.')
+            request.session['redirect_to_bnup'] = True  # Set the session flag for redirection
+            return redirect('home')
+
+        # Extraer datos del formulario para crear una nueva solicitud
         tipo_recepcion_id = request.POST.get('tipo_recepcion')
         numero_memo = request.POST.get('num_memo') if tipo_recepcion_id == '1' else None
         correo_solicitante = request.POST.get('correo_solicitante') if tipo_recepcion_id == '2' else None
@@ -17,7 +31,7 @@ def bnup_form(request):
         fecha_ingreso = request.POST.get('fecha_ingreso')
         funcionario_asignado_id = request.POST.get('funcionario_asignado')
         descripcion = request.POST.get('descripcion')
-        archivo_adjunto = request.FILES.get('archivo_adjunto_ingreso')  # Obtener el archivo adjunto desde request.FILES
+        archivo_adjunto = request.FILES.get('archivo_adjunto_ingreso')
 
         # Verificar que el ID de tipo de recepción es válido
         try:
@@ -36,14 +50,14 @@ def bnup_form(request):
                 fecha_ingreso=fecha_ingreso,
                 funcionario_asignado=funcionario_asignado,
                 descripcion=descripcion,
-                archivo_adjunto_ingreso=archivo_adjunto  # Guardar el archivo adjunto
+                archivo_adjunto_ingreso=archivo_adjunto
             )
             solicitud.save()
             messages.success(request, 'Solicitud creada con éxito.')
-            request.session['redirect_to_bnup'] = True  # Set a session flag
+            request.session['redirect_to_bnup'] = True  # Set the session flag for redirection
             return redirect('home')
         except Exception as e:
-            print("Error al guardar la solicitud:", e)  # Depuración
+            print("Error al guardar la solicitud:", e)
             messages.error(request, f'Error al guardar la solicitud: {e}')
 
     # Obtener las solicitudes por Memo y Correo
@@ -59,6 +73,8 @@ def bnup_form(request):
         'solicitudes_memo': solicitudes_memo,
         'solicitudes_correo': solicitudes_correo
     })
+
+
 
 def statistics_view(request):
     # Lógica para calcular estadísticas basadas en los datos

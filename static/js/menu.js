@@ -1,5 +1,3 @@
-// D:\Documents\proyectosWeb\asesoriaUrbana\static\js\menu.js
-
 document.addEventListener('DOMContentLoaded', function () {
   let originalBgColor = '';
 
@@ -24,10 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (url.includes('/bnup/')) {
           const script = document.createElement('script');
-          script.src = '/static/js/bnup_form.js'; // Cargar el script de bnup_form.js
+          script.src = '/static/js/bnup_form.js';
           script.onload = function () {
             updateBNUPFields();
-            initializeFileModal(); // Inicializar el modal después de cargar bnup_form.js
+            initializeFileModal();
           };
           document.head.appendChild(script);
         }

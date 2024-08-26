@@ -74,7 +74,6 @@
     <div class="tableInfor_container">
       <div>
         <div class="tittleTable">
-          <!-- Campo de búsqueda y tabla de solicitudes por Memo -->
           <h3>Solicitudes por Memo</h3>
           <input type="text" id="searchMemo" placeholder="Buscar en Memo..." class="search-input" />
           <div id="paginationMemo" class="pagination"></div>
@@ -88,7 +87,8 @@
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
-              <th class="shadow" data-type="string">Entrada</th> <!-- Nueva columna -->
+              <th class="shadow" data-type="string">Entrada</th>
+              <th class="shadow" data-type="string">Acciones</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -107,10 +107,17 @@
                     <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
                   {% endif %}
                 </td>
+                <td>
+                  {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
+                    <span>Respondido</span>
+                  {% else %}
+                    <button type="button" class="btn" onclick="openSalidaModal({{ solicitud.id }})">Responder</button>
+                  {% endif %}
+                </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="7">No hay solicitudes por Memo</td>
+                <td colspan="8">No hay solicitudes por Memo</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -133,6 +140,7 @@
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Entrada</th> <!-- Nueva columna -->
+              <th class="shadow" data-type="string">Acciones</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -149,6 +157,13 @@
                     <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">file_open</span></a>
                   {% else %}
                     <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
+                    <span>Respondido</span>
+                  {% else %}
+                    <button type="button" class="btn" onclick="openSalidaModal({{ solicitud.id }})">Responder</button>
                   {% endif %}
                 </td>
               </tr>
@@ -173,5 +188,25 @@
       </div>
       <input type="file" id="fileModalInput" class="file" />
     </div>
+  </div>
+</div>
+
+<!-- Modal para gestionar la salida -->
+<div id="salidaModal" class="modal">
+  <div class="modal-content">
+    <form id="salidaForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="display: flex;justify-content: space-between;align-items: center;">
+        <label for="numero_salida">N° de Salida</label>
+        <input type="number" name="numero_salida" id="numero_salida" required />
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+      </div>
+      <div style="margin-top: 10px;">
+        <label for="archivo_adjunto_salida">Adjuntar archivo</label>
+        <input type="file" name="archivo_adjunto_salida" id="salidaFileModalInput" required />
+      </div>
+      <input type="hidden" name="solicitud_id" id="solicitud_id" />
+      <button type="submit" class="btn">Guardar</button>
+    </form>
   </div>
 </div>
