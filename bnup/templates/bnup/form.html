@@ -23,7 +23,7 @@
             </div>
             <div id="correoFields" class="form-group" style="display: none;">
               <label for="correoSolicitante">Ingrese Correo:</label>
-              <input type="email" name="correo_solicitante" id="correoSolicitante"/>
+              <input type="email" name="correo_solicitante" id="correoSolicitante" />
             </div>
           </div>
           <div class="form-group" style="display: flex;">
@@ -87,10 +87,8 @@
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
-              <th class="shadow" data-type="string">
-                Funcionario <br />Asignado
-              </th>
-              <th class="shadow" data-type="string">Archivo Adjunto</th> <!-- Nueva columna -->
+              <th class="shadow" data-type="string">Funcionario</th>
+              <th class="shadow" data-type="string">Entrada</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -104,9 +102,9 @@
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
                   {% if solicitud.archivo_adjunto_ingreso %}
-                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank">Ver archivo</a>
+                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">file_open</span></a>
                   {% else %}
-                    Sin archivo
+                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
                   {% endif %}
                 </td>
               </tr>
@@ -129,16 +127,12 @@
           <thead>
             <tr>
               <th class="shadow" data-type="number">N° Ingreso</th>
-              <th class="shadow" data-type="string">
-                Correo <br />Solicitante
-              </th>
+              <th class="shadow" data-type="string">Correo</th>
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
-              <th class="shadow" data-type="string">
-                Funcionario <br />Asignado
-              </th>
-              <th class="shadow" data-type="string">Archivo Adjunto</th> <!-- Nueva columna -->
+              <th class="shadow" data-type="string">Funcionario</th>
+              <th class="shadow" data-type="string">Entrada</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -152,9 +146,9 @@
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
                   {% if solicitud.archivo_adjunto_ingreso %}
-                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank">Ver archivo</a>
+                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">file_open</span></a>
                   {% else %}
-                    Sin archivo
+                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
                   {% endif %}
                 </td>
               </tr>
@@ -175,10 +169,7 @@
     <div>
       <div style="display: flex;justify-content: space-between;align-items: center;">
         <label for="archivo_adjunto">Adjuntar archivo</label>
-        <span class="close"><span class="material-symbols-outlined">
-          close
-          </span></span>
-        
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
       </div>
       <input type="file" id="fileModalInput" class="file" />
     </div>

@@ -45,7 +45,7 @@ function sortTable(table, column, type, ascending) {
 // Función para actualizar la paginación después de ordenar la tabla
 function updatePaginationAfterSort(table, column) {
     const paginationId = table.id === 'tablaSolicitudesMemo' ? 'paginationMemo' : 'paginationCorreo';
-    const rowsPerPage = 6; // Número de filas por página
+    const rowsPerPage = 5; // Número de filas por página
     paginateTable(table.id, paginationId, rowsPerPage); // Volver a paginar la tabla
 }
 
@@ -195,6 +195,6 @@ document.addEventListener('DOMContentLoaded', function () {
     attachSortHandlers('tablaSolicitudesMemo');
     attachSortHandlers('tablaSolicitudesCorreo');
 
-    paginateTable('tablaSolicitudesMemo', 'paginationMemo', 6);
-    paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 6);
+    paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
+    paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
 });

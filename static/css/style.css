@@ -1109,3 +1109,8 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 .input-group-sm span {
   color: ghostwhite;
 }
+
+.file-drop-zone-title {  
+  font-family: 'HelveticaNeue';
+  font-size: 25px !important;
+}

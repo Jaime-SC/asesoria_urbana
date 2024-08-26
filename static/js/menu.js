@@ -1,3 +1,5 @@
+// D:\Documents\proyectosWeb\asesoriaUrbana\static\js\menu.js
+
 document.addEventListener('DOMContentLoaded', function () {
   let originalBgColor = '';
 
@@ -20,13 +22,20 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('contentMenu').innerHTML = data;
         if (typeof callback === 'function') callback();
 
-        // Asegúrate de que el contenido ha sido cargado antes de inicializar los elementos
-        initializeFileModal();
+        if (url.includes('/bnup/')) {
+          const script = document.createElement('script');
+          script.src = '/static/js/bnup_form.js'; // Cargar el script de bnup_form.js
+          script.onload = function () {
+            updateBNUPFields();
+            initializeFileModal(); // Inicializar el modal después de cargar bnup_form.js
+          };
+          document.head.appendChild(script);
+        }
 
         attachSortHandlers('tablaSolicitudesMemo');
         attachSortHandlers('tablaSolicitudesCorreo');
-        paginateTable('tablaSolicitudesMemo', 'paginationMemo', 6);
-        paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 6);
+        paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
+        paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
 
         if (url.includes('/bnup/statistics/')) {
           changeCardDetailsBgColor('#C9E8F4');
@@ -64,59 +73,6 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
-
-  function initializeFileModal() {
-    const modalButton = document.getElementById('openFileModal');
-    const closeModalButton = document.querySelector('.close');
-    const fileModalInput = document.getElementById('fileModalInput');
-    const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
-
-    if (modalButton) {
-      modalButton.onclick = function () {
-        document.getElementById('fileModal').style.display = 'block';
-      };
-    }
-
-    if (closeModalButton) {
-      closeModalButton.onclick = function () {
-        document.getElementById('fileModal').style.display = 'none';
-      };
-    }
-
-    window.onclick = function (event) {
-      if (event.target === document.getElementById('fileModal')) {
-        document.getElementById('fileModal').style.display = 'none';
-      }
-    };
-
-    if (fileModalInput) {
-      fileModalInput.onchange = function () {
-        archivoAdjuntoInput.files = fileModalInput.files; // Pasar los archivos seleccionados en el modal al input oculto en el formulario
-        document.getElementById('fileModal').style.display = 'none'; // Cerrar el modal después de seleccionar el archivo
-      };
-
-      $(fileModalInput).fileinput({
-        showUpload: false,
-        showRemove: true, // Mantén este botón visible
-        showPreview: true,
-        showCaption: false,
-        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo', // Icono para "Seleccionar archivo"
-        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar', // Icono para "Eliminar"
-        mainClass: 'input-group-sm',
-        fileActionSettings: {
-          showRemove: true, // Mantén el botón de eliminación principal
-          showZoom: false,
-          showDrag: false,
-          showDelete: false, // Asegúrate de que no haya un botón de cierre adicional
-        },
-        layoutTemplates: {
-          close: '', // Remueve el botón de cierre adicional
-          indicator: '', // Remueve el indicador de estado de subida
-          actionCancel: '' // Remueve el botón de cancelar (oculta el botón de cancelar)
-        }
-      });
-    }
-}
 
   function removeSelectedLogin() {
     const loginLink = document.querySelector('a[data-content="login"]');
