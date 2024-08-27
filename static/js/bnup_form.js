@@ -121,10 +121,35 @@ function updateBNUPFields() {
     }
 }
 
+function initializeBNUPFormModal() {
+    const modal = document.getElementById('bnupFormModal');
+    const btn = document.getElementById('openBNUPFormModal');
+    const span = document.querySelector('#bnupFormModal .close');
+
+    if (btn) {
+        btn.onclick = function () {
+            modal.style.display = 'block';
+        }
+    }
+
+    if (span) {
+        span.onclick = function () {
+            modal.style.display = 'none';
+        }
+    }
+
+    window.onclick = function (event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     if (document.querySelector('#bnupForm')) {
         updateBNUPFields();
         initializeFileModal();
+        initializeBNUPFormModal();
     }
 
     window.onclick = function (event) {

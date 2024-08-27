@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', function () {
           script.onload = function () {
             updateBNUPFields();
             initializeFileModal();
+        initializeBNUPFormModal();
+
           };
           document.head.appendChild(script);
         }

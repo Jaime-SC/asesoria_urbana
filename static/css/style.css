@@ -304,15 +304,14 @@ h1 {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  width: min-content !important;
 }
 
 h2 {
   text-align: center;
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
   font-family: 'HelveticaNeue';
-
   font-size: larger;
-
 }
 
 .tittleStatistics h2 {
@@ -400,7 +399,7 @@ select {
 
 textarea {
   resize: none;
-
+  height: max-content !important;
 }
 
 button {
@@ -720,7 +719,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   font-size: 16px;
   font-weight: bold;
   color: #fff;
-  background-color: #007bff;
+  background-color: #4BBFE0;
   border: none;
   border-radius: 4px;
   text-align: center;
@@ -730,7 +729,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .btn:hover {
-  background-color: #0056b3;
+  background-color: #387b8f;  
 }
 
 .selected {
@@ -1031,18 +1030,16 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .modal-content {
   background-color: #fefefe;
-  margin: 15% auto;
-  /* Centrado */
+  margin: 5% auto;
   padding: 20px;
   border: 1px solid #888;
   width: 80%;
   max-width: 500px;
-  /* Tamaño máximo del modal */
   border-radius: 10px;
 }
 
 .close {
-  color: #aaa;  
+  color: #aaa;
   font-size: 28px;
   font-weight: bold;
 }
@@ -1073,7 +1070,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .krajee-default.file-preview-frame .file-thumbnail-footer {
-  height: max-content !important; 
+  height: max-content !important;
 }
 
 .input-group-sm {
@@ -1096,11 +1093,12 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   padding: 5px;
   font-size: 15px;
   width: -webkit-fill-available;
+  margin-top: 0px;
 }
 
-#correoFields #correoSolicitante{
+/* #correoFields #correoSolicitante {
   width: 150px !important;
-}
+} */
 
 .form-group #numeroIngreso {
   width: 150px;
@@ -1110,12 +1108,13 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   color: ghostwhite;
 }
 
-.file-drop-zone-title {  
+.file-drop-zone-title {
   font-family: 'HelveticaNeue';
   font-size: 25px !important;
 }
 
-#tablaSolicitudesMemo, #tablaSolicitudesCorreo {
+#tablaSolicitudesMemo,
+#tablaSolicitudesCorreo {
   font-size: 15px !important;
 }
 
@@ -1134,7 +1133,8 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   padding: 5px 10px;
   position: absolute;
   z-index: 1;
-  bottom: 125%; /* Posicionar el tooltip arriba del icono */
+  bottom: 125%;
+  /* Posicionar el tooltip arriba del icono */
   left: 50%;
   margin-left: -60px;
   opacity: 0;
@@ -1145,7 +1145,8 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 .tooltip::after {
   content: "";
   position: absolute;
-  top: 100%; /* Apunta hacia abajo */
+  top: 100%;
+  /* Apunta hacia abajo */
   left: 50%;
   margin-left: -5px;
   border-width: 5px;

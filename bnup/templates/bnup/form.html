@@ -1,17 +1,24 @@
 <div class="cardContent">
   <div class="card-details">
     <div class="div-container">
-      <!-- Asegúrate de que el botón tenga el ID correcto -->
-      <div>
-        <button id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
-        {% comment %} <button style="background-color: #4BBFE0;" id="bnupForm" class="btn-stats"><span class="material-symbols-outlined">note_add</span> Ingresar BNUP</button> {% endcomment %}
+      <!-- Botones para abrir modales -->
+      <div style="display: flex;flex-direction: column;gap: 10px;">
+        <button style="background-color: #4BBFE0;justify-content: flex-start;width: -webkit-fill-available;" id="openBNUPFormModal" class="btn-stats"><span class="material-symbols-outlined">note_add</span> BNUP</button>
+        <button style="justify-content: flex-start;width: -webkit-fill-available;" id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
       </div>
-      <div class="form-container">
+    </div>
+
+    <!-- Ventana modal para el formulario BNUP -->
+    <div id="bnupFormModal" class="modal">
+      <div class="modal-content">
         <!-- Formulario para ingresar nuevas solicitudes -->
         <form id="bnupForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
           {% csrf_token %}
-          <h2>Solicitud de BNUP</h2>
-          <div class="form-group" style="display: flex;">
+          <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
+            <h2>Solicitud de BNUP</h2>
+            <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+          </div>
+          <div class="form-group" style="display: flex;flex-direction: row;justify-content: space-between;">
             <div>
               <label>Tipo de Recepción</label>
               <div class="radio-group">
@@ -28,7 +35,7 @@
               <input type="email" name="correo_solicitante" id="correoSolicitante" />
             </div>
           </div>
-          <div class="form-group" style="display: flex;">
+          <div class="form-group" style="display: flex;justify-content: space-between;">
             <div>
               <label for="numeroIngreso">N° de Ingreso</label>
               <input type="number" name="numero_ingreso" id="numeroIngreso" required />
