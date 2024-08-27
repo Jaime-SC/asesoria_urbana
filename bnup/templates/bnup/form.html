@@ -2,8 +2,10 @@
   <div class="card-details">
     <div class="div-container">
       <!-- Asegúrate de que el botón tenga el ID correcto -->
-      <button id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
-
+      <div>
+        <button id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+        {% comment %} <button style="background-color: #4BBFE0;" id="bnupForm" class="btn-stats"><span class="material-symbols-outlined">note_add</span> Ingresar BNUP</button> {% endcomment %}
+      </div>
       <div class="form-container">
         <!-- Formulario para ingresar nuevas solicitudes -->
         <form id="bnupForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
@@ -81,14 +83,14 @@
         <table id="tablaSolicitudesMemo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
-              <th class="shadow" data-type="number">N° Ingreso</th>
+              <th class="shadow" data-type="number">Ingreso</th>
               <th class="shadow" data-type="number">N° Memo</th>
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Entrada</th>
-              <th class="shadow" data-type="string">Acciones</th> <!-- Nueva columna -->
+              <th class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -102,16 +104,28 @@
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
                   {% if solicitud.archivo_adjunto_ingreso %}
-                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">file_open</span></a>
+                    <div class="icon-container">
+                      <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <div class="tooltip">Ver archivo de ingreso</div>
+                    </div>
                   {% else %}
-                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                    <div class="icon-container">
+                      <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                      <div class="tooltip">Sin archivo de ingreso</div>
+                    </div>
                   {% endif %}
                 </td>
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
-                    <span>Respondido</span>
+                    <div class="icon-container">
+                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <div class="tooltip">Ver archivo de salida</div>
+                    </div>
                   {% else %}
-                    <button type="button" class="btn" onclick="openSalidaModal({{ solicitud.id }})">Responder</button>
+                    <div class="icon-container">
+                      <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})"><span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span></a>
+                      <div class="tooltip">Responder con archivo de salida</div>
+                    </div>
                   {% endif %}
                 </td>
               </tr>
@@ -133,14 +147,14 @@
         <table id="tablaSolicitudesCorreo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
-              <th class="shadow" data-type="number">N° Ingreso</th>
+              <th class="shadow" data-type="number">Ingreso</th>
               <th class="shadow" data-type="string">Correo</th>
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Entrada</th> <!-- Nueva columna -->
-              <th class="shadow" data-type="string">Acciones</th> <!-- Nueva columna -->
+              <th class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -154,16 +168,28 @@
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
                   {% if solicitud.archivo_adjunto_ingreso %}
-                    <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">file_open</span></a>
+                    <div class="icon-container">
+                      <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <div class="tooltip">Ver archivo de ingreso</div>
+                    </div>
                   {% else %}
-                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                    <div class="icon-container">
+                      <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                      <div class="tooltip">Sin archivo de ingreso</div>
+                    </div>
                   {% endif %}
                 </td>
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
-                    <span>Respondido</span>
+                    <div class="icon-container">
+                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <div class="tooltip">Ver archivo de salida</div>
+                    </div>
                   {% else %}
-                    <button type="button" class="btn" onclick="openSalidaModal({{ solicitud.id }})">Responder</button>
+                    <div class="icon-container">
+                      <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})"><span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span></a>
+                      <div class="tooltip">Responder con archivo de salida</div>
+                    </div>
                   {% endif %}
                 </td>
               </tr>
@@ -196,13 +222,15 @@
   <div class="modal-content">
     <form id="salidaForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
       {% csrf_token %}
-      <div style="display: flex;justify-content: space-between;align-items: center;">
-        <label for="numero_salida">N° de Salida</label>
-        <input type="number" name="numero_salida" id="numero_salida" required />
+      <div style="display: flex;align-items: center;justify-content: space-between;">
+        <label for="archivo_adjunto_salida">Adjuntar archivo</label>
         <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
       </div>
+      <div style="display: flex;gap: 10px;justify-content: flex-start;align-items: center;">
+        <label style="margin-bottom: 0;" for="numero_salida">N° de Salida</label>
+        <input style="width: 80px;margin-top: 0;" type="number" name="numero_salida" id="numero_salida" required />
+      </div>
       <div style="margin-top: 10px;">
-        <label for="archivo_adjunto_salida">Adjuntar archivo</label>
         <input type="file" name="archivo_adjunto_salida" id="salidaFileModalInput" required />
       </div>
       <input type="hidden" name="solicitud_id" id="solicitud_id" />
