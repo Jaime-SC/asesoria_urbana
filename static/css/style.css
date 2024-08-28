@@ -446,23 +446,26 @@ button {
   width: -webkit-fill-available;
   border-collapse: collapse;
   margin-block: 20px 0px;
-  font-family: "Chivo Mono", monospace;
+  font-family: "Roboto Condensed", monospace;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Estilos para los encabezados */
 .tableInfor_container th {
-  background-color: #4CAF50;
+  background-color: #16233E;
   color: white;
   padding: 10px;
   text-align: left;
   cursor: pointer;
   /* Indicar que es interactivo */
   transition: background-color 0.3s;
+
 }
 
 .tableInfor_container th:hover {
-  background-color: #45a049;
+  background-color: #111522;
+  border-color: #d5d6dc;
+  box-shadow: inset 0 0 10px #000000;
 }
 
 /* Estilos para las filas de la tabla */
@@ -554,7 +557,7 @@ button {
 }
 
 .page-btn.active {
-  background-color: #4CAF50;
+  background-color: #16233E;
   color: white;
 }
 
@@ -729,7 +732,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .btn:hover {
-  background-color: #387b8f;  
+  background-color: #387b8f;
 }
 
 .selected {
@@ -1115,7 +1118,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 #tablaSolicitudesMemo,
 #tablaSolicitudesCorreo {
-  font-size: 15px !important;
+  font-size: 20px !important;
 }
 
 
@@ -1157,4 +1160,13 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 .icon-container:hover .tooltip {
   visibility: visible;
   opacity: 1;
+}
+
+.swal2-actions {  
+  flex-wrap: nowrap;
+}
+
+.swal2-confirm, .swal2-cancel {
+  color: ghostwhite;
+  font-weight: bold;
 }

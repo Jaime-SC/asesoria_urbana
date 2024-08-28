@@ -61,41 +61,79 @@ function openSalidaModal(solicitudId) {
     solicitudInput.value = solicitudId;
 
     $('#salidaFileModalInput').fileinput({
-        showUpload: false,
-        showRemove: true,
+        showUpload: false, // Desactiva el botón "Upload"
+        showRemove: true,  // Muestra el botón "Remove"
         showPreview: true,
         showCaption: false,
         browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar', // Texto en español para el botón "Remove"
         mainClass: 'input-group-sm',
         dropZoneTitle: 'Arrastra y suelta los archivos aquí',
         fileActionSettings: {
             showRemove: true,
+            showUpload: false,
             showZoom: false,
-            showDrag: false,
-            showDelete: false,
+            showDrag: false
         },
         layoutTemplates: {
             close: '',
             indicator: '',
-            actionCancel: ''
+            actionDelete: '',
+            actionUpload: ''
         }
     });
 
     salidaModal.style.display = 'block';
 
-    // Cerrar el modal cuando se presiona la 'X'
     salidaCloseButton.onclick = function () {
         salidaModal.style.display = 'none';
     };
 
-    // Cerrar el modal si se hace clic fuera de él
     window.onclick = function (event) {
         if (event.target === salidaModal) {
             salidaModal.style.display = 'none';
         }
     };
+
+    // Manejo del botón Guardar con validación y confirmación
+    const saveButton = salidaModal.querySelector('button[type="submit"]');
+    saveButton.onclick = function (event) {
+        event.preventDefault(); // Evita el envío del formulario por defecto
+
+        // Verificar si ambos campos están llenos
+        const numeroSalida = document.getElementById('numero_salida').value;
+        const archivoAdjuntoSalida = document.getElementById('salidaFileModalInput').files.length > 0;
+
+        if (!numeroSalida || !archivoAdjuntoSalida) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Debe ingresar el número de salida y adjuntar un archivo.',
+                icon: 'error',
+                confirmButtonColor: '#E73C45',
+                confirmButtonText: 'Aceptar'
+            });
+        } else {
+            // Mostrar el mensaje de confirmación si los campos están llenos
+            Swal.fire({
+                title: '¿Desea confirmar la Salida?',
+                text: "Se guardará el número y el archivo adjunto de salida.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4BBFE0',
+                cancelButtonColor: '#E73C45',
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Si el usuario confirma, enviar el formulario
+                    salidaModal.querySelector('form').submit();
+                }
+            });
+        }
+    };
 }
+
+
 
 function updateBNUPFields() {
     const memoRadio = document.getElementById('memo');
@@ -143,7 +181,45 @@ function initializeBNUPFormModal() {
             modal.style.display = 'none';
         }
     }
+
+    // Manejo del botón Guardar con confirmación
+    const saveButton = document.getElementById('guardarBNUP');
+    saveButton.onclick = function (event) {
+        event.preventDefault(); // Evita el envío del formulario por defecto
+
+        const numeroIngreso = document.getElementById('numeroIngreso').value;
+        const archivoAdjunto = document.getElementById('archivo_adjunto').files.length;
+
+        if (!numeroIngreso || archivoAdjunto === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos incompletos',
+                text: 'Complete todos los campos requeridos antes de enviar.',
+            });
+            return;
+        }
+
+        // Mostrar el mensaje de confirmación
+        Swal.fire({
+            title: '¿Desea confirmar la Solicitud de BNUP?',
+            text: "Se guardará la solicitud junto con el archivo adjunto.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4BBFE0',
+            cancelButtonColor: '#E73C45',
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Si el usuario confirma, enviar el formulario
+                document.getElementById('bnupForm').submit();
+            }
+        });
+    };
 }
+
+
+
 
 document.addEventListener('DOMContentLoaded', function () {
     if (document.querySelector('#bnupForm')) {
@@ -156,12 +232,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const fileModal = document.getElementById('fileModal');
         const salidaModal = document.getElementById('salidaModal');
 
-        // Cerrar el modal de ingreso si se hace clic fuera de él
         if (event.target === fileModal) {
             fileModal.style.display = 'none';
         }
 
-        // Cerrar el modal de salida si se hace clic fuera de él
         if (event.target === salidaModal) {
             salidaModal.style.display = 'none';
         }

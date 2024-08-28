@@ -14,11 +14,11 @@
         <!-- Formulario para ingresar nuevas solicitudes -->
         <form id="bnupForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
           {% csrf_token %}
-          <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
+          <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
             <h2>Solicitud de BNUP</h2>
             <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
           </div>
-          <div class="form-group" style="display: flex;flex-direction: row;justify-content: space-between;">
+          <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
             <div>
               <label>Tipo de Recepción</label>
               <div class="radio-group">
@@ -35,14 +35,14 @@
               <input type="email" name="correo_solicitante" id="correoSolicitante" />
             </div>
           </div>
-          <div class="form-group" style="display: flex;justify-content: space-between;">
+          <div class="form-group" style="display: flex; justify-content: space-between;">
             <div>
               <label for="numeroIngreso">N° de Ingreso</label>
               <input type="number" name="numero_ingreso" id="numeroIngreso" required />
             </div>
             <div class="btn-container">
               <button type="button" id="openFileModal" class="btn">Adjuntar archivo</button>
-              <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" /> <!-- Mantén el input en el formulario pero oculto -->
+              <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" required /> <!-- Mantén el input en el formulario pero oculto -->
             </div>
           </div>
 
@@ -76,10 +76,11 @@
             <label for="descripcion">Descripción</label>
             <textarea name="descripcion" id="descripcion" placeholder="Ingrese la descripción" rows="4"></textarea>
           </div>
-          <button type="submit" class="btn btn-primary">Enviar</button>
+          <button id="guardarBNUP" type="submit" class="btn btn-primary">Enviar</button>
         </form>
       </div>
     </div>
+
     <div class="tableInfor_container">
       <div>
         <div class="tittleTable">
@@ -90,14 +91,14 @@
         <table id="tablaSolicitudesMemo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
-              <th class="shadow" data-type="number">Ingreso</th>
+              <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
               <th class="shadow" data-type="number">N° Memo</th>
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Entrada</th>
-              <th class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
+              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -125,7 +126,7 @@
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                     <div class="icon-container">
-                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span> Respondido</a>
                       <div class="tooltip">Ver archivo de salida</div>
                     </div>
                   {% else %}
@@ -154,14 +155,14 @@
         <table id="tablaSolicitudesCorreo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
-              <th class="shadow" data-type="number">Ingreso</th>
+              <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
               <th class="shadow" data-type="string">Correo</th>
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Entrada</th> <!-- Nueva columna -->
-              <th class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
+              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
             </tr>
           </thead>
           <tbody>
@@ -189,7 +190,7 @@
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                     <div class="icon-container">
-                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span> Respondido</a>
                       <div class="tooltip">Ver archivo de salida</div>
                     </div>
                   {% else %}
@@ -241,7 +242,7 @@
         <input type="file" name="archivo_adjunto_salida" id="salidaFileModalInput" required />
       </div>
       <input type="hidden" name="solicitud_id" id="solicitud_id" />
-      <button type="submit" class="btn">Guardar</button>
+      <button id="guardarSalida" type="submit" class="btn">Guardar</button>
     </form>
   </div>
 </div>
