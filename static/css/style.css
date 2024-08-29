@@ -561,6 +561,12 @@ button {
   color: white;
 }
 
+.page-btn.active:hover {
+  background-color: #111522;
+  border-color: #d5d6dc;
+  box-shadow: inset 0 0 10px #000000;
+}
+
 .page-btn:hover:not(.active) {
   background-color: #ddd;
 }
@@ -1118,7 +1124,8 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 #tablaSolicitudesMemo,
 #tablaSolicitudesCorreo {
-  font-size: 20px !important;
+  font-size: 17.5px !important;
+  font-weight: 500;
 }
 
 
@@ -1162,11 +1169,12 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   opacity: 1;
 }
 
-.swal2-actions {  
+.swal2-actions {
   flex-wrap: nowrap;
 }
 
-.swal2-confirm, .swal2-cancel {
+.swal2-confirm,
+.swal2-cancel {
   color: ghostwhite;
   font-weight: bold;
 }

@@ -21,20 +21,23 @@
           <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
             <div>
               <label>Tipo de Recepción</label>
-              <div class="radio-group">
-                <label for="memo"><input type="radio" id="memo" name="tipo_recepcion" value="1" checked />Memo</label>
-                <label for="correo"><input type="radio" id="correo" name="tipo_recepcion" value="2" />Correo</label>
-              </div>
+              <select style="height: min-content;" name="tipo_recepcion" id="tipo_recepcion" required>
+                <option value="" disabled selected>Seleccione un tipo de recepción</option>
+                {% for tipo in tipos_recepcion %}
+                  <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+                {% endfor %}
+              </select>
             </div>
-            <div id="memoFields" class="form-group" style="display: none;">
-              <label for="num_memo">Ingrese N° de Memo:</label>
+            <div id="memoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
+              <label for="num_memo">Ingrese N° Doc:</label>
               <input type="number" name="num_memo" id="num_memo" />
             </div>
-            <div id="correoFields" class="form-group" style="display: none;">
+            <div id="correoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
               <label for="correoSolicitante">Ingrese Correo:</label>
               <input type="email" name="correo_solicitante" id="correoSolicitante" />
             </div>
           </div>
+
           <div class="form-group" style="display: flex; justify-content: space-between;">
             <div>
               <label for="numeroIngreso">N° de Ingreso</label>
@@ -84,21 +87,22 @@
     <div class="tableInfor_container">
       <div>
         <div class="tittleTable">
-          <h3>Solicitudes por Memo</h3>
-          <input type="text" id="searchMemo" placeholder="Buscar en Memo..." class="search-input" />
+          <h3>Solicitudes por Documento</h3>
+          <input type="text" id="searchMemo" placeholder="Buscar Documento..." class="search-input" />
           <div id="paginationMemo" class="pagination"></div>
         </div>
         <table id="tablaSolicitudesMemo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
               <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
-              <th class="shadow" data-type="number">N° Memo</th>
+              <th class="shadow" data-type="number">N° Doc</th>
+              <th class="shadow" data-type="string">Recepción</th>
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Entrada</th>
-              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
+              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th>
             </tr>
           </thead>
           <tbody>
@@ -106,6 +110,7 @@
               <tr>
                 <td>{{ solicitud.numero_ingreso }}</td>
                 <td>{{ solicitud.numero_memo }}</td>
+                <td>{{ solicitud.tipo_recepcion.tipo }}</td>
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.nombre_solicitante }}</td>
                 <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
@@ -139,7 +144,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="8">No hay solicitudes por Memo</td>
+                <td colspan="9">No hay solicitudes por Memo</td>
               </tr>
             {% endfor %}
           </tbody>

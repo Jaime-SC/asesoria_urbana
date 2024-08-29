@@ -18,12 +18,12 @@ def bnup_form(request):
             solicitud.archivo_adjunto_salida = archivo_adjunto_salida
             solicitud.save()
             messages.success(request, 'Salida registrada con éxito.')
-            request.session['redirect_to_bnup'] = True  # Set the session flag for redirection
+            request.session['redirect_to_bnup'] = True
             return redirect('home')
 
         # Extraer datos del formulario para crear una nueva solicitud
         tipo_recepcion_id = request.POST.get('tipo_recepcion')
-        numero_memo = request.POST.get('num_memo') if tipo_recepcion_id == '1' else None
+        numero_memo = request.POST.get('num_memo') if tipo_recepcion_id != '2' else None  # Adjust this based on your new logic
         correo_solicitante = request.POST.get('correo_solicitante') if tipo_recepcion_id == '2' else None
         depto_solicitante_id = request.POST.get('depto_solicitante')
         nombre_solicitante = request.POST.get('nombre_solicitante')
@@ -54,25 +54,29 @@ def bnup_form(request):
             )
             solicitud.save()
             messages.success(request, 'Solicitud creada con éxito.')
-            request.session['redirect_to_bnup'] = True  # Set the session flag for redirection
+            request.session['redirect_to_bnup'] = True
             return redirect('home')
         except Exception as e:
             print("Error al guardar la solicitud:", e)
             messages.error(request, f'Error al guardar la solicitud: {e}')
 
-    # Obtener las solicitudes por Memo y Correo
-    solicitudes_memo = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Memo')
+    # Filtrar las solicitudes para que solo se muestren las que no son de tipo "Correo"
+    solicitudes_memo = SolicitudBNUP.objects.filter(tipo_recepcion__tipo__in=['Memo', 'Providencia', 'Oficio', 'Ordinario'])
     solicitudes_correo = SolicitudBNUP.objects.filter(tipo_recepcion__tipo='Correo')
 
     departamentos = Departamento.objects.all()
     funcionarios = Funcionario.objects.all()
+    tipos_recepcion = TipoRecepcion.objects.all()
 
     return render(request, 'bnup/form.html', {
         'departamentos': departamentos,
         'funcionarios': funcionarios,
-        'solicitudes_memo': solicitudes_memo,
-        'solicitudes_correo': solicitudes_correo
+        'solicitudes_memo': solicitudes_memo.select_related('tipo_recepcion'),
+        'solicitudes_correo': solicitudes_correo.select_related('tipo_recepcion'),
+        'tipos_recepcion': tipos_recepcion
     })
+
+
 
 
 

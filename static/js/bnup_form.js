@@ -136,28 +136,33 @@ function openSalidaModal(solicitudId) {
 
 
 function updateBNUPFields() {
-    const memoRadio = document.getElementById('memo');
-    const correoRadio = document.getElementById('correo');
+    const tipoRecepcionSelect = document.getElementById('tipo_recepcion');
     const memoFields = document.getElementById('memoFields');
     const correoFields = document.getElementById('correoFields');
 
     function toggleFields() {
-        if (memoRadio.checked) {
+        const selectedValue = tipoRecepcionSelect.value;
+
+        if (['1', '3', '4', '5'].includes(selectedValue)) {  // IDs para Memo, Providencia, Oficio, Ordinario
             memoFields.style.display = 'block';
             correoFields.style.display = 'none';
-        } else if (correoRadio.checked) {
+        } else if (selectedValue === '2') {  // ID para Correo
             memoFields.style.display = 'none';
             correoFields.style.display = 'block';
+        } else {
+            memoFields.style.display = 'none';
+            correoFields.style.display = 'none';
         }
     }
 
-    if (memoRadio && correoRadio) {
-        memoRadio.addEventListener('change', toggleFields);
-        correoRadio.addEventListener('change', toggleFields);
-
-        toggleFields();
-    }
+    tipoRecepcionSelect.addEventListener('change', toggleFields);
+    toggleFields();  // Ejecutar al cargar la página para el estado inicial
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    updateBNUPFields();
+});
+
 
 function initializeBNUPFormModal() {
     const modal = document.getElementById('bnupFormModal');
