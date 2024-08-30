@@ -1047,19 +1047,6 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   border-radius: 10px;
 }
 
-.close {
-  color: #aaa;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
-}
-
 .fileinput-remove:not(.fileinput-remove-button) {
   display: none !important;
 }
@@ -1177,4 +1164,82 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 .swal2-cancel {
   color: ghostwhite;
   font-weight: bold;
+}
+
+/* Estilo para el preview de la descripción */
+.descripcion-preview {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.descripcion-preview::after {
+  content: '';
+  position: absolute;
+  right: 25px;
+  bottom: 0;
+  width: 75px;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #c9e8f4 75%);  
+}
+
+.descripcion-preview:hover .material-symbols-outlined {
+  color: #E73C45;  
+  transition: color 0.3s ease-in-out; /* Cambia 0.3s al tiempo que prefieras */
+}
+
+.descripcion-icon {
+  margin-left: 5px;
+  color: #4BBFE0;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 60px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 3% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tableInfor_container tr:nth-child(even) .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #f2f2f2 75%);
+}
+
+
+.tableInfor_container tr:hover .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #ddd 75%);
+
 }

@@ -171,7 +171,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
 
         input.addEventListener('input', function () {
             const filter = input.value.toLowerCase();
-            
+
             // Realizar búsqueda en todas las filas
             filteredRows = rows.filter(row => {
                 const cells = Array.from(row.getElementsByTagName('td'));
@@ -179,8 +179,6 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
             });
 
             updatePaginationAfterSearch();
-
-            
         });
     }
 
@@ -190,11 +188,54 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
     setupPagination();
 }
 
-// Ejecutar las funciones de ordenación y paginación cuando el contenido esté cargado
+function openDescripcionModal(descripcion) {
+    const modal = document.getElementById('descripcionModal');
+    const descripcionCompleta = document.getElementById('descripcionCompleta');
+
+    descripcionCompleta.textContent = descripcion;
+    modal.style.display = 'block';
+}
+
+function closeDescripcionModal() {
+    const modal = document.getElementById('descripcionModal');
+    modal.style.display = 'none';
+}
+
+// Cerrar el modal si se hace clic fuera de él
+window.onclick = function (event) {
+    const modal = document.getElementById('descripcionModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+};
+
+// Asegúrate de cargar estas funciones en la inicialización de tu página
 document.addEventListener('DOMContentLoaded', function () {
+    // Aquí asegúrate de que se cargue todo lo necesario para las tablas
     attachSortHandlers('tablaSolicitudesMemo');
     attachSortHandlers('tablaSolicitudesCorreo');
-
     paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
     paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
+
+    // Incluir las funciones de manejo del modal de descripción
+    window.openDescripcionModal = function (descripcion) {
+        const modal = document.getElementById('descripcionModal');
+        const descripcionCompleta = document.getElementById('descripcionCompleta');
+
+        descripcionCompleta.textContent = descripcion;
+        modal.style.display = 'block';
+    };
+
+    window.closeDescripcionModal = function () {
+        const modal = document.getElementById('descripcionModal');
+        modal.style.display = 'none';
+    };
+
+    // Cerrar el modal si se hace clic fuera de él
+    window.onclick = function (event) {
+        const modal = document.getElementById('descripcionModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
 });

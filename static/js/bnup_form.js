@@ -61,12 +61,12 @@ function openSalidaModal(solicitudId) {
     solicitudInput.value = solicitudId;
 
     $('#salidaFileModalInput').fileinput({
-        showUpload: false, // Desactiva el botón "Upload"
-        showRemove: true,  // Muestra el botón "Remove"
+        showUpload: false,
+        showRemove: true,
         showPreview: true,
         showCaption: false,
         browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar', // Texto en español para el botón "Remove"
+        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
         mainClass: 'input-group-sm',
         dropZoneTitle: 'Arrastra y suelta los archivos aquí',
         fileActionSettings: {
@@ -133,8 +133,6 @@ function openSalidaModal(solicitudId) {
     };
 }
 
-
-
 function updateBNUPFields() {
     const tipoRecepcionSelect = document.getElementById('tipo_recepcion');
     const memoFields = document.getElementById('memoFields');
@@ -158,11 +156,6 @@ function updateBNUPFields() {
     tipoRecepcionSelect.addEventListener('change', toggleFields);
     toggleFields();  // Ejecutar al cargar la página para el estado inicial
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    updateBNUPFields();
-});
-
 
 function initializeBNUPFormModal() {
     const modal = document.getElementById('bnupFormModal');
@@ -222,9 +215,6 @@ function initializeBNUPFormModal() {
         });
     };
 }
-
-
-
 
 document.addEventListener('DOMContentLoaded', function () {
     if (document.querySelector('#bnupForm')) {

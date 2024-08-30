@@ -95,12 +95,13 @@
           <thead>
             <tr>
               <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
-              <th class="shadow" data-type="number">N° Doc</th>
-              <th class="shadow" data-type="string">Recepción</th>
-              <th class="shadow" data-type="string">Departamento</th>
-              <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="date">Fecha</th>
+              <th class="shadow" data-type="string">Recepción</th>
+              <th class="shadow" data-type="number">N° Doc</th>
+              <th class="shadow" data-type="string">Solicitante</th>
+              <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Funcionario</th>
+              <th class="shadow" data-type="string">Descripción</th>
               <th class="shadow" data-type="string">Entrada</th>
               <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th>
             </tr>
@@ -109,12 +110,21 @@
             {% for solicitud in solicitudes_memo %}
               <tr>
                 <td>{{ solicitud.numero_ingreso }}</td>
-                <td>{{ solicitud.numero_memo }}</td>
-                <td>{{ solicitud.tipo_recepcion.tipo }}</td>
-                <td>{{ solicitud.depto_solicitante.nombre }}</td>
-                <td>{{ solicitud.nombre_solicitante }}</td>
                 <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
+                <td>{{ solicitud.tipo_recepcion.tipo }}</td>
+                <td>{{ solicitud.numero_memo }}</td>
+                <td>{{ solicitud.nombre_solicitante }}</td>
+                <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+                <td>
+                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}')">
+                    {{ solicitud.descripcion|truncatechars:30 }}
+                    {% if solicitud.descripcion|length > 20 %}
+                      <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
+                    {% endif %}
+                  </div>
+                </td>
+
                 <td>
                   {% if solicitud.archivo_adjunto_ingreso %}
                     <div class="icon-container">
@@ -144,7 +154,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="9">No hay solicitudes por Memo</td>
+                <td colspan="10">No hay solicitudes por Memo</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -161,24 +171,34 @@
           <thead>
             <tr>
               <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
+              <th class="shadow" data-type="date">Fecha</th>
+              <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="string">Correo</th>
               <th class="shadow" data-type="string">Departamento</th>
-              <th class="shadow" data-type="string">Solicitante</th>
-              <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Funcionario</th>
-              <th class="shadow" data-type="string">Entrada</th> <!-- Nueva columna -->
-              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th> <!-- Nueva columna -->
+              <th class="shadow" data-type="string">Descripción</th>
+              <th class="shadow" data-type="string">Entrada</th>
+              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th>
             </tr>
           </thead>
           <tbody>
             {% for solicitud in solicitudes_correo %}
               <tr>
                 <td>{{ solicitud.numero_ingreso }}</td>
+                <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
+                <td>{{ solicitud.nombre_solicitante }}</td>
                 <td>{{ solicitud.correo_solicitante }}</td>
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
-                <td>{{ solicitud.nombre_solicitante }}</td>
-                <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+                <td>
+                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}')">
+                    {{ solicitud.descripcion|truncatechars:20 }}
+                    {% if solicitud.descripcion|length > 20 %}
+                      <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
+                    {% endif %}
+                  </div>
+                </td>
+
                 <td>
                   {% if solicitud.archivo_adjunto_ingreso %}
                     <div class="icon-container">
@@ -208,7 +228,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="7">No hay solicitudes por Correo</td>
+                <td colspan="9">No hay solicitudes por Correo</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -217,7 +237,12 @@
     </div>
   </div>
 </div>
-
+<div id="descripcionModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeDescripcionModal()"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+    <div id="descripcionCompleta"></div>
+  </div>
+</div>
 <div id="fileModal" class="modal">
   <div class="modal-content">
     <div>
