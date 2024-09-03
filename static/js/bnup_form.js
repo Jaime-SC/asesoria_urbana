@@ -174,11 +174,12 @@ function initializeBNUPFormModal() {
         }
     }
 
-    window.onclick = function (event) {
+    // Cerrar el modal si se hace clic fuera de él
+    document.addEventListener('click', function (event) {
         if (event.target === modal) {
             modal.style.display = 'none';
         }
-    }
+    });
 
     // Manejo del botón Guardar con confirmación
     const saveButton = document.getElementById('guardarBNUP');
@@ -216,23 +217,12 @@ function initializeBNUPFormModal() {
     };
 }
 
+// Inicializar las funcionalidades específicas cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function () {
     if (document.querySelector('#bnupForm')) {
         updateBNUPFields();
         initializeFileModal();
         initializeBNUPFormModal();
     }
-
-    window.onclick = function (event) {
-        const fileModal = document.getElementById('fileModal');
-        const salidaModal = document.getElementById('salidaModal');
-
-        if (event.target === fileModal) {
-            fileModal.style.display = 'none';
-        }
-
-        if (event.target === salidaModal) {
-            salidaModal.style.display = 'none';
-        }
-    };
 });
+

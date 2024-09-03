@@ -188,27 +188,6 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
     setupPagination();
 }
 
-function openDescripcionModal(descripcion) {
-    const modal = document.getElementById('descripcionModal');
-    const descripcionCompleta = document.getElementById('descripcionCompleta');
-
-    descripcionCompleta.textContent = descripcion;
-    modal.style.display = 'block';
-}
-
-function closeDescripcionModal() {
-    const modal = document.getElementById('descripcionModal');
-    modal.style.display = 'none';
-}
-
-// Cerrar el modal si se hace clic fuera de él
-window.onclick = function (event) {
-    const modal = document.getElementById('descripcionModal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-};
-
 // Asegúrate de cargar estas funciones en la inicialización de tu página
 document.addEventListener('DOMContentLoaded', function () {
     // Aquí asegúrate de que se cargue todo lo necesario para las tablas
@@ -217,12 +196,32 @@ document.addEventListener('DOMContentLoaded', function () {
     paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
     paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
 
-    // Incluir las funciones de manejo del modal de descripción
-    window.openDescripcionModal = function (descripcion) {
+    window.openDescripcionModal = function (descripcion, nombre, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');
         const descripcionCompleta = document.getElementById('descripcionCompleta');
+        const nombreCompleto = document.getElementById('nombreCompleto');
+        const fechaIngreso = document.getElementById('fechaIngreso');
+        const numeroIngresoSpan = document.getElementById('numero_ingreso');
+        const correoSolicitante = document.getElementById('correo_solicitante');
+        const deptoSolicitante = document.getElementById('deptoSolicitante');
+        const funcionarioAsignado = document.getElementById('funcionario_asignado');
+        const correoField = document.getElementById('correoField');
 
         descripcionCompleta.textContent = descripcion;
+        nombreCompleto.textContent = nombre;
+        fechaIngreso.textContent = fecha;
+        numeroIngresoSpan.textContent = numero_ingreso;
+        deptoSolicitante.textContent = departamento;
+        funcionarioAsignado.textContent = funcionario_asignado;
+
+        // Condicional para mostrar u ocultar el correo según la tabla de origen
+        if (tablaOrigen === 'tablaSolicitudesCorreo') {
+            correoSolicitante.textContent = correo_solicitante;
+            correoField.style.display = 'block';
+        } else {
+            correoField.style.display = 'none';
+        }
+
         modal.style.display = 'block';
     };
 
@@ -231,11 +230,11 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.style.display = 'none';
     };
 
-    // Cerrar el modal si se hace clic fuera de él
-    window.onclick = function (event) {
+    // Cerrar el modal de descripción si se hace clic fuera de él
+    document.addEventListener('click', function (event) {
         const modal = document.getElementById('descripcionModal');
-        if (event.target == modal) {
+        if (event.target === modal) {
             modal.style.display = 'none';
         }
-    };
+    });
 });

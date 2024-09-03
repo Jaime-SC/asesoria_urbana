@@ -117,8 +117,8 @@
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
-                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}')">
-                    {{ solicitud.descripcion|truncatechars:30 }}
+                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}', '{{ solicitud.nombre_solicitante }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y' }}', '{{ solicitud.numero_ingreso }}', '', '{{ solicitud.depto_solicitante.nombre }}', '{{ solicitud.funcionario_asignado.nombre }}', 'tablaSolicitudesMemo')">
+                    {{ solicitud.descripcion|truncatechars:20 }}
                     {% if solicitud.descripcion|length > 20 %}
                       <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
                     {% endif %}
@@ -191,7 +191,7 @@
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
-                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}')">
+                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}', '{{ solicitud.nombre_solicitante }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y' }}', '{{ solicitud.numero_ingreso }}', '{{ solicitud.correo_solicitante }}', '{{ solicitud.depto_solicitante.nombre }}', '{{ solicitud.funcionario_asignado.nombre }}', 'tablaSolicitudesCorreo')">
                     {{ solicitud.descripcion|truncatechars:20 }}
                     {% if solicitud.descripcion|length > 20 %}
                       <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
@@ -240,9 +240,34 @@
 <div id="descripcionModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeDescripcionModal()"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
-    <div id="descripcionCompleta"></div>
+    <div class="modal-info">
+      <div class="modal-field">
+        <strong>Número de Ingreso:</strong> <span id="numero_ingreso"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Fecha de Ingreso:</strong> <span id="fechaIngreso"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Nombre del Solicitante:</strong> <span id="nombreCompleto"></span>
+      </div>
+      <!-- Condicional para mostrar u ocultar el correo -->
+      <div class="modal-field" id="correoField" style="display: none;">
+        <strong>Correo del Solicitante:</strong> <span id="correo_solicitante"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Departamento Solicitante:</strong> <span id="deptoSolicitante"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Funcionario Asignado:</strong> <span id="funcionario_asignado"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Descripción:</strong>
+        <div id="descripcionCompleta"></div>
+      </div>
+    </div>
   </div>
 </div>
+
 <div id="fileModal" class="modal">
   <div class="modal-content">
     <div>
