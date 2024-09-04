@@ -117,7 +117,7 @@
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
-                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}', '{{ solicitud.nombre_solicitante }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y' }}', '{{ solicitud.numero_ingreso }}', '', '{{ solicitud.depto_solicitante.nombre }}', '{{ solicitud.funcionario_asignado.nombre }}', 'tablaSolicitudesMemo')">
+                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.nombre_solicitante|escapejs }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudesCorreo')">
                     {{ solicitud.descripcion|truncatechars:20 }}
                     {% if solicitud.descripcion|length > 20 %}
                       <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
@@ -141,8 +141,8 @@
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                     <div class="icon-container">
-                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span> Respondido</a>
-                      <div class="tooltip">Ver archivo de salida</div>
+                      <a style="display: flex;align-items: center;" href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank">Nº: {{ solicitud.numero_salida }} <span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <div class="tooltip">Respondido</div>                      
                     </div>
                   {% else %}
                     <div class="icon-container">
@@ -154,7 +154,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="10">No hay solicitudes por Memo</td>
+                <td colspan="10">No hay solicitudes por Documento</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -215,8 +215,8 @@
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                     <div class="icon-container">
-                      <a href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span> Respondido</a>
-                      <div class="tooltip">Ver archivo de salida</div>
+                      <a style="display: flex;align-items: center;" href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank">Nº: {{ solicitud.numero_salida }} <span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
+                      <div class="tooltip">Respondido</div>
                     </div>
                   {% else %}
                     <div class="icon-container">
