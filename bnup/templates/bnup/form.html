@@ -191,7 +191,7 @@
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                 <td>
-                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion }}', '{{ solicitud.nombre_solicitante }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y' }}', '{{ solicitud.numero_ingreso }}', '{{ solicitud.correo_solicitante }}', '{{ solicitud.depto_solicitante.nombre }}', '{{ solicitud.funcionario_asignado.nombre }}', 'tablaSolicitudesCorreo')">
+                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.nombre_solicitante|escapejs }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudesCorreo')">
                     {{ solicitud.descripcion|truncatechars:20 }}
                     {% if solicitud.descripcion|length > 20 %}
                       <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
@@ -239,30 +239,34 @@
 </div>
 <div id="descripcionModal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="closeDescripcionModal()"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
-    <div class="modal-info">
-      <div class="modal-field">
+    <div style="display: flex;align-items: center;justify-content: space-between;">
+      <h2 for="archivo_adjunto_salida">Vista Previa</h2>
+      <span class="close" onclick="closeDescripcionModal()"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+    </div>
+    <div class="modal-info" style="font-family: 'Space Mono';">
+      <div class="modal-field modal-field-field">
         <strong>Número de Ingreso:</strong> <span id="numero_ingreso"></span>
       </div>
-      <div class="modal-field">
+      <div class="modal-field modal-field-field">
         <strong>Fecha de Ingreso:</strong> <span id="fechaIngreso"></span>
       </div>
-      <div class="modal-field">
+      <div class="modal-field modal-field-field">
         <strong>Nombre del Solicitante:</strong> <span id="nombreCompleto"></span>
       </div>
       <!-- Condicional para mostrar u ocultar el correo -->
-      <div class="modal-field" id="correoField" style="display: none;">
+      <div class="modal-field modal-field-field" id="correoField" style="display: none;">
         <strong>Correo del Solicitante:</strong> <span id="correo_solicitante"></span>
       </div>
-      <div class="modal-field">
+      <div class="modal-field modal-field-field">
         <strong>Departamento Solicitante:</strong> <span id="deptoSolicitante"></span>
       </div>
-      <div class="modal-field">
+      <div class="modal-field modal-field-field">
         <strong>Funcionario Asignado:</strong> <span id="funcionario_asignado"></span>
       </div>
       <div class="modal-field">
         <strong>Descripción:</strong>
-        <div id="descripcionCompleta"></div>
+        <br />
+        <div id="descripcionCompleta" style="text-align: justify;"></div>
       </div>
     </div>
   </div>
@@ -271,14 +275,20 @@
 <div id="fileModal" class="modal">
   <div class="modal-content">
     <div>
-      <div style="display: flex;justify-content: space-between;align-items: center;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
         <label for="archivo_adjunto">Adjuntar archivo</label>
-        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
       </div>
       <input type="file" id="fileModalInput" class="file" />
+
+      <!-- Nuevo botón de Confirmar -->
+      <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+        <button id="confirmButton" class="btn">Confirmar</button>
+      </div>
     </div>
   </div>
 </div>
+
 
 <!-- Modal para gestionar la salida -->
 <div id="salidaModal" class="modal">

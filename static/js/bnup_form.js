@@ -1,28 +1,56 @@
 function initializeFileModal() {
     const modalButton = document.getElementById('openFileModal');
     const closeModalButton = document.querySelector('#fileModal .close');
+    const confirmButton = document.getElementById('confirmButton'); // Botón de confirmar
     const fileModal = document.getElementById('fileModal');
     const fileModalInput = document.getElementById('fileModalInput');
     const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
 
+    // Abrir el modal
     if (modalButton) {
         modalButton.onclick = function () {
             fileModal.style.display = 'block';
         };
     }
 
+    // Cerrar el modal con el botón de cerrar
     if (closeModalButton) {
         closeModalButton.onclick = function () {
             fileModal.style.display = 'none';
         };
     }
 
+    // Cerrar el modal al hacer clic fuera de él
     window.onclick = function (event) {
         if (event.target === fileModal) {
             fileModal.style.display = 'none';
         }
     };
 
+    // Confirmar selección de archivo y cerrar modal
+    if (confirmButton) {
+        confirmButton.onclick = function () {
+            if (fileModalInput.files.length > 0) {
+                archivoAdjuntoInput.files = fileModalInput.files;
+                fileModal.style.display = 'none';
+                Swal.fire({
+                    title: 'Archivo adjuntado',
+                    text: 'El archivo se ha adjuntado correctamente.',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Debe seleccionar un archivo antes de confirmar.',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        };
+    }
+
+    // Configurar la carga de archivos
     if (fileModalInput) {
         fileModalInput.onchange = function () {
             archivoAdjuntoInput.files = fileModalInput.files;
@@ -51,6 +79,7 @@ function initializeFileModal() {
         });
     }
 }
+
 
 // Función para abrir el modal de archivo_adjunto_salida
 function openSalidaModal(solicitudId) {

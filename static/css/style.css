@@ -1043,7 +1043,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   padding: 20px;
   border: 1px solid #888;
   width: 80%;
-  max-width: 500px;
+  max-width: 700px;
   border-radius: 10px;
 }
 
@@ -1186,12 +1186,13 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   bottom: 0;
   width: 75px;
   height: 100%;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #c9e8f4 75%);  
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #c9e8f4 75%);
 }
 
 .descripcion-preview:hover .material-symbols-outlined {
-  color: #E73C45;  
-  transition: color 0.3s ease-in-out; /* Cambia 0.3s al tiempo que prefieras */
+  color: #E73C45;
+  transition: color 0.3s ease-in-out;
+  /* Cambia 0.3s al tiempo que prefieras */
 }
 
 .descripcion-icon {
@@ -1212,12 +1213,10 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
-.modal-content {
-  background-color: #fefefe;
-  margin: 3% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
+.modal-field-field {
+  display: flex;
+  justify-content: space-between;
+
 }
 
 .close {
@@ -1238,8 +1237,34 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   background: linear-gradient(to right, rgba(255, 255, 255, 0), #f2f2f2 75%);
 }
 
+.tableInfor_container tr.highlight-row:nth-child(even) .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #F7EA53 75%);
+}
 
 .tableInfor_container tr:hover .descripcion-preview::after {
   background: linear-gradient(to right, rgba(255, 255, 255, 0), #ddd 75%);
 
+}
+
+.highlight-row  {
+  background-color: #F7EA53;
+  color: ghostwhite;
+  font-weight: bold;
+  box-shadow: 0 0 15px #F7EA53;
+  border-radius: 3px;
+  padding: 1px;
+}
+
+.tableInfor_container tr.highlight-row:nth-child(even) {
+  background-color: #F7EA53 !important;
+}
+
+tr.highlight-row .descripcion-preview::after {  
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #F7EA53 75%);
+
+}
+
+div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {  
+  background-color: #4BBFE0 !important;
+  color: #fff;  
 }

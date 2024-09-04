@@ -164,23 +164,42 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         displayRows(currentPage);
     }
 
-    // Función para buscar en la tabla
     function searchTable(searchInputId) {
         const input = document.getElementById(searchInputId);
         if (!input) return;
 
         input.addEventListener('input', function () {
-            const filter = input.value.toLowerCase();
+            let filter = input.value.trim().toLowerCase(); // Eliminar los espacios en blanco al inicio y al final
+
+            // Limpiar todas las filas resaltadas antes de realizar una nueva búsqueda
+            rows.forEach(row => {
+                row.classList.remove('highlight-row'); // Eliminar el resaltado de todas las filas
+            });
+
+            // Si el cuadro de búsqueda está vacío o contiene solo espacios, mostrar todas las filas y salir de la función
+            if (filter === '') {
+                filteredRows = rows; // Restaurar todas las filas si no hay filtro válido
+                updatePaginationAfterSearch(); // Volver a mostrar todas las filas con paginación
+                return;
+            }
 
             // Realizar búsqueda en todas las filas
             filteredRows = rows.filter(row => {
                 const cells = Array.from(row.getElementsByTagName('td'));
-                return cells.some(cell => cell.innerText.toLowerCase().includes(filter));
+                const found = cells.some(cell => cell.innerText.toLowerCase().includes(filter));
+
+                // Si se encuentra una coincidencia, agregar la clase de resaltado a la fila
+                if (found) {
+                    row.classList.add('highlight-row');
+                }
+                return found; // Mantener la fila si contiene la palabra buscada
             });
 
-            updatePaginationAfterSearch();
+            updatePaginationAfterSearch(); // Actualizar la paginación después de la búsqueda
         });
     }
+
+
 
     // Inicializar la búsqueda en la tabla
     searchTable(tableId === 'tablaSolicitudesMemo' ? 'searchMemo' : 'searchCorreo');
@@ -217,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Condicional para mostrar u ocultar el correo según la tabla de origen
         if (tablaOrigen === 'tablaSolicitudesCorreo') {
             correoSolicitante.textContent = correo_solicitante;
-            correoField.style.display = 'block';
+            correoField.style.display = 'flex';
         } else {
             correoField.style.display = 'none';
         }
