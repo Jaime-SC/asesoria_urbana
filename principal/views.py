@@ -33,13 +33,15 @@ def login(request):
 
         if user is not None:
             auth_login(request, user)
-            # messages.success(request, 'Has iniciado sesión correctamente.')
             request.session['show_sweetalert'] = 'login_success'
             return redirect('home')
         else:
-            messages.error(request, 'Usuario o contraseña incorrectos.')
+            # En caso de error, establecer un indicador de error en la sesión
+            request.session['show_sweetalert'] = 'login_error'
+            return redirect('home')
 
     return render(request, 'login.html')
+
 
 def logout(request):
     auth_logout(request)
