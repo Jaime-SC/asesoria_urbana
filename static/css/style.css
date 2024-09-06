@@ -485,8 +485,14 @@ button {
 }
 
 /* Resaltar una fila cuando el mouse pasa sobre ella */
-.tableInfor_container tr:hover {
-  background-color: #ddd;
+.tableInfor_container tbody tr:hover {
+  background-color: #fef191;
+  color: ghostwhite;
+  font-weight: bold;
+  box-shadow: 0 0 15px #fef191;
+  border-radius: 3px;
+  padding: 1px;
+  
 }
 
 /* Estilo para cuando no hay datos en la tabla */
@@ -1043,8 +1049,13 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   padding: 20px;
   border: 1px solid #888;
   width: 80%;
-  max-width: 700px;
+  max-width: 500px;
   border-radius: 10px;
+}
+
+#descripcionModal .modal-content {  
+  width: 80%;
+  max-width: 700px !important;  
 }
 
 .fileinput-remove:not(.fileinput-remove-button) {
@@ -1200,19 +1211,6 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   color: #4BBFE0;
 }
 
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  padding-top: 60px;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
 .modal-field-field {
   display: flex;
   justify-content: space-between;
@@ -1241,12 +1239,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   background: linear-gradient(to right, rgba(255, 255, 255, 0), #F7EA53 75%);
 }
 
-.tableInfor_container tr:hover .descripcion-preview::after {
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #ddd 75%);
-
-}
-
-.highlight-row  {
+.highlight-row {
   background-color: #F7EA53;
   color: ghostwhite;
   font-weight: bold;
@@ -1259,12 +1252,33 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   background-color: #F7EA53 !important;
 }
 
-tr.highlight-row .descripcion-preview::after {  
+tr.highlight-row .descripcion-preview::after {
   background: linear-gradient(to right, rgba(255, 255, 255, 0), #F7EA53 75%);
+}
+
+.tableInfor_container tr.highlight-row:nth-child(even):hover .descripcion-preview:hover::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);  
+}
+
+.tableInfor_container tr.highlight-row:hover:nth-child(even) .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);
+}
+
+.tableInfor_container tr:hover .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);  
+}
+
+.tableInfor_container tr.highlight-row:hover:nth-child(even) {
+  background-color: #fef191 !important;
+}
+
+tr.highlight-row:hover .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);
 
 }
 
-div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {  
+div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   background-color: #4BBFE0 !important;
-  color: #fff;  
+  color: #fff;
+
 }

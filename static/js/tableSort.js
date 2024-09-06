@@ -96,10 +96,19 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         });
     }
 
-    // Función para configurar los botones de paginación
+    // Función para configurar los botones de paginación con carrusel
     function setupPagination() {
         const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
         pagination.innerHTML = ''; // Limpiar la paginación existente
+
+        const maxVisiblePages = 3; // Máximo de botones de páginas visibles
+        let startPage = Math.max(currentPage - 1, 1);
+        let endPage = Math.min(startPage + maxVisiblePages - 1, pageCount);
+
+        // Ajustar las páginas visibles si nos acercamos al final
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(endPage - maxVisiblePages + 1, 1);
+        }
 
         // Botón para ir a la página anterior
         const prevButton = document.createElement('button');
@@ -110,13 +119,13 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
             if (currentPage > 1) {
                 currentPage--;
                 displayRows(currentPage);
-                updatePaginationButtons();
+                setupPagination(); // Actualiza la paginación con las páginas visibles
             }
         });
         pagination.appendChild(prevButton);
 
-        // Crear botones para cada página
-        for (let i = 1; i <= pageCount; i++) {
+        // Crear botones para las páginas visibles
+        for (let i = startPage; i <= endPage; i++) {
             const pageButton = document.createElement('button');
             pageButton.textContent = i;
             pageButton.className = 'page-btn';
@@ -126,7 +135,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
             pageButton.addEventListener('click', function () {
                 currentPage = i;
                 displayRows(currentPage);
-                updatePaginationButtons();
+                setupPagination(); // Actualiza la paginación con las páginas visibles
             });
             pagination.appendChild(pageButton);
         }
@@ -140,11 +149,12 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
             if (currentPage < pageCount) {
                 currentPage++;
                 displayRows(currentPage);
-                updatePaginationButtons();
+                setupPagination(); // Actualiza la paginación con las páginas visibles
             }
         });
         pagination.appendChild(nextButton);
     }
+
 
     // Función para actualizar el estado de los botones de paginación
     function updatePaginationButtons() {
