@@ -1299,7 +1299,7 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 .inputLoginContainer input[type="password"], 
 textarea, select {
   margin-block: 2px;
-  border: 0px solid #111;
+  border: 0px solid #16233E;
   border-radius: 10px;
 }
 
@@ -1308,9 +1308,19 @@ textarea, select {
   transition: color 0.3s ease-in-out;  
 }
 
+.inputLoginContainer span {
+  color: #16233E;
+}
+
 /* Cambia el color del span cuando el input tiene foco */
 .inputLoginContainer:focus-within span {
-  color: #4BBFE0;
+  color: #387b8f;
+}
+
+.inputLoginContainer:focus-within  {  
+  border: solid 1px #387b8f;
+  transition: border 0.3s ease-in-out;  
+
 }
 
 .inputLoginContainer:hover span {

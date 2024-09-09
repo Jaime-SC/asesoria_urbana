@@ -141,12 +141,19 @@
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                     <div class="icon-container">
-                      <a style="display: flex;align-items: center;" href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank">Nº: {{ solicitud.numero_salida }} <span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
-                      <div class="tooltip">Respondido</div>                      
+                      <a style="display: flex; align-items: center;" href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank">
+                        Nº: {{ solicitud.numero_salida }}
+                        <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
+                      </a>
+                      <div class="tooltip">
+                        Respondido {{ solicitud.fecha_salida|date:'d/m/Y' }}
+                      </div>  <!-- Se muestra la fecha de salida -->
                     </div>
                   {% else %}
                     <div class="icon-container">
-                      <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})"><span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span></a>
+                      <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
+                        <span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span>
+                      </a>
                       <div class="tooltip">Responder con archivo de salida</div>
                     </div>
                   {% endif %}

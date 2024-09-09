@@ -31,6 +31,7 @@ class SolicitudBNUP(models.Model):
     archivo_adjunto_ingreso = models.FileField(upload_to='archivos_adjuntos/', null=True, blank=True)  # Ya existente
     archivo_adjunto_salida = models.FileField(upload_to='archivos_adjuntos_salida/', null=True, blank=True)  # Nuevo campo
     numero_salida = models.IntegerField(null=True, blank=True)  # Nuevo campo
+    fecha_salida = models.DateField(null=True, blank=True)  # Nuevo campo
 
     def __str__(self):
         return f"{self.nombre_solicitante} - {self.tipo_recepcion.tipo}"

@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render, redirect
 from .models import SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
 from django.contrib import messages
@@ -16,6 +17,7 @@ def bnup_form(request):
             solicitud = SolicitudBNUP.objects.get(id=solicitud_id)
             solicitud.numero_salida = numero_salida
             solicitud.archivo_adjunto_salida = archivo_adjunto_salida
+            solicitud.fecha_salida = datetime.now().date()  # Establecer la fecha actual como la fecha de salida
             solicitud.save()
             messages.success(request, 'Salida registrada con éxito.')
             request.session['redirect_to_bnup'] = True
