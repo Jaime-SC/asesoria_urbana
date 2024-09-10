@@ -2,10 +2,8 @@
   <div class="card-details">
     <div class="div-container">
       <!-- Botones para abrir modales -->
-      <div style="display: flex;flex-direction: column;gap: 10px;">
-        <button style="background-color: #4BBFE0;justify-content: flex-start;width: -webkit-fill-available;" id="openBNUPFormModal" class="btn-stats"><span class="material-symbols-outlined">note_add</span> BNUP</button>
-        <button style="justify-content: flex-start;width: -webkit-fill-available;" id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
-      </div>
+      <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats"><span class="material-symbols-outlined">note_add</span> BNUP</button>
+      <button style="justify-content: flex-start;width: 150px;" id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
     </div>
 
     <!-- Ventana modal para el formulario BNUP -->
@@ -86,18 +84,23 @@
 
     <div class="tableInfor_container">
       <div>
+        <!-- Campo de búsqueda para todas las solicitudes -->
         <div class="tittleTable">
-          <h3>Solicitudes por Documento</h3>
-          <input type="text" id="searchMemo" placeholder="Buscar Documento..." class="search-input" />
-          <div id="paginationMemo" class="pagination"></div>
+          <h3>Solicitudes de BNUP</h3>
+          <div class="searchContainer">
+            <span class="material-symbols-outlined">search</span>
+            <input style="width: 500px;margin-top: 0px;border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
+          </div>
+          <div id="paginationSolicitudes" class="pagination"></div>
         </div>
-        <table id="tablaSolicitudesMemo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
+        <table id="tablaSolicitudes" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
               <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Recepción</th>
               <th class="shadow" data-type="number">N° Doc</th>
+              <th class="shadow" data-type="string">Correo</th>
               <th class="shadow" data-type="string">Solicitante</th>
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Funcionario</th>
@@ -107,17 +110,41 @@
             </tr>
           </thead>
           <tbody>
-            {% for solicitud in solicitudes_memo %}
+            {% for solicitud in solicitudes %}
               <tr>
                 <td>{{ solicitud.numero_ingreso }}</td>
                 <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.tipo_recepcion.tipo }}</td>
-                <td>{{ solicitud.numero_memo }}</td>
+                <!-- N° Doc -->
+                <td>
+                  {% if solicitud.numero_memo %}
+                    {{ solicitud.numero_memo }}
+                  {% else %}
+                    <div class="icon-container">
+                      <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
+                      <div class="tooltip">Sin número de documento</div>
+                    </div>
+                  {% endif %}
+                </td>
+
+                <!-- Correo -->
+                <td>
+                  {% if solicitud.correo_solicitante %}
+                    {{ solicitud.correo_solicitante }}
+                  {% else %}
+                    <div class="icon-container">
+                      <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
+                      <div class="tooltip">Sin Correo</div>
+                    </div>
+                  {% endif %}
+                </td>
                 <td>{{ solicitud.nombre_solicitante }}</td>
+
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+
                 <td>
-                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.nombre_solicitante|escapejs }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudesCorreo')">
+                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.nombre_solicitante|escapejs }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
                     {{ solicitud.descripcion|truncatechars:20 }}
                     {% if solicitud.descripcion|length > 20 %}
                       <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
@@ -125,6 +152,7 @@
                   </div>
                 </td>
 
+                <!-- Entrada -->
                 <td>
                   {% if solicitud.archivo_adjunto_ingreso %}
                     <div class="icon-container">
@@ -138,6 +166,8 @@
                     </div>
                   {% endif %}
                 </td>
+
+                <!-- Salidas -->
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                     <div class="icon-container">
@@ -145,85 +175,7 @@
                         Nº: {{ solicitud.numero_salida }}
                         <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
                       </a>
-                      <div class="tooltip">
-                        Respondido {{ solicitud.fecha_salida|date:'d/m/Y' }}
-                      </div>  <!-- Se muestra la fecha de salida -->
-                    </div>
-                  {% else %}
-                    <div class="icon-container">
-                      <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
-                        <span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span>
-                      </a>
-                      <div class="tooltip">Responder con archivo de salida</div>
-                    </div>
-                  {% endif %}
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="10">No hay solicitudes por Documento</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <!-- Campo de búsqueda y tabla de solicitudes por Correo -->
-        <div class="tittleTable">
-          <h3>Solicitudes por Correo</h3>
-          <input type="text" id="searchCorreo" placeholder="Buscar en Correo..." class="search-input" />
-          <div id="paginationCorreo" class="pagination"></div>
-        </div>
-        <table id="tablaSolicitudesCorreo" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
-          <thead>
-            <tr>
-              <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
-              <th class="shadow" data-type="date">Fecha</th>
-              <th class="shadow" data-type="string">Solicitante</th>
-              <th class="shadow" data-type="string">Correo</th>
-              <th class="shadow" data-type="string">Departamento</th>
-              <th class="shadow" data-type="string">Funcionario</th>
-              <th class="shadow" data-type="string">Descripción</th>
-              <th class="shadow" data-type="string">Entrada</th>
-              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for solicitud in solicitudes_correo %}
-              <tr>
-                <td>{{ solicitud.numero_ingreso }}</td>
-                <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
-                <td>{{ solicitud.nombre_solicitante }}</td>
-                <td>{{ solicitud.correo_solicitante }}</td>
-                <td>{{ solicitud.depto_solicitante.nombre }}</td>
-                <td>{{ solicitud.funcionario_asignado.nombre }}</td>
-                <td>
-                  <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.nombre_solicitante|escapejs }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudesCorreo')">
-                    {{ solicitud.descripcion|truncatechars:20 }}
-                    {% if solicitud.descripcion|length > 20 %}
-                      <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
-                    {% endif %}
-                  </div>
-                </td>
-
-                <td>
-                  {% if solicitud.archivo_adjunto_ingreso %}
-                    <div class="icon-container">
-                      <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank"><span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
-                      <div class="tooltip">Ver archivo de ingreso</div>
-                    </div>
-                  {% else %}
-                    <div class="icon-container">
-                      <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
-                      <div class="tooltip">Sin archivo de ingreso</div>
-                    </div>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
-                    <div class="icon-container">
-                      <a style="display: flex;align-items: center;" href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank">Nº: {{ solicitud.numero_salida }} <span style="color: green;" class="material-symbols-outlined">find_in_page</span></a>
-                      <div class="tooltip">Respondido</div>
+                      <div class="tooltip">Respondido {{ solicitud.fecha_salida|date:'d/m/Y' }}</div>
                     </div>
                   {% else %}
                     <div class="icon-container">
@@ -235,7 +187,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="9">No hay solicitudes por Correo</td>
+                <td colspan="11">No hay solicitudes</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -295,7 +247,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- Modal para gestionar la salida -->
 <div id="salidaModal" class="modal">

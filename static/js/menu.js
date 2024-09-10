@@ -31,10 +31,9 @@ document.addEventListener('DOMContentLoaded', function () {
           document.head.appendChild(script);
         }
 
-        attachSortHandlers('tablaSolicitudesMemo');
-        attachSortHandlers('tablaSolicitudesCorreo');
-        paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
-        paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
+        // Adjuntar controladores de ordenación y paginación a la nueva tabla unificada
+        attachSortHandlers('tablaSolicitudes');
+        paginateTable('tablaSolicitudes', 'paginationSolicitudes', 12);
 
         if (url.includes('/bnup/statistics/')) {
           changeCardDetailsBgColor('#C9E8F4');

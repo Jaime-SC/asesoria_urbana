@@ -231,7 +231,7 @@ h1 {
   height: 100%;
   gap: .5em;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
 }
 
@@ -302,11 +302,11 @@ h1 {
 
 .div-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 10px;
+  /* width: min-content !important; */
   justify-content: space-between;
-  width: min-content !important;
 }
-
 h2 {
   text-align: center;
   /* margin-bottom: 20px; */
@@ -343,7 +343,7 @@ select {
   margin-top: 5px;
   background-color: #E5F4FA;
   border: 1px solid #16233e;
-  border-radius: 5px;
+  border-radius: 10px;
   box-sizing: border-box;
 }
 
@@ -426,18 +426,19 @@ button {
 /* ESTILOS TABLA */
 
 .tableInfor_container {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 0px 0px;
-  grid-template-areas:
-    "."
-    ".";
+  /* display: grid; */
+  /* grid-template-columns: 1fr; */
+  /* grid-template-rows: 1fr 1fr; */
+  /* gap: 0px 0px; */
+  /* grid-template-areas:
+      "."
+      "."; */
   background-color: #C9E8F4;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   width: -webkit-fill-available;
+  height: -webkit-fill-available;
   align-content: space-between;
 }
 
@@ -492,7 +493,7 @@ button {
   box-shadow: 0 0 15px #fef191;
   border-radius: 3px;
   padding: 1px;
-  
+
 }
 
 /* Estilo para cuando no hay datos en la tabla */
@@ -1053,9 +1054,9 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   border-radius: 10px;
 }
 
-#descripcionModal .modal-content {  
+#descripcionModal .modal-content {
   width: 80%;
-  max-width: 700px !important;  
+  max-width: 700px !important;
 }
 
 .fileinput-remove:not(.fileinput-remove-button) {
@@ -1120,9 +1121,8 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   font-size: 25px !important;
 }
 
-#tablaSolicitudesMemo,
-#tablaSolicitudesCorreo {
-  font-size: 17.5px !important;
+#tablaSolicitudes {
+  font-size: 16px !important;
   font-weight: 500;
 }
 
@@ -1257,7 +1257,7 @@ tr.highlight-row .descripcion-preview::after {
 }
 
 .tableInfor_container tr.highlight-row:nth-child(even):hover .descripcion-preview:hover::after {
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);  
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);
 }
 
 .tableInfor_container tr.highlight-row:hover:nth-child(even) .descripcion-preview::after {
@@ -1265,7 +1265,7 @@ tr.highlight-row .descripcion-preview::after {
 }
 
 .tableInfor_container tr:hover .descripcion-preview::after {
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);  
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);
 }
 
 .tableInfor_container tr.highlight-row:hover:nth-child(even) {
@@ -1292,20 +1292,21 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   align-items: center;
 }
 
-.inputLoginContainer input[type="text"], 
-.inputLoginContainer input[type="date"], 
-.inputLoginContainer input[type="number"], 
-.inputLoginContainer input[type="email"], 
-.inputLoginContainer input[type="password"], 
-textarea, select {
+.inputLoginContainer input[type="text"],
+.inputLoginContainer input[type="date"],
+.inputLoginContainer input[type="number"],
+.inputLoginContainer input[type="email"],
+.inputLoginContainer input[type="password"],
+textarea,
+select {
   margin-block: 2px;
-  border: 0px solid #16233E;
+  border: 1px solid #16233E;
   border-radius: 10px;
 }
 
 .inputLoginContainer span {
   margin-inline: 2px;
-  transition: color 0.3s ease-in-out;  
+  transition: color 0.3s ease-in-out;
 }
 
 .inputLoginContainer span {
@@ -1317,12 +1318,52 @@ textarea, select {
   color: #387b8f;
 }
 
-.inputLoginContainer:focus-within  {  
+.inputLoginContainer:focus-within {
   border: solid 1px #387b8f;
-  transition: border 0.3s ease-in-out;  
+  transition: border 0.3s ease-in-out;
 
 }
 
 .inputLoginContainer:hover span {
   color: #4BBFE0;
+}
+
+
+/* Estilo base para el contenedor de búsqueda */
+.searchContainer {
+  display: flex;
+  align-items: center;
+  background-color: #e5f4fa;
+  border: solid 1px #16233e;
+  border-radius: 10px;
+  transition: border 0.3s ease-in-out;
+}
+
+/* Estilo base para el ícono de búsqueda */
+.searchContainer span {
+  margin-inline: 2px;
+  color: #16233E;
+  transition: color 0.3s ease-in-out;
+}
+
+/* Estilo base para el input de búsqueda */
+.searchContainer input {
+  width: 500px;
+  margin-top: 0px;
+  border: 0px;
+  outline: none;
+}
+
+/* Cambiar color del borde y del ícono cuando se hace hover */
+.searchContainer:hover span {
+  color: #4BBFE0;
+}
+
+/* Cambiar el color del borde y del ícono cuando el input tiene foco */
+.searchContainer:focus-within {
+  border-color: #387b8f;
+}
+
+.searchContainer:focus-within span {
+  color: #387b8f;
 }

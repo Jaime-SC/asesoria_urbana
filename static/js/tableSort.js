@@ -45,7 +45,7 @@ function sortTable(table, column, type, ascending) {
 // Función para actualizar la paginación después de ordenar la tabla
 function updatePaginationAfterSort(table, column) {
     const paginationId = table.id === 'tablaSolicitudesMemo' ? 'paginationMemo' : 'paginationCorreo';
-    const rowsPerPage = 5; // Número de filas por página
+    const rowsPerPage = 12; // Número de filas por página
     paginateTable(table.id, paginationId, rowsPerPage); // Volver a paginar la tabla
 }
 
@@ -211,19 +211,18 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
 
 
 
-    // Inicializar la búsqueda en la tabla
-    searchTable(tableId === 'tablaSolicitudesMemo' ? 'searchMemo' : 'searchCorreo');
-    displayRows(currentPage);
-    setupPagination();
+    // Inicializar la búsqueda en la tabla unificada
+    searchTable('searchSolicitudes'); // Asocia el campo de búsqueda a la tabla unificada
+    displayRows(currentPage); // Mostrar las filas correspondientes a la página actual
+    setupPagination(); // Configurar la paginación para la tabla unificada
+
 }
 
 // Asegúrate de cargar estas funciones en la inicialización de tu página
 document.addEventListener('DOMContentLoaded', function () {
-    // Aquí asegúrate de que se cargue todo lo necesario para las tablas
-    attachSortHandlers('tablaSolicitudesMemo');
-    attachSortHandlers('tablaSolicitudesCorreo');
-    paginateTable('tablaSolicitudesMemo', 'paginationMemo', 5);
-    paginateTable('tablaSolicitudesCorreo', 'paginationCorreo', 5);
+    // Adjuntar controladores de ordenación y paginación a la nueva tabla unificada
+    attachSortHandlers('tablaSolicitudes');
+    paginateTable('tablaSolicitudes', 'paginationSolicitudes', 12);
 
     window.openDescripcionModal = function (descripcion, nombre, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');
