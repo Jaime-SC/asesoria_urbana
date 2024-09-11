@@ -1300,8 +1300,7 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 textarea,
 select {
   margin-block: 2px;
-  border: 1px solid #16233E;
-  border-radius: 10px;
+  
 }
 
 .inputLoginContainer span {

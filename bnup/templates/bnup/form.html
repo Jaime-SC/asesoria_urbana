@@ -128,7 +128,7 @@
                 </td>
 
                 <!-- Correo -->
-                <td>
+                <td data-order="{% if solicitud.correo_solicitante %}{{ solicitud.correo_solicitante|lower }}{% else %}zzz{% endif %}">
                   {% if solicitud.correo_solicitante %}
                     {{ solicitud.correo_solicitante }}
                   {% else %}
@@ -138,6 +138,7 @@
                     </div>
                   {% endif %}
                 </td>
+                
                 <td>{{ solicitud.nombre_solicitante }}</td>
 
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
@@ -146,7 +147,7 @@
                 <td>
                   <div class="descripcion-preview" onclick="openDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.nombre_solicitante|escapejs }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
                     {{ solicitud.descripcion|truncatechars:20 }}
-                    {% if solicitud.descripcion|length > 20 %}
+                    {% if solicitud.descripcion|length > 1 %}
                       <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
                     {% endif %}
                   </div>

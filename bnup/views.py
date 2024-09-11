@@ -19,7 +19,7 @@ def bnup_form(request):
             solicitud.archivo_adjunto_salida = archivo_adjunto_salida
             solicitud.fecha_salida = datetime.now().date()  # Establecer la fecha actual como la fecha de salida
             solicitud.save()
-            messages.success(request, 'Salida registrada con éxito.')
+            messages.success(request)
             request.session['redirect_to_bnup'] = True
             return redirect('home')
 
@@ -55,7 +55,7 @@ def bnup_form(request):
                 archivo_adjunto_ingreso=archivo_adjunto
             )
             solicitud.save()
-            messages.success(request, 'Solicitud creada con éxito.')
+            messages.success(request)
             request.session['redirect_to_bnup'] = True
             return redirect('home')
         except Exception as e:

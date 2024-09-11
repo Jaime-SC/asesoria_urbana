@@ -6,8 +6,9 @@ function sortTable(table, column, type, ascending) {
 
     // Función para comparar las filas basadas en el tipo de datos (número, fecha, texto)
     const compareFunction = (rowA, rowB) => {
-        const cellA = rowA.cells[column].innerText.trim(); // Obtener el valor de la celda de la fila A
-        const cellB = rowB.cells[column].innerText.trim(); // Obtener el valor de la celda de la fila B
+        // Obtener el valor de la celda de la fila A y B usando el atributo data-order si existe
+        const cellA = rowA.cells[column].getAttribute('data-order') || rowA.cells[column].innerText.trim(); 
+        const cellB = rowB.cells[column].getAttribute('data-order') || rowB.cells[column].innerText.trim(); 
 
         let a, b;
         switch (type) {
