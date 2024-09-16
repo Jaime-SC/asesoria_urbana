@@ -58,13 +58,20 @@
           {% if user.is_authenticated %}
             <span class="material-symbols-outlined">account_circle</span>
             <p>{{ user.username }}</p>
-            <a href="{% url 'logout' %}" class="buttonLogin buttonLogout"><span class="material-symbols-outlined bell" style="
-              color: ghostwhite;">logout</span>Cerrar Sesión</a>
+            <!-- Mostrar el tipo de usuario -->
+            {% if perfil_usuario %}
+              <p>({{ perfil_usuario.tipo_usuario.nombre }})</p>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="buttonLogin buttonLogout">
+              <span class="material-symbols-outlined bell" style="color: ghostwhite;">logout</span>Cerrar Sesión
+            </a>
           {% else %}
-            <a class="user buttonLogin" href="{% url 'login' %}" data-content="login"><span class="material-symbols-outlined bell" style="
-              color: #16233E;">badge</span>Iniciar Sesión</a>
+            <a class="user buttonLogin" href="{% url 'login' %}" data-content="login">
+              <span class="material-symbols-outlined bell" style="color: #16233E;">badge</span>Iniciar Sesión
+            </a>
           {% endif %}
         </div>
+        
       </div>
       {% block content %}
 

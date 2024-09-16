@@ -1248,8 +1248,61 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   padding: 1px;
 }
 
+.fila-marcada {
+  background-color: #62ff95;
+  font-weight: bold;
+  box-shadow: 0 0 15px #62ff95;
+  border-radius: 3px;
+  padding: 1px;
+}
+
+/* Alternar el color de fondo para las filas */
+.tableInfor_container tr.fila-marcada:nth-child(even) {
+  background-color: #62ff95;
+}
+
+.tableInfor_container tr.fila-marcada:nth-child(even):hover {
+  background-color: #fef191;
+}
+
+.tableInfor_container tr.fila-marcada:nth-child(even):hover .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fef191 75%);
+}
+
+.tableInfor_container tr.highlight-row.fila-marcada:nth-child(even) {
+  background-color: #62ff95;
+}
+
+.fila-marcada .descripcion-preview::after {  
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #62ff95 75%);
+}
+
+.tableInfor_container tr.fila-marcada:nth-child(even) .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #62ff95 75%);
+}
+
+tr.highlight-row.fila-marcada .descripcion-preview::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #62ff95 75%);
+}
+
+/* Estilos para las filas de la tabla */
+/* .tableInfor_container tr.fila-marcada td { 
+  color: ghostwhite;
+} */
+
+/* Deshabilitar los clics en la celda */
+.non-clickable {
+  pointer-events: none;  /* Deshabilita los clics en la celda */
+}
+
+/* Permitir los clics solo en el checkbox dentro de la celda */
+.non-clickable input[type="checkbox"] {
+  pointer-events: auto;  /* Reactiva los clics solo en el checkbox */
+}
+
+
 .tableInfor_container tr.highlight-row:nth-child(even) {
-  background-color: #F7EA53 !important;
+  background-color: #F7EA53;
 }
 
 tr.highlight-row .descripcion-preview::after {

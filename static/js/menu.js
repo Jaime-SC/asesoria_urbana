@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
             updateBNUPFields();
             initializeFileModal();
             initializeBNUPFormModal();
+            initializeRowSelection();  // Inicializar la selección de filas después de cargar el contenido
+            borde_thead();
           };
           document.head.appendChild(script);
         }

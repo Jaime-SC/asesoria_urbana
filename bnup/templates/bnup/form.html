@@ -96,7 +96,10 @@
         <table id="tablaSolicitudes" border="1" cellpadding="5" cellspacing="0" style="margin-top: 20px;">
           <thead>
             <tr>
-              <th style="border-radius: 10px 0px 0px;" class="shadow" data-type="number">Nº Ingreso</th>
+              <th class="non-clickable">
+                <input type="checkbox" id="selectAll" />
+              </th>
+              <th class="shadow" data-type="number">Nº Ingreso</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Recepción</th>
               <th class="shadow" data-type="number">N° Doc</th>
@@ -106,12 +109,15 @@
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Descripción</th>
               <th class="shadow" data-type="string">Entrada</th>
-              <th style="border-radius: 0px 10px 0px 0px;" class="shadow" data-type="string">Salidas</th>
+              <th class="shadow" data-type="string">Salidas</th>
             </tr>
           </thead>
           <tbody>
             {% for solicitud in solicitudes %}
               <tr>
+                <td>
+                  <input type="checkbox" class="rowCheckbox" />
+                </td> <!-- Checkbox para seleccionar fila individual -->
                 <td>{{ solicitud.numero_ingreso }}</td>
                 <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.tipo_recepcion.tipo }}</td>
@@ -128,7 +134,15 @@
                 </td>
 
                 <!-- Correo -->
-                <td data-order="{% if solicitud.correo_solicitante %}{{ solicitud.correo_solicitante|lower }}{% else %}zzz{% endif %}">
+                <td data-order="{% if solicitud.correo_solicitante %}
+                    {{ solicitud.correo_solicitante|lower }}
+                  {% else %}
+                    
+                    
+                    zzz
+
+
+                  {% endif %}">
                   {% if solicitud.correo_solicitante %}
                     {{ solicitud.correo_solicitante }}
                   {% else %}
@@ -138,7 +152,7 @@
                     </div>
                   {% endif %}
                 </td>
-                
+
                 <td>{{ solicitud.nombre_solicitante }}</td>
 
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
@@ -270,3 +284,5 @@
     </form>
   </div>
 </div>
+
+

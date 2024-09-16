@@ -246,6 +246,60 @@ function initializeBNUPFormModal() {
     };
 }
 
+// Función para inicializar la selección de filas
+function initializeRowSelection() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+
+    function toggleRowHighlight(row, isChecked) {
+        if (isChecked) {
+            row.classList.add('fila-marcada');
+        } else {
+            row.classList.remove('fila-marcada');
+        }
+    }
+
+    // Función para seleccionar o deseleccionar todas las filas
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('click', function (event) {
+            event.stopPropagation();  // Evita la propagación del evento para que no active el ordenamiento
+        });
+        selectAllCheckbox.addEventListener('change', function () {
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+            });
+        });
+    }
+
+    // Función para seleccionar o deseleccionar una fila individual
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+
+            // Si todas las filas están seleccionadas, marcar el selectAll checkbox
+            const allChecked = [...rowCheckboxes].every(cb => cb.checked);
+            selectAllCheckbox.checked = allChecked;
+        });
+    });
+}
+
+function borde_thead() {
+    const tableRow = document.querySelector('tr');  // Seleccionar la primera fila (puedes cambiar según corresponda)
+
+    if (tableRow) {
+        const thElements = tableRow.querySelectorAll('th');  // Obtener todos los <th>
+
+        if (thElements.length > 0) {
+            // Aplicar el estilo al primer <th>
+            thElements[0].style.borderRadius = '10px 0px 0px 0px';
+
+            // Aplicar el estilo al último <th>
+            thElements[thElements.length - 1].style.borderRadius = '0px 10px 0px 0px';
+        }
+    }
+}
+
 // Inicializar las funcionalidades específicas cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function () {
     if (document.querySelector('#bnupForm')) {
@@ -253,5 +307,10 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeFileModal();
         initializeBNUPFormModal();
     }
+
+    // Inicializar la selección de filas en la tabla
+    initializeRowSelection();
+    borde_thead();
 });
+
 
