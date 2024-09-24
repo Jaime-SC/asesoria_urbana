@@ -70,6 +70,16 @@ document.addEventListener('DOMContentLoaded', function () {
             });
           });
         }
+
+        // Verificar si se debe redirigir a BNUP
+        if (window.redirectToBNUP) {
+          const bnupLink = document.querySelector('a[data-content="BNUP"]');
+          if (bnupLink) {
+            highlightMenuOption(bnupLink);
+            loadContent('/bnup/');
+          }
+          window.redirectToBNUP = false;
+        }
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }

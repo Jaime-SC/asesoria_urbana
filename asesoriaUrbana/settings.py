@@ -79,22 +79,22 @@ WSGI_APPLICATION = 'asesoriaUrbana.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    #     'NAME': 'asesoria_urbana',
-    #     'USER': 'postgres',
-    #     'PASSWORD': '1234',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432',
-    # }
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'asesoria_urbana',
-        'USER': 'asesoria_urbana',
-        'PASSWORD': 'asesoria_urbana_2024',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '5432',
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': 'asesoria_urbana',
+    #     'USER': 'asesoria_urbana',
+    #     'PASSWORD': 'asesoria_urbana_2024',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432',
+    # }
 }
 
 

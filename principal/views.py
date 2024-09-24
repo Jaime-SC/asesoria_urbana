@@ -4,7 +4,7 @@ from django.contrib import messages
 from principal.models import PerfilUsuario  # Importar el modelo PerfilUsuario
 
 def home(request):
-    # Limpiar la bandera de redirección después de usarla
+    # Recuperar la bandera de redirección
     redirect_to_bnup = request.session.pop('redirect_to_bnup', False)
     
     perfil_usuario = None
@@ -16,7 +16,6 @@ def home(request):
         'redirect_to_bnup': redirect_to_bnup,
         'perfil_usuario': perfil_usuario  # Enviar el perfil al contexto
     })
-
 
 def inicio(request):
     return render(request, 'asesoria_urbana.html')
