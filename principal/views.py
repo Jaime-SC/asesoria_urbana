@@ -4,8 +4,9 @@ from django.contrib import messages
 from principal.models import PerfilUsuario  # Importar el modelo PerfilUsuario
 
 def home(request):
-    # Recuperar la bandera de redirección
+    # Limpiar las banderas de redirección y de alerta después de usarlas
     redirect_to_bnup = request.session.pop('redirect_to_bnup', False)
+    show_sweetalert = request.session.pop('show_sweetalert', None)
     
     perfil_usuario = None
     if request.user.is_authenticated:
@@ -14,7 +15,8 @@ def home(request):
 
     return render(request, 'home.html', {
         'redirect_to_bnup': redirect_to_bnup,
-        'perfil_usuario': perfil_usuario  # Enviar el perfil al contexto
+        'perfil_usuario': perfil_usuario,  # Enviar el perfil al contexto
+        'show_sweetalert': show_sweetalert  # Enviar la variable al contexto
     })
 
 def inicio(request):
@@ -43,11 +45,11 @@ def login(request):
                 return redirect('home')
             else:
                 request.session['show_sweetalert'] = 'login_error'
-                return redirect('login')
+                return redirect('home')
         else:
             # En caso de error, establecer un indicador de error en la sesión
             request.session['show_sweetalert'] = 'login_error'
-            return redirect('login')
+            return redirect('home')
 
     return render(request, 'login.html')
 

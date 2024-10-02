@@ -18,8 +18,7 @@ def bnup_form(request):
             solicitud.numero_salida = numero_salida
             solicitud.archivo_adjunto_salida = archivo_adjunto_salida
             solicitud.fecha_salida = datetime.now().date()  # Establecer la fecha actual como la fecha de salida
-            solicitud.save()
-            messages.success(request, 'Salida actualizada correctamente.')
+            solicitud.save()            
             request.session['redirect_to_bnup'] = True
             return redirect('home')
 

@@ -34,64 +34,53 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const showAlert = '{{ request.session.show_sweetalert|default_if_none:"" }}';
-
-        // Mostrar alertas de SweetAlert si es necesario
-        if (showAlert === 'login_success') {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: 'Has iniciado sesión correctamente.',
-                showConfirmButton: false,
-                timer: 2000
-            });
-        } else if (showAlert === 'logout_success') {
-            Swal.fire({
-                icon: 'info',
-                title: '¡Éxito!',
-                text: 'Has cerrado sesión correctamente.',
-                showConfirmButton: false,
-                timer: 2000
-            });
-        } else if (showAlert === 'login_error') {
-            // Mostrar el mensaje de error si los datos de inicio de sesión son incorrectos
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Usuario o contraseña incorrectos.',
-                showConfirmButton: false,
-                timer: 3000
-            });
-        }
-
-        // Marcar la opción "Inicio" como seleccionada y cargar su contenido
-        const inicioLink = document.querySelector('a[data-content="Inicio"]');
-        if (inicioLink) {
-            inicioLink.classList.add('selected');  // Añade la clase 'selected' para resaltar la opción "Inicio"
-            fetch('/inicio/')
-              .then(response => response.text())
-              .then(data => {
-                  document.getElementById('contentMenu').innerHTML = data;
-              });
-        }
-
-        // Limpiar la señal de la sesión para evitar que la alerta se muestre nuevamente al actualizar
-        {% if request.session.show_sweetalert %}
-          fetch("{% url 'home' %}", {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': '{{ csrf_token }}',
-            },
-            body: JSON.stringify({ clear_sweetalert: true })
-          });
-        {% endif %}
-    });
-</script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const showAlert = '{{ show_sweetalert|default_if_none:"" }}'
+    
+      // Mostrar alertas de SweetAlert si es necesario
+      if (showAlert === 'login_success') {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Has iniciado sesión correctamente.',
+          showConfirmButton: false,
+          timer: 2000
+        })
+      } else if (showAlert === 'logout_success') {
+        Swal.fire({
+          icon: 'info',
+          title: '¡Éxito!',
+          text: 'Has cerrado sesión correctamente.',
+          showConfirmButton: false,
+          timer: 2000
+        })
+      } else if (showAlert === 'login_error') {
+        // Mostrar el mensaje de error si los datos de inicio de sesión son incorrectos
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Usuario o contraseña incorrectos.',
+          showConfirmButton: false,
+          timer: 3000
+        })
+      }
+    
+      // Marcar la opción "Inicio" como seleccionada y cargar su contenido
+      const inicioLink = document.querySelector('a[data-content="Inicio"]')
+      if (inicioLink) {
+        inicioLink.classList.add('selected') // Añade la clase 'selected' para resaltar la opción "Inicio"
+        fetch('/inicio/')
+          .then((response) => response.text())
+          .then((data) => {
+            document.getElementById('contentMenu').innerHTML = data
+          })
+      }
+    })
+  </script>
 
   {% if redirect_to_bnup %}
     <script>
-  window.redirectToBNUP = true;
-</script>
+      window.redirectToBNUP = true
+    </script>
   {% endif %}
 {% endblock %}
