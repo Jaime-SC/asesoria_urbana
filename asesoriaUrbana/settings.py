@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-5(wfab=m_naze95+ul1w4v^1oe(1peg_h=8dk4#bsohf963$4c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '8afd-200-50-126-98.ng','192.168.12.80']
+ALLOWED_HOSTS = ['*', '192.168.17.65', 'asesoriaurbana.munivalpo.cl', 'www.asesoriaurbana.munivalpo.cl']
 
 
 # Application definition
