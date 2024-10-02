@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
             initializeBNUPFormModal();
             initializeRowSelection();  // Inicializar la selección de filas después de cargar el contenido
             borde_thead();
+            // Asegúrate de que cualquier otra función nueva se inicialice aquí
           };
           document.head.appendChild(script);
         }

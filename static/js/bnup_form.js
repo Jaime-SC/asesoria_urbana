@@ -300,6 +300,160 @@ function borde_thead() {
     }
 }
 
+function initializeRowSelection() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+    const deleteButton = document.getElementById('deleteSelected');
+
+    function toggleRowHighlight(row, isChecked) {
+        if (isChecked) {
+            row.classList.add('fila-marcada');
+        } else {
+            row.classList.remove('fila-marcada');
+        }
+    }
+
+    function updateDeleteButtonState() {
+        const anyChecked = Array.from(rowCheckboxes).some(checkbox => checkbox.checked);
+        deleteButton.disabled = !anyChecked;
+    }
+
+    // Función para seleccionar o deseleccionar todas las filas
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('click', function (event) {
+            event.stopPropagation();  // Evita la propagación del evento para que no active el ordenamiento
+        });
+        selectAllCheckbox.addEventListener('change', function () {
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+            });
+            updateDeleteButtonState();
+        });
+    }
+
+    // Función para seleccionar o deseleccionar una fila individual
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+
+            // Si todas las filas están seleccionadas, marcar el selectAll checkbox
+            const allChecked = [...rowCheckboxes].every(cb => cb.checked);
+            selectAllCheckbox.checked = allChecked;
+
+            updateDeleteButtonState();
+        });
+    });
+
+    // Evento para el botón de eliminar
+    if (deleteButton) {
+        deleteButton.addEventListener('click', function () {
+            // Obtener los checkboxes seleccionados
+            const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+            const numSelected = selectedCheckboxes.length;
+
+            if (numSelected === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No hay registros seleccionados',
+                    text: 'Por favor, seleccione al menos un registro para eliminar.',
+                });
+                return;
+            }
+
+            // Confirmar eliminación
+            Swal.fire({
+                title: `¿Desea eliminar ${numSelected} registro(s)?`,
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#E73C45',
+                cancelButtonColor: '#4BBFE0',
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Obtener los IDs de los registros seleccionados
+                    const idsToDelete = selectedCheckboxes.map(cb => cb.getAttribute('data-id'));
+
+                    // Enviar solicitud AJAX para eliminar los registros
+                    deleteSelectedRecords(idsToDelete);
+                }
+            });
+        });
+    }
+}
+
+function deleteSelectedRecords(ids) {
+    // Enviar solicitud AJAX al servidor
+    fetch('/bnup/delete/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+        body: JSON.stringify({ ids: ids })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Eliminar las filas de la tabla
+                ids.forEach(id => {
+                    const checkbox = document.querySelector(`.rowCheckbox[data-id="${id}"]`);
+                    if (checkbox) {
+                        const row = checkbox.closest('tr');
+                        row.parentNode.removeChild(row);
+                    }
+                });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Registros eliminados',
+                    text: 'Los registros han sido eliminados correctamente.',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                // Actualizar el estado del botón eliminar
+                const deleteButton = document.getElementById('deleteSelected');
+                deleteButton.disabled = true;
+                // Actualizar el estado del checkbox "select all"
+                const selectAllCheckbox = document.getElementById('selectAll');
+                selectAllCheckbox.checked = false;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ha ocurrido un error al eliminar los registros.',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ha ocurrido un error al eliminar los registros.',
+            });
+        });
+}
+
+// Función para obtener el token CSRF
+function getCSRFToken() {
+    let cookieValue = null;
+    const name = 'csrftoken';
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // ¿Comienza esta cookie con el nombre que queremos?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 // Inicializar las funcionalidades específicas cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function () {
     if (document.querySelector('#bnupForm')) {

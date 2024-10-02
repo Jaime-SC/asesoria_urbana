@@ -1,9 +1,10 @@
 from datetime import datetime
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
 from django.contrib import messages
 from django.db.models import Count
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse
 import json
 
 def bnup_form(request):
@@ -62,8 +63,8 @@ def bnup_form(request):
             request.session['redirect_to_bnup'] = True
             return redirect('home')
 
-    # Obtener todas las solicitudes unificadas
-    solicitudes = SolicitudBNUP.objects.all()
+    # Obtener todas las solicitudes activas
+    solicitudes = SolicitudBNUP.objects.filter(is_active=True)
 
     departamentos = Departamento.objects.all()
     funcionarios = Funcionario.objects.all()
@@ -75,6 +76,21 @@ def bnup_form(request):
         'solicitudes': solicitudes.select_related('tipo_recepcion'),
         'tipos_recepcion': tipos_recepcion
     })
+
+
+def delete_bnup_records(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            ids = data.get('ids', [])
+            # Realizar el borrado lógico
+            SolicitudBNUP.objects.filter(id__in=ids).update(is_active=False)
+            return JsonResponse({'success': True})
+        except Exception as e:
+            print("Error al eliminar los registros:", e)
+            return JsonResponse({'success': False})
+    else:
+        return JsonResponse({'success': False})
 
 def statistics_view(request):
     # Lógica para calcular estadísticas basadas en los datos

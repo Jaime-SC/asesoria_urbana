@@ -1250,7 +1250,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .fila-marcada {
   background-color: #62ff95;
-  font-weight: bold;
+  /* font-weight: bold; */
   box-shadow: 0 0 15px #62ff95;
   border-radius: 3px;
   padding: 1px;
