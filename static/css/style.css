@@ -307,6 +307,7 @@ h1 {
   /* width: min-content !important; */
   justify-content: space-between;
 }
+
 h2 {
   text-align: center;
   /* margin-bottom: 20px; */
@@ -1247,6 +1248,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   border-radius: 3px;
   padding: 1px;
 }
+
 .btn-stats span {
   color: #16233E;
 }
@@ -1276,7 +1278,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   background-color: #62ff95;
 }
 
-.fila-marcada .descripcion-preview::after {  
+.fila-marcada .descripcion-preview::after {
   background: linear-gradient(to right, rgba(255, 255, 255, 0), #62ff95 75%);
 }
 
@@ -1295,12 +1297,14 @@ tr.highlight-row.fila-marcada .descripcion-preview::after {
 
 /* Deshabilitar los clics en la celda */
 .non-clickable {
-  pointer-events: none;  /* Deshabilita los clics en la celda */
+  pointer-events: none;
+  /* Deshabilita los clics en la celda */
 }
 
 /* Permitir los clics solo en el checkbox dentro de la celda */
 .non-clickable input[type="checkbox"] {
-  pointer-events: auto;  /* Reactiva los clics solo en el checkbox */
+  pointer-events: auto;
+  /* Reactiva los clics solo en el checkbox */
 }
 
 
@@ -1356,7 +1360,7 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 textarea,
 select {
   margin-block: 2px;
-  
+
 }
 
 .inputLoginContainer span {
@@ -1421,4 +1425,32 @@ select {
 
 .searchContainer:focus-within span {
   color: #387b8f;
+}
+
+
+.modal-content table {
+
+  width: -webkit-fill-available;
+  border-collapse: collapse;
+  margin-block: 20px 0px;
+  font-family: "Roboto Condensed", monospace;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 16px !important;
+  font-weight: 500;
+
+}
+
+.modal-content table th {
+  background-color: #16233E;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-content table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
 }

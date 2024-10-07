@@ -89,63 +89,114 @@ function openSalidaModal(solicitudId) {
 
     solicitudInput.value = solicitudId;
 
-    $('#salidaFileModalInput').fileinput({
-        showUpload: false,
-        showRemove: true,
-        showPreview: true,
-        showCaption: false,
-        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
-        mainClass: 'input-group-sm',
-        dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-        fileActionSettings: {
-            showRemove: true,
-            showUpload: false,
-            showZoom: false,
-            showDrag: false
-        },
-        layoutTemplates: {
-            close: '',
-            indicator: '',
-            actionDelete: '',
-            actionUpload: ''
+    // Referencias al botón y a la sección oculta
+    const toggleButton = document.getElementById('toggleExtraFields');
+    const extraFields = document.getElementById('extraFields');
+    const archivoAdjuntoInput = document.getElementById('salidaFileModalInput');
+
+    // Asegurarse de que los campos extra estén ocultos al abrir el modal
+    extraFields.style.display = 'none';
+
+    // Evento para mostrar/ocultar los campos extra
+    toggleButton.onclick = function () {
+        if (extraFields.style.display === 'none') {
+            extraFields.style.display = 'block';
+            // Inicializar el plugin fileinput si es necesario
+            if (!$(archivoAdjuntoInput).data('fileinput')) {
+                $(archivoAdjuntoInput).fileinput({
+                    showUpload: false,
+                    showRemove: true,
+                    showPreview: true,
+                    showCaption: false,
+                    browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+                    removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                    mainClass: 'input-group-sm',
+                    dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+                    fileActionSettings: {
+                        showRemove: true,
+                        showUpload: false,
+                        showZoom: false,
+                        showDrag: false
+                    },
+                    layoutTemplates: {
+                        close: '',
+                        indicator: '',
+                        actionDelete: '',
+                        actionUpload: ''
+                    }
+                });
+            }
+        } else {
+            extraFields.style.display = 'none';
+            // Opcionalmente, limpiar el input de archivo
+            archivoAdjuntoInput.value = '';
+            // Opcionalmente, destruir el plugin fileinput
+            // $(archivoAdjuntoInput).fileinput('destroy');
         }
-    });
+    };
 
     salidaModal.style.display = 'block';
 
     salidaCloseButton.onclick = function () {
         salidaModal.style.display = 'none';
+        // Restablecer el formulario y ocultar los campos extra
+        salidaModal.querySelector('form').reset();
+        extraFields.style.display = 'none';
+        // Limpiar el input de archivo
+        if (archivoAdjuntoInput) {
+            archivoAdjuntoInput.value = '';
+            if ($(archivoAdjuntoInput).data('fileinput')) {
+                $(archivoAdjuntoInput).fileinput('clear');
+            }
+        }
     };
 
     window.onclick = function (event) {
         if (event.target === salidaModal) {
             salidaModal.style.display = 'none';
+            // Restablecer el formulario y ocultar los campos extra
+            salidaModal.querySelector('form').reset();
+            extraFields.style.display = 'none';
+            // Limpiar el input de archivo
+            if (archivoAdjuntoInput) {
+                archivoAdjuntoInput.value = '';
+                if ($(archivoAdjuntoInput).data('fileinput')) {
+                    $(archivoAdjuntoInput).fileinput('clear');
+                }
+            }
         }
     };
 
     // Manejo del botón Guardar con validación y confirmación
-    const saveButton = salidaModal.querySelector('button[type="submit"]');
+    const saveButton = document.getElementById('guardarSalida');
     saveButton.onclick = function (event) {
         event.preventDefault(); // Evita el envío del formulario por defecto
 
-        // Verificar si ambos campos están llenos
+        // Verificar si el campo número de salida está lleno
         const numeroSalida = document.getElementById('numero_salida').value;
-        const archivoAdjuntoSalida = document.getElementById('salidaFileModalInput').files.length > 0;
+        const archivoAdjuntoSalida = archivoAdjuntoInput && archivoAdjuntoInput.files.length > 0;
 
-        if (!numeroSalida || !archivoAdjuntoSalida) {
+        if (!numeroSalida) {
             Swal.fire({
                 title: 'Error',
-                text: 'Debe ingresar el número de salida y adjuntar un archivo.',
+                text: 'Debe ingresar el número de salida.',
                 icon: 'error',
                 confirmButtonColor: '#E73C45',
                 confirmButtonText: 'Aceptar'
             });
         } else {
-            // Mostrar el mensaje de confirmación si los campos están llenos
+            // Preparar el mensaje de confirmación
+            let confirmationText = "Se guardará el número de salida";
+            if (archivoAdjuntoSalida) {
+                confirmationText += " y el archivo adjunto.";
+            } else {
+                confirmationText += ".";
+            }
+
+            // Mostrar el mensaje de confirmación
             Swal.fire({
                 title: '¿Desea confirmar la Salida?',
-                text: "Se guardará el número y el archivo adjunto de salida.",
+                text: confirmationText,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#4BBFE0',
@@ -161,6 +212,7 @@ function openSalidaModal(solicitudId) {
         }
     };
 }
+
 
 function updateBNUPFields() {
     const tipoRecepcionSelect = document.getElementById('tipo_recepcion');
