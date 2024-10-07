@@ -1,8 +1,11 @@
+# bnup/urls.py
+
 from django.urls import path
-from .views import bnup_form, statistics_view, delete_bnup_records
+from .views import bnup_form, statistics_view, delete_bnup_records, edit_bnup_record
 
 urlpatterns = [
     path('', bnup_form, name='bnup_form'),
     path('statistics/', statistics_view, name='statistics_view'),
     path('delete/', delete_bnup_records, name='delete_bnup_records'),
+    path('edit/', edit_bnup_record, name='edit_bnup_record'),
 ]

@@ -5,9 +5,9 @@
       <div>
         <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats"><span class="material-symbols-outlined">note_add</span> BNUP</button>
         <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="deleteSelected" class="btn-stats" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
-        
+        <button style="background-color: #F7EA53;justify-content: flex-start;width: 150px;" id="editSelected" class="btn-stats" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
       </div>
-      <button style="justify-content: flex-start;width: 150px;" id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+      <button style="justify-content: flex-start;width: 150px;background-color: #bfff00;" id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
     </div>
 
     <!-- Ventana modal para el formulario BNUP -->
@@ -143,12 +143,7 @@
                   {% else %}
                     
                     
-                    
-                    
-                    
                     zzz
-
-
 
 
 
@@ -291,6 +286,88 @@
       </div>
       <input type="hidden" name="solicitud_id" id="solicitud_id" />
       <button id="guardarSalida" type="submit" class="btn">Guardar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para editar una solicitud (Formulario de edición) -->
+<div id="editBNUPFormModal" class="modal">
+  <div class="modal-content">
+    <!-- Formulario para editar solicitudes -->
+    <form id="editBNUPForm" method="post" action="{% url 'edit_bnup_record' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+        <h2>Editar Solicitud de BNUP</h2>
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+      </div>
+      <!-- Campo oculto para el ID de la solicitud -->
+      <input type="hidden" name="solicitud_id" id="edit_solicitud_id" />
+
+      <!-- Campos del formulario, similares al formulario de creación -->
+      <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
+        <div>
+          <label>Tipo de Recepción</label>
+          <select style="height: min-content;" name="tipo_recepcion" id="edit_tipo_recepcion" required>
+            <option value="" disabled selected>Seleccione un tipo de recepción</option>
+            {% for tipo in tipos_recepcion %}
+              <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="edit_memoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
+          <label for="edit_num_memo">Ingrese N° Doc:</label>
+          <input type="number" name="num_memo" id="edit_num_memo" />
+        </div>
+        <div id="edit_correoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
+          <label for="edit_correoSolicitante">Ingrese Correo:</label>
+          <input type="email" name="correo_solicitante" id="edit_correoSolicitante" />
+        </div>
+      </div>
+
+      <div class="form-group" style="display: flex; justify-content: space-between;">
+        <div>
+          <label for="edit_numeroIngreso">N° de Ingreso</label>
+          <input type="number" name="numero_ingreso" id="edit_numeroIngreso" required />
+        </div>
+        <div class="btn-container">
+          <button type="button" id="edit_openFileModal" class="btn">Adjuntar archivo</button>
+          <input type="file" name="archivo_adjunto_ingreso" id="edit_archivo_adjunto" class="file" style="display: none;" /> <!-- Mantén el input en el formulario pero oculto -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="edit_depto_solicitante">Departamento Solicitante</label>
+        <select style="height: max-content;" name="depto_solicitante" id="edit_depto_solicitante" required>
+          <option value="" disabled selected>Seleccione un Departamento</option>
+          {% for depto in departamentos %}
+            <option value="{{ depto.id }}">{{ depto.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="edit_nombreSolicitante">Nombre del Solicitante</label>
+        <input type="text" name="nombre_solicitante" id="edit_nombreSolicitante" placeholder="Nombre y apellido" required />
+      </div>
+      <div class="form-group">
+        <label for="edit_fecha">Fecha</label>
+        <input type="date" name="fecha_ingreso" id="edit_fecha" required />
+      </div>
+      <!-- Funcionario asignado (no editable) -->
+      <div class="form-group">
+        <label for="edit_funcionarioAsignado">Funcionario asignado a BNUP</label>
+        <select style="height: max-content;" id="edit_funcionarioAsignado" required disabled>
+          {% for funcionario in funcionarios %}
+            <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+          {% endfor %}
+        </select>
+        <!-- Campo oculto para enviar el valor -->
+        <input type="hidden" name="funcionario_asignado" id="edit_funcionarioAsignado_hidden" />
+      </div>
+      <div class="form-group">
+        <label for="edit_descripcion">Descripción</label>
+        <textarea name="descripcion" id="edit_descripcion" placeholder="Ingrese la descripción" rows="4"></textarea>
+      </div>
+      <button id="guardarEdicionBNUP" type="submit" class="btn btn-primary">Guardar Cambios</button>
     </form>
   </div>
 </div>

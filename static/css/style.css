@@ -1247,6 +1247,9 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   border-radius: 3px;
   padding: 1px;
 }
+.btn-stats span {
+  color: #16233E;
+}
 
 .fila-marcada {
   background-color: #62ff95;
