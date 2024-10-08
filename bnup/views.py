@@ -1,28 +1,17 @@
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
+from .models import SalidaBNUP, SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
 from django.contrib import messages
 from django.db.models import Count
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponseRedirect
 import json
 
 def bnup_form(request):
     if request.method == 'POST':
-        # Verifica si es una actualización de salida
-        if 'numero_salida' in request.POST and 'archivo_adjunto_salida' in request.FILES:
-            solicitud_id = request.POST.get('solicitud_id')
-            numero_salida = request.POST.get('numero_salida')
-            archivo_adjunto_salida = request.FILES.get('archivo_adjunto_salida')
-            
-            solicitud = SolicitudBNUP.objects.get(id=solicitud_id)
-            solicitud.numero_salida = numero_salida
-            solicitud.archivo_adjunto_salida = archivo_adjunto_salida
-            solicitud.fecha_salida = datetime.now().date()  # Establecer la fecha actual como la fecha de salida
-            solicitud.save()            
-            request.session['redirect_to_bnup'] = True
-            return redirect('home')
-
+        # Ya no verificamos si es una actualización de salida aquí
         # Extraer datos del formulario para crear una nueva solicitud
         tipo_recepcion_id = request.POST.get('tipo_recepcion')
         numero_memo = request.POST.get('num_memo') if tipo_recepcion_id != '2' else None
@@ -35,7 +24,7 @@ def bnup_form(request):
         descripcion = request.POST.get('descripcion')
         archivo_adjunto = request.FILES.get('archivo_adjunto_ingreso')
 
-        # Verificar que el ID de tipo de recepción es válido
+        # Verificar que los IDs son válidos y obtener las instancias correspondientes
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
@@ -54,7 +43,7 @@ def bnup_form(request):
                 descripcion=descripcion,
                 archivo_adjunto_ingreso=archivo_adjunto
             )
-            solicitud.save()            
+            solicitud.save()
             request.session['redirect_to_bnup'] = True
             return redirect('home')
         except Exception as e:
@@ -178,3 +167,50 @@ def statistics_view(request):
         'solicitudes_por_dia_semana': json.dumps({str(int(item['dia_semana'])): item['total'] for item in solicitudes_por_dia_semana}, cls=DjangoJSONEncoder),
     }
     return render(request, 'bnup/statistics.html', context)
+
+
+# views.py
+
+def get_salidas(request, solicitud_id):
+    if request.method == 'GET':
+        salidas = SalidaBNUP.objects.filter(solicitud_bnup_id=solicitud_id)
+        salidas_data = [
+            {
+                'numero_salida': salida.numero_salida,
+                'fecha_salida': salida.fecha_salida.strftime('%d/%m/%Y'),
+                'archivo_url': salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else ''
+            }
+            for salida in salidas
+        ]
+        return JsonResponse({'success': True, 'salidas': salidas_data})
+    else:
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
+
+def create_salida(request):
+    if request.method == 'POST':
+        solicitud_id = request.POST.get('solicitud_id')
+        numero_salida = request.POST.get('numero_salida')
+        fecha_salida = request.POST.get('fecha_salida')
+        archivo_adjunto_salida = request.FILES.get('archivo_adjunto_salida')
+
+        try:
+            solicitud = SolicitudBNUP.objects.get(id=solicitud_id)
+            salida = SalidaBNUP(
+                solicitud_bnup=solicitud,
+                numero_salida=numero_salida,
+                fecha_salida=fecha_salida,
+                archivo_adjunto_salida=archivo_adjunto_salida
+            )
+            salida.save()
+            
+            messages.success(request, 'Salida creada correctamente.')
+            request.session['redirect_to_bnup'] = True
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        except Exception as e:
+            print("Error al crear la salida:", e)
+            messages.error(request, f'Error al crear la salida: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    else:
+        return JsonResponse({'success': False, 'error': 'Método no permitido'})

@@ -1051,7 +1051,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   padding: 20px;
   border: 1px solid #888;
   width: 80%;
-  max-width: 500px;
+  max-width: 1000px;
   border-radius: 10px;
 }
 
@@ -1454,3 +1454,51 @@ select {
   text-align: left;
   border-bottom: 1px solid #ddd;
 }
+
+.modal-content .btn-expand {
+  display: flex;
+  background-color: #00ff7f;
+  border: solid 1px black;
+  border-radius: 10px;
+  padding: 5px;
+  margin: 0px;
+  width: min-content;
+}
+
+/* styles.css */
+
+/* Limitar el movimiento vertical de fadeInDown */
+@keyframes customFadeInDown {
+  from {
+      opacity: 0;
+      transform: translateY(-10px); /* Reducir el desplazamiento */
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+@keyframes customFadeOutUp {
+  from {
+      opacity: 1;
+      transform: translateY(0);
+  }
+  to {
+      opacity: 0;
+      transform: translateY(-10px); /* Reducir el desplazamiento */
+  }
+}
+
+/* Crear nuevas clases de animación con los keyframes personalizados */
+.animate__customFadeInDown {
+  animation: customFadeInDown 0.5s ease forwards;
+}
+
+.animate__customFadeOutUp {
+  animation: customFadeOutUp 0.5s ease forwards;
+}
+
+
+/* ------------------------------ */
+

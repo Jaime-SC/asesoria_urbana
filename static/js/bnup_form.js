@@ -80,137 +80,147 @@ function initializeFileModal() {
     }
 }
 
+// bnup_form.js
+// bnup_form.js
 
-// Función para abrir el modal de archivo_adjunto_salida
 function openSalidaModal(solicitudId) {
     const salidaModal = document.getElementById('salidaModal');
     const solicitudInput = document.getElementById('solicitud_id');
     const salidaCloseButton = salidaModal.querySelector('.close');
+    const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
+    const salidaFields = document.getElementById('salidaFields');
 
     solicitudInput.value = solicitudId;
 
-    // Referencias al botón y a la sección oculta
-    const toggleButton = document.getElementById('toggleExtraFields');
-    const extraFields = document.getElementById('extraFields');
-    const archivoAdjuntoInput = document.getElementById('salidaFileModalInput');
+    // Limpiar el formulario y la tabla de salidas
+    document.getElementById('salidaForm').reset();
+    tablaSalidasBody.innerHTML = '';
 
-    // Asegurarse de que los campos extra estén ocultos al abrir el modal
-    extraFields.style.display = 'none';
+    // Obtener las salidas asociadas a la solicitud
+    fetch(`/bnup/get_salidas/${solicitudId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                data.salidas.forEach(salida => {
+                    const row = document.createElement('tr');
 
-    // Evento para mostrar/ocultar los campos extra
-    toggleButton.onclick = function () {
-        if (extraFields.style.display === 'none') {
-            extraFields.style.display = 'block';
-            // Inicializar el plugin fileinput si es necesario
-            if (!$(archivoAdjuntoInput).data('fileinput')) {
-                $(archivoAdjuntoInput).fileinput({
-                    showUpload: false,
-                    showRemove: true,
-                    showPreview: true,
-                    showCaption: false,
-                    browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-                    removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
-                    mainClass: 'input-group-sm',
-                    dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-                    fileActionSettings: {
-                        showRemove: true,
-                        showUpload: false,
-                        showZoom: false,
-                        showDrag: false
-                    },
-                    layoutTemplates: {
-                        close: '',
-                        indicator: '',
-                        actionDelete: '',
-                        actionUpload: ''
+                    const numeroSalidaCell = document.createElement('td');
+                    numeroSalidaCell.textContent = salida.numero_salida;
+                    row.appendChild(numeroSalidaCell);
+
+                    const fechaSalidaCell = document.createElement('td');
+                    fechaSalidaCell.textContent = salida.fecha_salida;
+                    row.appendChild(fechaSalidaCell);
+
+                    const archivoCell = document.createElement('td');
+                    if (salida.archivo_url) {
+                        const link = document.createElement('a');
+                        link.href = salida.archivo_url;
+                        link.target = '_blank';
+                        link.setAttribute('aria-label', 'Ver Archivo'); // Mejorar accesibilidad
+                        link.setAttribute('title', 'Ver Archivo'); // Tooltip
+
+                        // Crear el icono span
+                        const iconSpan = document.createElement('span');
+                        iconSpan.classList.add('material-symbols-outlined');
+                        iconSpan.textContent = 'preview'; // Nombre del icono
+
+                        // Añadir el icono al enlace
+                        link.appendChild(iconSpan);
+
+                        archivoCell.appendChild(link);
+                    } else {
+                        archivoCell.textContent = 'No adjunto';
                     }
-                });
-            }
-        } else {
-            extraFields.style.display = 'none';
-            // Opcionalmente, limpiar el input de archivo
-            archivoAdjuntoInput.value = '';
-            // Opcionalmente, destruir el plugin fileinput
-            // $(archivoAdjuntoInput).fileinput('destroy');
-        }
-    };
+                    row.appendChild(archivoCell);
 
+                    tablaSalidasBody.appendChild(row);
+                });
+            } else {
+                console.error('Error al obtener las salidas:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error al obtener las salidas:', error);
+        });
+
+    // Mostrar el modal
     salidaModal.style.display = 'block';
 
+    // Cerrar el modal con el botón de cerrar
     salidaCloseButton.onclick = function () {
         salidaModal.style.display = 'none';
-        // Restablecer el formulario y ocultar los campos extra
-        salidaModal.querySelector('form').reset();
-        extraFields.style.display = 'none';
-        // Limpiar el input de archivo
-        if (archivoAdjuntoInput) {
-            archivoAdjuntoInput.value = '';
-            if ($(archivoAdjuntoInput).data('fileinput')) {
-                $(archivoAdjuntoInput).fileinput('clear');
-            }
-        }
     };
 
+    // Cerrar el modal al hacer clic fuera de él
     window.onclick = function (event) {
         if (event.target === salidaModal) {
             salidaModal.style.display = 'none';
-            // Restablecer el formulario y ocultar los campos extra
-            salidaModal.querySelector('form').reset();
-            extraFields.style.display = 'none';
-            // Limpiar el input de archivo
-            if (archivoAdjuntoInput) {
-                archivoAdjuntoInput.value = '';
-                if ($(archivoAdjuntoInput).data('fileinput')) {
-                    $(archivoAdjuntoInput).fileinput('clear');
-                }
-            }
         }
     };
 
-    // Manejo del botón Guardar con validación y confirmación
+    // Manejo del botón Guardar con confirmación previa usando SweetAlert2
     const saveButton = document.getElementById('guardarSalida');
     saveButton.onclick = function (event) {
-        event.preventDefault(); // Evita el envío del formulario por defecto
+        event.preventDefault(); // Evita el envío inmediato del formulario
 
-        // Verificar si el campo número de salida está lleno
-        const numeroSalida = document.getElementById('numero_salida').value;
-        const archivoAdjuntoSalida = archivoAdjuntoInput && archivoAdjuntoInput.files.length > 0;
-
-        if (!numeroSalida) {
-            Swal.fire({
-                title: 'Error',
-                text: 'Debe ingresar el número de salida.',
-                icon: 'error',
-                confirmButtonColor: '#E73C45',
-                confirmButtonText: 'Aceptar'
-            });
-        } else {
-            // Preparar el mensaje de confirmación
-            let confirmationText = "Se guardará el número de salida";
-            if (archivoAdjuntoSalida) {
-                confirmationText += " y el archivo adjunto.";
-            } else {
-                confirmationText += ".";
-            }
-
-            // Mostrar el mensaje de confirmación
-            Swal.fire({
-                title: '¿Desea confirmar la Salida?',
-                text: confirmationText,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#4BBFE0',
-                cancelButtonColor: '#E73C45',
-                confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Si el usuario confirma, enviar el formulario
-                    salidaModal.querySelector('form').submit();
-                }
-            });
-        }
+        // Mostrar la ventana de confirmación
+        Swal.fire({
+            title: '¿Desea confirmar la salida?',
+            text: "Se guardará la salida con los datos ingresados.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4BBFE0', // Color del botón de confirmar
+            cancelButtonColor: '#E73C45', // Color del botón de cancelar
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Si el usuario confirma, enviar el formulario
+                document.getElementById('salidaForm').submit();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Salida creada',
+                    text: 'La salida ha sido registrada correctamente.',
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(() => {
+                    // Opcional: Recargar la página o cerrar el modal
+                    salidaModal.style.display = 'none';
+                    window.location.reload();
+                });
+            }      
+            // Si el usuario cancela, no hacer nada
+        });
     };
+
+    // Inicializar el plugin fileinput para el input de adjuntar archivo
+    const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
+
+    if (archivoAdjuntoInput) {
+        $(archivoAdjuntoInput).fileinput({
+            showUpload: false,
+            showRemove: true,
+            showPreview: true,
+            showCaption: false,
+            browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+            removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+            mainClass: 'input-group-sm',
+            dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+            fileActionSettings: {
+                showRemove: true,
+                showUpload: false,
+                showZoom: false,
+                showDrag: false,
+                showDelete: false,
+            },
+            layoutTemplates: {
+                close: '',
+                indicator: '',
+                actionCancel: ''
+            }
+        });
+    }
 }
 
 

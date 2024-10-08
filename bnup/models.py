@@ -29,9 +29,17 @@ class SolicitudBNUP(models.Model):
     funcionario_asignado = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
     descripcion = models.TextField(null=True, blank=True)
     archivo_adjunto_ingreso = models.FileField(upload_to='archivos_adjuntos/', null=True, blank=True)  # Ya existente
-    archivo_adjunto_salida = models.FileField(upload_to='archivos_adjuntos_salida/', null=True, blank=True)  # Nuevo campo
-    numero_salida = models.IntegerField(null=True, blank=True)  # Nuevo campo
-    fecha_salida = models.DateField(null=True, blank=True)  # Nuevo campo
+    
     is_active = models.BooleanField(default=True)
     def __str__(self):
         return f"{self.nombre_solicitante} - {self.tipo_recepcion.tipo}"
+    
+# models.py
+class SalidaBNUP(models.Model):
+    solicitud_bnup = models.ForeignKey('SolicitudBNUP', on_delete=models.CASCADE, related_name='salidas')
+    numero_salida = models.IntegerField()
+    fecha_salida = models.DateField()
+    archivo_adjunto_salida = models.FileField(upload_to='archivos_adjuntos_salida/', null=True, blank=True)
+
+    def __str__(self):
+        return f"Salida Nº {self.numero_salida} - Solicitud Nº {self.solicitud_bnup.numero_ingreso}"

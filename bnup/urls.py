@@ -1,11 +1,13 @@
-# bnup/urls.py
+# urls.py
 
 from django.urls import path
-from .views import bnup_form, statistics_view, delete_bnup_records, edit_bnup_record
+from .views import bnup_form, statistics_view, delete_bnup_records, edit_bnup_record, create_salida, get_salidas
 
 urlpatterns = [
     path('', bnup_form, name='bnup_form'),
     path('statistics/', statistics_view, name='statistics_view'),
     path('delete/', delete_bnup_records, name='delete_bnup_records'),
     path('edit/', edit_bnup_record, name='edit_bnup_record'),
+    path('create_salida/', create_salida, name='create_salida'),
+    path('get_salidas/<int:solicitud_id>/', get_salidas, name='get_salidas'),
 ]
