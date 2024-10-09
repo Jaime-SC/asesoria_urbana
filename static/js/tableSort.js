@@ -40,13 +40,13 @@ function sortTable(table, column, type, ascending) {
     rows.forEach(row => tbody.appendChild(row));
 
     // Después de ordenar, resetear la paginación para empezar desde la primera página
-    updatePaginationAfterSort(table, column);
+    updatePaginationAfterSort(table);
 }
 
 // Función para actualizar la paginación después de ordenar la tabla
-function updatePaginationAfterSort(table, column) {
-    const paginationId = table.id === 'tablaSolicitudesMemo' ? 'paginationMemo' : 'paginationCorreo';
-    const rowsPerPage = 12; // Número de filas por página
+function updatePaginationAfterSort(table) {
+    const paginationId = table.getAttribute('data-pagination-id');
+    const rowsPerPage = parseInt(table.getAttribute('data-rows-per-page')) || 8; // Número de filas por página
     paginateTable(table.id, paginationId, rowsPerPage); // Volver a paginar la tabla
 }
 
@@ -156,18 +156,6 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         pagination.appendChild(nextButton);
     }
 
-
-    // Función para actualizar el estado de los botones de paginación
-    function updatePaginationButtons() {
-        const pageButtons = pagination.querySelectorAll('.page-btn');
-        pageButtons.forEach(btn => btn.classList.remove('active', 'highlight'));
-        if (pageButtons[currentPage]) {
-            pageButtons[currentPage].classList.add('active');
-        }
-        pagination.querySelector('.prev').disabled = currentPage === 1;
-        pagination.querySelector('.next').disabled = currentPage === Math.ceil(filteredRows.length / rowsPerPage);
-    }
-
     // Función para actualizar la paginación después de una búsqueda
     function updatePaginationAfterSearch() {
         currentPage = 1; // Resetear a la primera página después de la búsqueda
@@ -175,6 +163,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         displayRows(currentPage);
     }
 
+    // Función para manejar la búsqueda en la tabla
     function searchTable(searchInputId) {
         const input = document.getElementById(searchInputId);
         if (!input) return;
@@ -210,18 +199,39 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
         });
     }
 
-
+    // Obtener el ID del campo de búsqueda desde un atributo de datos
+    const searchInputId = table.getAttribute('data-search-input-id');
+    if (searchInputId) {
+        searchTable(searchInputId);
+    }
 
     // Inicializar la búsqueda en la tabla unificada
     searchTable('searchSolicitudes'); // Asocia el campo de búsqueda a la tabla unificada
     displayRows(currentPage); // Mostrar las filas correspondientes a la página actual
     setupPagination(); // Configurar la paginación para la tabla unificada
+}
 
+// Función para inicializar las tablas
+function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    // Establecer atributos de datos en la tabla
+    table.setAttribute('data-pagination-id', paginationId);
+    table.setAttribute('data-rows-per-page', rowsPerPage);
+    if (searchInputId) {
+        table.setAttribute('data-search-input-id', searchInputId);
+    }
+
+    // Adjuntar controladores de ordenación y paginación
+    attachSortHandlers(tableId);
+    paginateTable(tableId, paginationId, rowsPerPage);
 }
 
 // Asegúrate de cargar estas funciones en la inicialización de tu página
 document.addEventListener('DOMContentLoaded', function () {
     // Adjuntar controladores de ordenación y paginación a la nueva tabla unificada
+    initializeTable('tablaSolicitudes', 'paginationSolicitudes', 12, 'searchSolicitudes');
     attachSortHandlers('tablaSolicitudes');
     paginateTable('tablaSolicitudes', 'paginationSolicitudes', 12);
 

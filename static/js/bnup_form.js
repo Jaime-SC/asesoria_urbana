@@ -136,6 +136,9 @@ function openSalidaModal(solicitudId) {
 
                     tablaSalidasBody.appendChild(row);
                 });
+
+                // Después de llenar la tabla, inicializar las funciones
+                initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
             } else {
                 console.error('Error al obtener las salidas:', data.error);
             }
@@ -186,10 +189,10 @@ function openSalidaModal(solicitudId) {
                     timer: 2000
                 }).then(() => {
                     // Opcional: Recargar la página o cerrar el modal
-                    salidaModal.style.display = 'none';
+                    sessionStorage.setItem('redirectToBNUP', 'true');
                     window.location.reload();
                 });
-            }      
+            }
             // Si el usuario cancela, no hacer nada
         });
     };

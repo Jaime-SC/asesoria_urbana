@@ -140,42 +140,9 @@
                 <!-- Correo -->
                 <td data-order="{% if solicitud.correo_solicitante %}
                     {{ solicitud.correo_solicitante|lower }}
-                  {% else %}
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
+                  {% else %}                           
+                                      
                     zzz
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                   {% endif %}">
                   {% if solicitud.correo_solicitante %}
@@ -300,67 +267,71 @@
 
 <!-- Modal para gestionar la salida -->
 <div id="salidaModal" class="modal">
-  <div class="modal-content animate__animated animate__fadeInDown">
+  <div style="max-width: max-content;" class="modal-content animate__animated animate__fadeInDown">
     <!-- Encabezado del modal con título y botón de cerrar -->
     <div style="display: flex; align-items: center; justify-content: space-between;">
       <h2>Registrar Salida</h2>
-      <span class="close">
-        <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-      </span>
+      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
     </div>
     <div style="display: flex;justify-content: space-between;gap: 50px;">
-    <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
-      {% csrf_token %}
-      
-      
-      <!-- Sección de campos de salida (siempre visible) -->
-      <div id="salidaFields" style="margin-top: 10px;">
-        <div style="display: flex; justify-content: space-between; gap: 10px;">
-          <!-- Campos del formulario -->
-          <div class="form-group" style="width: 48%;">
-            <label for="numero_salida">N° de Salida</label>
-            <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
+      <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Sección de campos de salida (siempre visible) -->
+        <div id="salidaFields" style="margin-top: 10px;width: 500px;">
+          <div style="display: flex; justify-content: space-between; gap: 10px;">
+            <!-- Campos del formulario -->
+            <div class="form-group" style="width: 48%;">
+              <label for="numero_salida">N° de Salida</label>
+              <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
+            </div>
+
+            <div class="form-group" style="width: 48%;">
+              <label for="fecha_salida">Fecha de Salida</label>
+              <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="archivo_adjunto_salida">Adjuntar archivo</label>
+            <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" class="file" />
           </div>
 
-          <div class="form-group" style="width: 48%;">
-            <label for="fecha_salida">Fecha de Salida</label>
-            <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
+          <!-- Campo oculto para el ID de la solicitud -->
+          <input type="hidden" name="solicitud_id" id="solicitud_id" />
+
+          <!-- Botón de guardar -->
+          <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+
+      <!-- Tabla para mostrar las salidas asociadas -->
+      <div style="display: flex;flex-direction: column;justify-content: space-between;">
+        <div style="margin: 0px;width: -webkit-fill-available;">
+          <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
+            <h3 style="width: -webkit-fill-available;">Salidas Registradas</h3>
+            <!-- Campo de búsqueda -->
+            <div class="search-container" style="width: -webkit-fill-available;">
+              <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
+            </div>
           </div>
+          <table style="width: 350px;" id="tablaSalidas" class="table table-bordered">
+            <thead>
+              <tr>
+                <th style="border: 0px;border-radius: 10px 0px 0px;" data-type="number">Nº Salida</th>
+                <th data-type="date">Fecha</th>
+                <th style="border: 0px;border-radius: 0px 10px 0px 0px;" data-type="text">Adjunto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Aquí se llenarán las salidas mediante JavaScript -->
+            </tbody>
+          </table>
         </div>
-        <div class="form-group">
-          <label for="archivo_adjunto_salida">Adjuntar archivo</label>
-          <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" class="file" />
-        </div>
-
-        <!-- Campo oculto para el ID de la solicitud -->
-        <input type="hidden" name="solicitud_id" id="solicitud_id" />
-
-        <!-- Botón de guardar -->
-        <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
+        <div id="paginationSalidas" class="pagination"></div>
       </div>
-    </form>
-
-    <!-- Tabla para mostrar las salidas asociadas -->
-    <div style="margin-top: 20px;width: -webkit-fill-available;">
-      <h3>Salidas Registradas</h3>
-      <table id="tablaSalidas" class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Nº Salida</th>
-            <th>Fecha</th>
-            <th>Adjunto</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Aquí se llenarán las salidas mediante JavaScript -->
-        </tbody>
-      </table>
     </div>
   </div>
-  </div>
 </div>
-
-
 
 <!-- Modal para editar una solicitud (Formulario de edición) -->
 <div id="editBNUPFormModal" class="modal">
