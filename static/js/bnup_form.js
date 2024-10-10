@@ -163,9 +163,27 @@ function openSalidaModal(solicitudId) {
     };
 
     // Manejo del botón Guardar con confirmación previa usando SweetAlert2
+    // Manejo del botón Guardar con confirmación previa usando SweetAlert2
     const saveButton = document.getElementById('guardarSalida');
     saveButton.onclick = function (event) {
         event.preventDefault(); // Evita el envío inmediato del formulario
+
+        // Obtener los valores de los campos
+        const numeroSalida = document.getElementById('numero_salida').value.trim();
+        const fechaSalida = document.getElementById('fecha_salida').value.trim();
+        const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0]; // Verificamos si hay un archivo adjunto
+
+        // Verificar si los campos están completos
+        if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
+            // Mostrar mensaje de error si falta algún campo
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos incompletos',
+                text: 'Por favor, complete todos los campos antes de guardar.',
+                confirmButtonColor: '#E73C45',
+            });
+            return; // Detener la ejecución si falta algún campo
+        }
 
         // Mostrar la ventana de confirmación
         Swal.fire({
@@ -196,6 +214,7 @@ function openSalidaModal(solicitudId) {
             // Si el usuario cancela, no hacer nada
         });
     };
+
 
     // Inicializar el plugin fileinput para el input de adjuntar archivo
     const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');

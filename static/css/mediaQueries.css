@@ -156,6 +156,14 @@
     .modal-content h2 {        
         font-size: 20px;
     }
+
+    .tableInfor_container td {
+        padding: 4px;        
+    }
+
+    #tablaSolicitudes tbody {
+        font-size: 14.2px;
+    }
 }
 
 
