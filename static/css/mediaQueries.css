@@ -1,10 +1,7 @@
 /* PAGINA DE INICIO */
 
 /* Pantallas grandes (desktops) */
-@media (min-width: 960px) and (max-width: 1358px) {
-    .cardMain {
-        background: red;
-    }
+@media (min-width: 960px) and (max-width: 1358px) {    
 
     .cardContent {
         margin: 0px 15px 15px 15px;
@@ -169,9 +166,7 @@
 
 /* Pantallas extra grandes (desktops grandes y monitores de alta resolución) */
 @media (min-width: 1359px) and (max-width: 1912px) {
-    .cardMain {
-        background: blue;
-    }
+    
 
     .head {
         height: 150px;
