@@ -35,8 +35,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Adjuntar controladores de ordenación y paginación a la nueva tabla unificada
+        // attachSortHandlers('tablaSolicitudes');
+        // paginateTable('tablaSolicitudes', 'paginationSolicitudes', 10);
+        // Después:
+        const rowsPerPage = getRowsPerPage();
         attachSortHandlers('tablaSolicitudes');
-        paginateTable('tablaSolicitudes', 'paginationSolicitudes', 12);
+        paginateTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage);
+
 
         if (url.includes('/bnup/statistics/')) {
           changeCardDetailsBgColor('#C9E8F4');

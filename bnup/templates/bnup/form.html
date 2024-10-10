@@ -3,11 +3,11 @@
     <div class="div-container">
       <!-- Botones para abrir modales -->
       <div>
-        <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats"><span class="material-symbols-outlined">note_add</span> BNUP</button>
-        <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="deleteSelected" class="btn-stats" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
-        <button style="background-color: #F7EA53;justify-content: flex-start;width: 150px;" id="editSelected" class="btn-stats" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
+        <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span> BNUP</button>
+        <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
+        <button style="background-color: #F7EA53;justify-content: flex-start;width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
       </div>
-      <button style="justify-content: flex-start;width: 150px;background-color: #bfff00;" id="statisticsButton" class="btn-stats"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+      <button style="justify-content: flex-start;width: 150px;background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
     </div>
 
     <!-- Ventana modal para el formulario BNUP -->
@@ -103,7 +103,7 @@
               <th class="non-clickable">
                 <input type="checkbox" id="selectAll" />
               </th>
-              <th class="shadow" data-type="number">Nº Ingre</th>
+              <th class="shadow nIngre" data-type="number">Nº Ingre</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Recepción</th>
               <th class="shadow" data-type="number">N° Doc</th>
@@ -372,10 +372,10 @@
           <label for="edit_numeroIngreso">N° de Ingreso</label>
           <input type="number" name="numero_ingreso" id="edit_numeroIngreso" required />
         </div>
-        <div class="btn-container">
+        {% comment %} <div class="btn-container">
           <button type="button" id="edit_openFileModal" class="btn">Adjuntar archivo</button>
           <input type="file" name="archivo_adjunto_ingreso" id="edit_archivo_adjunto" class="file" style="display: none;" /> <!-- Mantén el input en el formulario pero oculto -->
-        </div>
+        </div> {% endcomment %}
       </div>
 
       <div class="form-group">

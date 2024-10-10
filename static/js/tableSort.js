@@ -228,12 +228,44 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     paginateTable(tableId, paginationId, rowsPerPage);
 }
 
+// Función para determinar las filas por página según el ancho de la pantalla
+function getRowsPerPage() {
+    if (window.matchMedia("(min-width: 960px) and (max-width: 1358px)").matches) {
+        return 6; // Si el ancho está entre 960px y 1358px
+    } else if (window.matchMedia("(min-width: 1359px) and (max-width: 1912px)").matches) {
+        return 10; // Si el ancho está entre 1359px y 1912px
+    } else {
+        return 8; // Valor por defecto para otros tamaños
+    }
+}
+
+// En tableSort.js o en un archivo JS común
+
+// Función para re-inicializar la tabla al cambiar el tamaño de la ventana
+function handleResize() {
+    const rowsPerPage = getRowsPerPage();
+    initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
+}
+
+// Agregar el listener al evento resize con un debounce para mejorar el rendimiento
+let resizeTimeout;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(handleResize, 500); // Ajusta el tiempo según tus necesidades
+});
+
+
+
 // Asegúrate de cargar estas funciones en la inicialización de tu página
 document.addEventListener('DOMContentLoaded', function () {
     // Adjuntar controladores de ordenación y paginación a la nueva tabla unificada
-    initializeTable('tablaSolicitudes', 'paginationSolicitudes', 12, 'searchSolicitudes');
+    // initializeTable('tablaSolicitudes', 'paginationSolicitudes', 10, 'searchSolicitudes');
+    // attachSortHandlers('tablaSolicitudes');
+    // paginateTable('tablaSolicitudes', 'paginationSolicitudes', 10);
+    const rowsPerPage = getRowsPerPage();
+    initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
     attachSortHandlers('tablaSolicitudes');
-    paginateTable('tablaSolicitudes', 'paginationSolicitudes', 12);
+    paginateTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage);
 
     window.openDescripcionModal = function (descripcion, nombre, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');

@@ -490,7 +490,7 @@ button {
 .tableInfor_container tbody tr:hover {
   background-color: #fef191;
   color: ghostwhite;
-  font-weight: bold;
+  /* font-weight: bold; */
   box-shadow: 0 0 15px #fef191;
   border-radius: 3px;
   padding: 1px;
