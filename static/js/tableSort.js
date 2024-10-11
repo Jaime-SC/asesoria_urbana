@@ -230,12 +230,12 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
 
 // Función para determinar las filas por página según el ancho de la pantalla
 function getRowsPerPage() {
-    if (window.matchMedia("(min-width: 960px) and (max-width: 1358px)").matches) {
-        return 6; // Si el ancho está entre 960px y 1358px
-    } else if (window.matchMedia("(min-width: 1359px) and (max-width: 1912px)").matches) {
+    if (window.matchMedia("(min-width: 1280px) and (max-width: 1366px)").matches) {
+        return 7; // Si el ancho está entre 960px y 1358px
+    } else if (window.matchMedia("(min-width: 1367px) and (max-width: 1920px)").matches) {
         return 10; // Si el ancho está entre 1359px y 1912px
     } else {
-        return 8; // Valor por defecto para otros tamaños
+        return 10; // Valor por defecto para otros tamaños
     }
 }
 
