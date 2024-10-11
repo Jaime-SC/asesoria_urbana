@@ -426,16 +426,9 @@ button {
 
 /* ESTILOS TABLA */
 
-.tableInfor_container {
-  /* display: grid; */
-  /* grid-template-columns: 1fr; */
-  /* grid-template-rows: 1fr 1fr; */
-  /* gap: 0px 0px; */
-  /* grid-template-areas:
-      "."
-      "."; */
+.tableInfor_container {  
   background-color: #C9E8F4;
-  padding: 20px;
+  padding: 10px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   width: -webkit-fill-available;

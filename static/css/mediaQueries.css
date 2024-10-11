@@ -1,7 +1,7 @@
 /* PAGINA DE INICIO */
 
 /* Pantallas grandes (desktops) */
-@media (min-width: 960px) and (max-width: 1358px) {    
+@media (min-width: 652px) and (max-width: 1358px) {    
 
     .cardContent {
         margin: 0px 15px 15px 15px;
@@ -51,7 +51,7 @@
 /* PAGINA DE BNUP */
 
 /* Pantallas grandes (desktops) */
-@media (min-width: 960px) and (max-width: 1358px) {
+@media (min-width: 652px) and (max-width: 1358px) {
     #tablaSolicitudes {
         font-size: 13px !important;
         margin-top: 10px;
@@ -170,5 +170,172 @@
 
     .head {
         height: 150px;
+    }
+}
+
+
+
+/* ------------------------ */
+
+/* Pantallas grandes (desktops) */
+@media (min-width: 600px) and (max-width: 1600px) {    
+
+    .cardContent {
+        margin: 0px 15px 15px 15px;
+        padding: 0.5rem;
+    }
+
+    .logo {
+        height: 75px;
+    }
+
+    .imagelogo {
+        height: -webkit-fill-available !important;
+    }
+
+    .user {
+        font-size: smaller;
+    }
+
+    .buttonLogin {
+        width: 120px;
+        height: 40px;
+    }
+
+    .material-symbols-outlined {
+        font-size: 20px;
+    }
+
+    h1 {
+        font-size: x-large;
+    }
+
+    .contentMenu {
+        font-size: 13px;
+    }
+
+    .menu a {
+
+        font-size: medium;
+        padding: 5px 7.5px;
+        width: auto;
+
+
+    }
+}
+
+
+/* PAGINA DE BNUP */
+
+/* Pantallas grandes (desktops) */
+@media (min-width: 600px) and (max-width: 1600px) {
+    #tablaSolicitudes {
+        font-size: 13px !important;
+        margin-top: 10px;
+    }
+
+    .tableInfor_container {
+        padding: 10px;
+    }
+
+    .btnAddBNUP,
+    .btnDelBNUP,
+    .btnEditBNUP,
+    .btnStatsBNUP {
+        width: 110px !important;
+        height: 25px;
+        font-size: 13px;
+    }
+
+    .btn-stats span {
+        font-size: 20px;
+    }
+
+    .searchContainer span {
+        font-size: 18px;
+    }
+
+    .searchContainer input {
+        font-size: 11px;
+        padding: 4px;
+        height: 25px;
+    }
+
+    .page-btn {
+        padding: 2.5px 5px;
+    }
+
+    .page-btn span {
+        font-size: 18px;
+
+    }
+
+    .page-btn.active {
+        font-size: 15px;
+    }
+
+    .tableInfor_container th {
+        padding: 5px;
+
+    }
+
+    #selectAll,
+    .rowCheckbox {
+        width: 10px;
+    }
+
+    #tablaSolicitudes span {
+        font-size: 20px;
+    }
+
+    .modal-content {
+        font-size: 12px;
+        margin: 3.45% auto
+    }
+    
+    .modal-content .modal-info {
+        font-size: 16px;
+    }
+
+    #salidaModal .modal-content {
+        /* font-size: 12px; */
+        margin: 2.45% auto;
+        padding: 15px;
+    }
+
+    /* .modal-content select {
+        font-size: 12px;
+        padding: 4px;
+    } */
+
+    .modal-content .form-group {
+        margin-bottom: 7.5px;
+    }
+
+    .modal-content label {        
+        margin-bottom: 2.5px;        
+    }
+
+    .modal-content input[type="text"], input[type="date"], input[type="number"], input[type="email"], input[type="password"], textarea, select {        
+        padding: 4px;   
+        font-size: 12px;
+        height: min-content;
+    }
+
+    .modal-content .btn-container .btn {        
+        font-size: 12px;        
+        padding: 2.5px;
+    }
+
+    .modal-content h2 {        
+        font-size: 20px;
+    }
+
+    .tableInfor_container td {
+        padding: 4px;        
+    }
+
+    #tablaSolicitudes tbody {
+        font-size: 14.2px;
     }
 }
