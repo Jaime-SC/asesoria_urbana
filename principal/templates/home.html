@@ -7,7 +7,7 @@
     <div class="menu">
       <ul class="ulMenu">
         <li>
-          <a href="#" data-content="Inicio">Inicio</a>
+          <a style="border-radius: 10px 0px 0px;" href="#" data-content="Inicio">Inicio</a>
         </li>
         {% if user.is_authenticated %}
           <li>
@@ -28,7 +28,7 @@
 
         {% if user.is_authenticated %}
           <li>
-            <a href="#" data-content="mapoteca">Mapoteca</a>
+            <a style="border-radius: 0px 10px 0px 0px;" href="#" data-content="mapoteca">Mapoteca</a>
           </li>
         {% endif %}
       </ul>
@@ -45,6 +45,8 @@
       // Mostrar alertas de SweetAlert si es necesario
       if (showAlert === 'login_success') {
         Swal.fire({
+          heightAuto: false,
+          scrollbarPadding: false,
           icon: 'success',
           title: '¡Éxito!',
           text: 'Has iniciado sesión correctamente.',
@@ -53,6 +55,8 @@
         })
       } else if (showAlert === 'logout_success') {
         Swal.fire({
+          heightAuto: false,
+          scrollbarPadding: false,
           icon: 'info',
           title: '¡Éxito!',
           text: 'Has cerrado sesión correctamente.',
@@ -62,6 +66,8 @@
       } else if (showAlert === 'login_error') {
         // Mostrar el mensaje de error si los datos de inicio de sesión son incorrectos
         Swal.fire({
+          heightAuto: false,
+          scrollbarPadding: false,
           icon: 'error',
           title: 'Error',
           text: 'Usuario o contraseña incorrectos.',

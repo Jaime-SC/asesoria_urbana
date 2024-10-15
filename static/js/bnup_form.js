@@ -21,12 +21,19 @@ function initializeFileModal() {
     }
 
     // Cerrar el modal al hacer clic fuera de él
-    window.onclick = function (event) {
-        if (event.target === fileModal) {
-            fileModal.style.display = 'none';
-        }
-    };
+    // window.onclick = function (event) {
+    //     if (event.target === fileModal) {
+    //         fileModal.style.display = 'none';
+    //     }
+    // };
 
+    if (fileModal) {
+        fileModal.addEventListener('click', function (event) {
+            if (event.target === fileModal) {
+                fileModal.style.display = 'none';
+            }
+        });
+    }
     // Confirmar selección de archivo y cerrar modal
     if (confirmButton) {
         confirmButton.onclick = function () {
@@ -34,17 +41,25 @@ function initializeFileModal() {
                 archivoAdjuntoInput.files = fileModalInput.files;
                 fileModal.style.display = 'none';
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     title: 'Archivo adjuntado',
                     text: 'El archivo se ha adjuntado correctamente.',
                     icon: 'success',
-                    confirmButtonText: 'Aceptar'
+                    confirmButtonText: 'Aceptar',
+
+
+
                 });
             } else {
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     title: 'Error',
                     text: 'Debe seleccionar un archivo antes de confirmar.',
                     icon: 'error',
-                    confirmButtonText: 'Aceptar'
+                    confirmButtonText: 'Aceptar',
+
                 });
             }
         };
@@ -177,16 +192,21 @@ function openSalidaModal(solicitudId) {
         if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
             // Mostrar mensaje de error si falta algún campo
             Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
                 icon: 'error',
                 title: 'Campos incompletos',
                 text: 'Por favor, complete todos los campos antes de guardar.',
                 confirmButtonColor: '#E73C45',
+
             });
             return; // Detener la ejecución si falta algún campo
         }
 
         // Mostrar la ventana de confirmación
         Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
             title: '¿Desea confirmar la salida?',
             text: "Se guardará la salida con los datos ingresados.",
             icon: 'warning',
@@ -194,17 +214,21 @@ function openSalidaModal(solicitudId) {
             confirmButtonColor: '#4BBFE0', // Color del botón de confirmar
             cancelButtonColor: '#E73C45', // Color del botón de cancelar
             confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar'
+            cancelButtonText: 'Cancelar',
+
         }).then((result) => {
             if (result.isConfirmed) {
                 // Si el usuario confirma, enviar el formulario
                 document.getElementById('salidaForm').submit();
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     icon: 'success',
                     title: 'Salida creada',
                     text: 'La salida ha sido registrada correctamente.',
                     showConfirmButton: false,
-                    timer: 2000
+                    timer: 2000,
+
                 }).then(() => {
                     // Opcional: Recargar la página o cerrar el modal
                     sessionStorage.setItem('redirectToBNUP', 'true');
@@ -304,15 +328,20 @@ function initializeBNUPFormModal() {
 
         if (!numeroIngreso || archivoAdjunto === 0) {
             Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
                 icon: 'error',
                 title: 'Campos incompletos',
                 text: 'Complete todos los campos requeridos antes de enviar.',
+
             });
             return;
         }
 
         // Mostrar el mensaje de confirmación
         Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
             title: '¿Desea confirmar la Solicitud de BNUP?',
             text: "Se guardará la solicitud junto con el archivo adjunto.",
             icon: 'warning',
@@ -320,7 +349,8 @@ function initializeBNUPFormModal() {
             confirmButtonColor: '#4BBFE0',
             cancelButtonColor: '#E73C45',
             confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar'
+            cancelButtonText: 'Cancelar',
+
         }).then((result) => {
             if (result.isConfirmed) {
                 // Si el usuario confirma, enviar el formulario
@@ -407,15 +437,21 @@ function initializeRowSelection() {
                 openEditModal(idToEdit);
             } else if (numSelected > 1) {
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     icon: 'warning',
                     title: 'Solo un registro a la vez',
                     text: 'Por favor, seleccione solo un registro para editar.',
+
                 });
             } else {
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     icon: 'warning',
                     title: 'No hay registros seleccionados',
                     text: 'Por favor, seleccione un registro para editar.',
+
                 });
             }
         });
@@ -430,15 +466,20 @@ function initializeRowSelection() {
 
             if (numSelected === 0) {
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     icon: 'warning',
                     title: 'No hay registros seleccionados',
                     text: 'Por favor, seleccione al menos un registro para eliminar.',
+
                 });
                 return;
             }
 
             // Confirmar eliminación
             Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
                 title: `¿Desea eliminar ${numSelected} registro(s)?`,
                 text: "Esta acción no se puede deshacer.",
                 icon: 'warning',
@@ -446,7 +487,8 @@ function initializeRowSelection() {
                 confirmButtonColor: '#E73C45',
                 cancelButtonColor: '#4BBFE0',
                 confirmButtonText: 'Eliminar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Obtener los IDs de los registros seleccionados
@@ -511,18 +553,24 @@ function openEditModal(solicitudId) {
                 editModal.style.display = 'block';
             } else {
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     icon: 'error',
                     title: 'Error',
                     text: 'No se pudieron cargar los datos para editar.',
+
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
             Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
                 icon: 'error',
                 title: 'Error',
                 text: 'Ha ocurrido un error al cargar los datos.',
+
             });
         });
 
@@ -547,6 +595,8 @@ function openEditModal(solicitudId) {
 
         // Mostrar el mensaje de confirmación
         Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
             title: '¿Desea guardar los cambios?',
             text: "Se actualizará la solicitud con los datos ingresados.",
             icon: 'warning',
@@ -554,7 +604,8 @@ function openEditModal(solicitudId) {
             confirmButtonColor: '#4BBFE0',
             cancelButtonColor: '#E73C45',
             confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar'
+            cancelButtonText: 'Cancelar',
+
         }).then((result) => {
             if (result.isConfirmed) {
                 // Enviar los datos mediante AJAX
@@ -570,11 +621,14 @@ function openEditModal(solicitudId) {
                     .then(data => {
                         if (data.success) {
                             Swal.fire({
+                                heightAuto: false,
+                                scrollbarPadding: false,
                                 icon: 'success',
                                 title: 'Solicitud actualizada',
                                 text: 'Los cambios han sido guardados correctamente.',
                                 showConfirmButton: false,
-                                timer: 2000
+                                timer: 2000,
+
                             }).then(() => {
                                 sessionStorage.setItem('redirectToBNUP', 'true');
                                 window.location.reload();
@@ -599,18 +653,24 @@ function openEditModal(solicitudId) {
                             });
                         } else {
                             Swal.fire({
+                                heightAuto: false,
+                                scrollbarPadding: false,
                                 icon: 'error',
                                 title: 'Error',
                                 text: 'Ha ocurrido un error al actualizar la solicitud.',
+
                             });
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
                             icon: 'error',
                             title: 'Error',
                             text: 'Ha ocurrido un error al actualizar la solicitud.',
+
                         });
                     });
             }
@@ -793,11 +853,14 @@ function deleteSelectedRecords(ids) {
                     }
                 });
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     icon: 'success',
                     title: 'Registros eliminados',
                     text: 'Los registros han sido eliminados correctamente.',
                     showConfirmButton: false,
-                    timer: 2000
+                    timer: 2000,
+
                 });
                 // Actualizar el estado del botón eliminar
                 const deleteButton = document.getElementById('deleteSelected');
@@ -807,18 +870,24 @@ function deleteSelectedRecords(ids) {
                 selectAllCheckbox.checked = false;
             } else {
                 Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
                     icon: 'error',
                     title: 'Error',
                     text: 'Ha ocurrido un error al eliminar los registros.',
+
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
             Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
                 icon: 'error',
                 title: 'Error',
                 text: 'Ha ocurrido un error al eliminar los registros.',
+
             });
         });
 }

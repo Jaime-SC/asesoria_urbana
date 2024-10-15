@@ -13,6 +13,7 @@
         align-items: center;
         gap: 10px;
         margin-left: 10px;
+        margin-block: 2.5px;
     }
 
     .separador {
@@ -64,6 +65,10 @@
         width: auto;
 
 
+    }
+
+    .menu ul {        
+        margin-left: 15px;        
     }
 }
 
@@ -255,6 +260,10 @@
         width: auto;
 
 
+    }
+
+    .menu ul {        
+        margin-left: 15px;        
     }
 }
 

@@ -398,7 +398,7 @@
       <!-- Funcionario asignado (no editable) -->
       <div class="form-group">
         <label for="edit_funcionarioAsignado">Funcionario asignado a BNUP</label>
-        <select style="height: max-content;" id="edit_funcionarioAsignado" required disabled>
+        <select style="height: max-content;" id="edit_funcionarioAsignado" required >
           {% for funcionario in funcionarios %}
             <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
           {% endfor %}
