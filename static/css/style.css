@@ -1524,5 +1524,9 @@ select {
   animation: customFadeOutUp 0.5s ease forwards;
 }
 
+.hidden-table {
+  display: none;
+}
+
 
 /* ------------------------------ */

@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // menu.js
+
+  // menu.js
+
   function loadContent(url, callback) {
     fetch(url)
       .then(response => response.text())
@@ -27,68 +31,28 @@ document.addEventListener('DOMContentLoaded', function () {
             updateBNUPFields();
             initializeFileModal();
             initializeBNUPFormModal();
-            initializeRowSelection();  // Inicializar la selección de filas después de cargar el contenido
+            initializeRowSelection();
             borde_thead();
-            // Asegúrate de que cualquier otra función nueva se inicialice aquí
+
+            // Inicializar la tabla aquí
+            const rowsPerPage = getRowsPerPage();
+            initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
+
+            // Después de inicializar la tabla, remover la clase 'hidden-table'
+            const table = document.getElementById('tablaSolicitudes');
+            if (table) {
+              table.classList.remove('hidden-table');
+            }
           };
           document.head.appendChild(script);
         }
 
-        // Adjuntar controladores de ordenación y paginación a la nueva tabla unificada
-        // attachSortHandlers('tablaSolicitudes');
-        // paginateTable('tablaSolicitudes', 'paginationSolicitudes', 10);
-        // Después:
-        const rowsPerPage = getRowsPerPage();
-        attachSortHandlers('tablaSolicitudes');
-        paginateTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage);
-
-
-        if (url.includes('/bnup/statistics/')) {
-          changeCardDetailsBgColor('#C9E8F4');
-        } else {
-          resetCardDetailsBgColor();
-        }
-
-        const statsButton = document.getElementById('statisticsButton');
-        if (statsButton) {
-          statsButton.addEventListener('click', function () {
-            loadContent('/bnup/statistics/', function () {
-              loadStatisticsScript();
-            });
-          });
-        }
-
-        const backButton = document.getElementById('backToBNUP');
-        if (backButton) {
-          backButton.addEventListener('click', function () {
-            const bnupLink = document.querySelector('a[data-content="BNUP"]');
-            if (bnupLink) {
-              bnupLink.click();
-            }
-          });
-        }
-
-        const backToInicioButton = document.getElementById('backToInicio');
-        if (backToInicioButton) {
-          backToInicioButton.addEventListener('click', function () {
-            loadContent('/inicio/', function () {
-              removeSelectedLogin();
-            });
-          });
-        }
-
-        // Verificar si se debe redirigir a BNUP
-        if (window.redirectToBNUP) {
-          const bnupLink = document.querySelector('a[data-content="BNUP"]');
-          if (bnupLink) {
-            highlightMenuOption(bnupLink);
-            loadContent('/bnup/');
-          }
-          window.redirectToBNUP = false;
-        }
+        // Asegúrate de no tener llamadas duplicadas a la inicialización de la tabla fuera de este bloque
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
+
+
 
   function removeSelectedLogin() {
     const loginLink = document.querySelector('a[data-content="login"]');
