@@ -1,3 +1,5 @@
+// menu.js
+
 document.addEventListener('DOMContentLoaded', function () {
   let originalBgColor = '';
 
@@ -15,8 +17,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // menu.js
 
-  // menu.js
-
   function loadContent(url, callback) {
     fetch(url)
       .then(response => response.text())
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('contentMenu').innerHTML = data;
         if (typeof callback === 'function') callback();
 
-        if (url.includes('/bnup/')) {
+        if (url === '/bnup/') {  // Cambiado para cargar bnup_form.js solo en la página principal de BNUP
           const script = document.createElement('script');
           script.src = '/static/js/bnup_form.js';
           script.onload = function () {
@@ -43,15 +43,42 @@ document.addEventListener('DOMContentLoaded', function () {
             if (table) {
               table.classList.remove('hidden-table');
             }
+
+            // Añadir el event listener al botón de estadísticas
+            const statsButton = document.getElementById('statisticsButton');
+            if (statsButton) {
+              statsButton.addEventListener('click', function () {
+                loadContent('/bnup/statistics/', function () {
+                  loadStatisticsScript();
+                });
+              });
+            }
           };
           document.head.appendChild(script);
         }
 
-        // Asegúrate de no tener llamadas duplicadas a la inicialización de la tabla fuera de este bloque
+        // Lógica para cargar el script de estadísticas cuando se navega a la página de estadísticas
+        if (url.includes('/bnup/statistics/')) {
+          changeCardDetailsBgColor('#C9E8F4');
+          loadStatisticsScript(); // Cargar el script de estadísticas
+        } else {
+          resetCardDetailsBgColor();
+        }
+
+        // Añadir el event listener al botón de regresar en la página de estadísticas
+        const backButton = document.getElementById('backToBNUP');
+        if (backButton) {
+          backButton.addEventListener('click', function () {
+            const bnupLink = document.querySelector('a[data-content="BNUP"]');
+            if (bnupLink) {
+              bnupLink.click();
+            }
+          });
+        }
+
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
-
 
 
   function removeSelectedLogin() {
@@ -79,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function loadStatisticsScript() {
     const script = document.createElement('script');
     script.src = '/static/js/statisticsChart.js';
-    script.onload = createCharts;
+    script.onload = createCharts; // Asegúrate de que la función createCharts esté definida en statisticsChart.js
     document.head.appendChild(script);
   }
 

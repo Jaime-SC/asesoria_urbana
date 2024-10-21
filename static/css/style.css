@@ -50,6 +50,7 @@ body {
   justify-items: center;
   align-items: end;
   font-family: "HelveticaNeue";
+  background-color: #fffbe4;
 }
 
 /* Ahora puedes usar la fuente en tu CSS */
@@ -78,13 +79,9 @@ h1 {
   flex-direction: column;
   border-radius: 10px;
   padding: 5px;
-  background: rgb(255 255 255 / 75%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(75, 191, 224, 1) 65%, rgba(22, 35, 62, 1) 100%);
   border: 3px solid cyan;
-  /* Simplificación */
-  box-shadow: 0 0 15px #4BBFE0;
-  /* Resplandor */
-
-  /* Opcional: puedes agregar un efecto de transición para hacer el resplandor más suave */
+  box-shadow: 0 0 10px 2.5px #16233E;
   transition: box-shadow 0.3s ease-in-out;
 }
 
@@ -180,7 +177,7 @@ h1 {
   width: max-content;
   border-radius: 10px 10px 0px 0px;
   background: #f5f5f5;
-  border: 2px solid #c3c6ce;
+  /* border: 2px solid #c3c6ce; */
 }
 
 .menu li {
@@ -198,19 +195,15 @@ h1 {
   display: block;
   transition: background 0.3s, color 0.3s, border-color 0.3s;
   font-size: large;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
+
 
 /* Efecto hover */
 .menu a:hover {
   background: #5e6479;
-  /* Fondo más brillante al pasar el ratón */
-  color: aquamarin;
-  /* Cambia el color del texto al pasar el ratón */
-  /* border-color: rgba(0, 255, 255, 0.7); */
-  /* Bordes brillantes al hacer hover */
-  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.5);
-  /* Sombra para efecto sofisticado */
+  border-color: #fff4ad;
+  box-shadow: 0 0 15px #f7ea53;
 }
 
 .cardMain.bright {
@@ -297,8 +290,8 @@ h1 {
 
 /*Hover*/
 .cardContent:hover {
-  border-color: cyan;
-  box-shadow: 0 0 15px #4BBFE0;
+  border-color: #fff4ad;
+  box-shadow: 0 0 15px #f7ea53;
   /* -webkit-box-shadow: 10px 5px 18px 0 rgba(255, 255, 255, 0.877);
   box-shadow: 10px 5px 18px 0 rgba(255, 255, 255, 0.877); */
 }
@@ -770,14 +763,13 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   background-color: #387b8f;
 }
 
-.selected {
-  background: rgba(255, 255, 255, 0.5);
+
+
+.menu a.selected {
   font-weight: bold;
-  /* Cambia el color del texto al pasar el ratón */
-  border-color: rgba(0, 255, 255, 0.7);
-  /* Bordes brillantes al hacer hover */
-  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.5);
-  /* Sombra para efecto sofisticado */
+  background: #5e6479;
+  border-color: #fff4ad;
+  box-shadow: 0 0 15px #f7ea53;  
 }
 
 .selected-login {
@@ -905,7 +897,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .statistics canvas {
   max-width: 100%;
-  height: auto;
+  max-height: 240px;
   margin-top: 20px;
 }
 

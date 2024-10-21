@@ -275,13 +275,19 @@ function updateBNUPFields() {
     const memoFields = document.getElementById('memoFields');
     const correoFields = document.getElementById('correoFields');
 
+    // Verificar si los elementos existen
+    if (!tipoRecepcionSelect || !memoFields || !correoFields) {
+        // Si no existen, salir de la función
+        return;
+    }
+
     function toggleFields() {
         const selectedValue = tipoRecepcionSelect.value;
 
-        if (['1', '3', '4', '5'].includes(selectedValue)) {  // IDs para Memo, Providencia, Oficio, Ordinario
+        if (['1', '3', '4', '5'].includes(selectedValue)) {
             memoFields.style.display = 'block';
             correoFields.style.display = 'none';
-        } else if (selectedValue === '2') {  // ID para Correo
+        } else if (selectedValue === '2') {
             memoFields.style.display = 'none';
             correoFields.style.display = 'block';
         } else {
@@ -291,8 +297,9 @@ function updateBNUPFields() {
     }
 
     tipoRecepcionSelect.addEventListener('change', toggleFields);
-    toggleFields();  // Ejecutar al cargar la página para el estado inicial
+    toggleFields();
 }
+
 
 function initializeBNUPFormModal() {
     const modal = document.getElementById('bnupFormModal');
