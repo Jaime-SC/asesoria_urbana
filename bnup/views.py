@@ -155,8 +155,9 @@ def statistics_view(request):
     # Nueva estadística: Solicitudes por mes
     solicitudes_por_mes = SolicitudBNUP.objects.extra(select={'mes': "EXTRACT(MONTH FROM fecha_ingreso)"}).values('mes').annotate(total=Count('id'))
 
-    # Nueva estadística 1
-    solicitudes_por_dia_semana = SolicitudBNUP.objects.extra(select={'dia_semana': "EXTRACT(DOW FROM fecha_ingreso)"}).values('dia_semana').annotate(total=Count('id'))
+    # Calculamos los totales de entradas y salidas
+    total_solicitudes = SolicitudBNUP.objects.count()
+    total_salidas = SalidaBNUP.objects.count()
 
     context = {        
         'solicitudes_por_depto': json.dumps({item['depto_solicitante__nombre']: item['total'] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
@@ -164,7 +165,10 @@ def statistics_view(request):
         'solicitudes_por_tipo': json.dumps({item['tipo_recepcion__tipo']: item['total'] for item in solicitudes_por_tipo}, cls=DjangoJSONEncoder),
         'solicitudes_por_anio': json.dumps({str(int(item['anio'])): item['total'] for item in solicitudes_por_anio}, cls=DjangoJSONEncoder),
         'solicitudes_por_mes': json.dumps({str(int(item['mes'])): item['total'] for item in solicitudes_por_mes}, cls=DjangoJSONEncoder),
-        'solicitudes_por_dia_semana': json.dumps({str(int(item['dia_semana'])): item['total'] for item in solicitudes_por_dia_semana}, cls=DjangoJSONEncoder),
+        # Eliminamos 'solicitudes_por_dia_semana' del contexto
+        # 'solicitudes_por_dia_semana': ...
+        'total_solicitudes': total_solicitudes,
+        'total_salidas': total_salidas,
     }
     return render(request, 'bnup/statistics.html', context)
 

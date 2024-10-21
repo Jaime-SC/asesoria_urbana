@@ -7,7 +7,7 @@
     let tipoChartInstance;
     let anioChartInstance;
     let mesChartInstance;
-    let diaSemanaChartInstance;
+    
 
     // Crea gráficos basados en los datos de las estadísticas
     function createCharts() {
@@ -17,7 +17,7 @@
         const solicitudesPorTipo = JSON.parse(document.getElementById('solicitudesPorTipo').innerText);
         const solicitudesPorAnio = JSON.parse(document.getElementById('solicitudesPorAnio').innerText);
         const solicitudesPorMes = JSON.parse(document.getElementById('solicitudesPorMes').innerText);
-        const solicitudesPorDiaSemana = JSON.parse(document.getElementById('solicitudesPorDiaSemana').innerText);
+        
 
         // Gráfico de barras para solicitudes por departamento
         const deptoCtx = document.getElementById('deptoChart').getContext('2d');
@@ -171,31 +171,7 @@
         });
 
 
-        // Gráfico de barras para solicitudes por día de la semana
-        const diaSemanaCtx = document.getElementById('diaSemanaChart').getContext('2d');
-        if (diaSemanaChartInstance) {
-            diaSemanaChartInstance.destroy();
-        }
-        diaSemanaChartInstance = new Chart(diaSemanaCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'],
-                datasets: [{
-                    label: 'Solicitudes por Día de la Semana',
-                    data: Object.values(solicitudesPorDiaSemana),
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
+        
     }
 
     // Exponer la función createCharts al ámbito global

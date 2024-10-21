@@ -21,10 +21,16 @@
           <p id="solicitudesPorDepto" style="display:none;">{{ solicitudes_por_depto|safe }}</p>
           <canvas id="deptoChart"></canvas>
         </div>
-        <!-- Gráfico de solicitudes por día de la semana -->
-        <div class="containerStatistics">
-          <p id="solicitudesPorDiaSemana" style="display:none;">{{ solicitudes_por_dia_semana|safe }}</p>
-          <canvas id="diaSemanaChart"></canvas>
+        <!-- Indicadores de totales -->
+        <div class="containerStatistics" style="display: flex;justify-content: space-between;gap: 10px;">
+          <div class="total-card">
+            <h3>Total de Solicitudes (Entradas)</h3>
+            <p>{{ total_solicitudes }}</p>
+          </div>
+          <div class="total-card">
+            <h3>Total de Salidas</h3>
+            <p>{{ total_salidas }}</p>
+          </div>
         </div>
         <!-- Gráfico de solicitudes por mes -->
         <div class="containerStatistics">

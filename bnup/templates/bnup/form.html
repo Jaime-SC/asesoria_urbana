@@ -108,7 +108,7 @@
               <th class="shadow" data-type="string">Recepción</th>
               <th class="shadow" data-type="number">N° Doc</th>
               <th class="shadow" data-type="string">Correo</th>
-              <th class="shadow" data-type="string">Solicitante</th>
+              {% comment %} <th class="shadow" data-type="string">Solicitante</th> {% endcomment %}
               <th class="shadow" data-type="string">Departamento</th>
               <th class="shadow" data-type="string">Funcionario</th>
               <th class="shadow" data-type="string">Descripción</th>
@@ -155,7 +155,7 @@
                   {% endif %}
                 </td>
 
-                <td>{{ solicitud.nombre_solicitante }}</td>
+                {% comment %} <td>{{ solicitud.nombre_solicitante }}</td> {% endcomment %}
 
                 <td>{{ solicitud.depto_solicitante.nombre }}</td>
                 <td>{{ solicitud.funcionario_asignado.nombre }}</td>
