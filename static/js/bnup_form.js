@@ -1,3 +1,445 @@
+// bnup_form.js
+
+(function () {
+    // Declarar `tipo_usuario` como una variable global dentro de esta función
+    let tipo_usuario;
+    function initializeBNUPPage() {
+        // Asignar el valor a `tipo_usuario` desde el atributo de la tarjeta
+        tipo_usuario = document.querySelector('.cardContent').getAttribute('data-tipo-usuario');
+
+        // Aquí puedes usar `tipo_usuario` en tus funciones
+
+        function initializeFileModal() {
+            const modalButton = document.getElementById('openFileModal');
+            const closeModalButton = document.querySelector('#fileModal .close');
+            const confirmButton = document.getElementById('confirmButton'); // Botón de confirmar
+            const fileModal = document.getElementById('fileModal');
+            const fileModalInput = document.getElementById('fileModalInput');
+            const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
+
+            // Verificar si los elementos existen
+            if (!modalButton || !closeModalButton || !confirmButton || !fileModal || !fileModalInput || !archivoAdjuntoInput) {
+                return; // Salir de la función si faltan elementos
+            }
+            // Abrir el modal
+            modalButton.onclick = function () {
+                fileModal.style.display = 'block';
+            };
+
+            // Cerrar el modal con el botón de cerrar
+            closeModalButton.onclick = function () {
+                fileModal.style.display = 'none';
+            };
+
+            // Cerrar el modal al hacer clic fuera de él
+            fileModal.addEventListener('click', function (event) {
+                if (event.target === fileModal) {
+                    fileModal.style.display = 'none';
+                }
+            });
+
+            // Confirmar selección de archivo y cerrar modal
+            confirmButton.onclick = function () {
+                if (fileModalInput.files.length > 0) {
+                    archivoAdjuntoInput.files = fileModalInput.files;
+                    fileModal.style.display = 'none';
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        title: 'Archivo adjuntado',
+                        text: 'El archivo se ha adjuntado correctamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar',
+                    });
+                } else {
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        title: 'Error',
+                        text: 'Debe seleccionar un archivo antes de confirmar.',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+            };
+
+            // Configurar la carga de archivos
+            if (fileModalInput) {
+                fileModalInput.onchange = function () {
+                    archivoAdjuntoInput.files = fileModalInput.files;
+                };
+
+                $(fileModalInput).fileinput({
+                    showUpload: false,
+                    showRemove: true,
+                    showPreview: true,
+                    showCaption: false,
+                    browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+                    removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                    mainClass: 'input-group-sm',
+                    dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+                    fileActionSettings: {
+                        showRemove: true,
+                        showZoom: false,
+                        showDrag: false,
+                        showDelete: false,
+                    },
+                    layoutTemplates: {
+                        close: '',
+                        indicator: '',
+                        actionCancel: ''
+                    }
+                });
+            }
+        }
+        window.openSalidaModal = openSalidaModal;
+        function openSalidaModal(solicitudId) {
+            if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR'].includes(tipo_usuario)) {
+                const salidaModal = document.getElementById('salidaModal');
+                const solicitudInput = document.getElementById('solicitud_id');
+                const salidaCloseButton = salidaModal.querySelector('.close');
+                const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
+                const salidaFields = document.getElementById('salidaFields');
+
+                solicitudInput.value = solicitudId;
+
+                // Limpiar el formulario y la tabla de salidas
+                document.getElementById('salidaForm').reset();
+                tablaSalidasBody.innerHTML = '';
+
+                // Obtener las salidas asociadas a la solicitud
+                fetch(`/bnup/get_salidas/${solicitudId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.salidas.forEach(salida => {
+                                const row = document.createElement('tr');
+
+                                const numeroSalidaCell = document.createElement('td');
+                                numeroSalidaCell.textContent = salida.numero_salida;
+                                row.appendChild(numeroSalidaCell);
+
+                                const fechaSalidaCell = document.createElement('td');
+                                fechaSalidaCell.textContent = salida.fecha_salida;
+                                row.appendChild(fechaSalidaCell);
+
+                                const archivoCell = document.createElement('td');
+                                if (salida.archivo_url) {
+                                    const link = document.createElement('a');
+                                    link.href = salida.archivo_url;
+                                    link.target = '_blank';
+                                    link.setAttribute('aria-label', 'Ver Archivo'); // Mejorar accesibilidad
+                                    link.setAttribute('title', 'Ver Archivo'); // Tooltip
+
+                                    // Crear el icono span
+                                    const iconSpan = document.createElement('span');
+                                    iconSpan.classList.add('material-symbols-outlined');
+                                    iconSpan.textContent = 'preview'; // Nombre del icono
+
+                                    // Añadir el icono al enlace
+                                    link.appendChild(iconSpan);
+
+                                    archivoCell.appendChild(link);
+                                } else {
+                                    archivoCell.textContent = 'No adjunto';
+                                }
+                                row.appendChild(archivoCell);
+
+                                tablaSalidasBody.appendChild(row);
+                            });
+
+                            // Después de llenar la tabla, inicializar las funciones
+                            initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
+                        } else {
+                            console.error('Error al obtener las salidas:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al obtener las salidas:', error);
+                    });
+
+                // Mostrar el modal
+                salidaModal.style.display = 'block';
+
+                // Cerrar el modal con el botón de cerrar
+                salidaCloseButton.onclick = function () {
+                    salidaModal.style.display = 'none';
+                };
+
+                // Cerrar el modal al hacer clic fuera de él
+                window.onclick = function (event) {
+                    if (event.target === salidaModal) {
+                        salidaModal.style.display = 'none';
+                    }
+                };
+
+                // Manejo del botón Guardar con confirmación previa usando SweetAlert2
+                // Manejo del botón Guardar con confirmación previa usando SweetAlert2
+                const saveButton = document.getElementById('guardarSalida');
+                saveButton.onclick = function (event) {
+                    event.preventDefault(); // Evita el envío inmediato del formulario
+
+                    // Obtener los valores de los campos
+                    const numeroSalida = document.getElementById('numero_salida').value.trim();
+                    const fechaSalida = document.getElementById('fecha_salida').value.trim();
+                    const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0]; // Verificamos si hay un archivo adjunto
+
+                    // Verificar si los campos están completos
+                    if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
+                        // Mostrar mensaje de error si falta algún campo
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'Campos incompletos',
+                            text: 'Por favor, complete todos los campos antes de guardar.',
+                            confirmButtonColor: '#E73C45',
+
+                        });
+                        return; // Detener la ejecución si falta algún campo
+                    }
+
+                    // Mostrar la ventana de confirmación
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        title: '¿Desea confirmar la salida?',
+                        text: "Se guardará la salida con los datos ingresados.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#4BBFE0', // Color del botón de confirmar
+                        cancelButtonColor: '#E73C45', // Color del botón de cancelar
+                        confirmButtonText: 'Guardar',
+                        cancelButtonText: 'Cancelar',
+
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Si el usuario confirma, enviar el formulario
+                            document.getElementById('salidaForm').submit();
+                            Swal.fire({
+                                heightAuto: false,
+                                scrollbarPadding: false,
+                                icon: 'success',
+                                title: 'Salida creada',
+                                text: 'La salida ha sido registrada correctamente.',
+                                showConfirmButton: false,
+                                timer: 2000,
+
+                            }).then(() => {
+                                // Opcional: Recargar la página o cerrar el modal
+                                sessionStorage.setItem('redirectToBNUP', 'true');
+                                window.location.reload();
+                            });
+                        }
+                        // Si el usuario cancela, no hacer nada
+                    });
+                };
+
+
+                // Inicializar el plugin fileinput para el input de adjuntar archivo
+                const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
+
+                if (archivoAdjuntoInput) {
+                    $(archivoAdjuntoInput).fileinput({
+                        showUpload: false,
+                        showRemove: true,
+                        showPreview: true,
+                        showCaption: false,
+                        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+                        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                        mainClass: 'input-group-sm',
+                        dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+                        fileActionSettings: {
+                            showRemove: true,
+                            showUpload: false,
+                            showZoom: false,
+                            showDrag: false,
+                            showDelete: false,
+                        },
+                        layoutTemplates: {
+                            close: '',
+                            indicator: '',
+                            actionCancel: ''
+                        }
+                    });
+                }
+            } else {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'warning',
+                    title: 'Acceso denegado',
+                    text: 'No tiene permiso para realizar esta acción.',
+                });
+            }
+        }
+
+        // Otras funciones que dependen de `tipo_usuario`
+
+        function initializeRowSelection() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+
+            const deleteButton = document.getElementById('deleteSelected');
+            const editButton = document.getElementById('editSelected');
+
+            // Ajustar botones según el tipo de usuario
+            if (tipo_usuario !== 'ADMIN') {
+                if (deleteButton) {
+                    deleteButton.style.display = 'none';
+                }
+            }
+
+            if (tipo_usuario !== 'ADMIN' && tipo_usuario !== 'PRIVILEGIADO') {
+                if (editButton) {
+                    editButton.style.display = 'none';
+                }
+            }
+
+            function toggleRowHighlight(row, isChecked) {
+                if (isChecked) {
+                    row.classList.add('fila-marcada');
+                } else {
+                    row.classList.remove('fila-marcada');
+                }
+            }
+
+            function updateActionButtonsState() {
+                const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+                const anyChecked = selectedCheckboxes.length > 0;
+                const singleChecked = selectedCheckboxes.length === 1;
+
+                if (deleteButton) {
+                    deleteButton.disabled = !anyChecked;
+                }
+
+                if (editButton) {
+                    editButton.disabled = !anyChecked;
+                }
+            }
+
+            // Función para seleccionar o deseleccionar todas las filas
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('click', function (event) {
+                    event.stopPropagation();  // Evita la propagación del evento para que no active el ordenamiento
+                });
+                selectAllCheckbox.addEventListener('change', function () {
+                    rowCheckboxes.forEach(checkbox => {
+                        checkbox.checked = selectAllCheckbox.checked;
+                        toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+                    });
+                    updateActionButtonsState();
+                });
+            }
+
+            // Función para seleccionar o deseleccionar una fila individual
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+
+                    // Si todas las filas están seleccionadas, marcar el selectAll checkbox
+                    const allChecked = [...rowCheckboxes].every(cb => cb.checked);
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.checked = allChecked;
+                    }
+
+                    updateActionButtonsState();
+                });
+            });
+
+            // Evento para el botón de editar
+            if (editButton) {
+                editButton.addEventListener('click', function () {
+                    const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+                    const numSelected = selectedCheckboxes.length;
+
+                    if (numSelected === 1) {
+                        const idToEdit = selectedCheckboxes[0].getAttribute('data-id');
+                        openEditModal(idToEdit);
+                    } else if (numSelected > 1) {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'warning',
+                            title: 'Solo un registro a la vez',
+                            text: 'Por favor, seleccione solo un registro para editar.',
+                        });
+                    } else {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'warning',
+                            title: 'No hay registros seleccionados',
+                            text: 'Por favor, seleccione un registro para editar.',
+                        });
+                    }
+                });
+            }
+
+            // Evento para el botón de eliminar
+            if (deleteButton) {
+                deleteButton.addEventListener('click', function () {
+                    // Obtener los checkboxes seleccionados
+                    const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+                    const numSelected = selectedCheckboxes.length;
+
+                    if (numSelected === 0) {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'warning',
+                            title: 'No hay registros seleccionados',
+                            text: 'Por favor, seleccione al menos un registro para eliminar.',
+                        });
+                        return;
+                    }
+
+                    // Confirmar eliminación
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        title: `¿Desea eliminar ${numSelected} registro(s)?`,
+                        text: "Esta acción no se puede deshacer.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#E73C45',
+                        cancelButtonColor: '#4BBFE0',
+                        confirmButtonText: 'Eliminar',
+                        cancelButtonText: 'Cancelar',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Obtener los IDs de los registros seleccionados
+                            const idsToDelete = selectedCheckboxes.map(cb => cb.getAttribute('data-id'));
+
+                            // Enviar solicitud AJAX para eliminar los registros
+                            deleteSelectedRecords(idsToDelete);
+                        }
+                    });
+                });
+            }
+        }
+
+        // Inicializar funciones
+        if (document.querySelector('#bnupForm')) {
+            updateBNUPFields();
+            updateEditBNUPFields();
+            initializeFileModal();
+            initializeBNUPFormModal();
+        }
+
+        // Inicializar la selección de filas en la tabla
+        initializeRowSelection();
+        borde_thead();
+        
+    
+    }
+
+    // Exponer `initializeBNUPPage` al ámbito global
+    window.initializeBNUPPage = initializeBNUPPage;
+
+})();
+
+
 function initializeFileModal() {
     const modalButton = document.getElementById('openFileModal');
     const closeModalButton = document.querySelector('#fileModal .close');
@@ -95,176 +537,185 @@ function initializeFileModal() {
     }
 }
 
-// bnup_form.js
-// bnup_form.js
 
 function openSalidaModal(solicitudId) {
-    const salidaModal = document.getElementById('salidaModal');
-    const solicitudInput = document.getElementById('solicitud_id');
-    const salidaCloseButton = salidaModal.querySelector('.close');
-    const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-    const salidaFields = document.getElementById('salidaFields');
+    // La variable `tipo_usuario` ahora debería estar disponible aquí
+    if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR'].includes(tipo_usuario)) {
+        const salidaModal = document.getElementById('salidaModal');
+        const solicitudInput = document.getElementById('solicitud_id');
+        const salidaCloseButton = salidaModal.querySelector('.close');
+        const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
+        const salidaFields = document.getElementById('salidaFields');
 
-    solicitudInput.value = solicitudId;
+        solicitudInput.value = solicitudId;
 
-    // Limpiar el formulario y la tabla de salidas
-    document.getElementById('salidaForm').reset();
-    tablaSalidasBody.innerHTML = '';
+        // Limpiar el formulario y la tabla de salidas
+        document.getElementById('salidaForm').reset();
+        tablaSalidasBody.innerHTML = '';
 
-    // Obtener las salidas asociadas a la solicitud
-    fetch(`/bnup/get_salidas/${solicitudId}/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                data.salidas.forEach(salida => {
-                    const row = document.createElement('tr');
+        // Obtener las salidas asociadas a la solicitud
+        fetch(`/bnup/get_salidas/${solicitudId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    data.salidas.forEach(salida => {
+                        const row = document.createElement('tr');
 
-                    const numeroSalidaCell = document.createElement('td');
-                    numeroSalidaCell.textContent = salida.numero_salida;
-                    row.appendChild(numeroSalidaCell);
+                        const numeroSalidaCell = document.createElement('td');
+                        numeroSalidaCell.textContent = salida.numero_salida;
+                        row.appendChild(numeroSalidaCell);
 
-                    const fechaSalidaCell = document.createElement('td');
-                    fechaSalidaCell.textContent = salida.fecha_salida;
-                    row.appendChild(fechaSalidaCell);
+                        const fechaSalidaCell = document.createElement('td');
+                        fechaSalidaCell.textContent = salida.fecha_salida;
+                        row.appendChild(fechaSalidaCell);
 
-                    const archivoCell = document.createElement('td');
-                    if (salida.archivo_url) {
-                        const link = document.createElement('a');
-                        link.href = salida.archivo_url;
-                        link.target = '_blank';
-                        link.setAttribute('aria-label', 'Ver Archivo'); // Mejorar accesibilidad
-                        link.setAttribute('title', 'Ver Archivo'); // Tooltip
+                        const archivoCell = document.createElement('td');
+                        if (salida.archivo_url) {
+                            const link = document.createElement('a');
+                            link.href = salida.archivo_url;
+                            link.target = '_blank';
+                            link.setAttribute('aria-label', 'Ver Archivo'); // Mejorar accesibilidad
+                            link.setAttribute('title', 'Ver Archivo'); // Tooltip
 
-                        // Crear el icono span
-                        const iconSpan = document.createElement('span');
-                        iconSpan.classList.add('material-symbols-outlined');
-                        iconSpan.textContent = 'preview'; // Nombre del icono
+                            // Crear el icono span
+                            const iconSpan = document.createElement('span');
+                            iconSpan.classList.add('material-symbols-outlined');
+                            iconSpan.textContent = 'preview'; // Nombre del icono
 
-                        // Añadir el icono al enlace
-                        link.appendChild(iconSpan);
+                            // Añadir el icono al enlace
+                            link.appendChild(iconSpan);
 
-                        archivoCell.appendChild(link);
-                    } else {
-                        archivoCell.textContent = 'No adjunto';
-                    }
-                    row.appendChild(archivoCell);
+                            archivoCell.appendChild(link);
+                        } else {
+                            archivoCell.textContent = 'No adjunto';
+                        }
+                        row.appendChild(archivoCell);
 
-                    tablaSalidasBody.appendChild(row);
-                });
+                        tablaSalidasBody.appendChild(row);
+                    });
 
-                // Después de llenar la tabla, inicializar las funciones
-                initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
-            } else {
-                console.error('Error al obtener las salidas:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error al obtener las salidas:', error);
-        });
-
-    // Mostrar el modal
-    salidaModal.style.display = 'block';
-
-    // Cerrar el modal con el botón de cerrar
-    salidaCloseButton.onclick = function () {
-        salidaModal.style.display = 'none';
-    };
-
-    // Cerrar el modal al hacer clic fuera de él
-    window.onclick = function (event) {
-        if (event.target === salidaModal) {
-            salidaModal.style.display = 'none';
-        }
-    };
-
-    // Manejo del botón Guardar con confirmación previa usando SweetAlert2
-    // Manejo del botón Guardar con confirmación previa usando SweetAlert2
-    const saveButton = document.getElementById('guardarSalida');
-    saveButton.onclick = function (event) {
-        event.preventDefault(); // Evita el envío inmediato del formulario
-
-        // Obtener los valores de los campos
-        const numeroSalida = document.getElementById('numero_salida').value.trim();
-        const fechaSalida = document.getElementById('fecha_salida').value.trim();
-        const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0]; // Verificamos si hay un archivo adjunto
-
-        // Verificar si los campos están completos
-        if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
-            // Mostrar mensaje de error si falta algún campo
-            Swal.fire({
-                heightAuto: false,
-                scrollbarPadding: false,
-                icon: 'error',
-                title: 'Campos incompletos',
-                text: 'Por favor, complete todos los campos antes de guardar.',
-                confirmButtonColor: '#E73C45',
-
+                    // Después de llenar la tabla, inicializar las funciones
+                    initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
+                } else {
+                    console.error('Error al obtener las salidas:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener las salidas:', error);
             });
-            return; // Detener la ejecución si falta algún campo
-        }
 
-        // Mostrar la ventana de confirmación
-        Swal.fire({
-            heightAuto: false,
-            scrollbarPadding: false,
-            title: '¿Desea confirmar la salida?',
-            text: "Se guardará la salida con los datos ingresados.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#4BBFE0', // Color del botón de confirmar
-            cancelButtonColor: '#E73C45', // Color del botón de cancelar
-            confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar',
+        // Mostrar el modal
+        salidaModal.style.display = 'block';
 
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Si el usuario confirma, enviar el formulario
-                document.getElementById('salidaForm').submit();
+        // Cerrar el modal con el botón de cerrar
+        salidaCloseButton.onclick = function () {
+            salidaModal.style.display = 'none';
+        };
+
+        // Cerrar el modal al hacer clic fuera de él
+        window.onclick = function (event) {
+            if (event.target === salidaModal) {
+                salidaModal.style.display = 'none';
+            }
+        };
+
+        // Manejo del botón Guardar con confirmación previa usando SweetAlert2
+        // Manejo del botón Guardar con confirmación previa usando SweetAlert2
+        const saveButton = document.getElementById('guardarSalida');
+        saveButton.onclick = function (event) {
+            event.preventDefault(); // Evita el envío inmediato del formulario
+
+            // Obtener los valores de los campos
+            const numeroSalida = document.getElementById('numero_salida').value.trim();
+            const fechaSalida = document.getElementById('fecha_salida').value.trim();
+            const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0]; // Verificamos si hay un archivo adjunto
+
+            // Verificar si los campos están completos
+            if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
+                // Mostrar mensaje de error si falta algún campo
                 Swal.fire({
                     heightAuto: false,
                     scrollbarPadding: false,
-                    icon: 'success',
-                    title: 'Salida creada',
-                    text: 'La salida ha sido registrada correctamente.',
-                    showConfirmButton: false,
-                    timer: 2000,
+                    icon: 'error',
+                    title: 'Campos incompletos',
+                    text: 'Por favor, complete todos los campos antes de guardar.',
+                    confirmButtonColor: '#E73C45',
 
-                }).then(() => {
-                    // Opcional: Recargar la página o cerrar el modal
-                    sessionStorage.setItem('redirectToBNUP', 'true');
-                    window.location.reload();
                 });
+                return; // Detener la ejecución si falta algún campo
             }
-            // Si el usuario cancela, no hacer nada
-        });
-    };
+
+            // Mostrar la ventana de confirmación
+            Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
+                title: '¿Desea confirmar la salida?',
+                text: "Se guardará la salida con los datos ingresados.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4BBFE0', // Color del botón de confirmar
+                cancelButtonColor: '#E73C45', // Color del botón de cancelar
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Si el usuario confirma, enviar el formulario
+                    document.getElementById('salidaForm').submit();
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'success',
+                        title: 'Salida creada',
+                        text: 'La salida ha sido registrada correctamente.',
+                        showConfirmButton: false,
+                        timer: 2000,
+
+                    }).then(() => {
+                        // Opcional: Recargar la página o cerrar el modal
+                        sessionStorage.setItem('redirectToBNUP', 'true');
+                        window.location.reload();
+                    });
+                }
+                // Si el usuario cancela, no hacer nada
+            });
+        };
 
 
-    // Inicializar el plugin fileinput para el input de adjuntar archivo
-    const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
+        // Inicializar el plugin fileinput para el input de adjuntar archivo
+        const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
 
-    if (archivoAdjuntoInput) {
-        $(archivoAdjuntoInput).fileinput({
-            showUpload: false,
-            showRemove: true,
-            showPreview: true,
-            showCaption: false,
-            browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-            removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
-            mainClass: 'input-group-sm',
-            dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-            fileActionSettings: {
-                showRemove: true,
+        if (archivoAdjuntoInput) {
+            $(archivoAdjuntoInput).fileinput({
                 showUpload: false,
-                showZoom: false,
-                showDrag: false,
-                showDelete: false,
-            },
-            layoutTemplates: {
-                close: '',
-                indicator: '',
-                actionCancel: ''
-            }
+                showRemove: true,
+                showPreview: true,
+                showCaption: false,
+                browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+                removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                mainClass: 'input-group-sm',
+                dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+                fileActionSettings: {
+                    showRemove: true,
+                    showUpload: false,
+                    showZoom: false,
+                    showDrag: false,
+                    showDelete: false,
+                },
+                layoutTemplates: {
+                    close: '',
+                    indicator: '',
+                    actionCancel: ''
+                }
+            });
+        }
+    } else {
+        Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
+            icon: 'warning',
+            title: 'Acceso denegado',
+            text: 'No tiene permiso para realizar esta acción.',
         });
     }
 }
@@ -304,68 +755,74 @@ function updateBNUPFields() {
 function initializeBNUPFormModal() {
     const modal = document.getElementById('bnupFormModal');
     const btn = document.getElementById('openBNUPFormModal');
-    const span = document.querySelector('#bnupFormModal .close');
+    const span = modal ? modal.querySelector('.close') : null;
 
-    if (btn) {
+    // Verificar si el botón y el modal existen
+    if (btn && modal) {
         btn.onclick = function () {
             modal.style.display = 'block';
         }
     }
 
-    if (span) {
+    // Verificar si el span (botón de cerrar) y el modal existen
+    if (span && modal) {
         span.onclick = function () {
             modal.style.display = 'none';
         }
     }
 
     // Cerrar el modal si se hace clic fuera de él
-    document.addEventListener('click', function (event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    if (modal) {
+        document.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
 
     // Manejo del botón Guardar con confirmación
     const saveButton = document.getElementById('guardarBNUP');
-    saveButton.onclick = function (event) {
-        event.preventDefault(); // Evita el envío del formulario por defecto
+    if (saveButton) {
+        saveButton.onclick = function (event) {
+            event.preventDefault(); // Evita el envío del formulario por defecto
 
-        const numeroIngreso = document.getElementById('numeroIngreso').value;
-        const archivoAdjunto = document.getElementById('archivo_adjunto').files.length;
+            const numeroIngreso = document.getElementById('numeroIngreso').value;
+            const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
+            const archivoAdjunto = archivoAdjuntoInput ? archivoAdjuntoInput.files.length : 0;
 
-        if (!numeroIngreso || archivoAdjunto === 0) {
+            if (!numeroIngreso || archivoAdjunto === 0) {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'error',
+                    title: 'Campos incompletos',
+                    text: 'Complete todos los campos requeridos antes de enviar.',
+                });
+                return;
+            }
+
+            // Mostrar el mensaje de confirmación
             Swal.fire({
                 heightAuto: false,
                 scrollbarPadding: false,
-                icon: 'error',
-                title: 'Campos incompletos',
-                text: 'Complete todos los campos requeridos antes de enviar.',
-
+                title: '¿Desea confirmar la Solicitud de BNUP?',
+                text: "Se guardará la solicitud junto con el archivo adjunto.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4BBFE0',
+                cancelButtonColor: '#E73C45',
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Si el usuario confirma, enviar el formulario
+                    document.getElementById('bnupForm').submit();
+                }
             });
-            return;
-        }
-
-        // Mostrar el mensaje de confirmación
-        Swal.fire({
-            heightAuto: false,
-            scrollbarPadding: false,
-            title: '¿Desea confirmar la Solicitud de BNUP?',
-            text: "Se guardará la solicitud junto con el archivo adjunto.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#4BBFE0',
-            cancelButtonColor: '#E73C45',
-            confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar',
-
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Si el usuario confirma, enviar el formulario
-                document.getElementById('bnupForm').submit();
-            }
-        });
-    };
+        };
+    }
 }
+
 
 function borde_thead() {
     const tableRow = document.querySelector('tr');  // Seleccionar la primera fila (puedes cambiar según corresponda)
@@ -383,131 +840,145 @@ function borde_thead() {
     }
 }
 
-function initializeRowSelection() {
-    const selectAllCheckbox = document.getElementById('selectAll');
-    const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
-    const deleteButton = document.getElementById('deleteSelected');
-    const editButton = document.getElementById('editSelected');
+// function initializeRowSelection() {
+//     const selectAllCheckbox = document.getElementById('selectAll');
+//     const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+//     // Ajustar botones según el tipo de usuario
+//     if (tipo_usuario !== 'ADMIN') {
+//         // Ocultar el botón de eliminar si no es ADMIN
+//         const deleteButton = document.getElementById('deleteSelected');
+//         if (deleteButton) {
+//             deleteButton.style.display = 'none';
+//         }
+//     }
 
-    function toggleRowHighlight(row, isChecked) {
-        if (isChecked) {
-            row.classList.add('fila-marcada');
-        } else {
-            row.classList.remove('fila-marcada');
-        }
-    }
+//     if (tipo_usuario !== 'ADMIN' && tipo_usuario !== 'PRIVILEGIADO') {
+//         // Ocultar el botón de editar si no es ADMIN o PRIVILEGIADO
+//         const editButton = document.getElementById('editSelected');
+//         if (editButton) {
+//             editButton.style.display = 'none';
+//         }
+//     }
 
-    function updateActionButtonsState() {
-        const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
-        const anyChecked = selectedCheckboxes.length > 0;
-        const singleChecked = selectedCheckboxes.length === 1;
+//     function toggleRowHighlight(row, isChecked) {
+//         if (isChecked) {
+//             row.classList.add('fila-marcada');
+//         } else {
+//             row.classList.remove('fila-marcada');
+//         }
+//     }
 
-        deleteButton.disabled = !anyChecked;
-        editButton.disabled = !anyChecked; // Ahora el botón "Editar" se habilita si hay al menos un registro seleccionado
-    }
+//     function updateActionButtonsState() {
+//         const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+//         const anyChecked = selectedCheckboxes.length > 0;
+//         const singleChecked = selectedCheckboxes.length === 1;
 
-    // Función para seleccionar o deseleccionar todas las filas
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('click', function (event) {
-            event.stopPropagation();  // Evita la propagación del evento para que no active el ordenamiento
-        });
-        selectAllCheckbox.addEventListener('change', function () {
-            rowCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
-                toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
-            });
-            updateActionButtonsState();
-        });
-    }
+//         deleteButton.disabled = !anyChecked;
+//         editButton.disabled = !anyChecked; // Ahora el botón "Editar" se habilita si hay al menos un registro seleccionado
+//     }
 
-    // Función para seleccionar o deseleccionar una fila individual
-    rowCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+//     // Función para seleccionar o deseleccionar todas las filas
+//     if (selectAllCheckbox) {
+//         selectAllCheckbox.addEventListener('click', function (event) {
+//             event.stopPropagation();  // Evita la propagación del evento para que no active el ordenamiento
+//         });
+//         selectAllCheckbox.addEventListener('change', function () {
+//             rowCheckboxes.forEach(checkbox => {
+//                 checkbox.checked = selectAllCheckbox.checked;
+//                 toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+//             });
+//             updateActionButtonsState();
+//         });
+//     }
 
-            // Si todas las filas están seleccionadas, marcar el selectAll checkbox
-            const allChecked = [...rowCheckboxes].every(cb => cb.checked);
-            selectAllCheckbox.checked = allChecked;
+//     // Función para seleccionar o deseleccionar una fila individual
+//     rowCheckboxes.forEach(checkbox => {
+//         checkbox.addEventListener('change', function () {
+//             toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
 
-            updateActionButtonsState();
-        });
-    });
+//             // Si todas las filas están seleccionadas, marcar el selectAll checkbox
+//             const allChecked = [...rowCheckboxes].every(cb => cb.checked);
+//             selectAllCheckbox.checked = allChecked;
 
-    // Evento para el botón de editar
-    if (editButton) {
-        editButton.addEventListener('click', function () {
-            const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
-            const numSelected = selectedCheckboxes.length;
+//             updateActionButtonsState();
+//         });
+//     });
 
-            if (numSelected === 1) {
-                const idToEdit = selectedCheckboxes[0].getAttribute('data-id');
-                openEditModal(idToEdit);
-            } else if (numSelected > 1) {
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    icon: 'warning',
-                    title: 'Solo un registro a la vez',
-                    text: 'Por favor, seleccione solo un registro para editar.',
+//     // Evento para el botón de editar
+//     if (editButton) {
+//         editButton.addEventListener('click', function () {
+//             const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+//             const numSelected = selectedCheckboxes.length;
 
-                });
-            } else {
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    icon: 'warning',
-                    title: 'No hay registros seleccionados',
-                    text: 'Por favor, seleccione un registro para editar.',
+//             if (numSelected === 1) {
+//                 const idToEdit = selectedCheckboxes[0].getAttribute('data-id');
+//                 openEditModal(idToEdit);
+//             } else if (numSelected > 1) {
+//                 Swal.fire({
+//                     heightAuto: false,
+//                     scrollbarPadding: false,
+//                     icon: 'warning',
+//                     title: 'Solo un registro a la vez',
+//                     text: 'Por favor, seleccione solo un registro para editar.',
 
-                });
-            }
-        });
-    }
+//                 });
+//             } else {
+//                 Swal.fire({
+//                     heightAuto: false,
+//                     scrollbarPadding: false,
+//                     icon: 'warning',
+//                     title: 'No hay registros seleccionados',
+//                     text: 'Por favor, seleccione un registro para editar.',
 
-    // Evento para el botón de eliminar
-    if (deleteButton) {
-        deleteButton.addEventListener('click', function () {
-            // Obtener los checkboxes seleccionados
-            const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
-            const numSelected = selectedCheckboxes.length;
+//                 });
+//             }
+//         });
+//     }
 
-            if (numSelected === 0) {
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    icon: 'warning',
-                    title: 'No hay registros seleccionados',
-                    text: 'Por favor, seleccione al menos un registro para eliminar.',
+//     // Evento para el botón de eliminar
+//     if (deleteButton) {
+//         deleteButton.addEventListener('click', function () {
+//             // Obtener los checkboxes seleccionados
+//             const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+//             const numSelected = selectedCheckboxes.length;
 
-                });
-                return;
-            }
+//             if (numSelected === 0) {
+//                 Swal.fire({
+//                     heightAuto: false,
+//                     scrollbarPadding: false,
+//                     icon: 'warning',
+//                     title: 'No hay registros seleccionados',
+//                     text: 'Por favor, seleccione al menos un registro para eliminar.',
 
-            // Confirmar eliminación
-            Swal.fire({
-                heightAuto: false,
-                scrollbarPadding: false,
-                title: `¿Desea eliminar ${numSelected} registro(s)?`,
-                text: "Esta acción no se puede deshacer.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#E73C45',
-                cancelButtonColor: '#4BBFE0',
-                confirmButtonText: 'Eliminar',
-                cancelButtonText: 'Cancelar',
+//                 });
+//                 return;
+//             }
 
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Obtener los IDs de los registros seleccionados
-                    const idsToDelete = selectedCheckboxes.map(cb => cb.getAttribute('data-id'));
+//             // Confirmar eliminación
+//             Swal.fire({
+//                 heightAuto: false,
+//                 scrollbarPadding: false,
+//                 title: `¿Desea eliminar ${numSelected} registro(s)?`,
+//                 text: "Esta acción no se puede deshacer.",
+//                 icon: 'warning',
+//                 showCancelButton: true,
+//                 confirmButtonColor: '#E73C45',
+//                 cancelButtonColor: '#4BBFE0',
+//                 confirmButtonText: 'Eliminar',
+//                 cancelButtonText: 'Cancelar',
 
-                    // Enviar solicitud AJAX para eliminar los registros
-                    deleteSelectedRecords(idsToDelete);
-                }
-            });
-        });
-    }
-}
+//             }).then((result) => {
+//                 if (result.isConfirmed) {
+//                     // Obtener los IDs de los registros seleccionados
+//                     const idsToDelete = selectedCheckboxes.map(cb => cb.getAttribute('data-id'));
+
+//                     // Enviar solicitud AJAX para eliminar los registros
+//                     deleteSelectedRecords(idsToDelete);
+//                 }
+//             });
+//         });
+//     }
+// }
 
 
 function openEditModal(solicitudId) {
@@ -927,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Inicializar la selección de filas en la tabla
-    initializeRowSelection();
+    // initializeRowSelection();
     borde_thead();
 });
 

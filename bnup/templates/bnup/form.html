@@ -1,90 +1,100 @@
-<div class="cardContent">
-  <div class="card-details" >
+<div class="cardContent" data-tipo-usuario="{{ tipo_usuario }}">
+  <div class="card-details">
     <div class="div-container">
       <!-- Botones para abrir modales -->
       <div>
-        <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span> BNUP</button>
-        <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
-        <button style="background-color: #F7EA53;justify-content: flex-start;width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+          <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span> BNUP</button>
+        {% endif %}
+        {% if tipo_usuario == 'ADMIN' %}
+          <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
+        {% endif %}
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+          <button style="background-color: #F7EA53;justify-content: flex-start;width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
+        {% endif %}
       </div>
-      <button style="justify-content: flex-start;width: 150px;background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+      {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+        <button style="justify-content: flex-start;width: 150px;background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+      {% endif %}
     </div>
 
     <!-- Ventana modal para el formulario BNUP -->
-    <div id="bnupFormModal" class="modal">
-      <div class="modal-content">
-        <!-- Formulario para ingresar nuevas solicitudes -->
-        <form id="bnupForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
-          {% csrf_token %}
-          <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-            <h2>Solicitud de BNUP</h2>
-            <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
-          </div>
-          <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
-            <div>
-              <label>Tipo de Recepción</label>
-              <select style="height: min-content;" name="tipo_recepcion" id="tipo_recepcion" required>
-                <option value="" disabled selected>Seleccione un tipo de recepción</option>
-                {% for tipo in tipos_recepcion %}
-                  <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+    {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+      <div id="bnupFormModal" class="modal">
+        <div class="modal-content">
+          <!-- Formulario para ingresar nuevas solicitudes -->
+          <form id="bnupForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+              <h2>Solicitud de BNUP</h2>
+              <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
+              <div>
+                <label>Tipo de Recepción</label>
+                <select style="height: min-content;" name="tipo_recepcion" id="tipo_recepcion" required>
+                  <option value="" disabled selected>Seleccione un tipo de recepción</option>
+                  {% for tipo in tipos_recepcion %}
+                    <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div id="memoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
+                <label for="num_memo">Ingrese N° Doc:</label>
+                <input type="number" name="num_memo" id="num_memo" />
+              </div>
+              <div id="correoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
+                <label for="correoSolicitante">Ingrese Correo:</label>
+                <input type="email" name="correo_solicitante" id="correoSolicitante" />
+              </div>
+            </div>
+
+            <div class="form-group" style="display: flex; justify-content: space-between;">
+              <div>
+                <label for="numeroIngreso">N° de Ingreso</label>
+                <input type="number" name="numero_ingreso" id="numeroIngreso" required />
+              </div>
+              <div class="btn-container">
+                <button type="button" id="openFileModal" class="btn">Adjuntar archivo</button>
+                <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" required /> <!-- Mantén el input en el formulario pero oculto -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="depto_solicitante">Departamento Solicitante</label>
+              <select style="height: max-content;" name="depto_solicitante" id="depto_solicitante" required>
+                <option value="" disabled selected>Seleccione un Departamento</option>
+                {% for depto in departamentos %}
+                  <option value="{{ depto.id }}">{{ depto.nombre }}</option>
                 {% endfor %}
               </select>
             </div>
-            <div id="memoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
-              <label for="num_memo">Ingrese N° Doc:</label>
-              <input type="number" name="num_memo" id="num_memo" />
+            <div class="form-group">
+              <label for="nombreSolicitante">Nombre del Solicitante</label>
+              <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" required />
             </div>
-            <div id="correoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
-              <label for="correoSolicitante">Ingrese Correo:</label>
-              <input type="email" name="correo_solicitante" id="correoSolicitante" />
+            <div class="form-group">
+              <label for="fecha">Fecha</label>
+              <input type="date" name="fecha_ingreso" id="fecha" required />
             </div>
-          </div>
-
-          <div class="form-group" style="display: flex; justify-content: space-between;">
-            <div>
-              <label for="numeroIngreso">N° de Ingreso</label>
-              <input type="number" name="numero_ingreso" id="numeroIngreso" required />
+            <div class="form-group">
+              <label for="funcionarioAsignado">Funcionario asignado a BNUP</label>
+              <select style="height: max-content;" name="funcionario_asignado" id="funcionarioAsignado" required>
+                <option value="" disabled selected>Seleccione un Funcionario</option>
+                {% for funcionario in funcionarios %}
+                  <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                {% endfor %}
+              </select>
             </div>
-            <div class="btn-container">
-              <button type="button" id="openFileModal" class="btn">Adjuntar archivo</button>
-              <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" required /> <!-- Mantén el input en el formulario pero oculto -->
+            <div class="form-group">
+              <label for="descripcion">Descripción</label>
+              <textarea name="descripcion" id="descripcion" placeholder="Ingrese la descripción" rows="4"></textarea>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="depto_solicitante">Departamento Solicitante</label>
-            <select style="height: max-content;" name="depto_solicitante" id="depto_solicitante" required>
-              <option value="" disabled selected>Seleccione un Departamento</option>
-              {% for depto in departamentos %}
-                <option value="{{ depto.id }}">{{ depto.nombre }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="nombreSolicitante">Nombre del Solicitante</label>
-            <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" required />
-          </div>
-          <div class="form-group">
-            <label for="fecha">Fecha</label>
-            <input type="date" name="fecha_ingreso" id="fecha" required />
-          </div>
-          <div class="form-group">
-            <label for="funcionarioAsignado">Funcionario asignado a BNUP</label>
-            <select style="height: max-content;" name="funcionario_asignado" id="funcionarioAsignado" required>
-              <option value="" disabled selected>Seleccione un Funcionario</option>
-              {% for funcionario in funcionarios %}
-                <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="descripcion">Descripción</label>
-            <textarea name="descripcion" id="descripcion" placeholder="Ingrese la descripción" rows="4"></textarea>
-          </div>
-          <button id="guardarBNUP" type="submit" class="btn btn-primary">Enviar</button>
-        </form>
+            <button id="guardarBNUP" type="submit" class="btn btn-primary">Enviar</button>
+          </form>
+        </div>
       </div>
-    </div>
+    {% endif %}
 
     <div class="tableInfor_container">
       <div>
@@ -100,9 +110,11 @@
         <table id="tablaSolicitudes" class="hidden-table" border="1" cellpadding="5" cellspacing="0" style="margin-top: 10px;">
           <thead>
             <tr>
-              <th class="non-clickable">
-                <input type="checkbox" id="selectAll" />
-              </th>
+              {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+                <th class="non-clickable">
+                  <input type="checkbox" id="selectAll" />
+                </th>
+              {% endif %}
               <th class="shadow nIngre" data-type="number">Nº Ingre</th>
               <th class="shadow" data-type="date">Fecha</th>
               <th class="shadow" data-type="string">Recepción</th>
@@ -119,9 +131,11 @@
           <tbody>
             {% for solicitud in solicitudes %}
               <tr>
-                <td>
-                  <input type="checkbox" class="rowCheckbox" data-id="{{ solicitud.id }}" />
-                </td> <!-- Checkbox para seleccionar fila individual -->
+                {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+                  <td>
+                    <input type="checkbox" class="rowCheckbox" data-id="{{ solicitud.id }}" />
+                  </td>
+                {% endif %}
                 <td>{{ solicitud.numero_ingreso }}</td>
                 <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                 <td>{{ solicitud.tipo_recepcion.tipo }}</td>
@@ -140,9 +154,37 @@
                 <!-- Correo -->
                 <td data-order="{% if solicitud.correo_solicitante %}
                     {{ solicitud.correo_solicitante|lower }}
-                  {% else %}                           
+                  {% else %}
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                                               
                                       
                     zzz
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                   {% endif %}">
                   {% if solicitud.correo_solicitante %}
@@ -187,6 +229,7 @@
                 <!-- Salidas -->
                 <td>
                   {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
+                    <!-- Mostrar información de la salida existente -->
                     <div class="icon-container">
                       <a style="display: flex; align-items: center;" href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank">
                         Nº: {{ solicitud.numero_salida }}
@@ -195,10 +238,20 @@
                       <div class="tooltip">Respondido {{ solicitud.fecha_salida|date:'d/m/Y' }}</div>
                     </div>
                   {% else %}
-                    <div class="icon-container">
-                      <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})"><span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span></a>
-                      <div class="tooltip">Responder con archivo de salida</div>
-                    </div>
+                    {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+                      <!-- Mostrar botón para crear salida -->
+                      <!-- Mostrar botón para crear salida -->
+                      <div class="icon-container">
+                        <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})"><span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span></a>
+                        <div class="tooltip">Responder con archivo de salida</div>
+                      </div>
+                    {% else %}
+                      <!-- Mostrar mensaje de sin permiso -->
+                      <div class="icon-container">
+                        <span style="color: #E73C45;" class="material-symbols-outlined">do_not_disturb_alt</span>
+                        <div class="tooltip">Sin permiso para crear salidas</div>
+                      </div>
+                    {% endif %}
                   {% endif %}
                 </td>
               </tr>
@@ -265,73 +318,77 @@
   </div>
 </div>
 
-<!-- Modal para gestionar la salida -->
-<div id="salidaModal" class="modal">
-  <div style="max-width: max-content;" class="modal-content animate__animated animate__fadeInDown">
-    <!-- Encabezado del modal con título y botón de cerrar -->
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-      <h2>Registrar Salida</h2>
-      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
-    </div>
-    <div style="display: flex;justify-content: space-between;gap: 50px;">
-      <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
-        {% csrf_token %}
+{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+  <!-- Mostrar botón para crear salida -->
+  <!-- Código del modal salidaModal -->
+  <!-- Modal para gestionar la salida -->
+  <div id="salidaModal" class="modal">
+    <div style="max-width: max-content;" class="modal-content animate__animated animate__fadeInDown">
+      <!-- Encabezado del modal con título y botón de cerrar -->
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h2>Registrar Salida</h2>
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+      </div>
+      <div style="display: flex;justify-content: space-between;gap: 50px;">
+        <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
+          {% csrf_token %}
 
-        <!-- Sección de campos de salida (siempre visible) -->
-        <div id="salidaFields" style="margin-top: 10px;width: 500px;">
-          <div style="display: flex; justify-content: space-between; gap: 10px;">
-            <!-- Campos del formulario -->
-            <div class="form-group" style="width: 48%;">
-              <label for="numero_salida">N° de Salida</label>
-              <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
+          <!-- Sección de campos de salida (siempre visible) -->
+          <div id="salidaFields" style="margin-top: 10px;width: 500px;">
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+              <!-- Campos del formulario -->
+              <div class="form-group" style="width: 48%;">
+                <label for="numero_salida">N° de Salida</label>
+                <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
+              </div>
+
+              <div class="form-group" style="width: 48%;">
+                <label for="fecha_salida">Fecha de Salida</label>
+                <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="archivo_adjunto_salida">Adjuntar archivo</label>
+              <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" class="file" required />
             </div>
 
-            <div class="form-group" style="width: 48%;">
-              <label for="fecha_salida">Fecha de Salida</label>
-              <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
+            <!-- Campo oculto para el ID de la solicitud -->
+            <input type="hidden" name="solicitud_id" id="solicitud_id" />
+
+            <!-- Botón de guardar -->
+            <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+
+        <!-- Tabla para mostrar las salidas asociadas -->
+        <div style="display: flex;flex-direction: column;justify-content: space-between;">
+          <div style="margin: 0px;width: -webkit-fill-available;">
+            <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
+              <h3 style="width: -webkit-fill-available;">Salidas Registradas</h3>
+              <!-- Campo de búsqueda -->
+              <div class="search-container" style="width: -webkit-fill-available;">
+                <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
+              </div>
             </div>
+            <table style="width: 350px;" id="tablaSalidas" class="table table-bordered">
+              <thead>
+                <tr>
+                  <th style="border: 0px;border-radius: 10px 0px 0px;" data-type="number">Nº Salida</th>
+                  <th data-type="date">Fecha</th>
+                  <th style="border: 0px;border-radius: 0px 10px 0px 0px;" data-type="text">Adjunto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Aquí se llenarán las salidas mediante JavaScript -->
+              </tbody>
+            </table>
           </div>
-          <div class="form-group">
-            <label for="archivo_adjunto_salida">Adjuntar archivo</label>
-            <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" class="file" required />
-          </div>
-
-          <!-- Campo oculto para el ID de la solicitud -->
-          <input type="hidden" name="solicitud_id" id="solicitud_id" />
-
-          <!-- Botón de guardar -->
-          <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
+          <div id="paginationSalidas" class="pagination"></div>
         </div>
-      </form>
-
-      <!-- Tabla para mostrar las salidas asociadas -->
-      <div style="display: flex;flex-direction: column;justify-content: space-between;">
-        <div style="margin: 0px;width: -webkit-fill-available;">
-          <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
-            <h3 style="width: -webkit-fill-available;">Salidas Registradas</h3>
-            <!-- Campo de búsqueda -->
-            <div class="search-container" style="width: -webkit-fill-available;">
-              <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
-            </div>
-          </div>
-          <table style="width: 350px;" id="tablaSalidas" class="table table-bordered">
-            <thead>
-              <tr>
-                <th style="border: 0px;border-radius: 10px 0px 0px;" data-type="number">Nº Salida</th>
-                <th data-type="date">Fecha</th>
-                <th style="border: 0px;border-radius: 0px 10px 0px 0px;" data-type="text">Adjunto</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Aquí se llenarán las salidas mediante JavaScript -->
-            </tbody>
-          </table>
-        </div>
-        <div id="paginationSalidas" class="pagination"></div>
       </div>
     </div>
   </div>
-</div>
+{% endif %}
 
 <!-- Modal para editar una solicitud (Formulario de edición) -->
 <div id="editBNUPFormModal" class="modal">
@@ -398,7 +455,7 @@
       <!-- Funcionario asignado (no editable) -->
       <div class="form-group">
         <label for="edit_funcionarioAsignado">Funcionario asignado a BNUP</label>
-        <select style="height: max-content;" id="edit_funcionarioAsignado" required >
+        <select style="height: max-content;" id="edit_funcionarioAsignado" required>
           {% for funcionario in funcionarios %}
             <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
           {% endfor %}

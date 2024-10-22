@@ -28,10 +28,11 @@ document.addEventListener('DOMContentLoaded', function () {
           const script = document.createElement('script');
           script.src = '/static/js/bnup_form.js';
           script.onload = function () {
+            initializeBNUPPage();
             updateBNUPFields();
             initializeFileModal();
             initializeBNUPFormModal();
-            initializeRowSelection();
+            // initializeRowSelection();
             borde_thead();
 
             // Inicializar la tabla aquí
