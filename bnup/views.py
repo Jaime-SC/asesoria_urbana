@@ -1,38 +1,35 @@
-from datetime import datetime
+import json
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import Count
+from django.db.models.functions import ExtractYear, ExtractMonth
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse, HttpResponseRedirect
 
 from principal.models import PerfilUsuario
 from .models import SalidaBNUP, SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
-from django.contrib import messages
-from django.db.models import Count
-from django.core.serializers.json import DjangoJSONEncoder
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponseRedirect
-import json
 
 
 def bnup_form(request):
-    # Verificar si el usuario está autenticado
+    """
+    Maneja la visualización y creación de solicitudes de BNUP.
+    - GET: Renderiza el formulario con datos necesarios.
+    - POST: Procesa y guarda una nueva solicitud de BNUP.
+    """
     if not request.user.is_authenticated:
-        return redirect("login")  # Redirigir al login si no está autenticado
+        return redirect("login")
 
-    # Obtener el perfil y tipo de usuario
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
     if request.method == "POST":
-        # Verificar permisos para crear solicitudes
         if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
             messages.error(request, "No tiene permiso para crear solicitudes de BNUP.")
             return redirect("bnup_form")
-        # Ya no verificamos si es una actualización de salida aquí
-        # Extraer datos del formulario para crear una nueva solicitud
+
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" else None
-        correo_solicitante = (
-            request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
-        )
+        correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
         nombre_solicitante = request.POST.get("nombre_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
@@ -41,13 +38,11 @@ def bnup_form(request):
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
-        # Verificar que los IDs son válidos y obtener las instancias correspondientes
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
             funcionario_asignado = Funcionario.objects.get(id=funcionario_asignado_id)
 
-            # Crear y guardar la solicitud
             solicitud = SolicitudBNUP(
                 tipo_recepcion=tipo_recepcion,
                 numero_memo=numero_memo,
@@ -63,33 +58,38 @@ def bnup_form(request):
             solicitud.save()
             request.session["redirect_to_bnup"] = True
             return redirect("home")
+        except TipoRecepcion.DoesNotExist:
+            messages.error(request, "Tipo de recepción inválido.")
+        except Departamento.DoesNotExist:
+            messages.error(request, "Departamento solicitante inválido.")
+        except Funcionario.DoesNotExist:
+            messages.error(request, "Funcionario asignado inválido.")
         except Exception as e:
-            print("Error al guardar la solicitud:", e)
             messages.error(request, f"Error al guardar la solicitud: {e}")
-            request.session["redirect_to_bnup"] = True
-            return redirect("home")
-    else:
-        # Obtener todas las solicitudes activas
-        solicitudes = SolicitudBNUP.objects.filter(is_active=True)
 
+        return redirect("home")
+    else:
+        solicitudes = SolicitudBNUP.objects.filter(is_active=True).select_related("tipo_recepcion")
         departamentos = Departamento.objects.all()
         funcionarios = Funcionario.objects.all()
         tipos_recepcion = TipoRecepcion.objects.all()
 
-        return render(
-            request,
-            "bnup/form.html",
-            {
-                "departamentos": departamentos,
-                "funcionarios": funcionarios,
-                "solicitudes": solicitudes.select_related("tipo_recepcion"),
-                "tipos_recepcion": tipos_recepcion,
-                "tipo_usuario": tipo_usuario,  # Pasar el tipo de usuario al contexto
-            },
-        )
+        context = {
+            "departamentos": departamentos,
+            "funcionarios": funcionarios,
+            "solicitudes": solicitudes,
+            "tipos_recepcion": tipos_recepcion,
+            "tipo_usuario": tipo_usuario,
+        }
+        return render(request, "bnup/form.html", context)
 
 
 def edit_bnup_record(request):
+    """
+    Maneja la edición de una solicitud de BNUP.
+    - POST: Actualiza una solicitud existente.
+    - GET: Devuelve los datos de una solicitud en formato JSON.
+    """
     if not request.user.is_authenticated:
         return JsonResponse({"success": False, "error": "No autenticado."})
 
@@ -97,19 +97,15 @@ def edit_bnup_record(request):
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
     if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
-        return JsonResponse(
-            {"success": False, "error": "No tiene permiso para editar registros."}
-        )
+        return JsonResponse({"success": False, "error": "No tiene permiso para editar registros."})
+
     if request.method == "POST":
         solicitud_id = request.POST.get("solicitud_id")
         solicitud = get_object_or_404(SolicitudBNUP, id=solicitud_id)
 
-        # Obtener datos del formulario
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" else None
-        correo_solicitante = (
-            request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
-        )
+        correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
         nombre_solicitante = request.POST.get("nombre_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
@@ -117,14 +113,10 @@ def edit_bnup_record(request):
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
-        # No obtener 'funcionario_asignado_id' ya que no se puede editar
-
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
-            # No necesitamos obtener 'funcionario_asignado'
 
-            # Actualizar los campos de la solicitud
             solicitud.tipo_recepcion = tipo_recepcion
             solicitud.numero_memo = numero_memo
             solicitud.correo_solicitante = correo_solicitante
@@ -132,22 +124,24 @@ def edit_bnup_record(request):
             solicitud.nombre_solicitante = nombre_solicitante
             solicitud.numero_ingreso = numero_ingreso
             solicitud.fecha_ingreso = fecha_ingreso
-            # No actualizar 'funcionario_asignado'
             solicitud.descripcion = descripcion
+
             if archivo_adjunto:
                 solicitud.archivo_adjunto_ingreso = archivo_adjunto
 
             solicitud.save()
-            messages.success(request, "Solicitud actualizada correctamente.")
-            request.session["redirect_to_bnup"] = True
+
             return JsonResponse({"success": True, "data": {"id": solicitud.id}})
+        except TipoRecepcion.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Tipo de recepción inválido."})
+        except Departamento.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Departamento solicitante inválido."})
         except Exception as e:
-            print("Error al actualizar la solicitud:", e)
             return JsonResponse({"success": False, "error": str(e)})
     else:
-        # Manejar la solicitud GET para obtener los datos de la solicitud
         solicitud_id = request.GET.get("solicitud_id")
         solicitud = get_object_or_404(SolicitudBNUP, id=solicitud_id)
+
         data = {
             "id": solicitud.id,
             "tipo_recepcion": solicitud.tipo_recepcion.id,
@@ -159,12 +153,16 @@ def edit_bnup_record(request):
             "fecha_ingreso": solicitud.fecha_ingreso.strftime("%Y-%m-%d"),
             "funcionario_asignado": solicitud.funcionario_asignado.id,
             "descripcion": solicitud.descripcion,
-            # Puedes incluir más campos si es necesario
         }
+
         return JsonResponse({"success": True, "data": data})
 
 
 def delete_bnup_records(request):
+    """
+    Maneja la eliminación lógica de solicitudes de BNUP.
+    - POST: Marca las solicitudes como inactivas.
+    """
     if request.method == "POST":
         if not request.user.is_authenticated:
             return JsonResponse({"success": False, "error": "No autenticado."})
@@ -173,24 +171,26 @@ def delete_bnup_records(request):
         tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
         if tipo_usuario != "ADMIN":
-            return JsonResponse(
-                {"success": False, "error": "No tiene permiso para eliminar registros."}
-            )
+            return JsonResponse({"success": False, "error": "No tiene permiso para eliminar registros."})
 
         try:
             data = json.loads(request.body)
             ids = data.get("ids", [])
-            # Realizar el borrado lógico
+
             SolicitudBNUP.objects.filter(id__in=ids).update(is_active=False)
             return JsonResponse({"success": True})
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "error": "Datos inválidos."})
         except Exception as e:
-            print("Error al eliminar los registros:", e)
             return JsonResponse({"success": False, "error": str(e)})
     else:
-        return JsonResponse({"success": False})
+        return JsonResponse({"success": False, "error": "Método no permitido."})
 
 
 def statistics_view(request):
+    """
+    Genera estadísticas relacionadas con las solicitudes de BNUP.
+    """
     if not request.user.is_authenticated:
         return redirect("login")
 
@@ -200,54 +200,35 @@ def statistics_view(request):
     if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
         messages.error(request, "No tiene permiso para ver las estadísticas.")
         return redirect("bnup_form")
-    # Lógica para calcular estadísticas basadas en los datos
 
-    solicitudes_por_depto = SolicitudBNUP.objects.values(
-        "depto_solicitante__nombre"
-    ).annotate(total=Count("id"))
-    solicitudes_por_funcionario = SolicitudBNUP.objects.values(
-        "funcionario_asignado__nombre"
-    ).annotate(total=Count("id"))
-    solicitudes_por_tipo = SolicitudBNUP.objects.values(
-        "tipo_recepcion__tipo"
-    ).annotate(total=Count("id"))
+    solicitudes_por_depto = SolicitudBNUP.objects.values("depto_solicitante__nombre").annotate(total=Count("id"))
+    solicitudes_por_funcionario = SolicitudBNUP.objects.values("funcionario_asignado__nombre").annotate(total=Count("id"))
+    solicitudes_por_tipo = SolicitudBNUP.objects.values("tipo_recepcion__tipo").annotate(total=Count("id"))
     solicitudes_por_anio = (
-        SolicitudBNUP.objects.extra(select={"anio": "EXTRACT(YEAR FROM fecha_ingreso)"})
+        SolicitudBNUP.objects.annotate(anio=ExtractYear("fecha_ingreso"))
         .values("anio")
         .annotate(total=Count("id"))
     )
-
-    # Nueva estadística: Solicitudes por mes
     solicitudes_por_mes = (
-        SolicitudBNUP.objects.extra(select={"mes": "EXTRACT(MONTH FROM fecha_ingreso)"})
+        SolicitudBNUP.objects.annotate(mes=ExtractMonth("fecha_ingreso"))
         .values("mes")
         .annotate(total=Count("id"))
     )
 
-    # Calculamos los totales de entradas y salidas
     total_solicitudes = SolicitudBNUP.objects.count()
     total_salidas = SalidaBNUP.objects.count()
 
     context = {
         "solicitudes_por_depto": json.dumps(
-            {
-                item["depto_solicitante__nombre"]: item["total"]
-                for item in solicitudes_por_depto
-            },
+            {item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_depto},
             cls=DjangoJSONEncoder,
         ),
         "solicitudes_por_funcionario": json.dumps(
-            {
-                item["funcionario_asignado__nombre"]: item["total"]
-                for item in solicitudes_por_funcionario
-            },
+            {item["funcionario_asignado__nombre"]: item["total"] for item in solicitudes_por_funcionario},
             cls=DjangoJSONEncoder,
         ),
         "solicitudes_por_tipo": json.dumps(
-            {
-                item["tipo_recepcion__tipo"]: item["total"]
-                for item in solicitudes_por_tipo
-            },
+            {item["tipo_recepcion__tipo"]: item["total"] for item in solicitudes_por_tipo},
             cls=DjangoJSONEncoder,
         ),
         "solicitudes_por_anio": json.dumps(
@@ -258,38 +239,36 @@ def statistics_view(request):
             {str(int(item["mes"])): item["total"] for item in solicitudes_por_mes},
             cls=DjangoJSONEncoder,
         ),
-        # Eliminamos 'solicitudes_por_dia_semana' del contexto
-        # 'solicitudes_por_dia_semana': ...
         "total_solicitudes": total_solicitudes,
         "total_salidas": total_salidas,
     }
+
     return render(request, "bnup/statistics.html", context)
 
 
-# views.py
-
-
 def get_salidas(request, solicitud_id):
+    """
+    Devuelve las salidas asociadas a una solicitud específica en formato JSON.
+    """
     if request.method == "GET":
         salidas = SalidaBNUP.objects.filter(solicitud_bnup_id=solicitud_id)
         salidas_data = [
             {
                 "numero_salida": salida.numero_salida,
                 "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
-                "archivo_url": (
-                    salida.archivo_adjunto_salida.url
-                    if salida.archivo_adjunto_salida
-                    else ""
-                ),
+                "archivo_url": salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else "",
             }
             for salida in salidas
         ]
         return JsonResponse({"success": True, "salidas": salidas_data})
     else:
-        return JsonResponse({"success": False, "error": "Método no permitido"})
+        return JsonResponse({"success": False, "error": "Método no permitido."})
 
 
 def create_salida(request):
+    """
+    Crea una nueva salida asociada a una solicitud de BNUP.
+    """
     if not request.user.is_authenticated:
         return JsonResponse({"success": False, "error": "No autenticado."})
 
@@ -297,9 +276,8 @@ def create_salida(request):
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
     if tipo_usuario not in ["ADMIN", "PRIVILEGIADO", "ALIMENTADOR"]:
-        return JsonResponse(
-            {"success": False, "error": "No tiene permiso para crear salidas."}
-        )
+        return JsonResponse({"success": False, "error": "No tiene permiso para crear salidas."})
+
     if request.method == "POST":
         solicitud_id = request.POST.get("solicitud_id")
         numero_salida = request.POST.get("numero_salida")
@@ -307,7 +285,7 @@ def create_salida(request):
         archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
 
         try:
-            solicitud = SolicitudBNUP.objects.get(id=solicitud_id)
+            solicitud = get_object_or_404(SolicitudBNUP, id=solicitud_id)
             salida = SalidaBNUP(
                 solicitud_bnup=solicitud,
                 numero_salida=numero_salida,
@@ -316,12 +294,10 @@ def create_salida(request):
             )
             salida.save()
 
-            
-            request.session["redirect_to_bnup"] = True
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
+            messages.success(request, "Salida creada exitosamente.")
+            return redirect(request.META.get("HTTP_REFERER", "home"))
         except Exception as e:
-            print("Error al crear la salida:", e)
             messages.error(request, f"Error al crear la salida: {e}")
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
+            return redirect(request.META.get("HTTP_REFERER", "home"))
     else:
-        return JsonResponse({"success": False, "error": "Método no permitido"})
+        return JsonResponse({"success": False, "error": "Método no permitido."})

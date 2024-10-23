@@ -203,9 +203,9 @@ h1 {
 
 /* Efecto hover */
 .menu a:hover {
-  background: #5e6479;
-  border-color: #fff4ad;
-  box-shadow: 0 0 15px #f7ea53;
+  background: #387b8f;
+  border-color: cyan;
+  /* box-shadow: 0 0 15px #4bbfe0; */
 }
 
 .cardMain.bright {
@@ -292,8 +292,8 @@ h1 {
 
 /*Hover*/
 .cardContent:hover {
-  border-color: #f7ea53;
-  box-shadow: inset 0 0 10px 2px #746e2e;
+  border-color: cyan;
+  box-shadow: inset 0 0 10px 2px #247777;
 
   
 }
@@ -769,9 +769,9 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .menu a.selected {
   font-weight: bold;
-  background: #5e6479;
-  border-color: #fff4ad;
-  box-shadow: 0 0 15px #f7ea53;
+  background: #387b8f;
+  border-color: cyan;
+  box-shadow: inset 0 0 15px #16233e;
 }
 
 .selected-login {
