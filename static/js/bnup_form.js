@@ -613,9 +613,6 @@
                     const funcionarioSelect = document.getElementById('edit_funcionarioAsignado');
                     funcionarioSelect.value = data.data.funcionario_asignado;
 
-                    const funcionarioHiddenInput = document.getElementById('edit_funcionarioAsignado_hidden');
-                    funcionarioHiddenInput.value = data.data.funcionario_asignado;
-
                     // Mostrar el modal de edición
                     editModal.style.display = 'block';
                 } else {

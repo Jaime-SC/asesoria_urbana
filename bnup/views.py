@@ -57,6 +57,7 @@ def bnup_form(request):
             )
             solicitud.save()
             request.session["redirect_to_bnup"] = True
+            messages.success(request, "Solicitud de BNUP creada exitosamente.")
             return redirect("home")
         except TipoRecepcion.DoesNotExist:
             messages.error(request, "Tipo de recepción inválido.")
@@ -112,10 +113,14 @@ def edit_bnup_record(request):
         fecha_ingreso = request.POST.get("fecha_ingreso")
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
+        
+        # Solo ADMIN puede editar 'funcionario_asignado'
+        funcionario_asignado_id = request.POST.get("funcionario_asignado") if tipo_usuario == "ADMIN" else solicitud.funcionario_asignado.id
 
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
+            funcionario_asignado = Funcionario.objects.get(id=funcionario_asignado_id)
 
             solicitud.tipo_recepcion = tipo_recepcion
             solicitud.numero_memo = numero_memo
@@ -125,6 +130,9 @@ def edit_bnup_record(request):
             solicitud.numero_ingreso = numero_ingreso
             solicitud.fecha_ingreso = fecha_ingreso
             solicitud.descripcion = descripcion
+
+            if tipo_usuario == "ADMIN":
+                solicitud.funcionario_asignado = funcionario_asignado
 
             if archivo_adjunto:
                 solicitud.archivo_adjunto_ingreso = archivo_adjunto
@@ -136,6 +144,8 @@ def edit_bnup_record(request):
             return JsonResponse({"success": False, "error": "Tipo de recepción inválido."})
         except Departamento.DoesNotExist:
             return JsonResponse({"success": False, "error": "Departamento solicitante inválido."})
+        except Funcionario.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Funcionario asignado inválido."})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
     else:

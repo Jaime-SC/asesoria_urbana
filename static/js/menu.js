@@ -1,13 +1,17 @@
-// menu.js
-
 document.addEventListener('DOMContentLoaded', function () {
   let originalBgColor = '';
 
+  /**
+   * Resalta la opción de menú seleccionada.
+   * @param {HTMLElement} selectedElement - El elemento de enlace del menú seleccionado.
+   */
   function highlightMenuOption(selectedElement) {
+    // Elimina las clases 'selected' y 'selected-login' de todos los enlaces del menú
     document.querySelectorAll('a[data-content]').forEach(item => {
       item.classList.remove('selected', 'selected-login');
     });
 
+    // Añade la clase adecuada al enlace de menú seleccionado
     if (selectedElement.getAttribute('data-content') === 'login') {
       selectedElement.classList.add('selected-login');
     } else {
@@ -15,58 +19,68 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // menu.js
-
+  /**
+   * Carga contenido vía AJAX e inicializa scripts específicos de la página.
+   * @param {string} url - La URL desde la cual obtener el contenido.
+   * @param {Function} [callback] - Función de devolución de llamada opcional para ejecutar después de cargar el contenido.
+   */
   function loadContent(url, callback) {
     fetch(url)
       .then(response => response.text())
       .then(data => {
+        // Actualiza el área de contenido con los datos obtenidos
         document.getElementById('contentMenu').innerHTML = data;
-        if (typeof callback === 'function') callback();
 
-        if (url === '/bnup/') {  // Cambiado para cargar bnup_form.js solo en la página principal de BNUP
+        // Maneja la carga de scripts específicos de la página
+        if (url === '/bnup/') {
+          // Carga dinámicamente bnup_form.js
           const script = document.createElement('script');
           script.src = '/static/js/bnup_form.js';
           script.onload = function () {
+            // Inicializa las funcionalidades de la página BNUP
             initializeBNUPPage();
             updateBNUPFields();
             initializeFileModal();
             initializeBNUPFormModal();
-            // initializeRowSelection();
             borde_thead();
 
-            // Inicializar la tabla aquí
+            // Inicializa la tabla
             const rowsPerPage = getRowsPerPage();
             initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
 
-            // Después de inicializar la tabla, remover la clase 'hidden-table'
+            // Elimina la clase 'hidden-table' después de inicializar la tabla
             const table = document.getElementById('tablaSolicitudes');
             if (table) {
               table.classList.remove('hidden-table');
             }
 
-            // Añadir el event listener al botón de estadísticas
+            // Añade el event listener al botón de estadísticas
             const statsButton = document.getElementById('statisticsButton');
             if (statsButton) {
               statsButton.addEventListener('click', function () {
-                loadContent('/bnup/statistics/', function () {
-                  loadStatisticsScript();
-                });
+                loadContent('/bnup/statistics/');
               });
             }
+
+            // Ejecuta la función de devolución de llamada si se proporciona
+            if (typeof callback === 'function') callback();
           };
           document.head.appendChild(script);
-        }
-
-        // Lógica para cargar el script de estadísticas cuando se navega a la página de estadísticas
-        if (url.includes('/bnup/statistics/')) {
+        } else if (url.includes('/bnup/statistics/')) {
+          // Maneja la carga de scripts de estadísticas
           changeCardDetailsBgColor('#C9E8F4');
-          loadStatisticsScript(); // Cargar el script de estadísticas
+          loadStatisticsScript();
+
+          // Ejecuta la función de devolución de llamada si se proporciona
+          if (typeof callback === 'function') callback();
         } else {
           resetCardDetailsBgColor();
+
+          // Ejecuta la función de devolución de llamada si se proporciona
+          if (typeof callback === 'function') callback();
         }
 
-        // Añadir el event listener al botón de regresar en la página de estadísticas
+        // Añade el event listener al botón de regresar en la página de estadísticas
         const backButton = document.getElementById('backToBNUP');
         if (backButton) {
           backButton.addEventListener('click', function () {
@@ -81,14 +95,10 @@ document.addEventListener('DOMContentLoaded', function () {
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
 
-
-  function removeSelectedLogin() {
-    const loginLink = document.querySelector('a[data-content="login"]');
-    if (loginLink) {
-      loginLink.classList.remove('selected-login');
-    }
-  }
-
+  /**
+   * Cambia el color de fondo de los detalles de la tarjeta.
+   * @param {string} color - El nuevo color de fondo.
+   */
   function changeCardDetailsBgColor(color) {
     const cardDetails = document.querySelector('.cardContent');
     if (cardDetails) {
@@ -97,6 +107,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  /**
+   * Restablece el color de fondo de los detalles de la tarjeta al original.
+   */
   function resetCardDetailsBgColor() {
     const cardDetails = document.querySelector('.cardContent');
     if (cardDetails) {
@@ -104,13 +117,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  /**
+   * Carga dinámicamente el script de estadísticas y inicializa los gráficos.
+   */
   function loadStatisticsScript() {
     const script = document.createElement('script');
     script.src = '/static/js/statisticsChart.js';
-    script.onload = createCharts; // Asegúrate de que la función createCharts esté definida en statisticsChart.js
+    script.onload = createCharts; // Asume que createCharts está definido en statisticsChart.js
     document.head.appendChild(script);
   }
 
+  // Define los elementos del menú y sus URLs correspondientes
   const menuItems = {
     'BNUP': '/bnup/',
     'PatenteAlcohol': '/patente_alcohol/',
@@ -121,20 +138,23 @@ document.addEventListener('DOMContentLoaded', function () {
     'login': '/login/'
   };
 
+  // Configura los event listeners para los elementos del menú
   Object.entries(menuItems).forEach(([key, url]) => {
     const menuLink = document.querySelector(`a[data-content="${key}"]`);
     if (menuLink) {
       menuLink.addEventListener('click', function (event) {
         event.preventDefault();
         highlightMenuOption(this);
-        loadContent(url, key === 'BNUP' ? updateBNUPFields : null);
+        loadContent(url);
       });
     }
   });
 
+  // Carga el contenido inicial
   loadContent('/inicio/', function () {
     highlightMenuOption(document.querySelector('a[data-content="Inicio"]'));
 
+    // Redirige a la página BNUP si es necesario
     if (sessionStorage.getItem('redirectToBNUP') === 'true') {
       const bnupLink = document.querySelector('a[data-content="BNUP"]');
       if (bnupLink) {
@@ -144,15 +164,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // Verifica si es necesario redirigir a BNUP al cargar la página
   if (window.redirectToBNUP) {
     sessionStorage.setItem('redirectToBNUP', 'true');
-  }
-
-  const loginLink = document.querySelector('a[data-content="login"]');
-  if (loginLink) {
-    loginLink.addEventListener('click', function (event) {
-      event.preventDefault();
-      loadContent('/login/');
-    });
   }
 });

@@ -83,18 +83,6 @@
     <script src="{% static 'js/tableSort.js' %}"></script>
     <script src="{% static 'js/statisticsChart.js' %}"></script>
     <script src="{% static 'js/cursor.js' %}"></script>
-    <script>
-      // Esperar a que todo el contenido esté cargado
-      window.addEventListener('load', function () {
-        var headerImage = document.querySelector('.header-image')
-        var cardMain = document.querySelector('.cardMain')
-      
-        // Obtener la altura de la imagen de encabezado
-        var headerHeight = headerImage.offsetHeight
-      
-        // Establecer el margen superior de .cardMain
-        cardMain.style.marginTop = headerHeight + 'px'
-      })
-    </script>
+    
   </body>
 </html>

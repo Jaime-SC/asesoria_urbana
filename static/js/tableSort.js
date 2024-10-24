@@ -1,20 +1,24 @@
-// tableSort.js
-
 // Objeto para mantener el estado de cada tabla
 const tableStates = {};
 
-// Función para determinar las filas por página según el ancho de la pantalla
+/**
+ * Determina el número de filas por página según el ancho de la pantalla.
+ */
 function getRowsPerPage() {
     if (window.matchMedia("(min-width: 1280px) and (max-width: 1366px)").matches) {
-        return 7; // Si el ancho está entre 1280px y 1366px
-    } else if (window.matchMedia("(min-width: 1367px) and (max-width: 1920px)").matches) {
-        return 10; // Si el ancho está entre 1367px y 1920px
+        return 7;
     } else {
-        return 10; // Valor por defecto para otros tamaños
+        return 10;
     }
 }
 
-// Función para inicializar las tablas
+/**
+ * Inicializa la tabla con funcionalidad de ordenamiento y paginación.
+ * @param {string} tableId - El ID del elemento de la tabla.
+ * @param {string} paginationId - El ID del contenedor de paginación.
+ * @param {number} rowsPerPage - Número de filas a mostrar por página.
+ * @param {string} [searchInputId] - El ID del elemento de entrada de búsqueda (opcional).
+ */
 function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     const table = document.getElementById(tableId);
     if (!table) return;
@@ -24,41 +28,50 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
         delete tableStates[tableId];
     }
 
-    // Establecer atributos de datos en la tabla
+    // Establecer atributos de datos en la tabla para referencia
     table.setAttribute('data-pagination-id', paginationId);
     table.setAttribute('data-rows-per-page', rowsPerPage);
     if (searchInputId) {
         table.setAttribute('data-search-input-id', searchInputId);
     }
 
-    // Inicializar paginación y ordenación
+    // Inicializar paginación y ordenamiento
     paginateTable(tableId, paginationId, rowsPerPage);
     attachSortHandlers(tableId);
 }
 
-// Función para adjuntar los controladores de eventos de ordenación a los encabezados de la tabla
+/**
+ * Adjunta controladores de eventos de clic a los encabezados de la tabla para la funcionalidad de ordenamiento.
+ * @param {string} tableId - El ID del elemento de la tabla.
+ */
 function attachSortHandlers(tableId) {
     const table = document.getElementById(tableId);
     if (!table) return;
 
     const headers = table.querySelectorAll('thead th');
     headers.forEach((header, index) => {
-        let ascending = true; // Empezar con el orden ascendente
+        let ascending = true; // Comenzar con orden ascendente
         header.addEventListener('click', function () {
             const type = header.getAttribute('data-type');
 
-            // Limpiar los indicadores de ordenación anteriores
+            // Eliminar indicadores de ordenamiento anteriores
             headers.forEach(h => h.classList.remove('ascending', 'descending'));
 
             // Ordenar la tabla y alternar la dirección
             sortTable(table, index, type, ascending);
             header.classList.add(ascending ? 'ascending' : 'descending');
-            ascending = !ascending; // Alternar la dirección de ordenación para el siguiente clic
+            ascending = !ascending; // Alternar dirección para el próximo clic
         });
     });
 }
 
-// Función para ordenar la tabla según una columna específica
+/**
+ * Ordena la tabla basada en una columna específica.
+ * @param {HTMLTableElement} table - El elemento de la tabla a ordenar.
+ * @param {number} column - El índice de la columna por la cual ordenar.
+ * @param {string} type - El tipo de dato de la columna ('number', 'date' o 'string').
+ * @param {boolean} ascending - Orden de clasificación; true para ascendente, false para descendente.
+ */
 function sortTable(table, column, type, ascending) {
     const tableId = table.id;
     const state = tableStates[tableId];
@@ -66,7 +79,7 @@ function sortTable(table, column, type, ascending) {
 
     const tbody = table.tBodies[0];
 
-    // Ordenar todas las filas
+    // Ordenar todas las filas basado en la columna y tipo especificados
     state.rows.sort((rowA, rowB) => {
         const cellA = rowA.cells[column].getAttribute('data-order') || rowA.cells[column].innerText.trim();
         const cellB = rowB.cells[column].getAttribute('data-order') || rowB.cells[column].innerText.trim();
@@ -78,7 +91,7 @@ function sortTable(table, column, type, ascending) {
                 b = parseFloat(cellB) || 0;
                 break;
             case 'date':
-                // Convertir fechas al formato 'yyyymmdd' para comparar correctamente
+                // Convertir fechas al formato 'yyyymmdd' para comparación adecuada
                 a = cellA.split('/').reverse().join('');
                 b = cellB.split('/').reverse().join('');
                 break;
@@ -100,20 +113,23 @@ function sortTable(table, column, type, ascending) {
             return cells.some(cell => cell.innerText.toLowerCase().includes(state.searchTerm));
         });
     } else {
-        state.filteredRows = [...state.rows]; // Clonar el array
+        state.filteredRows = [...state.rows];
     }
 
-    // Reconstruir el cuerpo de la tabla
+    // Reconstruir el cuerpo de la tabla con las filas ordenadas
     while (tbody.firstChild) {
         tbody.removeChild(tbody.firstChild);
     }
     state.rows.forEach(row => tbody.appendChild(row));
 
-    // Actualizar paginación
+    // Actualizar paginación después del ordenamiento
     updatePaginationAfterSort(table);
 }
 
-// Función para actualizar la paginación después de ordenar la tabla
+/**
+ * Actualiza la paginación y muestra la primera página después del ordenamiento.
+ * @param {HTMLTableElement} table - El elemento de la tabla.
+ */
 function updatePaginationAfterSort(table) {
     const tableId = table.id;
     const state = tableStates[tableId];
@@ -124,11 +140,16 @@ function updatePaginationAfterSort(table) {
     displayRows(state, state.currentPage);
 }
 
-// Función para manejar la paginación de la tabla
+/**
+ * Configura la paginación para la tabla.
+ * @param {string} tableId - El ID del elemento de la tabla.
+ * @param {string} paginationId - El ID del contenedor de paginación.
+ * @param {number} rowsPerPage - Número de filas a mostrar por página.
+ */
 function paginateTable(tableId, paginationId, rowsPerPage) {
     const table = document.getElementById(tableId);
     const pagination = document.getElementById(paginationId);
-    if (!table || !pagination) return; // Salir si la tabla o la paginación no se encuentran
+    if (!table || !pagination) return;
 
     // Inicializar el estado de la tabla si no existe
     if (!tableStates[tableId]) {
@@ -147,17 +168,21 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
 
     const state = tableStates[tableId];
 
-    // Inicializar búsqueda si corresponde
+    // Inicializar la funcionalidad de búsqueda si corresponde
     if (state.searchInputId) {
         searchTable(state);
     }
 
-    // Mostrar filas y configurar paginación
+    // Mostrar filas iniciales y configurar controles de paginación
     displayRows(state, state.currentPage);
     setupPagination(state);
 }
 
-// Función para mostrar las filas de la página actual
+/**
+ * Muestra las filas correspondientes a la página actual.
+ * @param {Object} state - El objeto de estado de la tabla.
+ * @param {number} page - El número de la página actual.
+ */
 function displayRows(state, page) {
     const start = (page - 1) * state.rowsPerPage;
     const end = start + state.rowsPerPage;
@@ -173,17 +198,20 @@ function displayRows(state, page) {
     });
 }
 
-// Función para configurar la paginación
+/**
+ * Configura los controles de paginación.
+ * @param {Object} state - El objeto de estado de la tabla.
+ */
 function setupPagination(state) {
     const pageCount = Math.ceil(state.filteredRows.length / state.rowsPerPage);
     const pagination = document.getElementById(state.paginationId);
-    pagination.innerHTML = ''; // Limpiar la paginación existente
+    pagination.innerHTML = ''; // Limpiar paginación existente
 
     const maxVisiblePages = 3; // Máximo de botones de páginas visibles
     let startPage = Math.max(state.currentPage - 1, 1);
     let endPage = Math.min(startPage + maxVisiblePages - 1, pageCount);
 
-    // Ajustar las páginas visibles si nos acercamos al final
+    // Ajustar páginas visibles si estamos cerca del final
     if (endPage - startPage + 1 < maxVisiblePages) {
         startPage = Math.max(endPage - maxVisiblePages + 1, 1);
     }
@@ -197,12 +225,12 @@ function setupPagination(state) {
         if (state.currentPage > 1) {
             state.currentPage--;
             displayRows(state, state.currentPage);
-            setupPagination(state); // Actualiza la paginación con las páginas visibles
+            setupPagination(state);
         }
     });
     pagination.appendChild(prevButton);
 
-    // Crear botones para las páginas visibles
+    // Botones para los números de página visibles
     for (let i = startPage; i <= endPage; i++) {
         const pageButton = document.createElement('button');
         pageButton.textContent = i;
@@ -213,7 +241,7 @@ function setupPagination(state) {
         pageButton.addEventListener('click', function () {
             state.currentPage = i;
             displayRows(state, state.currentPage);
-            setupPagination(state); // Actualiza la paginación con las páginas visibles
+            setupPagination(state);
         });
         pagination.appendChild(pageButton);
     }
@@ -227,13 +255,16 @@ function setupPagination(state) {
         if (state.currentPage < pageCount) {
             state.currentPage++;
             displayRows(state, state.currentPage);
-            setupPagination(state); // Actualiza la paginación con las páginas visibles
+            setupPagination(state);
         }
     });
     pagination.appendChild(nextButton);
 }
 
-// Función para manejar la búsqueda en la tabla
+/**
+ * Inicializa la funcionalidad de búsqueda para la tabla.
+ * @param {Object} state - El objeto de estado de la tabla.
+ */
 function searchTable(state) {
     const input = document.getElementById(state.searchInputId);
     if (!input) return;
@@ -242,7 +273,7 @@ function searchTable(state) {
         const filter = input.value.trim().toLowerCase();
         state.searchTerm = filter;
 
-        // Limpiar resaltados
+        // Eliminar resaltados anteriores
         state.rows.forEach(row => {
             row.classList.remove('highlight-row');
         });
@@ -253,7 +284,7 @@ function searchTable(state) {
             return;
         }
 
-        // Filtrar las filas
+        // Filtrar filas basadas en el término de búsqueda
         state.filteredRows = state.rows.filter(row => {
             const cells = Array.from(row.getElementsByTagName('td'));
             const found = cells.some(cell => cell.innerText.toLowerCase().includes(filter));
@@ -269,17 +300,22 @@ function searchTable(state) {
     });
 }
 
-// Función para actualizar la paginación después de una búsqueda
+/**
+ * Actualiza la paginación y muestra la primera página después de una búsqueda.
+ * @param {Object} state - El objeto de estado de la tabla.
+ */
 function updatePaginationAfterSearch(state) {
     state.currentPage = 1;
     setupPagination(state);
     displayRows(state, state.currentPage);
 }
 
-// Función para re-inicializar la tabla al cambiar el tamaño de la ventana
+/**
+ * Re-inicializa la tabla cuando se cambia el tamaño de la ventana.
+ */
 function handleResize() {
     const rowsPerPage = getRowsPerPage();
-    // Actualizar las tablas existentes
+    // Actualizar tablas existentes
     for (const tableId in tableStates) {
         const state = tableStates[tableId];
         state.rowsPerPage = rowsPerPage;
@@ -289,19 +325,31 @@ function handleResize() {
     }
 }
 
-// Agregar el listener al evento resize con un debounce para mejorar el rendimiento
+// Añadir un listener con debounce al evento resize para mejorar el rendimiento
 let resizeTimeout;
 window.addEventListener('resize', function () {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(handleResize, 500); // Ajusta el tiempo según tus necesidades
+    resizeTimeout = setTimeout(handleResize, 500);
 });
 
-// Inicializar las funcionalidades específicas cuando el DOM esté completamente cargado
+/**
+ * Inicializa las funcionalidades específicas cuando el DOM está completamente cargado.
+ */
 document.addEventListener('DOMContentLoaded', function () {
-    
     const rowsPerPage = getRowsPerPage();
     initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
 
+    /**
+     * Abre el modal de descripción con los datos proporcionados.
+     * @param {string} descripcion - El texto de la descripción.
+     * @param {string} nombre - El nombre del solicitante.
+     * @param {string} fecha - La fecha de la solicitud.
+     * @param {string} numero_ingreso - El número de ingreso.
+     * @param {string} correo_solicitante - El correo del solicitante.
+     * @param {string} departamento - El departamento del solicitante.
+     * @param {string} funcionario_asignado - El funcionario asignado.
+     * @param {string} tablaOrigen - El identificador de la tabla de origen.
+     */
     window.openDescripcionModal = function (descripcion, nombre, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');
         const descripcionCompleta = document.getElementById('descripcionCompleta');
@@ -313,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const funcionarioAsignado = document.getElementById('funcionario_asignado');
         const correoField = document.getElementById('correoField');
 
+        // Rellenar los campos del modal con los datos proporcionados
         descripcionCompleta.textContent = descripcion;
         nombreCompleto.textContent = nombre;
         fechaIngreso.textContent = fecha;
@@ -320,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function () {
         deptoSolicitante.textContent = departamento;
         funcionarioAsignado.textContent = funcionario_asignado;
 
-        // Condicional para mostrar u ocultar el correo según la tabla de origen
+        // Mostrar u ocultar el campo de correo según la tabla de origen
         if (tablaOrigen === 'tablaSolicitudesCorreo') {
             correoSolicitante.textContent = correo_solicitante;
             correoField.style.display = 'flex';
@@ -331,6 +380,9 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.style.display = 'block';
     };
 
+    /**
+     * Cierra el modal de descripción.
+     */
     window.closeDescripcionModal = function () {
         const modal = document.getElementById('descripcionModal');
         modal.style.display = 'none';
