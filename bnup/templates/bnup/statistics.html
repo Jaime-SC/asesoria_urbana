@@ -3,7 +3,7 @@
     <div class="statistics">
       <div class="tittleStatistics">
         <button id="backToBNUP" class="btn-back"><span class="material-symbols-outlined">arrow_back</span> Volver a BNUP</button>
-        <h2>Estadísticas de Solicitudes</h2>
+        <h2>Estadísticas de Solicitudes de BNUP</h2>
       </div>
       <div class="divStatistics">
         <!-- Gráfico de solicitudes por tipo de recepción -->
@@ -23,13 +23,17 @@
         </div>
         <!-- Indicadores de totales -->
         <div class="containerStatistics" style="display: flex;justify-content: space-between;gap: 10px;">
-          <div class="total-card bg-pan-left">
-            <h3>Total de Solicitudes (Entradas)</h3>
-            <p>{{ total_solicitudes }}</p>
+          <div class="cardTotalEstadisticas">
+            <div class="contentEstadisticas">
+              <h3>Total de Entradas</h3>
+              <p>{{ total_solicitudes }}</p>
+            </div>
           </div>
-          <div class="total-card bg-pan-left">
-            <h3>Total de Salidas</h3>
-            <p>{{ total_salidas }}</p>
+          <div class="cardTotalEstadisticas inverse">
+            <div class="contentEstadisticas">
+              <h3>Total de Salidas</h3>
+              <p>{{ total_salidas }}</p>
+            </div>
           </div>
         </div>
         <!-- Gráfico de solicitudes por mes -->

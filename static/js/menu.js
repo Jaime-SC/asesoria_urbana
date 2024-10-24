@@ -48,9 +48,28 @@ document.addEventListener('DOMContentLoaded', function () {
             const rowsPerPage = getRowsPerPage();
             initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
 
-            // Elimina la clase 'hidden-table' después de inicializar la tabla
+            // Obtener la tabla y los encabezados
             const table = document.getElementById('tablaSolicitudes');
             if (table) {
+              const headers = table.querySelectorAll('thead th');
+
+              // Encontrar el índice de la columna 'Nº Ingre' (numero_ingreso)
+              let columnIndex = -1;
+              headers.forEach((header, index) => {
+                if (header.classList.contains('nIngre')) {
+                  columnIndex = index;
+                }
+              });
+
+              // Si se encontró la columna, ordenar la tabla inicialmente
+              if (columnIndex !== -1) {
+                sortTable(table, columnIndex, 'number', true);
+                // Añadir indicador visual de ordenamiento al encabezado
+                headers.forEach(h => h.classList.remove('ascending', 'descending'));
+                headers[columnIndex].classList.add('ascending');
+              }
+
+              // Elimina la clase 'hidden-table' después de inicializar la tabla
               table.classList.remove('hidden-table');
             }
 

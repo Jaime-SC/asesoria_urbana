@@ -332,6 +332,7 @@ window.addEventListener('resize', function () {
     resizeTimeout = setTimeout(handleResize, 500);
 });
 
+
 /**
  * Inicializa las funcionalidades específicas cuando el DOM está completamente cargado.
  */

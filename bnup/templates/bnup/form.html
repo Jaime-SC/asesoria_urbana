@@ -202,32 +202,19 @@
 
                 <!-- Salidas -->
                 <td>
-                  {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
-                    <!-- Mostrar información de la salida existente -->
-                    <div class="icon-container">
-                      <a style="display: flex; align-items: center;" href="{{ solicitud.archivo_adjunto_salida.url }}" target="_blank">
-                        Nº: {{ solicitud.numero_salida }}
+                  <!-- Mostrar botón para abrir el modal de salidas -->
+                  <div class="icon-container">
+                    <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
+                      {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                         <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
-                      </a>
-                      <div class="tooltip">Respondido {{ solicitud.fecha_salida|date:'d/m/Y' }}</div>
-                    </div>
-                  {% else %}
-                    {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
-                      <!-- Mostrar botón para crear salida -->
-                      <!-- Mostrar botón para crear salida -->
-                      <div class="icon-container">
-                        <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})"><span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span></a>
-                        <div class="tooltip">Responder con archivo de salida</div>
-                      </div>
-                    {% else %}
-                      <!-- Mostrar mensaje de sin permiso -->
-                      <div class="icon-container">
-                        <span style="color: #E73C45;" class="material-symbols-outlined">do_not_disturb_alt</span>
-                        <div class="tooltip">Sin permiso para crear salidas</div>
-                      </div>
-                    {% endif %}
-                  {% endif %}
+                      {% else %}
+                        <span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span>
+                      {% endif %}
+                    </a>
+                    <div class="tooltip">Ver salidas</div>
+                  </div>
                 </td>
+                
               </tr>
             {% empty %}
               <tr>
@@ -292,7 +279,9 @@
   </div>
 </div>
 
-{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+{% comment %} {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %} {% endcomment %}
+{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' or tipo_usuario == 'VISUALIZADOR' %}
+
   <!-- Mostrar botón para crear salida -->
   <!-- Código del modal salidaModal -->
   <!-- Modal para gestionar la salida -->
@@ -300,10 +289,19 @@
     <div style="max-width: max-content;" class="modal-content animate__animated animate__fadeInDown">
       <!-- Encabezado del modal con título y botón de cerrar -->
       <div style="display: flex; align-items: center; justify-content: space-between;">
-        <h2>Registrar Salida</h2>
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+          <h2>Registrar Salida</h2>
+        {% else %}
+          <h2>Salidas Registradas</h2>
+        {% endif %}
+
         <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
       </div>
       <div style="display: flex;justify-content: space-between;gap: 50px;">
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+        <!-- Formulario para crear salidas -->
+        <!-- ... -->
+
         <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
           {% csrf_token %}
 
@@ -333,12 +331,14 @@
             <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
           </div>
         </form>
+        {% endif %}
+
 
         <!-- Tabla para mostrar las salidas asociadas -->
         <div style="display: flex;flex-direction: column;justify-content: space-between;">
           <div style="margin: 0px;width: -webkit-fill-available;">
             <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
-              <h3 style="width: -webkit-fill-available;">Salidas Registradas</h3>
+              {% comment %} <h3 style="width: -webkit-fill-available;">Salidas Registradas</h3> {% endcomment %}
               <!-- Campo de búsqueda -->
               <div class="search-container" style="width: -webkit-fill-available;">
                 <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />

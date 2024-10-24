@@ -113,25 +113,36 @@
     }
 
     /**
-     * Abre el modal de salidas si el usuario tiene los permisos adecuados.
-     * @param {string} solicitudId - ID de la solicitud para la cual se creará la salida.
+     * Abre el modal de salidas, mostrando o no el formulario de creación según el tipo de usuario.
+     * @param {string} solicitudId - ID de la solicitud para la cual se mostrarán las salidas.
      */
     function openSalidaModal(solicitudId) {
-        if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR'].includes(tipo_usuario)) {
+        if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR', 'VISUALIZADOR'].includes(tipo_usuario)) {
             const salidaModal = document.getElementById('salidaModal');
-            const solicitudInput = document.getElementById('solicitud_id');
             const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
             const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
 
-            if (!salidaModal || !salidaCloseButton || !solicitudInput || !tablaSalidasBody) {
+            if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
                 console.error('Elementos del modal de salida no encontrados.');
                 return;
             }
 
-            solicitudInput.value = solicitudId;
+            // Mostrar el modal de salidas
+            salidaModal.style.display = 'block';
 
-            // Resetear el formulario y limpiar la tabla de salidas
-            document.getElementById('salidaForm').reset();
+            // Evento para cerrar el modal al hacer clic en el botón de cerrar
+            salidaCloseButton.onclick = () => {
+                salidaModal.style.display = 'none';
+            };
+
+            // Evento para cerrar el modal al hacer clic fuera de él
+            window.onclick = (event) => {
+                if (event.target === salidaModal) {
+                    salidaModal.style.display = 'none';
+                }
+            };
+
+            // Limpiar la tabla de salidas
             tablaSalidasBody.innerHTML = '';
 
             // Obtener las salidas asociadas a la solicitud mediante una solicitud AJAX
@@ -185,105 +196,112 @@
                     console.error('Error al obtener las salidas:', error);
                 });
 
-            // Mostrar el modal de salidas
-            salidaModal.style.display = 'block';
-
-            // Evento para cerrar el modal al hacer clic en el botón de cerrar
-            salidaCloseButton.onclick = () => {
-                salidaModal.style.display = 'none';
-            };
-
-            // Evento para cerrar el modal al hacer clic fuera de él
-            window.onclick = (event) => {
-                if (event.target === salidaModal) {
-                    salidaModal.style.display = 'none';
+            // Si el usuario no es 'VISUALIZADOR', inicializar el formulario para crear salidas
+            if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR'].includes(tipo_usuario)) {
+                const solicitudInput = document.getElementById('solicitud_id');
+                if (!solicitudInput) {
+                    console.error('Elemento solicitud_id no encontrado.');
+                    return;
                 }
-            };
+                solicitudInput.value = solicitudId;
 
-            // Manejo del botón "Guardar" con confirmación previa usando SweetAlert2
-            const saveButton = document.getElementById('guardarSalida');
-            if (saveButton) {
-                saveButton.onclick = (event) => {
-                    event.preventDefault();
+                // Resetear el formulario
+                const salidaForm = document.getElementById('salidaForm');
+                if (salidaForm) {
+                    salidaForm.reset();
+                }
 
-                    // Obtener valores de los campos del formulario
-                    const numeroSalida = document.getElementById('numero_salida').value.trim();
-                    const fechaSalida = document.getElementById('fecha_salida').value.trim();
-                    const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0];
+                // Manejo del botón "Guardar" con confirmación previa usando SweetAlert2
+                const saveButton = document.getElementById('guardarSalida');
+                if (saveButton) {
+                    saveButton.onclick = (event) => {
+                        event.preventDefault();
 
-                    // Validar que todos los campos estén completos
-                    if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
-                        Swal.fire({
-                            heightAuto: false,
-                            scrollbarPadding: false,
-                            icon: 'error',
-                            title: 'Campos incompletos',
-                            text: 'Por favor, complete todos los campos antes de guardar.',
-                            confirmButtonColor: '#E73C45',
-                        });
-                        return;
-                    }
+                        // Obtener valores de los campos del formulario
+                        const numeroSalida = document.getElementById('numero_salida').value.trim();
+                        const fechaSalida = document.getElementById('fecha_salida').value.trim();
+                        const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0];
 
-                    // Mostrar ventana de confirmación
-                    Swal.fire({
-                        heightAuto: false,
-                        scrollbarPadding: false,
-                        title: '¿Desea confirmar la salida?',
-                        text: "Se guardará la salida con los datos ingresados.",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#4BBFE0',
-                        cancelButtonColor: '#E73C45',
-                        confirmButtonText: 'Guardar',
-                        cancelButtonText: 'Cancelar',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Enviar el formulario
-                            document.getElementById('salidaForm').submit();
-
-                            // Mostrar mensaje de éxito y recargar la página
+                        // Validar que todos los campos estén completos
+                        if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
                             Swal.fire({
                                 heightAuto: false,
                                 scrollbarPadding: false,
-                                icon: 'success',
-                                title: 'Salida creada',
-                                text: 'La salida ha sido registrada correctamente.',
-                                showConfirmButton: false,
-                                timer: 2000,
-                            }).then(() => {
-                                sessionStorage.setItem('redirectToBNUP', 'true');
-                                window.location.reload();
+                                icon: 'error',
+                                title: 'Campos incompletos',
+                                text: 'Por favor, complete todos los campos antes de guardar.',
+                                confirmButtonColor: '#E73C45',
                             });
+                            return;
+                        }
+
+                        // Mostrar ventana de confirmación
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            title: '¿Desea confirmar la salida?',
+                            text: "Se guardará la salida con los datos ingresados.",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#4BBFE0',
+                            cancelButtonColor: '#E73C45',
+                            confirmButtonText: 'Guardar',
+                            cancelButtonText: 'Cancelar',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Enviar el formulario
+                                document.getElementById('salidaForm').submit();
+
+                                // Mostrar mensaje de éxito y recargar la página
+                                Swal.fire({
+                                    heightAuto: false,
+                                    scrollbarPadding: false,
+                                    icon: 'success',
+                                    title: 'Salida creada',
+                                    text: 'La salida ha sido registrada correctamente.',
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                }).then(() => {
+                                    sessionStorage.setItem('redirectToBNUP', 'true');
+                                    window.location.reload();
+                                });
+                            }
+                        });
+                    };
+                }
+
+                // Inicializar el plugin fileinput para el input de adjuntar archivo en salidas
+                const archivoAdjuntoSalidaInput = document.getElementById('archivo_adjunto_salida');
+                if (archivoAdjuntoSalidaInput) {
+                    $(archivoAdjuntoSalidaInput).fileinput({
+                        showUpload: false,
+                        showRemove: true,
+                        showPreview: true,
+                        showCaption: false,
+                        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+                        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                        mainClass: 'input-group-sm',
+                        dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+                        fileActionSettings: {
+                            showRemove: true,
+                            showUpload: false,
+                            showZoom: false,
+                            showDrag: false,
+                            showDelete: false,
+                        },
+                        layoutTemplates: {
+                            close: '',
+                            indicator: '',
+                            actionCancel: ''
                         }
                     });
-                };
-            }
-
-            // Inicializar el plugin fileinput para el input de adjuntar archivo en salidas
-            const archivoAdjuntoSalidaInput = document.getElementById('archivo_adjunto_salida');
-            if (archivoAdjuntoSalidaInput) {
-                $(archivoAdjuntoSalidaInput).fileinput({
-                    showUpload: false,
-                    showRemove: true,
-                    showPreview: true,
-                    showCaption: false,
-                    browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-                    removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
-                    mainClass: 'input-group-sm',
-                    dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-                    fileActionSettings: {
-                        showRemove: true,
-                        showUpload: false,
-                        showZoom: false,
-                        showDrag: false,
-                        showDelete: false,
-                    },
-                    layoutTemplates: {
-                        close: '',
-                        indicator: '',
-                        actionCancel: ''
-                    }
-                });
+                }
+            } else {
+                // Si el usuario es 'VISUALIZADOR', asegurarse de que el formulario no se muestre
+                const salidaFields = document.getElementById('salidaFields');
+                if (salidaFields) {
+                    salidaFields.style.display = 'none';
+                }
             }
         } else {
             // Mostrar mensaje de acceso denegado si el usuario no tiene permisos

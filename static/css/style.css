@@ -119,9 +119,62 @@ h1 {
 .user {
   display: flex;
   align-items: center;
-  gap: 10px;
-  /* Asegura que el contenido dentro de .logo y .user esté centrado verticalmente */
+  gap: 1rem;
 }
+
+/* style.css */
+
+/* Estilos base para userIdentificador sin color de fondo predeterminado */
+.userIdentificador {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  box-shadow: 0px 1px 5px 0px #16233E;
+  /* Eliminamos el background-color predeterminado para usar clases específicas */
+  /* background-color: greenyellow; */
+}
+
+/* Clases específicas para cada tipo de usuario */
+.bg-admin {
+  background-color: #1E90FF; /* DodgerBlue */
+}
+
+.bg-admin span, .bg-admin p{
+  color: ghostwhite;
+}
+
+.bg-privilegiado {
+  background-color: #4c2882; /* MediumPurple */
+}
+
+.bg-privilegiado span, .bg-privilegiado p{
+  color: ghostwhite;
+}
+
+.bg-alimentador {
+  background-color: #00bb2d; /* Orange */
+}
+
+.bg-alimentador span, .bg-alimentador p{
+  color: ghostwhite;
+}
+
+.bg-visualizador {
+  background-color: #a25e2a; /* MediumPurple */
+}
+
+.bg-visualizador span, .bg-visualizador p{
+  color: ghostwhite;
+}
+
+/* Clase por defecto en caso de que el tipo de usuario no coincida */
+.bg-default {
+  background-color: #D3D3D3; /* LightGray */
+}
+
 
 .separador {
   height: 45px;
@@ -153,7 +206,8 @@ h1 {
   display: flex;
   gap: 0px 0px;
   flex-direction: column;
-  width: -webkit-fill-available;
+  /* width: -webkit-fill-available; */
+  height: -webkit-fill-available;
   font-family: 'Trebuchet MS', 'HelveticaNeue';
   font-size: 16px;
 }
@@ -252,7 +306,7 @@ h1 {
 .card-details {
   color: rgb(162, 0, 255);
   height: 100%;
-  gap: .5em;
+  gap: 1em;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -583,11 +637,11 @@ button {
 
 }
 
-.page-btn span{
+.page-btn span {
   color: ghostwhite !important;
 }
 
-.page-btn.active {  
+.page-btn.active {
   border: 2px solid cyan;
   background: #387b8f;
   box-shadow: inset 0px 1px 5px 0px #16233e;
@@ -601,7 +655,7 @@ button {
 }
 
 .page-btn:hover:not(.active) {
-  background: #387b8f;  
+  background: #387b8f;
   /* box-shadow: inset 0px 1px 5px 0px #16233e; */
 
 }
@@ -869,7 +923,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   /* margin: 0 auto; */
   flex-direction: column;
   justify-content: space-between;
-  gap: 20px;
+  gap: 1rem;
 }
 
 .tittleStatistics {
@@ -883,7 +937,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 20px;
+  gap: 1rem;
   height: -webkit-fill-available;
 }
 
@@ -1455,15 +1509,13 @@ select {
 
 
 .modal-content table {
-
   width: -webkit-fill-available;
   border-collapse: collapse;
-  margin-block: 20px 0px;
+  margin-block: 20px 20px;
   font-family: "Roboto Condensed", monospace;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-size: 16px !important;
   font-weight: 500;
-
 }
 
 .modal-content table th {
@@ -1556,4 +1608,94 @@ select {
   font-size: 48px;
   margin: 0;
   color: ghostwhite;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* From Uiverse.io by Pradeepsaranbishnoi */
+.cardTotalEstadisticas {
+  width: 250px;
+  height: 300px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 5px 0px,
+    rgba(0, 0, 0, 0.5) 0px 2px 15px 0px;
+}
+
+.contentEstadisticas {
+  position: absolute;
+  width: 95%;
+  height: 95%;
+  background: #16233E;
+  border-radius: 10px;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  color: ghostwhite;
+  overflow: hidden;
+  padding: 20px;
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.5) 0px 18px 36px -18px inset;
+  font-family: "Roboto Condensed", monospace;
+}
+
+.contentEstadisticas h3, .contentEstadisticas p {
+  color: ghostwhite;
+}
+
+.contentEstadisticas h3 {
+  font-size: 1.75rem;
+}
+
+.contentEstadisticas p {
+  font-size: 10rem;
+}
+
+.cardTotalEstadisticas::before {
+  content: "";
+  position: absolute;
+  width: 40%;
+  height: 150%;
+  background: #4BBFE0;
+  background: -webkit-linear-gradient(to right, #E73C45, #F7EA53, #4BBFE0);
+  background: linear-gradient(to right, #E73C45, #F7EA53, #4BBFE0);
+  transform-origin: center;
+  animation: glowing_401_v1 5s linear infinite;
+}
+
+.inverse::before {  
+  animation: glowing_401_v2 5s linear infinite !important;
+}
+
+@keyframes glowing_401_v1 {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glowing_401_v2 {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(-360deg);
+  }
 }
