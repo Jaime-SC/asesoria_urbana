@@ -41,6 +41,15 @@
         font-size: smaller;
     }
 
+    .user-menu ul {
+        font-size: smaller;
+    }
+
+    .user-menu {
+        right: 9.85rem;
+        top: 6rem;
+    }
+
     .buttonLogin {
         width: 120px;
         height: 40px;
@@ -67,8 +76,8 @@
 
     }
 
-    .menu ul {        
-        margin-left: 15px;        
+    .menu ul {
+        margin-left: 15px;
     }
 }
 
@@ -232,10 +241,6 @@
         height: 90px;
     }
 
-    .user {
-        font-size: smaller;
-    }
-
     .buttonLogin {
         width: 120px;
         height: 40px;
@@ -262,8 +267,8 @@
 
     }
 
-    .menu ul {        
-        margin-left: 15px;        
+    .menu ul {
+        margin-left: 15px;
     }
 }
 
@@ -289,6 +294,12 @@
         height: 25px;
         font-size: 13px;
     }
+
+    .user-menu {
+        right: 10rem;
+        top: 6.25rem;
+    }
+
 
     .btn-stats span {
         font-size: 20px;

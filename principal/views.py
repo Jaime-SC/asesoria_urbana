@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib import messages
 from principal.models import PerfilUsuario  # Importar el modelo PerfilUsuario
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 
 def home(request):
     # Limpiar las banderas de redirección y de alerta después de usarlas
@@ -57,3 +60,24 @@ def logout(request):
     auth_logout(request)
     request.session['show_sweetalert'] = 'logout_success'
     return redirect('home')
+
+@login_required
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Tu contraseña ha sido actualizada exitosamente.')
+            return redirect('home')
+        else:
+            messages.error(request, 'Por favor corrige los errores a continuación.')
+            # Renderizar la misma página con el formulario y los mensajes de error
+            perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
+            return render(request, 'home.html', {
+                'form': form,
+                'perfil_usuario': perfil_usuario,
+            })
+    else:
+        return redirect('home')

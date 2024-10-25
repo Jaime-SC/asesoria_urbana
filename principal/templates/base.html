@@ -60,35 +60,24 @@
 
         <div class="user">
           {% if user.is_authenticated %}
-            <div class="userIdentificador
+            <!-- Añadimos un ID al div para poder referenciarlo desde JavaScript -->
+            <div id="userIdentificador" class="userIdentificador
               {% if perfil_usuario.tipo_usuario.nombre == 'ADMIN' %}
-                
                 bg-admin
-
               {% elif perfil_usuario.tipo_usuario.nombre == 'PRIVILEGIADO' %}
-                
                 bg-privilegiado
-
               {% elif perfil_usuario.tipo_usuario.nombre == 'ALIMENTADOR' %}
-                
                 bg-alimentador
-
               {% elif perfil_usuario.tipo_usuario.nombre == 'VISUALIZADOR' %}
-                
                 bg-visualizador
-
               {% else %}
-                
                 bg-default
-
               {% endif %}
             ">
               <span class="material-symbols-outlined">account_circle</span>
               <p>{{ user.username }}</p>
-              <!-- Mostrar el tipo de usuario -->
-              {% comment %} {% if perfil_usuario %}
-                <p>({{ perfil_usuario.tipo_usuario.nombre }})</p>
-              {% endif %} {% endcomment %}
+              <!-- Si deseas mostrar el tipo de usuario, puedes descomentar la siguiente línea -->
+              <!-- <p>({{ perfil_usuario.tipo_usuario.nombre }})</p> -->
             </div>
             <a href="{% url 'logout' %}" class="buttonLogin buttonLogout"><span class="material-symbols-outlined bell" style="color: ghostwhite;">logout</span>Cerrar Sesión</a>
           {% else %}
@@ -101,8 +90,60 @@
       {% endblock %}
     </div>
 
+    <!-- Modal para el menú desplegable -->
+    {% if user.is_authenticated %}
+      <div id="userMenu" class="user-menu
+        {% if perfil_usuario.tipo_usuario.nombre == 'ADMIN' %}
+          bg-admin
+        {% elif perfil_usuario.tipo_usuario.nombre == 'PRIVILEGIADO' %}
+          bg-privilegiado
+        {% elif perfil_usuario.tipo_usuario.nombre == 'ALIMENTADOR' %}
+          bg-alimentador
+        {% elif perfil_usuario.tipo_usuario.nombre == 'VISUALIZADOR' %}
+          bg-visualizador
+        {% else %}
+          bg-default
+        {% endif %}
+      ">
+        <ul>
+          <li id="changePasswordOption">Cambiar Contraseña</li>
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- Modal para cambiar la contraseña -->
+    <div id="changePasswordModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Cambiar Contraseña</h2>
+          <span class="close" id="closeChangePasswordModal">&times;</span>
+        </div>
+        <form id="changePasswordForm" method="post" action="{% url 'change_password' %}">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="old_password">Contraseña Actual</label>
+              <input type="password" id="old_password" name="old_password" required />
+            </div>
+            <div class="form-group">
+              <label for="new_password1">Nueva Contraseña</label>
+              <input type="password" id="new_password1" name="new_password1" required />
+            </div>
+            <div class="form-group">
+              <label for="new_password2">Confirmar Nueva Contraseña</label>
+              <input type="password" id="new_password2" name="new_password2" required />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn">Cambiar Contraseña</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     {% comment %} <script src="{% static 'js/background.js' %}"></script> {% endcomment %}
     <script src="{% static 'js/menu.js' %}"></script>
+    <script src="{% static 'js/userMenu.js' %}"></script>
     <script src="{% static 'js/bnup_form.js' %}"></script>
     <script src="{% static 'js/tableSort.js' %}"></script>
     <script src="{% static 'js/statisticsChart.js' %}"></script>
