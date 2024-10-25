@@ -8,6 +8,22 @@
         padding: 0.5rem;
     }
 
+    .containerStatistics {
+        width: 0rem;
+    }
+
+    /* .cardTotalEstadisticas {
+        height: 12.5rem;
+    } */
+
+    .contentEstadisticas h3 {
+        font-size: 1.2rem;
+    }
+
+    .contentEstadisticas p {
+        font-size: 7rem;
+    }
+
     .logo {
         display: flex;
         align-items: center;
@@ -98,10 +114,27 @@
     .btnAddBNUP,
     .btnDelBNUP,
     .btnEditBNUP,
-    .btnStatsBNUP {
+    .btnStatsBNUP,
+    .btn-back {
         width: 110px !important;
         height: 25px;
         font-size: 13px;
+    }
+
+    .btn-back {
+        width: 8rem !important;
+    }
+
+    /* .cardTotalEstadisticas {
+        height: 11.5rem;
+    } */
+
+    .contentEstadisticas h3 {
+        font-size: 1rem;
+    }
+
+    .contentEstadisticas p {
+        font-size: 6rem;
     }
 
     .btn-stats span {
@@ -289,10 +322,21 @@
     .btnAddBNUP,
     .btnDelBNUP,
     .btnEditBNUP,
-    .btnStatsBNUP {
+    .btnStatsBNUP,
+    .btn-back {
         width: 110px !important;
         height: 25px;
         font-size: 13px;
+    }
+
+    .btn-back {
+        width: 8rem !important;
+
+
+    }
+
+    .containerStatistics {
+        width: 0rem;
     }
 
     .user-menu {
