@@ -21,15 +21,17 @@ def bnup_form(request):
     - POST: Procesa y guarda una nueva solicitud de BNUP.
     """
     if not request.user.is_authenticated:
-        return redirect("login")
+        if request.method == "POST":
+            return JsonResponse({"success": False, "error": "No autenticado."})
+        else:
+            return redirect("login")
 
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
     if request.method == "POST":
         if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
-            messages.error(request, "No tiene permiso para crear solicitudes de BNUP.")
-            return redirect("bnup_form")
+            return JsonResponse({"success": False, "error": "No tiene permiso para crear solicitudes de BNUP."})
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" else None
@@ -37,10 +39,16 @@ def bnup_form(request):
         depto_solicitante_id = request.POST.get("depto_solicitante")
         nombre_solicitante = request.POST.get("nombre_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
-        fecha_ingreso = request.POST.get("fecha_ingreso")
+        fecha_ingreso_str = request.POST.get("fecha_ingreso")
         funcionario_asignado_id = request.POST.get("funcionario_asignado")
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
+
+        # Convertir fecha_ingreso_str a objeto datetime.date
+        try:
+            fecha_ingreso = datetime.strptime(fecha_ingreso_str, "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
 
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
@@ -60,19 +68,36 @@ def bnup_form(request):
                 archivo_adjunto_ingreso=archivo_adjunto,
             )
             solicitud.save()
-            request.session["redirect_to_bnup"] = True
-            messages.success(request, "Solicitud de BNUP creada exitosamente.")
-            return redirect("home")
-        except TipoRecepcion.DoesNotExist:
-            messages.error(request, "Tipo de recepción inválido.")
-        except Departamento.DoesNotExist:
-            messages.error(request, "Departamento solicitante inválido.")
-        except Funcionario.DoesNotExist:
-            messages.error(request, "Funcionario asignado inválido.")
-        except Exception as e:
-            messages.error(request, f"Error al guardar la solicitud: {e}")
 
-        return redirect("home")
+            # Construir datos de la solicitud para devolver en la respuesta
+            solicitud_data = {
+                "id": solicitud.id,
+                "tipo_recepcion": solicitud.tipo_recepcion.id,
+                "tipo_recepcion_text": solicitud.tipo_recepcion.tipo,
+                "numero_memo": solicitud.numero_memo,
+                "correo_solicitante": solicitud.correo_solicitante,
+                "depto_solicitante": solicitud.depto_solicitante.id,
+                "depto_solicitante_text": solicitud.depto_solicitante.nombre,
+                "nombre_solicitante": solicitud.nombre_solicitante,
+                "numero_ingreso": solicitud.numero_ingreso,
+                "fecha_ingreso": solicitud.fecha_ingreso.strftime("%Y-%m-%d"),
+                "funcionario_asignado": solicitud.funcionario_asignado.id,
+                "funcionario_asignado_text": solicitud.funcionario_asignado.nombre,
+                "descripcion": solicitud.descripcion,
+                "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
+            }
+
+            return JsonResponse({"success": True, "solicitud": solicitud_data})
+
+        except TipoRecepcion.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Tipo de recepción inválido."})
+        except Departamento.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Departamento solicitante inválido."})
+        except Funcionario.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Funcionario asignado inválido."})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": f"Error al guardar la solicitud: {e}"})
+
     else:
         solicitudes = SolicitudBNUP.objects.filter(is_active=True).select_related("tipo_recepcion")
         departamentos = Departamento.objects.all()

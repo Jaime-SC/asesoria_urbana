@@ -4,6 +4,25 @@
     // Variable para almacenar el tipo de usuario
     let tipo_usuario;
 
+    // Variables that will be used across functions
+    let selectAllCheckbox;
+    let rowCheckboxes;
+    let deleteButton;
+    let editButton;
+
+    /**
+     * Alterna el resaltado de una fila basada en si está seleccionada.
+     * @param {HTMLElement} row - Fila de la tabla.
+     * @param {boolean} isChecked - Estado del checkbox.
+     */
+    function toggleRowHighlight(row, isChecked) {
+        if (isChecked) {
+            row.classList.add('fila-marcada');
+        } else {
+            row.classList.remove('fila-marcada');
+        }
+    }
+
     /**
      * Inicializa la página BNUP, configurando variables y funciones necesarias.
      */
@@ -429,6 +448,23 @@
     }
 
     /**
+     * Actualiza el estado de los botones de acción según las filas seleccionadas.
+     */
+    function updateActionButtonsState() {
+        rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+        const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+        const anyChecked = selectedCheckboxes.length > 0;
+
+        if (deleteButton) {
+            deleteButton.disabled = !anyChecked;
+        }
+
+        if (editButton) {
+            editButton.disabled = !anyChecked;
+        }
+    }
+
+    /**
      * Inicializa el modal del formulario BNUP con confirmación de guardado.
      */
     function initializeBNUPFormModal() {
@@ -463,6 +499,7 @@
             saveButton.onclick = (event) => {
                 event.preventDefault();
 
+                const bnupForm = document.getElementById('bnupForm');
                 const numeroIngreso = document.getElementById('numeroIngreso').value.trim();
                 const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
                 const archivoAdjunto = archivoAdjuntoInput ? archivoAdjuntoInput.files.length : 0;
@@ -493,12 +530,64 @@
                     cancelButtonText: 'Cancelar',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Enviar el formulario BNUP
-                        document.getElementById('bnupForm').submit();
+                        // Enviar el formulario BNUP vía AJAX
+                        const formData = new FormData(bnupForm);
+
+                        fetch('/bnup/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCSRFToken(),
+                            },
+                            body: formData,
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'success',
+                                        title: 'Solicitud creada',
+                                        text: 'La solicitud ha sido registrada correctamente.',
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                    });
+
+                                    // Agregar el nuevo registro a la tabla
+                                    addTableRow(data.solicitud);
+
+                                    // Cerrar el modal
+                                    modal.style.display = 'none';
+
+                                    // Limpiar el formulario
+                                    bnupForm.reset();
+                                    // Si usas fileinput plugin para el archivo adjunto
+                                    $(archivoAdjuntoInput).fileinput('clear');
+                                } else {
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.error || 'Ha ocurrido un error al crear la solicitud.',
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error al crear la solicitud:', error);
+                                Swal.fire({
+                                    heightAuto: false,
+                                    scrollbarPadding: false,
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Ha ocurrido un error al crear la solicitud.',
+                                });
+                            });
                     }
                 });
             };
         }
+
     }
 
     /**
@@ -521,13 +610,13 @@
      * Inicializa la selección de filas en la tabla, manejando botones de acción según el tipo de usuario.
      */
     function initializeRowSelection() {
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+        selectAllCheckbox = document.getElementById('selectAll');
+        rowCheckboxes = document.querySelectorAll('.rowCheckbox');
 
-        const deleteButton = document.getElementById('deleteSelected');
-        const editButton = document.getElementById('editSelected');
+        deleteButton = document.getElementById('deleteSelected');
+        editButton = document.getElementById('editSelected');
 
-        // Ajustar la visibilidad de los botones según el tipo de usuario
+        // Adjust button visibility based on user type
         if (deleteButton && tipo_usuario !== 'ADMIN') {
             deleteButton.style.display = 'none';
         }
@@ -536,36 +625,7 @@
             editButton.style.display = 'none';
         }
 
-        /**
-         * Alterna el resaltado de una fila basada en si está seleccionada.
-         * @param {HTMLElement} row - Fila de la tabla.
-         * @param {boolean} isChecked - Estado del checkbox.
-         */
-        function toggleRowHighlight(row, isChecked) {
-            if (isChecked) {
-                row.classList.add('fila-marcada');
-            } else {
-                row.classList.remove('fila-marcada');
-            }
-        }
-
-        /**
-         * Actualiza el estado de los botones de acción según las filas seleccionadas.
-         */
-        function updateActionButtonsState() {
-            const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
-            const anyChecked = selectedCheckboxes.length > 0;
-
-            if (deleteButton) {
-                deleteButton.disabled = !anyChecked;
-            }
-
-            if (editButton) {
-                editButton.disabled = !anyChecked;
-            }
-        }
-
-        // Evento para seleccionar o deseleccionar todas las filas
+        // Event for selecting or deselecting all rows
         if (selectAllCheckbox) {
             selectAllCheckbox.addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -580,13 +640,16 @@
             });
         }
 
-        // Eventos para cada checkbox de fila individual
+        // Events for individual row checkboxes
         rowCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
                 const row = checkbox.closest('tr');
                 toggleRowHighlight(row, checkbox.checked);
 
-                // Verificar si todas las filas están seleccionadas
+                // Update the list of checkboxes
+                rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+
+                // Check if all rows are selected
                 const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
                 if (selectAllCheckbox) {
                     selectAllCheckbox.checked = allChecked;
@@ -596,7 +659,7 @@
             });
         });
 
-        // Evento para el botón de editar
+        // Event for the edit button
         if (editButton) {
             editButton.addEventListener('click', () => {
                 const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
@@ -625,7 +688,7 @@
             });
         }
 
-        // Evento para el botón de eliminar
+        // Event for the delete button
         if (deleteButton) {
             deleteButton.addEventListener('click', () => {
                 const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
@@ -642,7 +705,7 @@
                     return;
                 }
 
-                // Confirmar eliminación
+                // Confirm deletion
                 Swal.fire({
                     heightAuto: false,
                     scrollbarPadding: false,
@@ -1199,6 +1262,184 @@
                 console.error('Error al actualizar la fila:', error);
             });
     }
+
+    /**
+ * Agrega una nueva fila a la tabla de solicitudes con los datos proporcionados.
+ * @param {Object} solicitud - Objeto que contiene los datos de la solicitud.
+ */
+    function addTableRow(solicitud) {
+        const tablaSolicitudesBody = document.querySelector('#tablaSolicitudes tbody');
+        if (!tablaSolicitudesBody) {
+            console.error('No se encontró la tabla de solicitudes.');
+            return;
+        }
+
+        // Crear la nueva fila
+        const row = document.createElement('tr');
+        row.setAttribute('data-id', solicitud.id);
+
+        let cellIndex = 0;
+
+        // Si el usuario es ADMIN o PRIVILEGIADO, añadir la celda del checkbox
+        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
+            const checkbox = row.querySelector('.rowCheckbox');
+            checkbox.addEventListener('change', () => {
+                const row = checkbox.closest('tr');
+                toggleRowHighlight(row, checkbox.checked);
+
+                // Update the list of checkboxes
+                rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+
+                // Check if all rows are selected
+                const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = allChecked;
+                }
+
+                updateActionButtonsState();
+            });
+        }
+
+        // Añadir celdas correspondientes a cada columna
+        // Nº Ingreso
+        const numIngresoCell = document.createElement('td');
+        numIngresoCell.textContent = solicitud.numero_ingreso;
+        row.appendChild(numIngresoCell);
+
+        // Fecha
+        const fechaCell = document.createElement('td');
+        fechaCell.classList.add('fechaTable');
+        fechaCell.textContent = formatDate(solicitud.fecha_ingreso);
+        row.appendChild(fechaCell);
+
+        // Recepción
+        const recepcionCell = document.createElement('td');
+        recepcionCell.textContent = solicitud.tipo_recepcion_text;
+        row.appendChild(recepcionCell);
+
+        // N° Doc
+        const numDocCell = document.createElement('td');
+        if (solicitud.numero_memo) {
+            numDocCell.textContent = solicitud.numero_memo;
+        } else {
+            numDocCell.innerHTML = `
+            <div class="icon-container">
+                <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
+                <div class="tooltip">Sin número de documento</div>
+            </div>
+        `;
+        }
+        row.appendChild(numDocCell);
+
+        // Correo
+        const correoCell = document.createElement('td');
+        if (solicitud.correo_solicitante) {
+            correoCell.textContent = solicitud.correo_solicitante;
+            correoCell.setAttribute('data-order', solicitud.correo_solicitante.toLowerCase());
+        } else {
+            correoCell.innerHTML = `
+            <div class="icon-container">
+                <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
+                <div class="tooltip">Sin Correo</div>
+            </div>
+        `;
+            correoCell.setAttribute('data-order', 'zzz');
+        }
+        row.appendChild(correoCell);
+
+        // Departamento
+        const deptoCell = document.createElement('td');
+        deptoCell.textContent = solicitud.depto_solicitante_text;
+        row.appendChild(deptoCell);
+
+        // Funcionario
+        const funcionarioCell = document.createElement('td');
+        funcionarioCell.textContent = solicitud.funcionario_asignado_text;
+        row.appendChild(funcionarioCell);
+
+        // Descripción
+        const descripcionCell = document.createElement('td');
+        const descripcionDiv = document.createElement('div');
+        descripcionDiv.classList.add('descripcion-preview');
+        descripcionDiv.onclick = function () {
+            openDescripcionModal(
+                escapeHtml(solicitud.descripcion),
+                escapeHtml(solicitud.nombre_solicitante),
+                formatDate(solicitud.fecha_ingreso),
+                solicitud.numero_ingreso,
+                escapeHtml(solicitud.correo_solicitante),
+                escapeHtml(solicitud.depto_solicitante_text),
+                escapeHtml(solicitud.funcionario_asignado_text),
+                'tablaSolicitudes'
+            );
+        };
+        descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
+        if (solicitud.descripcion.length > 1) {
+            descripcionDiv.innerHTML += `
+            <span class="descripcion-icon">
+                <span class="material-symbols-outlined">preview</span>
+            </span>
+        `;
+        }
+        descripcionCell.appendChild(descripcionDiv);
+        row.appendChild(descripcionCell);
+
+        // Entrada
+        const entradaCell = document.createElement('td');
+        if (solicitud.archivo_adjunto_ingreso_url) {
+            entradaCell.innerHTML = `
+            <div class="icon-container">
+                <a href="${solicitud.archivo_adjunto_ingreso_url}" target="_blank">
+                    <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
+                </a>
+                <div class="tooltip">Ver archivo de ingreso</div>
+            </div>
+        `;
+        } else {
+            entradaCell.innerHTML = `
+            <div class="icon-container">
+                <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                <div class="tooltip">Sin archivo de ingreso</div>
+            </div>
+        `;
+        }
+        row.appendChild(entradaCell);
+
+        // Salidas
+        const salidasCell = document.createElement('td');
+        salidasCell.innerHTML = `
+        <div class="icon-container">
+            <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
+                <span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span>
+            </a>
+            <div class="tooltip">Ver salidas</div>
+        </div>
+    `;
+        row.appendChild(salidasCell);
+
+        // Insertar la nueva fila al inicio de la tabla
+        tablaSolicitudesBody.insertBefore(row, tablaSolicitudesBody.firstChild);
+
+        // Añadir event listener al checkbox si aplica
+        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
+            const checkbox = row.querySelector('.rowCheckbox');
+            checkbox.addEventListener('change', () => {
+                const row = checkbox.closest('tr');
+                toggleRowHighlight(row, checkbox.checked);
+
+                // Verificar si todas las filas están seleccionadas
+                const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+                const selectAllCheckbox = document.getElementById('selectAll');
+                const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = allChecked;
+                }
+
+                updateActionButtonsState();
+            });
+        }
+    }
+
 
     /**
      * Inicializa las funcionalidades específicas cuando el DOM está completamente cargado.
