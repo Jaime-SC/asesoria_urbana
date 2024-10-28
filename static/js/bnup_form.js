@@ -665,6 +665,153 @@
     }
 
     /**
+     * Inicializa la selección de filas en la tabla, manejando botones de acción según el tipo de usuario.
+     */
+    function initializeRowSelection() {
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+
+        const deleteButton = document.getElementById('deleteSelected');
+        const editButton = document.getElementById('editSelected');
+
+        // Ajustar la visibilidad de los botones según el tipo de usuario
+        if (deleteButton && tipo_usuario !== 'ADMIN') {
+            deleteButton.style.display = 'none';
+        }
+
+        if (editButton && !['ADMIN', 'PRIVILEGIADO'].includes(tipo_usuario)) {
+            editButton.style.display = 'none';
+        }
+
+        /**
+         * Alterna el resaltado de una fila basada en si está seleccionada.
+         * @param {HTMLElement} row - Fila de la tabla.
+         * @param {boolean} isChecked - Estado del checkbox.
+         */
+        function toggleRowHighlight(row, isChecked) {
+            if (isChecked) {
+                row.classList.add('fila-marcada');
+            } else {
+                row.classList.remove('fila-marcada');
+            }
+        }
+
+        /**
+         * Actualiza el estado de los botones de acción según las filas seleccionadas.
+         */
+        function updateActionButtonsState() {
+            const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+            const anyChecked = selectedCheckboxes.length > 0;
+
+            if (deleteButton) {
+                deleteButton.disabled = !anyChecked;
+            }
+
+            if (editButton) {
+                editButton.disabled = !anyChecked;
+            }
+        }
+
+        // Evento para seleccionar o deseleccionar todas las filas
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+            selectAllCheckbox.addEventListener('change', () => {
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                    toggleRowHighlight(checkbox.closest('tr'), checkbox.checked);
+                });
+                updateActionButtonsState();
+            });
+        }
+
+        // Eventos para cada checkbox de fila individual
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const row = checkbox.closest('tr');
+                toggleRowHighlight(row, checkbox.checked);
+
+                // Verificar si todas las filas están seleccionadas
+                const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = allChecked;
+                }
+
+                updateActionButtonsState();
+            });
+        });
+
+        // Evento para el botón de editar
+        if (editButton) {
+            editButton.addEventListener('click', () => {
+                const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+                const numSelected = selectedCheckboxes.length;
+
+                if (numSelected === 1) {
+                    const idToEdit = selectedCheckboxes[0].getAttribute('data-id');
+                    openEditModal(idToEdit);
+                } else if (numSelected > 1) {
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'warning',
+                        title: 'Solo un registro a la vez',
+                        text: 'Por favor, seleccione solo un registro para editar.',
+                    });
+                } else {
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'warning',
+                        title: 'No hay registros seleccionados',
+                        text: 'Por favor, seleccione un registro para editar.',
+                    });
+                }
+            });
+        }
+
+        // Evento para el botón de eliminar
+        if (deleteButton) {
+            deleteButton.addEventListener('click', () => {
+                const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+                const numSelected = selectedCheckboxes.length;
+
+                if (numSelected === 0) {
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'warning',
+                        title: 'No hay registros seleccionados',
+                        text: 'Por favor, seleccione al menos un registro para eliminar.',
+                    });
+                    return;
+                }
+
+                // Confirmar eliminación
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    title: `¿Desea eliminar ${numSelected} registro(s)?`,
+                    text: "Esta acción no se puede deshacer.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#E73C45',
+                    cancelButtonColor: '#4BBFE0',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const idsToDelete = selectedCheckboxes.map(cb => cb.getAttribute('data-id'));
+                        deleteSelectedRecords(idsToDelete);
+                    }
+                });
+            });
+        }
+    }
+
+    /**
      * Inicializa el modal de edición de una solicitud específica.
      * @param {string} solicitudId - ID de la solicitud a editar.
      */
@@ -783,13 +930,16 @@
                                         text: 'Los cambios han sido guardados correctamente.',
                                         showConfirmButton: false,
                                         timer: 2000,
-                                    }).then(() => {
-                                        sessionStorage.setItem('redirectToBNUP', 'true');
-                                        window.location.reload();
                                     });
 
                                     // Actualizar la fila correspondiente en la tabla
                                     updateTableRow(solicitudId);
+
+                                    // Cerrar el modal de edición
+                                    const editModal = document.getElementById('editBNUPFormModal');
+                                    if (editModal) {
+                                        editModal.style.display = 'none';
+                                    }
                                 } else {
                                     Swal.fire({
                                         heightAuto: false,
@@ -856,6 +1006,14 @@
      * @param {string} solicitudId - ID de la solicitud a actualizar.
      */
     function updateTableRow(solicitudId) {
+        const bnupData = document.getElementById('bnupData');
+        const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
+        let cellIndex = 0;
+
+        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
+            cellIndex = 1; // Ajustar índice si hay checkbox
+        }
+
         fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
             .then(response => response.json())
             .then(data => {
@@ -865,19 +1023,19 @@
                         const cells = row.getElementsByTagName('td');
 
                         // Actualizar Nº Ingreso
-                        cells[1].textContent = data.data.numero_ingreso;
+                        cells[cellIndex++].textContent = data.data.numero_ingreso;
 
                         // Actualizar Fecha
-                        cells[2].textContent = formatDate(data.data.fecha_ingreso);
+                        cells[cellIndex++].textContent = formatDate(data.data.fecha_ingreso);
 
                         // Actualizar Recepción
-                        cells[3].textContent = getTipoRecepcionText(data.data.tipo_recepcion);
+                        cells[cellIndex++].textContent = getTipoRecepcionText(data.data.tipo_recepcion);
 
                         // Actualizar N° Doc
                         if (data.data.numero_memo) {
-                            cells[4].textContent = data.data.numero_memo;
+                            cells[cellIndex++].textContent = data.data.numero_memo;
                         } else {
-                            cells[4].innerHTML = `
+                            cells[cellIndex++].innerHTML = `
                                 <div class="icon-container">
                                     <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
                                     <div class="tooltip">Sin número de documento</div>
@@ -887,29 +1045,26 @@
 
                         // Actualizar Correo
                         if (data.data.correo_solicitante) {
-                            cells[5].textContent = data.data.correo_solicitante;
-                            cells[5].setAttribute('data-order', data.data.correo_solicitante.toLowerCase());
+                            cells[cellIndex++].textContent = data.data.correo_solicitante;
+                            cells[cellIndex - 1].setAttribute('data-order', data.data.correo_solicitante.toLowerCase());
                         } else {
-                            cells[5].innerHTML = `
+                            cells[cellIndex++].innerHTML = `
                                 <div class="icon-container">
                                     <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
                                     <div class="tooltip">Sin Correo</div>
                                 </div>
                             `;
-                            cells[5].setAttribute('data-order', 'zzz');
+                            cells[cellIndex - 1].setAttribute('data-order', 'zzz');
                         }
 
-                        // Actualizar Solicitante
-                        cells[6].textContent = data.data.nombre_solicitante;
-
                         // Actualizar Departamento
-                        cells[7].textContent = getDepartamentoText(data.data.depto_solicitante);
+                        cells[cellIndex++].textContent = getDepartamentoText(data.data.depto_solicitante);
 
                         // Actualizar Funcionario
-                        cells[8].textContent = getFuncionarioText(data.data.funcionario_asignado);
+                        cells[cellIndex++].textContent = getFuncionarioText(data.data.funcionario_asignado);
 
                         // Actualizar Descripción
-                        cells[9].innerHTML = `
+                        cells[cellIndex++].innerHTML = `
                             <div class="descripcion-preview" onclick="openDescripcionModal('${escapeHtml(data.data.descripcion)}', '${escapeHtml(data.data.nombre_solicitante)}', '${formatDate(data.data.fecha_ingreso)}', '${data.data.numero_ingreso}', '${escapeHtml(data.data.correo_solicitante)}', '${escapeHtml(getDepartamentoText(data.data.depto_solicitante))}', '${escapeHtml(getFuncionarioText(data.data.funcionario_asignado))}', 'tablaSolicitudes')">
                                 ${truncateText(data.data.descripcion, 20)}
                                 ${data.data.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
@@ -1087,8 +1242,6 @@
         return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
     }
 
-    // Dentro de bnup_form.js
-
     /**
      * Inicializa la funcionalidad para agregar un nuevo departamento desde el formulario.
      */
@@ -1195,7 +1348,274 @@
     }
 
     /**
-     * Inicializa las funcionalidades específicas cuando el DOM esté completamente cargado.
+     * Inicializa el modal de edición de una solicitud específica.
+     * @param {string} solicitudId - ID de la solicitud a editar.
+     */
+    function openEditModal(solicitudId) {
+        const editModal = document.getElementById('editBNUPFormModal');
+        const closeModalButton = editModal ? editModal.querySelector('.close') : null;
+        const editForm = document.getElementById('editBNUPForm');
+
+        if (!editModal || !closeModalButton || !editForm) {
+            console.error('Elementos del modal de edición no encontrados.');
+            return;
+        }
+
+        // Resetear el formulario antes de cargar nuevos datos
+        editForm.reset();
+
+        // Obtener los datos de la solicitud mediante una solicitud AJAX
+        fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Rellenar el formulario con los datos obtenidos
+                    document.getElementById('edit_solicitud_id').value = data.data.id;
+                    document.getElementById('edit_numeroIngreso').value = data.data.numero_ingreso;
+                    document.getElementById('edit_nombreSolicitante').value = data.data.nombre_solicitante;
+                    document.getElementById('edit_fecha').value = data.data.fecha_ingreso;
+                    document.getElementById('edit_descripcion').value = data.data.descripcion;
+
+                    const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
+                    tipoRecepcionSelect.value = data.data.tipo_recepcion;
+                    updateEditBNUPFields();
+
+                    if (['1', '3', '4', '5'].includes(data.data.tipo_recepcion.toString())) {
+                        document.getElementById('edit_num_memo').value = data.data.numero_memo || '';
+                    } else if (data.data.tipo_recepcion.toString() === '2') {
+                        document.getElementById('edit_correoSolicitante').value = data.data.correo_solicitante || '';
+                    }
+
+                    const deptoSelect = document.getElementById('edit_depto_solicitante');
+                    deptoSelect.value = data.data.depto_solicitante;
+
+                    const funcionarioSelect = document.getElementById('edit_funcionarioAsignado');
+                    funcionarioSelect.value = data.data.funcionario_asignado;
+
+                    // Mostrar el modal de edición
+                    editModal.style.display = 'block';
+                } else {
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudieron cargar los datos para editar.',
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ha ocurrido un error al cargar los datos.',
+                });
+            });
+
+        // Evento para cerrar el modal al hacer clic en el botón de cerrar
+        closeModalButton.onclick = () => {
+            editModal.style.display = 'none';
+        };
+
+        // Evento para cerrar el modal al hacer clic fuera de él
+        document.addEventListener('click', (event) => {
+            if (event.target === editModal) {
+                editModal.style.display = 'none';
+            }
+        });
+
+        // Evento para manejar el guardado de cambios con confirmación previa
+        const saveButton = document.getElementById('guardarEdicionBNUP');
+        if (saveButton) {
+            saveButton.onclick = (event) => {
+                event.preventDefault();
+
+                // Mostrar ventana de confirmación
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    title: '¿Desea guardar los cambios?',
+                    text: "Se actualizará la solicitud con los datos ingresados.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4BBFE0',
+                    cancelButtonColor: '#E73C45',
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData(editForm);
+                        fetch('/bnup/edit/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCSRFToken(),
+                            },
+                            body: formData
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'success',
+                                        title: 'Solicitud actualizada',
+                                        text: 'Los cambios han sido guardados correctamente.',
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                    });
+
+                                    // Actualizar la fila correspondiente en la tabla
+                                    updateTableRow(solicitudId);
+
+                                    // Cerrar el modal de edición
+                                    const editModal = document.getElementById('editBNUPFormModal');
+                                    if (editModal) {
+                                        editModal.style.display = 'none';
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'Ha ocurrido un error al actualizar la solicitud.',
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire({
+                                    heightAuto: false,
+                                    scrollbarPadding: false,
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Ha ocurrido un error al actualizar la solicitud.',
+                                });
+                            });
+                    }
+                });
+            };
+        }
+    }
+
+    /**
+     * Actualiza la visibilidad de los campos en el formulario de edición BNUP según el tipo de recepción seleccionado.
+     */
+    function updateEditBNUPFields() {
+        const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
+        const memoFields = document.getElementById('edit_memoFields');
+        const correoFields = document.getElementById('edit_correoFields');
+
+        if (!tipoRecepcionSelect || !memoFields || !correoFields) {
+            return;
+        }
+
+        /**
+         * Alterna la visibilidad de los campos según el valor seleccionado en el tipo de recepción.
+         */
+        function toggleFields() {
+            const selectedValue = tipoRecepcionSelect.value;
+
+            if (['1', '3', '4', '5'].includes(selectedValue)) {  // IDs para Memo, Providencia, Oficio, Ordinario
+                memoFields.style.display = 'block';
+                correoFields.style.display = 'none';
+            } else if (selectedValue === '2') {  // ID para Correo
+                memoFields.style.display = 'none';
+                correoFields.style.display = 'block';
+            } else {
+                memoFields.style.display = 'none';
+                correoFields.style.display = 'none';
+            }
+        }
+
+        // Evento para cambiar la visibilidad cuando se selecciona un tipo de recepción diferente
+        tipoRecepcionSelect.addEventListener('change', toggleFields);
+        toggleFields();
+    }
+
+    /**
+     * Actualiza una fila específica de la tabla con los datos más recientes de la solicitud.
+     * @param {string} solicitudId - ID de la solicitud a actualizar.
+     */
+    function updateTableRow(solicitudId) {
+        const bnupData = document.getElementById('bnupData');
+        const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
+        let cellIndex = 0;
+
+        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
+            cellIndex = 1; // Ajustar índice si hay checkbox
+        }
+
+        fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.querySelector(`tr[data-id="${solicitudId}"]`);
+                    if (row) {
+                        const cells = row.getElementsByTagName('td');
+
+                        // Actualizar Nº Ingreso
+                        cells[cellIndex++].textContent = data.data.numero_ingreso;
+
+                        // Actualizar Fecha
+                        cells[cellIndex++].textContent = formatDate(data.data.fecha_ingreso);
+
+                        // Actualizar Recepción
+                        cells[cellIndex++].textContent = getTipoRecepcionText(data.data.tipo_recepcion);
+
+                        // Actualizar N° Doc
+                        if (data.data.numero_memo) {
+                            cells[cellIndex++].textContent = data.data.numero_memo;
+                        } else {
+                            cells[cellIndex++].innerHTML = `
+                                <div class="icon-container">
+                                    <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
+                                    <div class="tooltip">Sin número de documento</div>
+                                </div>
+                            `;
+                        }
+
+                        // Actualizar Correo
+                        if (data.data.correo_solicitante) {
+                            cells[cellIndex++].textContent = data.data.correo_solicitante;
+                            cells[cellIndex - 1].setAttribute('data-order', data.data.correo_solicitante.toLowerCase());
+                        } else {
+                            cells[cellIndex++].innerHTML = `
+                                <div class="icon-container">
+                                    <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
+                                    <div class="tooltip">Sin Correo</div>
+                                </div>
+                            `;
+                            cells[cellIndex - 1].setAttribute('data-order', 'zzz');
+                        }
+
+                        // Actualizar Departamento
+                        cells[cellIndex++].textContent = getDepartamentoText(data.data.depto_solicitante);
+
+                        // Actualizar Funcionario
+                        cells[cellIndex++].textContent = getFuncionarioText(data.data.funcionario_asignado);
+
+                        // Actualizar Descripción
+                        cells[cellIndex++].innerHTML = `
+                            <div class="descripcion-preview" onclick="openDescripcionModal('${escapeHtml(data.data.descripcion)}', '${escapeHtml(data.data.nombre_solicitante)}', '${formatDate(data.data.fecha_ingreso)}', '${data.data.numero_ingreso}', '${escapeHtml(data.data.correo_solicitante)}', '${escapeHtml(getDepartamentoText(data.data.depto_solicitante))}', '${escapeHtml(getFuncionarioText(data.data.funcionario_asignado))}', 'tablaSolicitudes')">
+                                ${truncateText(data.data.descripcion, 20)}
+                                ${data.data.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error al actualizar la fila:', error);
+            });
+    }
+
+    /**
+     * Inicializa las funcionalidades específicas cuando el DOM está completamente cargado.
      */
     document.addEventListener('DOMContentLoaded', () => {
         initializeBNUPPage();
@@ -1213,4 +1633,3 @@
     window.updateTableRow = updateTableRow;   // Exponer updateTableRow
 
 })();
-
