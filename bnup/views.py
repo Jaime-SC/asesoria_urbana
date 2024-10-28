@@ -240,22 +240,27 @@ def statistics_view(request):
         messages.error(request, "No tiene permiso para ver las estadísticas.")
         return redirect("bnup_form")
 
-    solicitudes_por_depto = SolicitudBNUP.objects.values("depto_solicitante__nombre").annotate(total=Count("id"))
-    solicitudes_por_funcionario = SolicitudBNUP.objects.values("funcionario_asignado__nombre").annotate(total=Count("id"))
-    solicitudes_por_tipo = SolicitudBNUP.objects.values("tipo_recepcion__tipo").annotate(total=Count("id"))
+    # Filtrar solo las solicitudes activas
+    active_solicitudes = SolicitudBNUP.objects.filter(is_active=True)
+
+    solicitudes_por_depto = active_solicitudes.values("depto_solicitante__nombre").annotate(total=Count("id"))
+    solicitudes_por_funcionario = active_solicitudes.values("funcionario_asignado__nombre").annotate(total=Count("id"))
+    solicitudes_por_tipo = active_solicitudes.values("tipo_recepcion__tipo").annotate(total=Count("id"))
     solicitudes_por_anio = (
-        SolicitudBNUP.objects.annotate(anio=ExtractYear("fecha_ingreso"))
+        active_solicitudes.annotate(anio=ExtractYear("fecha_ingreso"))
         .values("anio")
         .annotate(total=Count("id"))
     )
     solicitudes_por_mes = (
-        SolicitudBNUP.objects.annotate(mes=ExtractMonth("fecha_ingreso"))
+        active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso"))
         .values("mes")
         .annotate(total=Count("id"))
     )
 
-    total_solicitudes = SolicitudBNUP.objects.count()
-    total_salidas = SalidaBNUP.objects.count()
+    total_solicitudes = active_solicitudes.count()
+
+    # Contar salidas asociadas a solicitudes activas
+    total_salidas = SalidaBNUP.objects.filter(solicitud_bnup__is_active=True).count()
 
     context = {
         "solicitudes_por_depto": json.dumps(
@@ -290,7 +295,12 @@ def get_salidas(request, solicitud_id):
     Devuelve las salidas asociadas a una solicitud específica en formato JSON.
     """
     if request.method == "GET":
-        salidas = SalidaBNUP.objects.filter(solicitud_bnup_id=solicitud_id)
+        try:
+            solicitud = SolicitudBNUP.objects.get(id=solicitud_id, is_active=True)
+        except SolicitudBNUP.DoesNotExist:
+            return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
+
+        salidas = SalidaBNUP.objects.filter(solicitud_bnup=solicitud)
         salidas_data = [
             {
                 "numero_salida": salida.numero_salida,
@@ -324,7 +334,7 @@ def create_salida(request):
         archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
 
         try:
-            solicitud = get_object_or_404(SolicitudBNUP, id=solicitud_id)
+            solicitud = SolicitudBNUP.objects.get(id=solicitud_id, is_active=True)
             
             # Convertir la cadena de fecha a objeto datetime.date
             fecha_salida = datetime.strptime(fecha_salida_str, "%Y-%m-%d").date()
@@ -345,6 +355,8 @@ def create_salida(request):
             }
 
             return JsonResponse({"success": True, "salida": salida_data})
+        except SolicitudBNUP.DoesNotExist:
+            return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
         except ValueError as ve:
             # Error en la conversión de la fecha
             return JsonResponse({"success": False, "error": f"Fecha inválida: {ve}"})
