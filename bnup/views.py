@@ -5,6 +5,8 @@ from django.db.models import Count
 from django.db.models.functions import ExtractYear, ExtractMonth
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponseRedirect
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 from principal.models import PerfilUsuario
 from .models import SalidaBNUP, SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
@@ -311,3 +313,38 @@ def create_salida(request):
             return redirect(request.META.get("HTTP_REFERER", "home"))
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
+
+
+@require_POST
+def add_departamento(request):
+    """
+    Agrega un nuevo departamento a la base de datos.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "No autenticado."})
+
+    perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
+
+    if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
+        return JsonResponse({"success": False, "error": "No tiene permiso para agregar departamentos."})
+
+    try:
+        data = json.loads(request.body)
+        nombre = data.get("nombre", "").strip()
+        if not nombre:
+            return JsonResponse({"success": False, "error": "Nombre inválido."})
+
+        # Verificar si el departamento ya existe
+        if Departamento.objects.filter(nombre__iexact=nombre).exists():
+            return JsonResponse({"success": False, "error": "El departamento ya existe."})
+
+        # Crear el nuevo departamento
+        departamento = Departamento(nombre=nombre)
+        departamento.save()
+
+        return JsonResponse({"success": True, "departamento": {"id": departamento.id, "nombre": departamento.nombre}})
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Datos inválidos."})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})

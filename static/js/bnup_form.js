@@ -15,6 +15,7 @@
         if (document.querySelector('#bnupForm')) {
             updateBNUPFields();
             updateEditBNUPFields();
+            initializeNewDeptoFeature();
             initializeFileModal();
             initializeBNUPFormModal();
         }
@@ -1007,6 +1008,113 @@
     function truncateText(text, maxLength) {
         if (!text) return '';
         return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+    }
+
+    // Dentro de bnup_form.js
+
+    /**
+     * Inicializa la funcionalidad para agregar un nuevo departamento desde el formulario.
+     */
+    function initializeNewDeptoFeature() {
+        const addDeptoButton = document.getElementById('addDeptoButton');
+        const deptoSelect = document.getElementById('depto_solicitante');
+        const newDeptoContainer = document.getElementById('newDeptoContainer');
+        const newDeptoInput = document.getElementById('newDeptoInput');
+        const saveNewDeptoButton = document.getElementById('saveNewDeptoButton');
+        const cancelNewDeptoButton = document.getElementById('cancelNewDeptoButton');
+
+        if (!addDeptoButton || !deptoSelect || !newDeptoContainer || !newDeptoInput || !saveNewDeptoButton || !cancelNewDeptoButton) {
+            console.error('Elementos para la funcionalidad de nuevo departamento no encontrados.');
+            return;
+        }
+
+        // Mostrar el campo para ingresar nuevo departamento
+        addDeptoButton.addEventListener('click', () => {
+            deptoSelect.style.display = 'none';
+            addDeptoButton.style.display = 'none';
+            newDeptoContainer.style.display = 'flex';
+            newDeptoInput.focus();
+        });
+
+        // Guardar el nuevo departamento
+        saveNewDeptoButton.addEventListener('click', () => {
+            const newDeptoName = newDeptoInput.value.trim();
+            if (newDeptoName === '') {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'warning',
+                    title: 'Nombre inválido',
+                    text: 'Por favor, ingrese un nombre para el nuevo departamento.',
+                });
+                return;
+            }
+
+            // Enviar solicitud AJAX para guardar el nuevo departamento
+            fetch('/bnup/add_departamento/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify({ nombre: newDeptoName }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Añadir el nuevo departamento al select
+                        const newOption = document.createElement('option');
+                        newOption.value = data.departamento.id;
+                        newOption.textContent = data.departamento.nombre;
+                        deptoSelect.appendChild(newOption);
+
+                        // Establecer el select en el nuevo departamento
+                        deptoSelect.value = data.departamento.id;
+
+                        // Restaurar el select y ocultar el contenedor de nuevo departamento
+                        deptoSelect.style.display = '';
+                        addDeptoButton.style.display = '';
+                        newDeptoContainer.style.display = 'none';
+                        newDeptoInput.value = '';
+
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'success',
+                            title: 'Departamento agregado',
+                            text: 'El nuevo departamento ha sido agregado y seleccionado.',
+                            timer: 2000,
+                            showConfirmButton: false,
+                        });
+                    } else {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.error || 'Ocurrió un error al agregar el departamento.',
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al agregar el departamento.',
+                    });
+                });
+        });
+
+        // Cancelar la adición de nuevo departamento
+        cancelNewDeptoButton.addEventListener('click', () => {
+            deptoSelect.style.display = '';
+            addDeptoButton.style.display = '';
+            newDeptoContainer.style.display = 'none';
+            newDeptoInput.value = '';
+        });
     }
 
     /**
