@@ -7,6 +7,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
+
 
 from principal.models import PerfilUsuario
 from .models import SalidaBNUP, SolicitudBNUP, Departamento, Funcionario, TipoRecepcion
@@ -279,7 +281,7 @@ def get_salidas(request, solicitud_id):
 
 def create_salida(request):
     """
-    Crea una nueva salida asociada a una solicitud de BNUP.
+    Crea una nueva salida asociada a una solicitud de BNUP y devuelve una respuesta JSON.
     """
     if not request.user.is_authenticated:
         return JsonResponse({"success": False, "error": "No autenticado."})
@@ -293,11 +295,15 @@ def create_salida(request):
     if request.method == "POST":
         solicitud_id = request.POST.get("solicitud_id")
         numero_salida = request.POST.get("numero_salida")
-        fecha_salida = request.POST.get("fecha_salida")
+        fecha_salida_str = request.POST.get("fecha_salida")
         archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
 
         try:
             solicitud = get_object_or_404(SolicitudBNUP, id=solicitud_id)
+            
+            # Convertir la cadena de fecha a objeto datetime.date
+            fecha_salida = datetime.strptime(fecha_salida_str, "%Y-%m-%d").date()
+
             salida = SalidaBNUP(
                 solicitud_bnup=solicitud,
                 numero_salida=numero_salida,
@@ -306,13 +312,22 @@ def create_salida(request):
             )
             salida.save()
 
-            messages.success(request, "Salida creada exitosamente.")
-            return redirect(request.META.get("HTTP_REFERER", "home"))
+            # Construir datos de la salida para devolver en la respuesta
+            salida_data = {
+                "numero_salida": salida.numero_salida,
+                "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
+                "archivo_url": salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else "",
+            }
+
+            return JsonResponse({"success": True, "salida": salida_data})
+        except ValueError as ve:
+            # Error en la conversión de la fecha
+            return JsonResponse({"success": False, "error": f"Fecha inválida: {ve}"})
         except Exception as e:
-            messages.error(request, f"Error al crear la salida: {e}")
-            return redirect(request.META.get("HTTP_REFERER", "home"))
+            return JsonResponse({"success": False, "error": f"Error al crear la salida: {e}"})
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
+
 
 
 @require_POST

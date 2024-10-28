@@ -221,7 +221,8 @@
                         // Obtener valores de los campos del formulario
                         const numeroSalida = document.getElementById('numero_salida').value.trim();
                         const fechaSalida = document.getElementById('fecha_salida').value.trim();
-                        const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0];
+                        const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
+                        const archivoAdjunto = archivoAdjuntoInput.files[0];
 
                         // Validar que todos los campos estén completos
                         if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
@@ -250,22 +251,98 @@
                             cancelButtonText: 'Cancelar',
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                // Enviar el formulario
-                                document.getElementById('salidaForm').submit();
+                                // Enviar el formulario vía AJAX
+                                const formData = new FormData();
+                                formData.append('solicitud_id', solicitudId);
+                                formData.append('numero_salida', numeroSalida);
+                                formData.append('fecha_salida', fechaSalida);
+                                formData.append('archivo_adjunto_salida', archivoAdjunto);
 
-                                // Mostrar mensaje de éxito y recargar la página
-                                Swal.fire({
-                                    heightAuto: false,
-                                    scrollbarPadding: false,
-                                    icon: 'success',
-                                    title: 'Salida creada',
-                                    text: 'La salida ha sido registrada correctamente.',
-                                    showConfirmButton: false,
-                                    timer: 2000,
-                                }).then(() => {
-                                    sessionStorage.setItem('redirectToBNUP', 'true');
-                                    window.location.reload();
-                                });
+                                fetch('/bnup/create_salida/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRFToken': getCSRFToken(),
+                                    },
+                                    body: formData,
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            // Actualizar la tabla de salidas con el nuevo registro
+                                            const salida = data.salida;
+                                            const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
+
+                                            const row = document.createElement('tr');
+
+                                            // Columna para el número de salida
+                                            const numeroSalidaCell = document.createElement('td');
+                                            numeroSalidaCell.textContent = salida.numero_salida;
+                                            row.appendChild(numeroSalidaCell);
+
+                                            // Columna para la fecha de salida
+                                            const fechaSalidaCell = document.createElement('td');
+                                            fechaSalidaCell.textContent = salida.fecha_salida;
+                                            row.appendChild(fechaSalidaCell);
+
+                                            // Columna para el archivo adjunto
+                                            const archivoCell = document.createElement('td');
+                                            if (salida.archivo_url) {
+                                                const link = document.createElement('a');
+                                                link.href = salida.archivo_url;
+                                                link.target = '_blank';
+                                                link.setAttribute('aria-label', 'Ver Archivo');
+                                                link.setAttribute('title', 'Ver Archivo');
+
+                                                const iconSpan = document.createElement('span');
+                                                iconSpan.classList.add('material-symbols-outlined');
+                                                iconSpan.textContent = 'preview';
+
+                                                link.appendChild(iconSpan);
+                                                archivoCell.appendChild(link);
+                                            } else {
+                                                archivoCell.textContent = 'No adjunto';
+                                            }
+                                            row.appendChild(archivoCell);
+
+                                            // Añadir la nueva fila al principio de la tabla
+                                            tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
+
+                                            // Limpiar los campos del formulario
+                                            document.getElementById('numero_salida').value = '';
+                                            document.getElementById('fecha_salida').value = '';
+                                            archivoAdjuntoInput.value = '';
+                                            // Si estás usando fileinput plugin:
+                                            $(archivoAdjuntoInput).fileinput('clear');
+
+                                            Swal.fire({
+                                                heightAuto: false,
+                                                scrollbarPadding: false,
+                                                icon: 'success',
+                                                title: 'Salida creada',
+                                                text: 'La salida ha sido registrada correctamente.',
+                                                showConfirmButton: false,
+                                                timer: 2000,
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                heightAuto: false,
+                                                scrollbarPadding: false,
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: data.error || 'Ha ocurrido un error al crear la salida.',
+                                            });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error al crear la salida:', error);
+                                        Swal.fire({
+                                            heightAuto: false,
+                                            scrollbarPadding: false,
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: 'Ha ocurrido un error al crear la salida.',
+                                        });
+                                    });
                             }
                         });
                     };
