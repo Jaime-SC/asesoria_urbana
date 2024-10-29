@@ -37,6 +37,7 @@
             initializeNewDeptoFeature();
             initializeFileModal();
             initializeBNUPFormModal();
+            initializeStandardizeInputs(); // Utiliza la función de utilities.js
         }
 
         // Inicializar selección de filas y estilos de tabla
