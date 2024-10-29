@@ -1282,15 +1282,24 @@
 
         // Si el usuario es ADMIN o PRIVILEGIADO, añadir la celda del checkbox
         if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
-            const checkbox = row.querySelector('.rowCheckbox');
+            // Crear la celda y el checkbox
+            const checkboxCell = document.createElement('td');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.classList.add('rowCheckbox');
+            checkbox.setAttribute('data-id', solicitud.id);
+
+            // Añadir el checkbox a la celda y la celda a la fila
+            checkboxCell.appendChild(checkbox);
+            row.appendChild(checkboxCell);
+
+            // Añadir event listener al checkbox
             checkbox.addEventListener('change', () => {
                 const row = checkbox.closest('tr');
                 toggleRowHighlight(row, checkbox.checked);
 
-                // Update the list of checkboxes
+                // Verificar si todas las filas están seleccionadas
                 rowCheckboxes = document.querySelectorAll('.rowCheckbox');
-
-                // Check if all rows are selected
                 const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
                 if (selectAllCheckbox) {
                     selectAllCheckbox.checked = allChecked;
@@ -1298,6 +1307,8 @@
 
                 updateActionButtonsState();
             });
+
+            cellIndex = 1; // Ajustar índice si hay checkbox
         }
 
         // Añadir celdas correspondientes a cada columna
@@ -1419,26 +1430,8 @@
 
         // Insertar la nueva fila al inicio de la tabla
         tablaSolicitudesBody.insertBefore(row, tablaSolicitudesBody.firstChild);
-
-        // Añadir event listener al checkbox si aplica
-        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
-            const checkbox = row.querySelector('.rowCheckbox');
-            checkbox.addEventListener('change', () => {
-                const row = checkbox.closest('tr');
-                toggleRowHighlight(row, checkbox.checked);
-
-                // Verificar si todas las filas están seleccionadas
-                const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
-                const selectAllCheckbox = document.getElementById('selectAll');
-                const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = allChecked;
-                }
-
-                updateActionButtonsState();
-            });
-        }
     }
+
 
 
     /**
