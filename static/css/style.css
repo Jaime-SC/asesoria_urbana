@@ -1740,16 +1740,6 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   color: ghostwhite;
 }
 
-
-
-
-
-
-
-
-
-
-
 /* From Uiverse.io by Pradeepsaranbishnoi */
 .cardTotalEstadisticas {
   width: 100%;
@@ -1758,6 +1748,7 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   display: grid;
   place-items: center;
   overflow: hidden;
+  background-color: #3a425b;
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 5px 0px,
     rgba(0, 0, 0, 0.5) 0px 2px 15px 0px;
@@ -1801,8 +1792,8 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   width: 40%;
   height: 150%;
   background: #4BBFE0;
-  background: -webkit-linear-gradient(to right, #E73C45, #F7EA53, #4BBFE0);
-  background: linear-gradient(to right, #E73C45, #F7EA53, #4BBFE0);
+  background: -webkit-linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
+  background: linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
   transform-origin: center;
   animation: glowing_401_v1 5s linear infinite;
 }

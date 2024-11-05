@@ -61,17 +61,28 @@
         <div class="user">
           {% if user.is_authenticated %}
             <!-- Añadimos un ID al div para poder referenciarlo desde JavaScript -->
-            <div id="userIdentificador" class="userIdentificador
+            <div id="userIdentificador"
+              class="userIdentificador
               {% if perfil_usuario.tipo_usuario.nombre == 'ADMIN' %}
+                
                 bg-admin
+
               {% elif perfil_usuario.tipo_usuario.nombre == 'PRIVILEGIADO' %}
+                
                 bg-privilegiado
+
               {% elif perfil_usuario.tipo_usuario.nombre == 'ALIMENTADOR' %}
+                
                 bg-alimentador
+
               {% elif perfil_usuario.tipo_usuario.nombre == 'VISUALIZADOR' %}
+                
                 bg-visualizador
+
               {% else %}
+                
                 bg-default
+
               {% endif %}
             ">
               <span class="material-symbols-outlined">account_circle</span>
@@ -92,17 +103,28 @@
 
     <!-- Modal para el menú desplegable -->
     {% if user.is_authenticated %}
-      <div id="userMenu" class="user-menu
+      <div id="userMenu"
+        class="user-menu
         {% if perfil_usuario.tipo_usuario.nombre == 'ADMIN' %}
+          
           bg-admin
+
         {% elif perfil_usuario.tipo_usuario.nombre == 'PRIVILEGIADO' %}
+          
           bg-privilegiado
+
         {% elif perfil_usuario.tipo_usuario.nombre == 'ALIMENTADOR' %}
+          
           bg-alimentador
+
         {% elif perfil_usuario.tipo_usuario.nombre == 'VISUALIZADOR' %}
+          
           bg-visualizador
+
         {% else %}
+          
           bg-default
+
         {% endif %}
       ">
         <ul>
@@ -145,6 +167,7 @@
     <script src="{% static 'js/menu.js' %}"></script>
     <script src="{% static 'js/userMenu.js' %}"></script>
     <script src="{% static 'js/utilities.js' %}"></script>
+    <script src="{% static 'js/shared.js' %}"></script>
     <script src="{% static 'js/bnup_form.js' %}"></script>
     <script src="{% static 'js/tableSort.js' %}"></script>
     <script src="{% static 'js/statisticsChart.js' %}"></script>
