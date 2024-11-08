@@ -1,10 +1,61 @@
+<!-- patente_alcohol/templates/patente_alcohol/form.html -->
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/patente_alcohol.css' %}" />
+
 <div class="cardContent">
   <div class="card-details" style="flex-direction: column;justify-content: flex-start;">
     <h1>Formulario Patente de Alcohol</h1>
-    <!-- Aquí puedes agregar tu formulario -->
-    <div style="display: flex;flex-direction: column;align-items: center;height: -webkit-fill-available;justify-content: center;">
-      <span class="material-symbols-outlined" style="font-size: 250px;">construction</span>
-      <h3 style="font-size: 50px;">EN CONSTRUCCIÓN</h3>
+    <div class="containerFormPatenteAlcohol">
+      <form id="patenteForm">
+        {% csrf_token %}
+        <h3>Datos del Solicitante</h3>
+        <div class="formContainer">
+          <div class="form-group">
+            <label for="nombre">Nombre Completo</label>
+            <input type="text" name="nombre" id="nombre" required class="standardize-input" />
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input type="text" name="telefono" id="telefono" />
+          </div>
+          <div class="form-group" style="width: 15rem;">
+            <label for="correo">Correo Electrónico</label>
+            <input type="email" name="correo" id="correo" />
+          </div>
+        </div>
+        <h3>Ubicación</h3>
+        <div class="formContainer">
+          <div class="form-group">
+            <label for="calle">Calle</label>
+            <input type="text" name="calle" id="calle" required class="standardize-input" />
+          </div>
+          <div class="form-group">
+            <label for="numero">Número</label>
+            <input type="text" name="numero" id="numero" />
+          </div>
+          <div class="form-group">
+            <label for="departamento">Departamento (opcional)</label>
+            <input type="text" name="departamento" id="departamento" />
+          </div>
+          <div class="form-group">
+            <label for="cerro">Cerro</label>
+            <select name="cerro_id" id="cerro" required>
+              <option value="" disabled selected>Seleccione un cerro</option>
+              {% for cerro in cerros %}
+                <option value="{{ cerro.id }}">{{ cerro.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <h3>Datos de la Solicitud</h3>
+        <div class="form-group">
+          <label for="rol_avaluo">Rol de Avalúo</label>
+          <input type="text" name="rol_avaluo" id="rol_avaluo" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+      </form>
     </div>
   </div>
 </div>

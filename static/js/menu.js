@@ -92,7 +92,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
           // Ejecuta la función de devolución de llamada si se proporciona
           if (typeof callback === 'function') callback();
-        } else {
+        } else if (url === '/patente_alcohol/') {
+          const script = document.createElement('script');
+          script.src = '/static/js/patente_alcohol.js';
+          script.onload = function () {
+            // Inicializar funcionalidades específicas de la página de Patente de Alcohol
+            initializePatenteAlcoholForm();
+          };
+          document.head.appendChild(script);
+        }
+        else {
           resetCardDetailsBgColor();
 
           // Ejecuta la función de devolución de llamada si se proporciona

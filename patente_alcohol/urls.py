@@ -1,7 +1,13 @@
 # patente_alcohol/urls.py
+
 from django.urls import path
-from .views import patente_form
+from . import views
 
 urlpatterns = [
-    path('', patente_form, name='patente_form'),
+    path("", views.patente_form, name="patente_form"),
+    path(
+        "create/",
+        views.create_solicitud_patente_alcohol,
+        name="create_solicitud_patente_alcohol",
+    ),
 ]
