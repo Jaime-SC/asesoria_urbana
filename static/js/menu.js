@@ -1,3 +1,5 @@
+// static/js/menu.js
+
 document.addEventListener('DOMContentLoaded', function () {
   let originalBgColor = '';
 
@@ -98,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
           script.onload = function () {
             // Inicializar funcionalidades específicas de la página de Patente de Alcohol
             initializePatenteAlcoholForm();
+            initializePatenteAlcoholTable();
           };
           document.head.appendChild(script);
         }
