@@ -31,6 +31,61 @@
     }
 
     /**
+     * Función específica para abrir el modal de descripción en BNUP.
+     * @param {string} descripcion - Descripción de la solicitud.
+     * @param {string} nombre - Nombre del solicitante.
+     * @param {string} fecha - Fecha de ingreso.
+     * @param {string} numero_ingreso - Número de ingreso.
+     * @param {string} correo_solicitante - Correo del solicitante.
+     * @param {string} departamento - Departamento del solicitante.
+     * @param {string} funcionario_asignado - Funcionario asignado.
+     * @param {string} tablaOrigen - Identificador de la tabla de origen.
+     */
+    function openBNUPDescripcionModal(descripcion, nombre, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
+        const modal = document.getElementById('descripcionModal');
+        const descripcionCompleta = document.getElementById('descripcionCompleta');
+        const nombreCompleto = document.getElementById('nombreCompleto');
+        const fechaIngreso = document.getElementById('fechaIngreso');
+        const numeroIngresoSpan = document.getElementById('numero_ingreso');
+        const correoSolicitante = document.getElementById('correo_solicitante');
+        const deptoSolicitante = document.getElementById('deptoSolicitante');
+        const funcionarioAsignado = document.getElementById('funcionario_asignado');
+        const correoField = document.getElementById('correoField');
+
+        // Rellenar los campos del modal con los datos proporcionados
+        descripcionCompleta.textContent = descripcion;
+        nombreCompleto.textContent = nombre;
+        fechaIngreso.textContent = fecha;
+        numeroIngresoSpan.textContent = numero_ingreso;
+        deptoSolicitante.textContent = departamento;
+        funcionarioAsignado.textContent = funcionario_asignado;
+
+        // Mostrar u ocultar el campo de correo según la tabla de origen
+        if (tablaOrigen === 'tablaSolicitudesCorreo') {
+            correoSolicitante.textContent = correo_solicitante;
+            correoField.style.display = 'flex';
+        } else {
+            correoField.style.display = 'none';
+        }
+
+        modal.style.display = 'block';
+
+        // Manejar el cierre del modal
+        const spanClose = modal.querySelector('.close');
+        spanClose.onclick = function () {
+            modal.style.display = 'none';
+        };
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+
+    window.openBNUPDescripcionModal = openBNUPDescripcionModal;
+
+    /**
      * Inicializa el modal para la selección y confirmación de archivos.
      */
     function initializeFileModal() {

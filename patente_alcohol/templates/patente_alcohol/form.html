@@ -5,25 +5,15 @@
 
 <div class="cardContent">
   <div class="card-details">
-    <h1>Formulario Patente de Alcohol</h1>
     <div class="containerPatenteAlcohol">
       <div class="containerFormPatenteAlcohol">
+        <h1>Formulario Patente de Alcohol</h1>
         <form id="patenteForm">
           {% csrf_token %}
-          <h3>Datos del Solicitante</h3>
-          <div class="formContainer">
-            <div class="form-group">
-              <label for="nombre">Nombre Completo</label>
-              <input type="text" name="nombre" id="nombre" required class="standardize-input" />
-            </div>
-            <div class="form-group">
-              <label for="telefono">Teléfono</label>
-              <input type="text" name="telefono" id="telefono" />
-            </div>
-            <div class="form-group" style="width: 15rem;">
-              <label for="correo">Correo Electrónico</label>
-              <input type="email" name="correo" id="correo" />
-            </div>
+          <h3>Datos de la Solicitud</h3>
+          <div class="form-group">
+            <label for="rol_avaluo">Rol de Avalúo</label>
+            <input type="text" name="rol_avaluo" id="rol_avaluo" required />
           </div>
           <h3>Ubicación</h3>
           <div class="formContainer">
@@ -49,10 +39,20 @@
               </select>
             </div>
           </div>
-          <h3>Datos de la Solicitud</h3>
-          <div class="form-group">
-            <label for="rol_avaluo">Rol de Avalúo</label>
-            <input type="text" name="rol_avaluo" id="rol_avaluo" required />
+          <h3>Datos del Solicitante</h3>
+          <div class="formContainer">
+            <div class="form-group">
+              <label for="nombre">Nombre Completo</label>
+              <input type="text" name="nombre" id="nombre" required class="standardize-input" />
+            </div>
+            <div class="form-group">
+              <label for="telefono">Teléfono</label>
+              <input type="text" name="telefono" id="telefono" />
+            </div>
+            <div class="form-group" style="width: 15rem;">
+              <label for="correo">Correo Electrónico</label>
+              <input type="email" name="correo" id="correo" />
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
@@ -61,8 +61,8 @@
 
       {% if user.is_authenticated %}
         <div class="tableInfor_container">
-          <h2>Solicitudes de Patente de Alcohol</h2>
           <div class="containerSearchPagination">
+            <h2>Solicitudes de Patente de Alcohol</h2>
             <div class="searchContainer">
               <span class="material-symbols-outlined">search</span>
               <input type="text" id="searchSolicitudes" placeholder="Buscar solicitudes..." />
@@ -88,9 +88,11 @@
                   <td>{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                   <td>{{ solicitud.solicitante.nombre }}</td>
                   <td>{{ solicitud.ubicacion.cerro.nombre }}</td>
-                  <td>
-                    <!-- Botones de acción, por ejemplo, ver detalles -->
-                    <button onclick="openDescripcionModal('{{ solicitud.id }}')">Ver Detalles</button>
+                  <td class="tdPreview">
+                    <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('{{ solicitud.id }}')">
+                      <span class="material-symbols-outlined bell" style="color: ghostwhite;">preview</span>
+                      <span style="color: ghostwhite;">Ver Detalles</span>
+                    </button>
                   </td>
                 </tr>
               {% empty %}
@@ -100,7 +102,61 @@
               {% endfor %}
             </tbody>
           </table>
+
+          <!-- Modal HTML -->
+          <div id="descripcionModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <h2>Detalles de la Solicitud</h2>
+              <div class="infoSolicitudModal">
+                <div>
+                  <h3>Solicitud</h3>
+                  <p>
+                    <strong>Nº Ingreso:</strong> <span id="modalNumeroIngreso"></span>
+                  </p>
+                  <p>
+                    <strong>Rol Avalúo:</strong> <span id="modalRolAvaluo"></span>
+                  </p>
+                  <p>
+                    <strong>Fecha Ingreso:</strong> <span id="modalFechaIngreso"></span>
+                  </p>
+                </div>
+
+                <div>
+                  <h3>Ubicación</h3>
+                  <p>
+                    <strong>Cerro:</strong> <span id="modalCerro"></span>
+                  </p>
+                  <p>
+                    <strong>Calle:</strong> <span id="modalCalle"></span>
+                  </p>
+                  <p>
+                    <strong>Número:</strong> <span id="modalNumero"></span>
+                  </p>
+                  <p>
+                    <strong>Departamento:</strong> <span id="modalDepartamento"></span>
+                  </p>
+                </div>
+
+                <div>
+                  <h3>Solicitante</h3>
+                  <p>
+                    <strong>Nombre Completo:</strong> <span id="modalSolicitante"></span>
+                  </p>
+                  <p>
+                    <strong>Nº Teléfono:</strong> <span id="modalTelefono"></span>
+                  </p>
+                  <p>
+                    <strong>Correo Electrónico:</strong> <span id="modalCorreo"></span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Asegúrate de incluir el script al final del body -->
+        <script src="{% static 'js/patente_alcohol.js' %}"></script>
       {% else %}
         <div class="additionalInfo">
           <img src="{% static 'images/info.png' %}" alt="Información" style="max-width: 200px;" />

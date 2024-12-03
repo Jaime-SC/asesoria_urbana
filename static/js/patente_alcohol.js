@@ -75,8 +75,12 @@ function initializePatenteAlcoholForm() {
                             <td>${escapeHtml(data.solicitud.solicitante)}</td>
                             <td>${escapeHtml(data.solicitud.cerro)}</td>
                             <td>
-                                <button onclick="openDescripcionModal('${data.solicitud.id}')">Ver Detalles</button>
+                                <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('${data.solicitud.id}')">
+                                    <span class="material-symbols-outlined bell" style="color: ghostwhite;">preview</span>
+                                    <span style="color: ghostwhite;">Ver Detalles</span>
+                                </button>
                             </td>
+                            
                         `;
 
                         tableBody.appendChild(newRow);
@@ -127,4 +131,100 @@ function initializePatenteAlcoholTable(reload = false) {
         table.dataset.initialized = true;
         console.log('Tabla inicializada.');
     }
+}
+
+/**
+ * Función para abrir el modal y mostrar los detalles de la solicitud.
+ * @param {number} solicitudId - ID de la solicitud a mostrar.
+ */
+function openPatenteAlcoholDescripcionModal(solicitudId) {
+    // Obtener el modal
+    const modal = document.getElementById('descripcionModal');
+    const spanClose = modal.querySelector('.close');
+
+    // Limpiar contenido previo
+    document.getElementById('modalNumeroIngreso').textContent = '';
+    document.getElementById('modalRolAvaluo').textContent = '';
+    document.getElementById('modalFechaIngreso').textContent = '';
+    document.getElementById('modalSolicitante').textContent = '';
+    document.getElementById('modalTelefono').textContent = '';
+    document.getElementById('modalCorreo').textContent = '';
+    document.getElementById('modalCalle').textContent = '';
+    document.getElementById('modalNumero').textContent = '';
+    document.getElementById('modalDepartamento').textContent = '';
+    document.getElementById('modalCerro').textContent = '';
+
+    // Hacer una petición AJAX para obtener los detalles
+    fetch(`/patente_alcohol/detail/${solicitudId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const solicitud = data.data;
+                document.getElementById('modalNumeroIngreso').textContent = solicitud.numero_ingreso;
+                document.getElementById('modalRolAvaluo').textContent = solicitud.rol_avaluo;
+                document.getElementById('modalFechaIngreso').textContent = solicitud.fecha_ingreso;
+                document.getElementById('modalSolicitante').textContent = solicitud.solicitante;
+                document.getElementById('modalTelefono').textContent = solicitud.telefono;
+                document.getElementById('modalCorreo').textContent = solicitud.correo;
+                document.getElementById('modalCalle').textContent = solicitud.calle;
+                document.getElementById('modalNumero').textContent = solicitud.numero;
+                document.getElementById('modalDepartamento').textContent = solicitud.departamento;
+                document.getElementById('modalCerro').textContent = solicitud.cerro;
+
+                // Mostrar el modal
+                modal.style.display = 'block';
+            } else {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'No se pudo obtener los detalles de la solicitud.',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al obtener los detalles de la solicitud.',
+            });
+        });
+
+    // Cuando el usuario hace clic en <span> (x), cierra el modal
+    spanClose.onclick = function () {
+        modal.style.display = 'none';
+    }
+
+    // Cuando el usuario hace clic fuera del modal, lo cierra
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+}
+
+/**
+ * Función para escapar caracteres HTML y prevenir inyecciones.
+ * @param {string} text - Texto a escapar.
+ * @returns {string} - Texto escapado.
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>"'`=\/]/g, function (s) {
+        const escape = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;'
+        };
+        return escape[s] || s;
+    });
 }

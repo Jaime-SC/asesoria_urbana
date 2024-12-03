@@ -8,12 +8,14 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    gap: 1rem;
     height: -webkit-fill-available;
 }
 
 .containerSearchPagination {
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .containerFormPatenteAlcohol {
@@ -23,6 +25,20 @@
     box-shadow: 0px 1px 10px 0px #16233E;
     width: 100%;
     max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.containerFormPatenteAlcohol>form {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.containerFormPatenteAlcohol>form>h3 {
+    color: #E73C45;
 }
 
 .containerTablePatenteAlcohol {
@@ -128,6 +144,48 @@
 .tableInfor_container tr.fila-marcada {
     background-color: #62ff95;
     color: #16233E;
+}
+
+#descripcionModal .modal-content {
+    width: min-content;
+    max-width: unset !important;
+}
+
+.infoSolicitudModal {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    font-family: 'Space Mono';
+}
+
+.infoSolicitudModal>div {
+    width: 30rem;
+}
+
+.infoSolicitudModal>div>p {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed;
+    padding-block: .25rem;
+}
+
+.infoSolicitudModal>div>h3 {
+    color: #E73C45;
+}
+
+.buttonPreview {
+    background: #4BBFE0;
+    color: ghostwhite;
+    height: 2rem;
+}
+
+.buttonPreview:hover {
+    background: #74cae5;
+    color: ghostwhite;
+}
+
+#tablaSolicitudes .tdPreview {
+    width: 10rem;
 }
 
 /* .pagination {

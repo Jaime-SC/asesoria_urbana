@@ -10,4 +10,9 @@ urlpatterns = [
         views.create_solicitud_patente_alcohol,
         name="create_solicitud_patente_alcohol",
     ),
+    path(
+        "detail/<int:solicitud_id>/",
+        views.get_solicitud_details,
+        name="get_solicitud_details",
+    ),
 ]

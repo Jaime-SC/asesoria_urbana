@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Solicitante, Ubicacion, SolicitudPatenteAlcohol, Cerro
 import json
+from django.contrib.auth.decorators import login_required
 
 
 def patente_form(request):
@@ -75,7 +76,12 @@ def create_solicitud_patente_alcohol(request):
                 "rol_avaluo": solicitud.rol_avaluo,
                 "fecha_ingreso": solicitud.fecha_ingreso.strftime("%d/%m/%Y"),
                 "solicitante": solicitante.nombre,
-                "cerro": cerro.nombre,
+                "telefono": solicitante.telefono or "No proporcionado",
+                "correo": solicitante.correo or "No proporcionado",
+                "calle": ubicacion.calle,
+                "numero": ubicacion.numero or "No proporcionado",
+                "departamento": ubicacion.departamento or "No proporcionado",
+                "cerro": cerro.nombre if cerro else "No asignado",
                 "id": solicitud.id,
             }
 
@@ -96,3 +102,33 @@ def create_solicitud_patente_alcohol(request):
     return JsonResponse(
         {"success": False, "message": "Método no permitido."}, status=400
     )
+
+
+@login_required
+def get_solicitud_details(request, solicitud_id):
+    try:
+        solicitud = SolicitudPatenteAlcohol.objects.select_related(
+            "solicitante", "ubicacion__cerro"
+        ).get(id=solicitud_id)
+        data = {
+            "numero_ingreso": solicitud.numero_ingreso or "Sin número",
+            "rol_avaluo": solicitud.rol_avaluo,
+            "fecha_ingreso": solicitud.fecha_ingreso.strftime("%d/%m/%Y"),
+            "solicitante": solicitud.solicitante.nombre,
+            "telefono": solicitud.solicitante.telefono or "No proporcionado",
+            "correo": solicitud.solicitante.correo or "No proporcionado",
+            "calle": solicitud.ubicacion.calle,
+            "numero": solicitud.ubicacion.numero or "No proporcionado",
+            "departamento": solicitud.ubicacion.departamento or "No proporcionado",
+            "cerro": (
+                solicitud.ubicacion.cerro.nombre
+                if solicitud.ubicacion.cerro
+                else "No asignado"
+            ),
+            # Añade más campos si es necesario
+        }
+        return JsonResponse({"success": True, "data": data})
+    except SolicitudPatenteAlcohol.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "message": "Solicitud no encontrada."}, status=404
+        )
