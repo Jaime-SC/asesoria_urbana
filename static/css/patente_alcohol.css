@@ -165,7 +165,7 @@
 .infoSolicitudModal>div>p {
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px dashed;
+    border-bottom: 1px dashed darkgray;
     padding-block: .25rem;
 }
 
@@ -176,7 +176,7 @@
 .buttonPreview {
     background: #4BBFE0;
     color: ghostwhite;
-    height: 2rem;
+    height: 1.9rem;
 }
 
 .buttonPreview:hover {

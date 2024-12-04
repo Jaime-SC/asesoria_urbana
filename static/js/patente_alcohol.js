@@ -120,16 +120,16 @@ function initializePatenteAlcoholTable(reload = false) {
 
     const paginationId = 'paginationSolicitudes';
     const searchInputId = 'searchSolicitudes';
-    const rowsPerPage = getRowsPerPage();
+    const rowsPerPage = 10; // Límite de 10 registros por página
 
     console.log('Inicializando tabla:', table.id);
 
-    // Inicializar la tabla solo una vez
+    // Inicializar la tabla solo una vez o recargarla
     if (!table.dataset.initialized || reload) {
         initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
         table.classList.remove('hidden-table'); // Mostrar la tabla después de inicializarla
         table.dataset.initialized = true;
-        console.log('Tabla inicializada.');
+        console.log('Tabla inicializada con 10 registros por página.');
     }
 }
 

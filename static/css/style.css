@@ -112,8 +112,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: 10px;
-  margin-block: 5px;
+  
 }
 
 .user {
@@ -323,11 +322,11 @@ h1 {
 }
 
 .logoAU {
-  height: 90px;
+  height: 7.5rem;
 }
 
 .logoMuniValpo {
-  height: 100px;
+  height: 7.5rem;
 }
 
 .tittle {
