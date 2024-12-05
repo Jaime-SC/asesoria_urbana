@@ -1,15 +1,54 @@
 // static/js/patente_alcohol.js
 
+/**
+ * Obtiene el token CSRF de las cookies.
+ * @returns {string} - Token CSRF.
+ */
+function getCSRFToken() {
+    let cookieValue = null;
+    const name = 'csrftoken';
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Verifica si esta cookie comienza con el nombre que buscamos
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/**
+ * Muestra un mensaje informativo indicando que se debe agregar un Número de Ingreso antes.
+ */
+function mostrarMensajeAgregarIngreso() {
+    Swal.fire({
+        heightAuto: false,
+        scrollbarPadding: false,
+        icon: 'info',
+        title: 'Información Necesaria',
+        text: 'Debe agregar un Número de Ingreso antes de poder agregar un Número de Salida.',
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     initializePatenteAlcoholForm();
     initializePatenteAlcoholTable(); // Inicializar la tabla al cargar la página
 });
 
+/**
+ * Inicializa el formulario de patente de alcohol.
+ */
 function initializePatenteAlcoholForm() {
     const patenteForm = document.getElementById('patenteForm');
 
-    // Estandarizar inputs
-    initializeStandardizeInputs();
+    // Estandarizar inputs (función asumida existente)
+    if (typeof initializeStandardizeInputs === 'function') {
+        initializeStandardizeInputs();
+    }
 
     patenteForm.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -67,20 +106,40 @@ function initializePatenteAlcoholForm() {
                     if (data.solicitud && table) {
                         const tableBody = table.querySelector('tbody');
                         const newRow = document.createElement('tr');
+                        newRow.setAttribute('data-id', data.solicitud.id);
 
                         newRow.innerHTML = `
-                            <td>${escapeHtml(data.solicitud.numero_ingreso)}</td>
-                            <td>${escapeHtml(data.solicitud.rol_avaluo)}</td>
-                            <td>${escapeHtml(data.solicitud.fecha_ingreso)}</td>
-                            <td>${escapeHtml(data.solicitud.solicitante)}</td>
-                            <td>${escapeHtml(data.solicitud.cerro)}</td>
                             <td>
+                                ${data.solicitud.numero_ingreso !== "Sin número" ? escapeHtml(data.solicitud.numero_ingreso) : `
+                                    <button class="buttonLogin buttonAgregarIngreso" onclick="openAddNumeroIngresoModal('${data.solicitud.id}')">
+                                        <span class="material-symbols-outlined">add_box</span>
+                                        <span class="spanText">Nº Ingreso</span>
+                                    </button>
+                                `}
+                            </td>
+                            <td>${escapeHtml(data.solicitud.fecha_ingreso)}</td>
+                            <td>${escapeHtml(data.solicitud.rol_avaluo)}</td>
+                            <td>${escapeHtml(data.solicitud.cerro)}</td>
+                            <td>${escapeHtml(data.solicitud.solicitante)}</td>
+                            <td class="tdSalida">
+                                ${data.solicitud.numero_ingreso ? `
+                                    <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('${data.solicitud.id}')">
+                                        <span class="material-symbols-outlined bell">add_box</span>
+                                        <span class="spanText">Nº Salida</span>
+                                    </button>
+                                ` : `
+                                    <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()">
+                                        <span class="material-symbols-outlined bell">add_box</span>
+                                        <span class="spanText">Nº Salida</span>
+                                    </button>
+                                `}
+                            </td>
+                            <td class="tdPreview">
                                 <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('${data.solicitud.id}')">
-                                    <span class="material-symbols-outlined bell" style="color: ghostwhite;">preview</span>
-                                    <span style="color: ghostwhite;">Ver Detalles</span>
+                                    <span class="material-symbols-outlined bell">preview</span>
+                                    <span class="spanText">Ver Detalles</span>
                                 </button>
                             </td>
-                            
                         `;
 
                         tableBody.appendChild(newRow);
@@ -111,6 +170,10 @@ function initializePatenteAlcoholForm() {
     });
 }
 
+/**
+ * Inicializa la tabla de solicitudes con paginación y búsqueda.
+ * @param {boolean} reload - Indica si se debe recargar la tabla.
+ */
 function initializePatenteAlcoholTable(reload = false) {
     const table = document.getElementById('tablaSolicitudes');
     if (!table) {
@@ -131,6 +194,38 @@ function initializePatenteAlcoholTable(reload = false) {
         table.dataset.initialized = true;
         console.log('Tabla inicializada con 10 registros por página.');
     }
+}
+
+/**
+ * Abre el modal para agregar el Número de Ingreso.
+ * @param {number} solicitudId - ID de la solicitud.
+ */
+function openAddNumeroIngresoModal(solicitudId) {
+    const modal = document.getElementById('agregarNumeroIngresoModal');
+    const form = document.getElementById('numeroIngresoForm');
+    const solicitudIdInput = document.getElementById('numeroIngresoSolicitudId');
+
+    // Establecer el ID de la solicitud en el campo oculto
+    solicitudIdInput.value = solicitudId;
+
+    // Resetear el formulario
+    form.reset();
+
+    // Mostrar el modal
+    modal.style.display = 'block';
+
+    // Manejar el cierre del modal al hacer clic en la 'x'
+    const spanClose = modal.querySelector('.close');
+    spanClose.onclick = function () {
+        modal.style.display = 'none';
+    };
+
+    // Cerrar el modal al hacer clic fuera de él
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
 }
 
 /**
@@ -194,18 +289,338 @@ function openPatenteAlcoholDescripcionModal(solicitudId) {
             });
         });
 
-    // Cuando el usuario hace clic en <span> (x), cierra el modal
+    // Manejar el cierre del modal al hacer clic en la 'x'
     spanClose.onclick = function () {
         modal.style.display = 'none';
     }
 
-    // Cuando el usuario hace clic fuera del modal, lo cierra
+    // Cerrar el modal al hacer clic fuera de él
     window.onclick = function (event) {
         if (event.target == modal) {
             modal.style.display = 'none';
         }
     }
 }
+
+/**
+ * Abre el modal para registrar una salida.
+ * @param {number} solicitudId - ID de la solicitud asociada.
+ */
+function openAgregarSalidaModal(solicitudId) {
+    const modal = document.getElementById('agregarSalidaModal');
+    const form = document.getElementById('salidaForm');
+    const solicitudIdInput = document.getElementById('salidaSolicitudId');
+
+    // Establecer el ID de la solicitud en el campo oculto
+    solicitudIdInput.value = solicitudId;
+
+    // Resetear el formulario
+    form.reset();
+
+    // Mostrar el modal
+    modal.style.display = 'block';
+
+    // Manejar el cierre del modal al hacer clic en la 'x'
+    const spanClose = modal.querySelector('.close');
+    spanClose.onclick = function () {
+        modal.style.display = 'none';
+    };
+
+    // Cerrar el modal al hacer clic fuera de él
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+/**
+ * Abre el modal para ver la salida de una solicitud.
+ * @param {number} solicitudId - ID de la solicitud.
+ */
+function openVerSalidaModal(solicitudId) {
+    const modal = document.getElementById('verSalidaModal');
+    const spanClose = modal.querySelector('.close');
+
+    // Limpiar contenido previo
+    document.getElementById('modalNumeroSalida').textContent = '';
+    document.getElementById('modalFechaSalida').textContent = '';
+    document.getElementById('modalDescripcionSalida').textContent = '';
+    document.getElementById('modalArchivoSalida').href = '#';
+    document.getElementById('modalArchivoSalida').textContent = 'Sin archivo';
+
+    // Hacer una petición AJAX para obtener los detalles de la salida
+    fetch(`/patente_alcohol/detail_salida/${solicitudId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const salida = data.data;
+                document.getElementById('modalNumeroSalida').textContent = salida.numero_salida || 'Sin número';
+                document.getElementById('modalFechaSalida').textContent = salida.fecha_salida;
+                document.getElementById('modalDescripcionSalida').textContent = salida.descripcion || 'Sin descripción';
+
+                if (salida.archivo_adjunto_salida_url) {
+                    document.getElementById('modalArchivoSalida').href = salida.archivo_adjunto_salida_url;
+                    document.getElementById('modalArchivoSalida').textContent = 'Ver Archivo';
+                } else {
+                    document.getElementById('modalArchivoSalida').href = '#';
+                    document.getElementById('modalArchivoSalida').textContent = 'Sin archivo';
+                }
+
+                // Mostrar el modal
+                modal.style.display = 'block';
+            } else {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'No se pudo obtener los detalles de la salida.',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al obtener los detalles de la salida.',
+            });
+        });
+
+    // Manejar el cierre del modal al hacer clic en la 'x'
+    spanClose.onclick = function () {
+        modal.style.display = 'none';
+    }
+
+    // Cerrar el modal al hacer clic fuera de él
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+}
+
+/**
+ * Escucha el envío del formulario de Salida y lo envía vía AJAX con confirmación.
+ */
+document.getElementById('salidaForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const solicitudId = document.getElementById('salidaSolicitudId').value;
+    const numeroSalida = document.getElementById('numero_salida').value.trim();
+    const descripcion = document.getElementById('descripcion').value.trim();
+    const archivoAdjunto = document.getElementById('archivo_adjunto_salida').files[0];
+
+    // Validar campos obligatorios
+    if (!numeroSalida || !descripcion) {
+        Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
+            icon: 'warning',
+            title: 'Campos incompletos',
+            text: 'Por favor, complete todos los campos obligatorios.',
+        });
+        return;
+    }
+
+    // Mostrar ventana de confirmación
+    Swal.fire({
+        heightAuto: false,
+        scrollbarPadding: false,
+        title: '¿Estás seguro?',
+        text: '¿Deseas agregar esta Salida?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Crear FormData para enviar archivos
+            const formData = new FormData();
+            formData.append('solicitud_id', solicitudId);
+            formData.append('numero_salida', numeroSalida);
+            formData.append('descripcion', descripcion);
+            if (archivoAdjunto) {
+                formData.append('archivo_adjunto_salida', archivoAdjunto);
+            }
+
+            // Obtener el token CSRF
+            const csrftoken = getCSRFToken();
+
+            // Enviar la solicitud vía AJAX
+            fetch('/patente_alcohol/create_salida/', { // Asegúrate de que esta URL es correcta
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                },
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'success',
+                            title: 'Salida agregada exitosamente',
+                            showConfirmButton: false,
+                            timer: 1500,
+                        });
+
+                        // Cerrar el modal
+                        const modal = document.getElementById('agregarSalidaModal');
+                        modal.style.display = 'none';
+
+                        // Actualizar la fila en la tabla para indicar que se ha registrado una salida
+                        const fila = document.querySelector(`tr[data-id="${solicitudId}"]`);
+                        if (fila) {
+                            const botonSalida = fila.querySelector('.buttonAgregarSalida');
+                            if (botonSalida) {
+                                botonSalida.innerHTML = `
+                                    <span class="material-symbols-outlined bell">eye_tracking</span>
+                                    <span class="spanText">Ver Salida</span>
+                                `;
+                                botonSalida.setAttribute('onclick', `openVerSalidaModal('${solicitudId}')`);
+                                botonSalida.classList.remove('buttonAgregarSalida', 'disabled-button');
+                                botonSalida.classList.add('buttonVerSalida'); // Opcional: para estilos específicos
+                            }
+                        }
+                    } else {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error al agregar la salida.',
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar la salida.',
+                    });
+                });
+        }
+        // Si el usuario cancela, no hacer nada
+    });
+});
+
+/**
+ * Escucha el envío del formulario de Agregar Número de Ingreso y lo envía vía AJAX con confirmación.
+ */
+document.getElementById('numeroIngresoForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const solicitudId = document.getElementById('numeroIngresoSolicitudId').value;
+    const numeroIngreso = document.getElementById('numero_ingreso').value.trim();
+
+    // Validar campo obligatorio
+    if (!numeroIngreso) {
+        Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
+            icon: 'warning',
+            title: 'Campo incompleto',
+            text: 'Por favor, ingrese el Número de Ingreso.',
+        });
+        return;
+    }
+
+    // Mostrar ventana de confirmación
+    Swal.fire({
+        heightAuto: false,
+        scrollbarPadding: false,
+        title: '¿Estás seguro?',
+        text: '¿Deseas agregar este Número de Ingreso?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Crear FormData para enviar
+            const formData = new FormData();
+            formData.append('solicitud_id', solicitudId);
+            formData.append('numero_ingreso', numeroIngreso);
+
+            // Obtener el token CSRF
+            const csrftoken = getCSRFToken();
+
+            // Enviar la solicitud vía AJAX
+            fetch('/patente_alcohol/update_numero_ingreso/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                },
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'success',
+                            title: 'Número de Ingreso agregado exitosamente',
+                            showConfirmButton: false,
+                            timer: 1500,
+                        });
+
+                        // Cerrar el modal
+                        const modal = document.getElementById('agregarNumeroIngresoModal');
+                        modal.style.display = 'none';
+
+                        // Actualizar la fila en la tabla para mostrar el número de ingreso
+                        const fila = document.querySelector(`tr[data-id="${solicitudId}"]`);
+                        if (fila) {
+                            const numeroIngresoCell = fila.children[0]; // Primer <td>
+                            numeroIngresoCell.innerHTML = escapeHtml(data.numero_ingreso);
+
+                            // Habilitar el botón "Agregar Salida" si estaba deshabilitado
+                            const botonSalida = fila.querySelector('.buttonAgregarSalida');
+                            if (botonSalida && botonSalida.classList.contains('disabled-button')) {
+                                botonSalida.innerHTML = `
+                                    <span class="material-symbols-outlined bell">add_box</span>
+                                    <span class="spanText">Nº Salida</span>
+                                `;
+                                botonSalida.setAttribute('onclick', `openAgregarSalidaModal('${solicitudId}')`);
+                                botonSalida.classList.remove('disabled-button');
+                            }
+                        }
+                    } else {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error al agregar el Número de Ingreso.',
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al enviar el Número de Ingreso.',
+                    });
+                });
+        }
+        // Si el usuario cancela, no hacer nada
+    });
+});
 
 /**
  * Función para escapar caracteres HTML y prevenir inyecciones.

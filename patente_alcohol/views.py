@@ -3,7 +3,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Solicitante, Ubicacion, SolicitudPatenteAlcohol, Cerro
+from .models import Solicitante, Ubicacion, SolicitudPatenteAlcohol, Cerro, Salida
 import json
 from django.contrib.auth.decorators import login_required
 
@@ -13,7 +13,7 @@ def patente_form(request):
     solicitudes = []
     if request.user.is_authenticated:
         solicitudes = SolicitudPatenteAlcohol.objects.all().select_related(
-            "solicitante", "ubicacion__cerro"
+            "solicitante", "ubicacion__cerro", "salida"
         )
     return render(
         request,
@@ -23,6 +23,7 @@ def patente_form(request):
 
 
 @csrf_exempt
+@login_required
 def create_solicitud_patente_alcohol(request):
     if request.method == "POST":
         try:
@@ -101,6 +102,175 @@ def create_solicitud_patente_alcohol(request):
 
     return JsonResponse(
         {"success": False, "message": "Método no permitido."}, status=400
+    )
+
+
+@csrf_exempt
+@login_required
+def create_salida_patente_alcohol(request):
+    if request.method == "POST":
+        try:
+            solicitud_id = request.POST.get("solicitud_id")
+            numero_salida = request.POST.get("numero_salida")
+            descripcion = request.POST.get("descripcion")
+            archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
+
+            # Validar datos obligatorios
+            if not solicitud_id or not numero_salida or not descripcion:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "Por favor, complete todos los campos obligatorios.",
+                    }
+                )
+
+            # Obtener la solicitud
+            try:
+                solicitud = SolicitudPatenteAlcohol.objects.get(id=solicitud_id)
+            except SolicitudPatenteAlcohol.DoesNotExist:
+                return JsonResponse(
+                    {"success": False, "message": "Solicitud no encontrada."},
+                    status=404,
+                )
+
+            # Verificar si ya existe una Salida para esta Solicitud
+            if hasattr(solicitud, "salida"):
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "Ya existe una salida para esta solicitud.",
+                    },
+                    status=400,
+                )
+
+            # Crear Salida
+            salida = Salida.objects.create(
+                solicitud=solicitud,
+                numero_salida=numero_salida,
+                descripcion=descripcion,
+                archivo_adjunto_salida=archivo_adjunto_salida,
+            )
+
+            # Preparar datos para la respuesta
+            salida_data = {
+                "id": salida.id,
+                "numero_salida": salida.numero_salida,
+                "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
+                "descripcion": salida.descripcion,
+                "archivo_adjunto_salida_url": (
+                    salida.archivo_adjunto_salida.url
+                    if salida.archivo_adjunto_salida
+                    else ""
+                ),
+            }
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Salida agregada exitosamente.",
+                    "salida": salida_data,
+                }
+            )
+
+        except Exception as e:
+            return JsonResponse(
+                {"success": False, "message": f"Error al agregar la salida: {str(e)}"},
+                status=500,
+            )
+
+    return JsonResponse(
+        {"success": False, "message": "Método no permitido."}, status=400
+    )
+
+
+@login_required
+def get_salida_details(request, solicitud_id):
+    try:
+        salida = Salida.objects.select_related("solicitud").get(
+            solicitud_id=solicitud_id
+        )
+        data = {
+            "numero_salida": salida.numero_salida or "Sin número",
+            "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
+            "descripcion": salida.descripcion or "Sin descripción",
+            "archivo_adjunto_salida_url": (
+                salida.archivo_adjunto_salida.url
+                if salida.archivo_adjunto_salida
+                else None
+            ),
+        }
+        return JsonResponse({"success": True, "data": data})
+    except Salida.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "message": "Salida no encontrada."}, status=404
+        )
+
+
+@csrf_exempt
+@login_required
+def update_numero_ingreso(request):
+    if request.method == "POST":
+        try:
+            solicitud_id = request.POST.get("solicitud_id")
+            numero_ingreso = request.POST.get("numero_ingreso").strip()
+
+            # Validar datos obligatorios
+            if not solicitud_id or not numero_ingreso:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "Por favor, proporcione tanto el ID de la solicitud como el Número de Ingreso.",
+                    },
+                    status=400,
+                )
+
+            # Validar que el numero_ingreso no esté duplicado
+            if (
+                SolicitudPatenteAlcohol.objects.filter(numero_ingreso=numero_ingreso)
+                .exclude(id=solicitud_id)
+                .exists()
+            ):
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "El Número de Ingreso ya está en uso. Por favor, ingrese uno diferente.",
+                    },
+                    status=400,
+                )
+
+            # Obtener la solicitud
+            try:
+                solicitud = SolicitudPatenteAlcohol.objects.get(id=solicitud_id)
+            except SolicitudPatenteAlcohol.DoesNotExist:
+                return JsonResponse(
+                    {"success": False, "message": "Solicitud no encontrada."},
+                    status=404,
+                )
+
+            # Actualizar el numero_ingreso
+            solicitud.numero_ingreso = numero_ingreso
+            solicitud.save()
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Número de Ingreso actualizado exitosamente.",
+                    "numero_ingreso": solicitud.numero_ingreso,
+                }
+            )
+
+        except Exception as e:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"Error al actualizar el Número de Ingreso: {str(e)}",
+                },
+                status=500,
+            )
+
+    return JsonResponse(
+        {"success": False, "message": "Método no permitido."},
+        status=400,
     )
 
 

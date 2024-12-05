@@ -73,37 +73,68 @@
             <thead>
               <tr>
                 <th data-type="number" class="nIngre">Nº Ingreso</th>
-                <th data-type="string">Rol Avalúo</th>
                 <th data-type="date">Fecha Ingreso</th>
-                <th data-type="string">Solicitante</th>
+                <th data-type="string">Rol Avalúo</th>
                 <th data-type="string">Cerro</th>
+                <th data-type="string">Solicitante</th>
+                <th data-type="string">Nº Salida</th>
                 <th data-type="string">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {% for solicitud in solicitudes %}
-                <tr>
-                  <td>{{ solicitud.numero_ingreso }}</td>
-                  <td>{{ solicitud.rol_avaluo }}</td>
+                <tr data-id="{{ solicitud.id }}">
+                  <td class="tdIngreso">
+                    {% if solicitud.numero_ingreso %}
+                      {{ solicitud.numero_ingreso }}
+                    {% else %}
+                      <button class="buttonLogin buttonAgregarIngreso" onclick="openAddNumeroIngresoModal('{{ solicitud.id }}')">
+                        <span class="material-symbols-outlined bell">add_box</span>
+                        <span class="spanText">Nº Ingreso</span>
+                      </button>
+                    {% endif %}
+                  </td>
                   <td>{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
-                  <td>{{ solicitud.solicitante.nombre }}</td>
+                  <td>{{ solicitud.rol_avaluo }}</td>
                   <td>{{ solicitud.ubicacion.cerro.nombre }}</td>
+                  <td>{{ solicitud.solicitante.nombre }}</td>
+                  <td class="tdSalida">
+                    {% if solicitud.salida %}
+                        <button class="buttonLogin buttonVerSalida" onclick="openVerSalidaModal('{{ solicitud.id }}')">
+                            <span class="material-symbols-outlined bell">eye_tracking</span>
+                            <span class="spanText">Ver Salida</span>
+                        </button>
+                    {% else %}
+                        {% if solicitud.numero_ingreso %}
+                            <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('{{ solicitud.id }}')">
+                                <span class="material-symbols-outlined bell">add_box</span>
+                                <span class="spanText">Nº Salida</span>
+                            </button>
+                        {% else %}
+                            <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()">
+                                <span class="material-symbols-outlined bell">add_box</span>
+                                <span class="spanText">Nº Salida</span>
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                
                   <td class="tdPreview">
                     <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('{{ solicitud.id }}')">
-                      <span class="material-symbols-outlined bell" style="color: ghostwhite;">preview</span>
-                      <span style="color: ghostwhite;">Ver Detalles</span>
+                      <span class="material-symbols-outlined bell">eye_tracking</span>
+                      <span class="spanText">Ver Ingreso</span>
                     </button>
                   </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6">No hay solicitudes disponibles.</td>
+                  <td colspan="7">No hay solicitudes disponibles.</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
 
-          <!-- Modal HTML -->
+          <!-- Modal HTML para Descripción -->
           <div id="descripcionModal" class="modal">
             <div class="modal-content">
               <span class="close">&times;</span>
@@ -153,9 +184,80 @@
               </div>
             </div>
           </div>
+
+          <!-- Modal para Agregar Salida -->
+          <div id="agregarSalidaModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <h2>Registrar Salida</h2>
+              <form id="salidaForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="salidaSolicitudId" name="solicitud_id" value="" />
+
+                <div class="form-group">
+                  <label for="numero_salida">Número de Salida</label>
+                  <input type="text" name="numero_salida" id="numero_salida" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="descripcion">Descripción</label>
+                  <textarea name="descripcion" id="descripcion" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="archivo_adjunto_salida">Archivo Adjunto</label>
+                  <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" accept=".pdf,.doc,.docx,image/*" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Guardar Salida</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Modal para Ver Salida -->
+          <div id="verSalidaModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <h2>Detalles de la Salida</h2>
+              <div class="infoSalidaModal">
+                <div>
+                  <h3>Salida</h3>
+                  <p>
+                    <strong>Número de Salida:</strong> <span id="modalNumeroSalida"></span>
+                  </p>
+                  <p>
+                    <strong>Fecha de Salida:</strong> <span id="modalFechaSalida"></span>
+                  </p>
+                  <p>
+                    <strong>Descripción:</strong> <span id="modalDescripcionSalida"></span>
+                  </p>
+                  <p>
+                    <strong>Archivo Adjunto:</strong> <a href="#" id="modalArchivoSalida" target="_blank">Ver Archivo</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal para Agregar Número de Ingreso -->
+          <div id="agregarNumeroIngresoModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <h2>Agregar Número de Ingreso</h2>
+              <form id="numeroIngresoForm">
+                {% csrf_token %}
+                <input type="hidden" id="numeroIngresoSolicitudId" name="solicitud_id" value="" />
+                <div class="form-group">
+                  <label for="numero_ingreso">Número de Ingreso</label>
+                  <input type="text" name="numero_ingreso" id="numero_ingreso" required />
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Número de Ingreso</button>
+              </form>
+            </div>
+          </div>
         </div>
 
-        <!-- Asegúrate de incluir el script al final del body -->
+        <!-- Incluir el script al final del body -->
         <script src="{% static 'js/patente_alcohol.js' %}"></script>
       {% else %}
         <div class="additionalInfo">

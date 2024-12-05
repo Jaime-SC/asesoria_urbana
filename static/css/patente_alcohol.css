@@ -37,6 +37,14 @@
     justify-content: space-between;
 }
 
+#agregarNumeroIngresoModal #numeroIngresoForm {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
 .containerFormPatenteAlcohol>form>h3 {
     color: #E73C45;
 }
@@ -118,7 +126,7 @@
 .tableInfor_container th,
 .tableInfor_container td {
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px dashed #16233E;
     text-align: left;
 }
 
@@ -146,76 +154,107 @@
     color: #16233E;
 }
 
-#descripcionModal .modal-content {
+#descripcionModal .modal-content,
+#verSalidaModal .modal-content {
     width: min-content;
     max-width: unset !important;
 }
 
-.infoSolicitudModal {
+.infoSolicitudModal,
+.infoSalidaModal {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     font-family: 'Space Mono';
 }
 
-.infoSolicitudModal>div {
+.infoSolicitudModal>div,
+.infoSalidaModal>div {
     width: 30rem;
 }
 
-.infoSolicitudModal>div>p {
+.infoSolicitudModal>div>p,
+.infoSalidaModal>div>p {
     display: flex;
     justify-content: space-between;
     border-bottom: 1px dashed darkgray;
     padding-block: .25rem;
 }
 
-.infoSolicitudModal>div>h3 {
+.infoSolicitudModal>div>h3,
+.infoSalidaModal>div>h3 {
     color: #E73C45;
 }
 
-.buttonPreview {
-    background: #4BBFE0;
-    color: ghostwhite;
+.buttonPreview,
+.buttonAgregarIngreso,
+.buttonAgregarSalida,
+.buttonVerSalida {
     height: 1.9rem;
+    width: -webkit-fill-available;
+    font-size: .924rem;
+    justify-content: space-between;
 }
 
-.buttonPreview:hover {
-    background: #74cae5;
-    color: ghostwhite;
+.buttonPreview {
+    background: #F7EA53;
 }
 
-#tablaSolicitudes .tdPreview {
+.buttonPreview span {
+    color: #16233E;
+}
+
+.buttonPreview:hover, .buttonVerSalida:hover {
+    background: #fef191;
+}
+
+.buttonAgregarSalida,
+.buttonAgregarIngreso {
+    background: #4BBFE0;
+}
+
+.buttonAgregarSalida:hover,
+.buttonAgregarIngreso:hover {
+    background: #94d4ea;
+}
+
+.buttonVerSalida {
+    background: #F7EA53;
+}
+
+.buttonAgregarIngreso span,
+.buttonAgregarSalida span,
+.buttonVerSalida span {
+    color: #16233E;
+}
+
+/* Estilo para botones "Agregar Salida" deshabilitados */
+.disabled-button {
+    background-color: #cccccc; /* Gris claro */
+    color: #666666; /* Texto gris oscuro */
+    cursor: not-allowed; /* Cambia el cursor para indicar que no es clickeable */
+    opacity: 0.6; /* Reduce la opacidad para dar un efecto de deshabilitado */
+}
+
+.disabled-button:hover {
+    background-color: #cccccc; /* Mantiene el color gris en hover */
+}
+
+
+#tablaSolicitudes .spanText {
+    margin-inline: auto;
+}
+
+#tablaSolicitudes .tdPreview,
+.tdSalida,
+.tdIngreso {
     width: 10rem;
 }
 
-/* .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    gap: 5px;
+.containerFormPatenteAlcohol {
+    width: 100%;
+    max-width: 500px;
 }
-
-.pagination .page-btn {
-    padding: 8px 12px;
-    border: 1px solid #16233E;
-    border-radius: 5px;
-    background-color: #fff;
-    cursor: pointer;
-}
-
-.pagination .page-btn.active {
-    background-color: #16233E;
-    color: #fff;
-}
-
-.pagination .page-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-} */
-
-/* static/css/patente_alcohol.css */
-
-/* ... estilos anteriores ... */
 
 .additionalInfo {
     display: flex;
