@@ -29,7 +29,7 @@ function mostrarMensajeAgregarIngreso() {
         heightAuto: false,
         scrollbarPadding: false,
         icon: 'info',
-        title: 'Información Necesaria',
+        title: 'Sin Nº de Ingreso',
         text: 'Debe agregar un Número de Ingreso antes de poder agregar un Número de Salida.',
     });
 }

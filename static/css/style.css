@@ -111,7 +111,6 @@ h1 {
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   
 }
 
@@ -322,11 +321,17 @@ h1 {
 }
 
 .logoAU {
-  height: 7.5rem;
+  height: 8.5rem;
 }
 
 .logoMuniValpo {
-  height: 7.5rem;
+  height: 8.5rem;
+}
+
+.logoIlustreMunicipalidad {
+  position: absolute;
+  top: 105px;
+  width: 280px;
 }
 
 .tittle {
@@ -679,7 +684,6 @@ button {
 .tableInfor_container td {
   padding: 8px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
 }
 
 /* .tableInfor_container .fechaTable {
@@ -1175,7 +1179,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .bell {
-  width: 13px;
+  width: auto;
 }
 
 .bell path {

@@ -1,0 +1,45 @@
+.buttonPreview,
+.buttonAgregarIngreso,
+.buttonAgregarSalida,
+.buttonSubirSalida {
+    height: 1.9rem;
+    width: auto;
+    font-size: .924rem;
+    justify-content: space-between;
+}
+
+.buttonPreview {
+    background: #F7EA53;
+}
+
+.buttonSubirSalida {
+    background: #4bbfe0;
+    color: ghostwhite;
+}
+
+.buttonSubirSalida:hover {
+    background: #94d4ea;
+}
+
+.buttonSubirSalida span {
+    color: #16233E;
+}
+
+.iconContainerButton {
+    margin-inline: 1rem;
+}
+
+#tablaSolicitudes tr td {
+    border-inline: 1px #16233E dashed;
+}
+
+#tablaSolicitudes tr {
+    border-top: 0;
+    border-bottom: 1px #16233E dashed;
+    
+
+}
+
+.modal-content .modal-info .modal-field.modal-field-field {
+    border-bottom: 1px dashed gray;
+}

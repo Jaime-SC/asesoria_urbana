@@ -1,3 +1,7 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/bnup_form.css' %}" />
+
+
 <div id="bnupData" data-tipo-usuario="{{ tipo_usuario }}">
   <div class="cardContent" data-tipo-usuario="{{ tipo_usuario }}">
     <div class="card-details">
@@ -187,12 +191,14 @@
                       {% endif %}
                     </div>
                   </td>
-                  <td>
+                  <td style="display: flex;justify-content: center; border-inline: 0;">
                     {% if solicitud.archivo_adjunto_ingreso %}
-                      <div class="icon-container">
-                        <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank">
-                          <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
-                        </a>
+                      <div class="icon-container">                        
+                        <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;">
+                          <button class="buttonLogin buttonPreview">
+                            <span class="material-symbols-outlined bell">find_in_page</span>
+                          </button>
+                        </a>                        
                         <div class="tooltip">Ver archivo de ingreso</div>
                       </div>
                     {% else %}
@@ -208,7 +214,9 @@
                         {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
                           <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
                         {% else %}
-                          <span style="color: #429cb7;" class="material-symbols-outlined">upload_file</span>
+                          <button class="buttonLogin buttonSubirSalida">
+                            <span class="material-symbols-outlined bell">upload_file</span>
+                          </button>
                         {% endif %}
                       </a>
                       <div class="tooltip">Ver salidas</div>

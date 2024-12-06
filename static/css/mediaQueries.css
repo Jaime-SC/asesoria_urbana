@@ -27,9 +27,6 @@
     .logo {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-left: 10px;
-        margin-block: 2.5px;
     }
 
     .separador {
@@ -45,12 +42,17 @@
     }
 
     .logoAU {
-        height: 75px;
-        margin-bottom: 10px;
+        height: 5.75rem;
     }
 
     .logoMuniValpo {
-        height: 90px;
+        height: 5.75rem;
+    }
+
+    .logoIlustreMunicipalidad {
+        position: absolute;
+        top: 69px;
+        width: 190px;
     }
 
     .user {
@@ -249,8 +251,6 @@
     .logo {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-left: 10px;
     }
 
     .separador {
@@ -266,12 +266,17 @@
     }
 
     .logoAU {
-        height: 75px;
-        margin-bottom: 10px;
+        height: 7rem;
     }
 
     .logoMuniValpo {
-        height: 90px;
+        height: 7rem;
+    }
+
+    .logoIlustreMunicipalidad {
+        position: absolute;
+        top: 85px;
+        width: 230px;
     }
 
     .buttonLogin {
