@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 import io
 from django.template.loader import render_to_string
 from weasyprint import HTML, CSS
+from django.db import IntegrityError
 
 
 def patente_form(request):
@@ -146,6 +147,16 @@ def create_salida_patente_alcohol(request):
                     status=400,
                 )
 
+            # Verificar que el numero_salida no esté duplicado
+            if Salida.objects.filter(numero_salida=numero_salida).exists():
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "El Número de Salida ya está en uso. Por favor, ingrese uno diferente.",
+                    },
+                    status=400,
+                )
+
             # Crear Salida
             salida = Salida.objects.create(
                 solicitud=solicitud,
@@ -175,6 +186,15 @@ def create_salida_patente_alcohol(request):
                 }
             )
 
+        except IntegrityError:
+            # Manejar la excepción de unicidad a nivel de base de datos
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "El Número de Salida ya está en uso. Por favor, ingrese uno diferente.",
+                },
+                status=400,
+            )
         except Exception as e:
             return JsonResponse(
                 {"success": False, "message": f"Error al agregar la salida: {str(e)}"},
@@ -308,7 +328,6 @@ def get_solicitud_details(request, solicitud_id):
 
 
 @login_required
-@login_required
 def generate_salida_pdf(request, solicitud_id):
     try:
         # Obtener la solicitud
@@ -347,7 +366,8 @@ def generate_salida_pdf(request, solicitud_id):
         # Renderizar el HTML usando la plantilla
         html_string = render_to_string("patente_alcohol/salida_pdf.html", context)
 
-        css = CSS(string=f'''
+        css = CSS(
+            string=f"""
             @page {{
                 size: 1224px 820px;
                 margin: 0; /* Ajustar márgenes si es necesario */
@@ -355,7 +375,8 @@ def generate_salida_pdf(request, solicitud_id):
             body {{
                 image-rendering: pixelated;
             }}
-        ''')
+        """
+        )
 
         # Generar el PDF
         html = HTML(string=html_string, base_url=request.build_absolute_uri())

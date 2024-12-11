@@ -53,12 +53,14 @@ class Salida(models.Model):
     solicitud = models.OneToOneField(
         SolicitudPatenteAlcohol, on_delete=models.CASCADE, related_name="salida"
     )
-    fecha_salida = models.DateField(auto_now_add=True)
-    numero_salida = models.CharField(max_length=20, blank=True, null=True)
-    descripcion = models.TextField(blank=True, null=True)
+    numero_salida = models.CharField(
+        max_length=50, unique=True
+    )  # Asegura unicidad global
+    descripcion = models.TextField()
     archivo_adjunto_salida = models.FileField(
-        upload_to="patente_alcohol/salidas/", blank=True, null=True
+        upload_to="salidas_adjuntos/", null=True, blank=True
     )
+    fecha_salida = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return f"Salida {self.id} - Solicitud {self.solicitud.id}"
+        return f"Salida {self.numero_salida} para Solicitud {self.solicitud.id}"
