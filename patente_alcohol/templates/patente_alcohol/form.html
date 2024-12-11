@@ -100,25 +100,25 @@
                   <td>{{ solicitud.solicitante.nombre }}</td>
                   <td class="tdSalida">
                     {% if solicitud.salida %}
-                        <button class="buttonLogin buttonVerSalida" onclick="openVerSalidaModal('{{ solicitud.id }}')">
-                            <span class="material-symbols-outlined bell">eye_tracking</span>
-                            <span class="spanText">Ver Salida</span>
-                        </button>
+                      <button class="buttonLogin buttonVerSalida" onclick="openVerSalidaModal('{{ solicitud.id }}')">
+                        <span class="material-symbols-outlined bell">eye_tracking</span>
+                        <span class="spanText">Ver Salida</span>
+                      </button>
                     {% else %}
-                        {% if solicitud.numero_ingreso %}
-                            <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('{{ solicitud.id }}')">
-                                <span class="material-symbols-outlined bell">add_box</span>
-                                <span class="spanText">Nº Salida</span>
-                            </button>
-                        {% else %}
-                            <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()">
-                                <span class="material-symbols-outlined bell">add_box</span>
-                                <span class="spanText">Nº Salida</span>
-                            </button>
-                        {% endif %}
+                      {% if solicitud.numero_ingreso %}
+                        <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('{{ solicitud.id }}')">
+                          <span class="material-symbols-outlined bell">add_box</span>
+                          <span class="spanText">Nº Salida</span>
+                        </button>
+                      {% else %}
+                        <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()">
+                          <span class="material-symbols-outlined bell">add_box</span>
+                          <span class="spanText">Nº Salida</span>
+                        </button>
+                      {% endif %}
                     {% endif %}
-                </td>
-                
+                  </td>
+
                   <td class="tdPreview">
                     <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('{{ solicitud.id }}')">
                       <span class="material-symbols-outlined bell">eye_tracking</span>
@@ -234,6 +234,13 @@
                   <p>
                     <strong>Archivo Adjunto:</strong> <a href="#" id="modalArchivoSalida" target="_blank">Ver Archivo</a>
                   </p>
+                </div>
+                <!-- Botón para Generar y Ver PDF -->
+                <div >
+                  <a id="pdfLink" href="#" target="_blank" class="buttonLogin btn btn-secondary">
+                    <span class="material-symbols-outlined bell">picture_as_pdf</span>
+                    <span class="spanText">PDF</span>
+                  </a>
                 </div>
               </div>
             </div>

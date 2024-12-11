@@ -1,11 +1,14 @@
 # patente_alcohol/views.py
 
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Solicitante, Ubicacion, SolicitudPatenteAlcohol, Cerro, Salida
 import json
 from django.contrib.auth.decorators import login_required
+import io
+from django.template.loader import render_to_string
+from weasyprint import HTML, CSS
 
 
 def patente_form(request):
@@ -301,4 +304,82 @@ def get_solicitud_details(request, solicitud_id):
     except SolicitudPatenteAlcohol.DoesNotExist:
         return JsonResponse(
             {"success": False, "message": "Solicitud no encontrada."}, status=404
+        )
+
+
+@login_required
+@login_required
+def generate_salida_pdf(request, solicitud_id):
+    try:
+        # Obtener la solicitud
+        solicitud = SolicitudPatenteAlcohol.objects.select_related(
+            "solicitante", "ubicacion__cerro"
+        ).get(id=solicitud_id)
+
+        # Obtener la salida relacionada
+        salida = Salida.objects.get(solicitud=solicitud)
+
+        # Preparar el contexto para la plantilla
+        context = {
+            "solicitud": {
+                "numero_ingreso": solicitud.numero_ingreso or "Sin número",
+                "rol_avaluo": solicitud.rol_avaluo,
+                "fecha_ingreso": solicitud.fecha_ingreso,  # Pasar como objeto date
+                "solicitante": solicitud.solicitante.nombre,
+                "telefono": solicitud.solicitante.telefono or "No proporcionado",
+                "correo": solicitud.solicitante.correo or "No proporcionado",
+                "calle": solicitud.ubicacion.calle,
+                "numero": solicitud.ubicacion.numero or "No proporcionado",
+                "departamento": solicitud.ubicacion.departamento or "No proporcionado",
+                "cerro": (
+                    solicitud.ubicacion.cerro.nombre
+                    if solicitud.ubicacion.cerro
+                    else "No asignado"
+                ),
+            },
+            "salida": {
+                "numero_salida": salida.numero_salida or "Sin número",
+                "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
+                "descripcion": salida.descripcion or "Sin descripción",
+            },
+        }
+
+        # Renderizar el HTML usando la plantilla
+        html_string = render_to_string("patente_alcohol/salida_pdf.html", context)
+
+        css = CSS(string=f'''
+            @page {{
+                size: 1224px 820px;
+                margin: 0; /* Ajustar márgenes si es necesario */
+            }}
+            body {{
+                image-rendering: pixelated;
+            }}
+        ''')
+
+        # Generar el PDF
+        html = HTML(string=html_string, base_url=request.build_absolute_uri())
+        pdf = html.write_pdf(stylesheets=[css])
+
+        # Crear una respuesta HTTP con el PDF
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = (
+            f'inline; filename="Salida_{solicitud_id}.pdf"'
+        )
+
+        return response
+
+    except SolicitudPatenteAlcohol.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "message": "Solicitud no encontrada."}, status=404
+        )
+    except Salida.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "message": "Salida no encontrada para esta solicitud."},
+            status=404,
+        )
+    except Exception as e:
+        return JsonResponse(
+            {"success": False, "message": f"Error al generar el PDF: {str(e)}"},
+            status=500,
         )

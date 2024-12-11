@@ -14,7 +14,7 @@ urlpatterns = [
         "create_salida/",
         views.create_salida_patente_alcohol,
         name="create_salida_patente_alcohol",
-    ),  # Nueva ruta añadida
+    ),
     path(
         "detail/<int:solicitud_id>/",
         views.get_solicitud_details,
@@ -24,10 +24,15 @@ urlpatterns = [
         "detail_salida/<int:solicitud_id>/",
         views.get_salida_details,
         name="get_salida_details",
-    ),  # Nueva ruta
+    ),
     path(
         "update_numero_ingreso/",
         views.update_numero_ingreso,
         name="update_numero_ingreso",
-    ),  # Nueva ruta para actualizar número de ingreso
+    ),
+    path(
+        "generate_salida_pdf/<int:solicitud_id>/",
+        views.generate_salida_pdf,
+        name="generate_salida_pdf",
+    ),
 ]

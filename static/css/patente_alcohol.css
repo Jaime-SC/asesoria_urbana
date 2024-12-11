@@ -204,7 +204,8 @@
     color: #16233E;
 }
 
-.buttonPreview:hover, .buttonVerSalida:hover {
+.buttonPreview:hover,
+.buttonVerSalida:hover {
     background: #fef191;
 }
 
@@ -230,16 +231,24 @@
 
 /* Estilo para botones "Agregar Salida" deshabilitados */
 .disabled-button {
-    background-color: #cccccc; /* Gris claro */
-    color: #666666; /* Texto gris oscuro */
-    cursor: not-allowed; /* Cambia el cursor para indicar que no es clickeable */
-    opacity: 0.6; /* Reduce la opacidad para dar un efecto de deshabilitado */
+    background-color: #cccccc;
+    /* Gris claro */
+    color: #666666;
+    /* Texto gris oscuro */
+    cursor: not-allowed;
+    /* Cambia el cursor para indicar que no es clickeable */
+    opacity: 0.6;
+    /* Reduce la opacidad para dar un efecto de deshabilitado */
 }
 
 .disabled-button:hover {
-    background-color: #cccccc; /* Mantiene el color gris en hover */
+    background-color: #cccccc;
+    /* Mantiene el color gris en hover */
 }
 
+.modal .btn span{
+    color: #fff;
+}
 
 #tablaSolicitudes .spanText {
     margin-inline: auto;
@@ -280,5 +289,6 @@
 
 .tableInfor_container table {
     margin-block: 10px 0px !important;
-    
+
 }
+

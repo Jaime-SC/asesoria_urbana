@@ -122,7 +122,7 @@ function initializePatenteAlcoholForm() {
                             <td>${escapeHtml(data.solicitud.cerro)}</td>
                             <td>${escapeHtml(data.solicitud.solicitante)}</td>
                             <td class="tdSalida">
-                                ${data.solicitud.numero_ingreso ? `
+                                ${data.solicitud.numero_ingreso !== "Sin número" ? `
                                     <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('${data.solicitud.id}')">
                                         <span class="material-symbols-outlined bell">add_box</span>
                                         <span class="spanText">Nº Salida</span>
@@ -137,7 +137,7 @@ function initializePatenteAlcoholForm() {
                             <td class="tdPreview">
                                 <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('${data.solicitud.id}')">
                                     <span class="material-symbols-outlined bell">preview</span>
-                                    <span class="spanText">Ver Detalles</span>
+                                    <span class="spanText">Ver Ingreso</span>
                                 </button>
                             </td>
                         `;
@@ -292,14 +292,14 @@ function openPatenteAlcoholDescripcionModal(solicitudId) {
     // Manejar el cierre del modal al hacer clic en la 'x'
     spanClose.onclick = function () {
         modal.style.display = 'none';
-    }
+    };
 
     // Cerrar el modal al hacer clic fuera de él
     window.onclick = function (event) {
         if (event.target == modal) {
             modal.style.display = 'none';
         }
-    }
+    };
 }
 
 /**
@@ -348,6 +348,7 @@ function openVerSalidaModal(solicitudId) {
     document.getElementById('modalDescripcionSalida').textContent = '';
     document.getElementById('modalArchivoSalida').href = '#';
     document.getElementById('modalArchivoSalida').textContent = 'Sin archivo';
+    document.getElementById('pdfLink').href = '#'; // Resetear el enlace del PDF
 
     // Hacer una petición AJAX para obtener los detalles de la salida
     fetch(`/patente_alcohol/detail_salida/${solicitudId}/`)
@@ -366,6 +367,9 @@ function openVerSalidaModal(solicitudId) {
                     document.getElementById('modalArchivoSalida').href = '#';
                     document.getElementById('modalArchivoSalida').textContent = 'Sin archivo';
                 }
+
+                // Establecer la URL del PDF en el enlace
+                document.getElementById('pdfLink').href = `/patente_alcohol/generate_salida_pdf/${solicitudId}/`;
 
                 // Mostrar el modal
                 modal.style.display = 'block';
@@ -393,14 +397,14 @@ function openVerSalidaModal(solicitudId) {
     // Manejar el cierre del modal al hacer clic en la 'x'
     spanClose.onclick = function () {
         modal.style.display = 'none';
-    }
+    };
 
     // Cerrar el modal al hacer clic fuera de él
     window.onclick = function (event) {
         if (event.target == modal) {
             modal.style.display = 'none';
         }
-    }
+    };
 }
 
 /**
