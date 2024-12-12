@@ -101,6 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Inicializar funcionalidades específicas de la página de Patente de Alcohol
             initializePatenteAlcoholForm();
             initializePatenteAlcoholTable();
+            initializeSelectAllCheckbox();  // Inicializar el checkbox "Select All"
+            initializeGenerateCombinedPDFButton();
           };
           document.head.appendChild(script);
         }

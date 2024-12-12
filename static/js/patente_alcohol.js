@@ -37,6 +37,8 @@ function mostrarMensajeAgregarIngreso() {
 document.addEventListener('DOMContentLoaded', function () {
     initializePatenteAlcoholForm();
     initializePatenteAlcoholTable(); // Inicializar la tabla al cargar la página
+    initializeSelectAllCheckbox();  // Inicializar el checkbox "Select All"
+    initializeGenerateCombinedPDFButton();
 });
 
 /**
@@ -108,7 +110,15 @@ function initializePatenteAlcoholForm() {
                         const newRow = document.createElement('tr');
                         newRow.setAttribute('data-id', data.solicitud.id);
 
+                        // Determinar si el checkbox debe estar habilitado o deshabilitado
+                        // Para nuevas solicitudes, 'salida' no existe, por lo que el checkbox debe estar deshabilitado
+                        const isCheckboxDisabled = true; // Siempre deshabilitado al crear una nueva solicitud
+
+                        // Construir el HTML de la nueva fila
                         newRow.innerHTML = `
+                            <td>
+                                <input type="checkbox" class="select-solicitud" value="${data.solicitud.id}" disabled title="Debe tener Nº Ingreso y Salida" />
+                            </td>
                             <td>
                                 ${data.solicitud.numero_ingreso !== "Sin número" ? escapeHtml(data.solicitud.numero_ingreso) : `
                                     <button class="buttonLogin buttonAgregarIngreso" onclick="openAddNumeroIngresoModal('${data.solicitud.id}')">
@@ -128,7 +138,7 @@ function initializePatenteAlcoholForm() {
                                         <span class="spanText">Nº Salida</span>
                                     </button>
                                 ` : `
-                                    <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()">
+                                    <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()" title="Debe agregar Nº Ingreso primero">
                                         <span class="material-symbols-outlined bell">add_box</span>
                                         <span class="spanText">Nº Salida</span>
                                     </button>
@@ -142,10 +152,32 @@ function initializePatenteAlcoholForm() {
                             </td>
                         `;
 
+                        // Añadir la nueva fila al cuerpo de la tabla
                         tableBody.appendChild(newRow);
 
                         // Re-inicializar la tabla para que incluya la nueva fila
                         initializePatenteAlcoholTable(true);
+
+                        // Obtener el nuevo checkbox
+                        const newCheckbox = newRow.querySelector('.select-solicitud');
+
+                        // Agregar el event listener al nuevo checkbox
+                        newCheckbox.addEventListener('change', function () {
+                            if (!newCheckbox.checked) {
+                                selectAllCheckbox.checked = false;
+                            } else {
+                                const allChecked = Array.from(document.querySelectorAll('.select-solicitud')).every(cb => cb.checked || cb.disabled);
+                                selectAllCheckbox.checked = allChecked;
+                            }
+
+                            // Obtener el <tr> padre
+                            const row = newCheckbox.closest('tr');
+                            // Aplicar o remover la clase 'fila-marcada' usando la función de shared.js
+                            toggleRowHighlight(row, newCheckbox.checked);
+
+                            // Actualizar el estado de los botones de acción (si existen)
+                            updateActionButtonsState();
+                        });
                     }
                 } else {
                     Swal.fire({
@@ -492,6 +524,20 @@ document.getElementById('salidaForm').addEventListener('submit', function (e) {
                                 botonSalida.classList.remove('buttonAgregarSalida', 'disabled-button');
                                 botonSalida.classList.add('buttonVerSalida'); // Opcional: para estilos específicos
                             }
+
+                            // Habilitar el checkbox si el número de ingreso está presente
+                            const numeroIngresoCell = fila.children[1]; // Segundo <td> (index 1)
+                            const numeroIngreso = numeroIngresoCell.textContent.trim();
+                            if (numeroIngreso && numeroIngreso !== "Sin número") {
+                                const checkbox = fila.querySelector('.select-solicitud');
+                                if (checkbox) {
+                                    checkbox.disabled = false;
+                                    checkbox.title = '';
+                                }
+                            }
+
+                            // Actualizar el estado de los botones de acción (si existen)
+                            updateActionButtonsState();
                         }
                     } else {
                         Swal.fire({
@@ -587,19 +633,34 @@ document.getElementById('numeroIngresoForm').addEventListener('submit', function
                         // Actualizar la fila en la tabla para mostrar el número de ingreso
                         const fila = document.querySelector(`tr[data-id="${solicitudId}"]`);
                         if (fila) {
-                            const numeroIngresoCell = fila.children[0]; // Primer <td>
+                            const numeroIngresoCell = fila.children[1]; // Segundo <td>
                             numeroIngresoCell.innerHTML = escapeHtml(data.numero_ingreso);
 
-                            // Habilitar el botón "Agregar Salida" si estaba deshabilitado
+                            // Verificar si ya existe una salida para habilitar el checkbox
                             const botonSalida = fila.querySelector('.buttonAgregarSalida');
-                            if (botonSalida && botonSalida.classList.contains('disabled-button')) {
-                                botonSalida.innerHTML = `
+                            const hasSalida = botonSalida && botonSalida.classList.contains('buttonVerSalida');
+
+                            if (hasSalida) {
+                                const checkbox = fila.querySelector('.select-solicitud');
+                                if (checkbox) {
+                                    checkbox.disabled = false;
+                                    checkbox.title = '';
+                                }
+                            }
+
+                            // Habilitar el botón "Agregar Salida" si estaba deshabilitado
+                            const botonSalidaActual = fila.querySelector('.buttonAgregarSalida');
+                            if (botonSalidaActual && botonSalidaActual.classList.contains('disabled-button')) {
+                                botonSalidaActual.innerHTML = `
                                     <span class="material-symbols-outlined bell">add_box</span>
                                     <span class="spanText">Nº Salida</span>
                                 `;
-                                botonSalida.setAttribute('onclick', `openAgregarSalidaModal('${solicitudId}')`);
-                                botonSalida.classList.remove('disabled-button');
+                                botonSalidaActual.setAttribute('onclick', `openAgregarSalidaModal('${solicitudId}')`);
+                                botonSalidaActual.classList.remove('disabled-button');
                             }
+
+                            // Actualizar el estado de los botones de acción (si existen)
+                            updateActionButtonsState();
                         }
                     } else {
                         Swal.fire({
@@ -645,5 +706,131 @@ function escapeHtml(text) {
             '=': '&#x3D;'
         };
         return escape[s] || s;
+    });
+}
+
+// static/js/patente_alcohol.js (continuación)
+
+/**
+ * Inicializa el checkbox "Select All".
+ */
+function initializeSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('select-all');
+    const solicitudCheckboxes = document.querySelectorAll('.select-solicitud');
+
+    selectAllCheckbox.addEventListener('change', function (e) {
+        solicitudCheckboxes.forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = e.target.checked;
+                // Obtener el <tr> padre
+                const row = cb.closest('tr');
+                // Aplicar o remover la clase 'fila-marcada' usando la función de shared.js
+                toggleRowHighlight(row, cb.checked);
+            }
+        });
+    });
+
+    // Agregar event listeners a cada checkbox individual
+    solicitudCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function () {
+            if (!cb.checked) {
+                selectAllCheckbox.checked = false;
+            } else {
+                const allChecked = Array.from(solicitudCheckboxes).every(cb => cb.checked || cb.disabled);
+                selectAllCheckbox.checked = allChecked;
+            }
+
+            // Obtener el <tr> padre
+            const row = cb.closest('tr');
+            // Aplicar o remover la clase 'fila-marcada' usando la función de shared.js
+            toggleRowHighlight(row, cb.checked);
+
+            // Actualizar el estado de los botones de acción (si existen)
+            updateActionButtonsState();
+        });
+    });
+}
+
+/**
+ * Inicializa el botón para generar PDF combinado.
+ */
+function initializeGenerateCombinedPDFButton() {
+    const generateButton = document.getElementById('generateCombinedPDF');
+
+    generateButton.addEventListener('click', function () {
+        const selectedCheckboxes = document.querySelectorAll('.select-solicitud:checked');
+        const solicitudIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        if (solicitudIds.length === 0) {
+            Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
+                icon: 'warning',
+                title: 'No hay solicitudes seleccionadas',
+                text: 'Por favor, seleccione al menos una solicitud con número de ingreso y salida.',
+            });
+            return;
+        }
+
+        // Confirmación antes de generar el PDF
+        Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
+            title: '¿Estás seguro?',
+            text: `¿Deseas generar un PDF combinado con ${solicitudIds.length} solicitud(es)?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Mostrar indicador de carga
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    title: 'Generando PDF...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+
+                // Enviar solicitud para generar el PDF combinado
+                fetch('/patente_alcohol/generate_combined_pdf/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken(),
+                    },
+                    body: JSON.stringify({ 'solicitud_ids': solicitudIds }),
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => { throw data; });
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'Solicitudes_Combinadas.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        Swal.close();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message || 'Error al generar el PDF combinado.',
+                        });
+                    });
+            }
+        });
     });
 }

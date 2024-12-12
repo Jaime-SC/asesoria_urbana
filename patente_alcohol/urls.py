@@ -35,4 +35,9 @@ urlpatterns = [
         views.generate_salida_pdf,
         name="generate_salida_pdf",
     ),
+    path(
+        "generate_combined_pdf/",
+        views.generate_combined_pdf,
+        name="generate_combined_pdf",
+    ),
 ]

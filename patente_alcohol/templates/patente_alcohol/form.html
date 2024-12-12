@@ -62,16 +62,25 @@
       {% if user.is_authenticated %}
         <div class="tableInfor_container">
           <div class="containerSearchPagination">
-            <h2>Solicitudes de Patente de Alcohol</h2>
+            <h2>Patentes de Alcohol</h2>
             <div class="searchContainer">
               <span class="material-symbols-outlined">search</span>
               <input type="text" id="searchSolicitudes" placeholder="Buscar solicitudes..." />
             </div>
+            <!-- Nuevo Botón para Generar PDF Combinado -->
+            <button id="generateCombinedPDF" class="btn-combinarPDF">
+              <span class="material-symbols-outlined">attach_file_add</span>
+              Combinar PDF
+            </button>
             <div id="paginationSolicitudes" class="pagination"></div>
           </div>
           <table id="tablaSolicitudes" class="hidden-table">
             <thead>
               <tr>
+                <!-- Nueva Columna para Checkboxes -->
+                <th>
+                  <input type="checkbox" id="select-all" title="Seleccionar todas las solicitudes" />
+                </th>
                 <th data-type="number" class="nIngre">Nº Ingreso</th>
                 <th data-type="date">Fecha Ingreso</th>
                 <th data-type="string">Rol Avalúo</th>
@@ -84,6 +93,10 @@
             <tbody>
               {% for solicitud in solicitudes %}
                 <tr data-id="{{ solicitud.id }}">
+                  <!-- Checkbox en cada fila, deshabilitado si falta número de ingreso o salida -->
+                  <td>
+                    <input type="checkbox" class="select-solicitud" value="{{ solicitud.id }}" {% if not solicitud.numero_ingreso or not solicitud.salida %} disabled title="Debe tener Nº Ingreso y Salida" {% endif %} />
+                  </td>
                   <td class="tdIngreso">
                     {% if solicitud.numero_ingreso %}
                       {{ solicitud.numero_ingreso }}
@@ -111,7 +124,7 @@
                           <span class="spanText">Nº Salida</span>
                         </button>
                       {% else %}
-                        <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()">
+                        <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()" title="Debe agregar Nº Ingreso primero">
                           <span class="material-symbols-outlined bell">add_box</span>
                           <span class="spanText">Nº Salida</span>
                         </button>
@@ -121,14 +134,14 @@
 
                   <td class="tdPreview">
                     <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('{{ solicitud.id }}')">
-                      <span class="material-symbols-outlined bell">eye_tracking</span>
+                      <span class="material-symbols-outlined bell">preview</span>
                       <span class="spanText">Ver Ingreso</span>
                     </button>
                   </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="7">No hay solicitudes disponibles.</td>
+                  <td colspan="8">No hay solicitudes disponibles.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -265,6 +278,7 @@
         </div>
 
         <!-- Incluir el script al final del body -->
+        <script src="{% static 'js/shared.js' %}"></script>
         <script src="{% static 'js/patente_alcohol.js' %}"></script>
       {% else %}
         <div class="additionalInfo">

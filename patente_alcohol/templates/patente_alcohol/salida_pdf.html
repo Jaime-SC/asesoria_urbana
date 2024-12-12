@@ -9,13 +9,16 @@
       /* Estilos básicos para el PDF */
       body {
         font-family: 'Koh Santepheap', serif;
-        margin: 80px;
       }
       h1,
       h2,
       h3 {
         color: black;
         margin-block: 0.5rem;
+      }
+      
+      strong {
+        font-size: 1.15rem;
       }
       
       .establecimientoComercial .section {
@@ -54,15 +57,14 @@
       }
       
       .containerCalle strong {
-        margin-left: 1rem;
+        margin-left: 2rem;
       }
       
       .containerCalle p {
         border-bottom: 1px solid;
-        width: 25.5rem;
+        width: 26.25rem;
         margin-left: 1rem;
         margin-block: 0.5rem;
-        
         font-size: 1.25rem;
       }
       
@@ -79,7 +81,7 @@
       }
       
       .containerNumCasa strong {
-        margin-left: 1rem;
+        margin-left: 2rem;
       }
       
       .containerNumCasa p {
@@ -87,7 +89,7 @@
         width: 15rem;
         margin-left: 1rem;
         margin-block: 0.5rem;
-        
+      
         font-size: 1.25rem;
       }
       
@@ -107,15 +109,14 @@
       }
       
       .containerCerro strong {
-        margin-left: 1rem;
+        margin-left: 2rem;
       }
       
       .containerCerro p {
         border-bottom: 1px solid;
-        width: 26rem;
+        width: 34.9rem;
         margin-left: 1rem;
         margin-block: 0.5rem;
-        
         font-size: 1.25rem;
       }
       
@@ -123,30 +124,29 @@
         text-decoration: underline;
         text-align: center;
         margin-top: 7em;
+        margin-left: 15em;
       }
       .containerNum {
         border: 1px solid;
-        position: absolute;
-        top: 2em;
-        right: 3em;
         width: 12em;
         height: 6em;
         display: flex;
         flex-direction: column;
         justify-content: space-around;
+        margin-bottom: 1rem;
       }
       
       .containerNum p {
         font-size: 1.25rem;
         margin-left: 1rem;
-        margin-top: .5rem;
-        margin-bottom: .25rem;
-
+        margin-top: 0.5rem;
+        margin-bottom: 0.25rem;
       }
       
       .establecimientoComercial {
         display: flex;
         justify-content: space-evenly;
+        margin-top: 1rem;
       }
       
       .containerNombreSolicitante {
@@ -159,11 +159,11 @@
       }
       
       .containerNombreSolicitante p {
-        width: 48rem;
+        width: 54rem;
         border-bottom: 1px solid;
         margin-left: 1rem;
         margin-block: 0.5rem;
-        
+      
         font-size: 1.25rem;
       }
       .containerTelefonoCorreo {
@@ -179,7 +179,7 @@
         width: 20rem;
         margin-left: 1rem;
         border-bottom: 1px solid;
-        
+      
         font-size: 1.25rem;
       }
       
@@ -192,20 +192,31 @@
         width: 20rem;
         margin-left: 0.25rem;
         border-bottom: 1px solid;
-        
+      
         font-size: 1.25rem;
+      }
+      
+      .tittleContainerNum {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        margin-right: 0.5rem;
       }
     </style>
   </head>
   <body>
-    <div class="tittle">
-      <h1>SOLICITUD PARA PATENTE DE ALCOHOL</h1>
-      <h3>INFORME PARA EL DEPARTAMENTO DE ASESORIA URBANA</h3>
+    <div class="tittleContainerNum">
+      <div class="tittle">
+        <h1>SOLICITUD PARA PATENTE DE ALCOHOL</h1>
+        <h3>INFORME PARA EL DEPARTAMENTO DE ASESORIA URBANA</h3>
+      </div>
+      <div class="containerNum">
+        <p>ING: {{ solicitud.numero_ingreso }}</p>
+        <p>SAL: {{ salida.numero_salida }}</p>
+      </div>
     </div>
-    <div class="containerNum">
-      <p>ING: {{ solicitud.numero_ingreso }}</p>
-      <p>SAL: {{ salida.numero_salida }}</p>
-    </div>
+
     <div class="establecimientoComercial">
       <div class="section" style="width: 15%;">
         <div class="containerTittle">
@@ -243,7 +254,7 @@
       </div>
     </div>
 
-    <div class="section" style="margin-left: 4rem;margin-top: 3rem;">
+    <div class="section" style="margin-left: 5rem;margin-top: 3rem;">
       <div class="containerNombreSolicitante">
         <strong>Nombre y Apellidos:</strong>
         <p>{{ solicitud.solicitante }}</p>
@@ -255,13 +266,15 @@
         </div>
         <div style="width: 70%;margin-left: 1rem;">
           <strong style="width: 10%;">E-Mail:</strong>
-          <p style="width: 34rem;">{{ solicitud.correo }}</p>
+          <p style="width: 38.3rem;">{{ solicitud.correo }}</p>
         </div>
       </div>
       <div class="containerFecha">
         <strong>Valparaíso</strong>
         <p>{{ solicitud.fecha_ingreso|date:'d \d\e F \d\e Y' }}</p>
       </div>
+      <!-- Separador Opcional -->
+      <!-- <div class="separator"></div> -->
     </div>
 
     <!-- Puedes agregar más secciones según tus necesidades -->

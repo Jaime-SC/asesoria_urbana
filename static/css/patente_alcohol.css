@@ -126,8 +126,16 @@
 .tableInfor_container th,
 .tableInfor_container td {
     padding: 12px;
-    border: 1px dashed #16233E;
     text-align: left;
+}
+
+#tablaSolicitudes tr td {
+    border-inline: 1px #16233E dashed;
+}
+
+#tablaSolicitudes tr {
+    border-top: 0;
+    border-bottom: 1px #16233E dashed;
 }
 
 .tableInfor_container th {
@@ -292,3 +300,59 @@
 
 }
 
+.btn-combinarPDF {
+    padding: 5px;
+    border: unset;
+    border-radius: 10px;
+    color: #16233E;
+    z-index: 1;
+    background: #62ff95;
+    position: relative;
+    font-weight: 1000;
+    font-size: 17px;
+    -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+    transition: all 250ms;
+    overflow: hidden;
+    display: inline-flex
+;
+    font-family: 'Trebuchet MS', 'HelveticaNeue';
+    justify-content: center;
+    align-items: center;
+    width: max-content;
+    box-shadow: 0px 1px 5px 0px #16233E;
+}
+
+.btn-combinarPDF::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  border-radius: 10px;
+  background-color: #16233E;
+  z-index: -1;
+  -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+  transition: all 250ms;
+}
+
+.btn-combinarPDF:hover {
+  color: #e8e8e8;
+}
+
+.btn-combinarPDF:hover::before {
+  width: 100%;
+}
+
+.btn-combinarPDF span {
+  margin-right: 5px;
+  /* Espacio entre el icono y el texto */
+  transition: inherit;
+  /* Asegura que los iconos hereden la transición de color */
+}
+
+.btn-combinarPDF:hover span {
+  color: #e8e8e8;
+  /* Cambia el color del ícono al color del texto al hacer hover */
+}

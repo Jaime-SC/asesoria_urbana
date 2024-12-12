@@ -404,3 +404,96 @@ def generate_salida_pdf(request, solicitud_id):
             {"success": False, "message": f"Error al generar el PDF: {str(e)}"},
             status=500,
         )
+
+
+@csrf_exempt
+@login_required
+def generate_combined_pdf(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            solicitud_ids = data.get("solicitud_ids", [])
+
+            if not solicitud_ids:
+                return JsonResponse(
+                    {"success": False, "message": "No se seleccionaron solicitudes."},
+                    status=400,
+                )
+
+            # Fetch solicitudes with numero_ingreso and salida
+            solicitudes = SolicitudPatenteAlcohol.objects.filter(
+                id__in=solicitud_ids
+            ).select_related("solicitante", "ubicacion__cerro", "salida")
+
+            # Validate that all selected solicitudes have numero_ingreso and salida
+            invalid_solicitudes = [
+                s.id
+                for s in solicitudes
+                if not s.numero_ingreso or not hasattr(s, "salida")
+            ]
+            if invalid_solicitudes:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": f"Las siguientes solicitudes no tienen número de ingreso o salida: {invalid_solicitudes}",
+                    },
+                    status=400,
+                )
+
+            # Prepare context
+            context = {"solicitudes": solicitudes}
+
+            # Render combined HTML
+            html_string = render_to_string(
+                "patente_alcohol/combined_salida_pdf.html", context
+            )
+
+            # Define CSS for Letter size and layout
+            css = CSS(
+                string="""
+                @page {
+                    size: 1224px 1640px;
+                    margin: 0;
+
+                }
+
+                body {
+                image-rendering: pixelated;
+                }
+
+                .page-container {
+                    page-break-after: always;
+                    margin-top: 1cm;
+
+                }
+                .solicitud {
+                    page-break-inside: avoid;
+                }
+
+            """
+            )
+
+            # Generate PDF
+            html = HTML(string=html_string, base_url=request.build_absolute_uri())
+            pdf = html.write_pdf(stylesheets=[css])
+
+            # Create HTTP response
+            response = HttpResponse(pdf, content_type="application/pdf")
+            response["Content-Disposition"] = (
+                'attachment; filename="Solicitudes_Combinadas.pdf"'
+            )
+
+            return response
+
+        except Exception as e:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": f"Error al generar el PDF combinado: {str(e)}",
+                },
+                status=500,
+            )
+
+    return JsonResponse(
+        {"success": False, "message": "Método no permitido."}, status=400
+    )
