@@ -1,0 +1,282 @@
+<!-- patente_alcohol/templates/patente_alcohol/salida_pdf.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Reporte de Salida - Patente de Alcohol</title>
+    <style>
+      /* Estilos básicos para el PDF */
+      body {
+        font-family: 'Koh Santepheap', serif;
+      }
+      h1,
+      h2,
+      h3 {
+        color: black;
+        margin-block: 0.5rem;
+      }
+      
+      strong {
+        font-size: 1.15rem;
+      }
+      
+      .establecimientoComercial .section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: min-content;
+        border: 1px solid;
+      }
+      
+      .containerTittle {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .containerRolAvaluo {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-evenly;
+      }
+      .containerRolAvaluo strong {
+        font-size: xx-large;
+      }
+      
+      .containerRolAvaluo p {
+        font-size: 2rem;
+        border-bottom: 1px solid;
+      }
+      
+      .containerCalle {
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+      
+      .containerCalle strong {
+        margin-left: 2rem;
+      }
+      
+      .containerCalle p {
+        border-bottom: 1px solid;
+        width: 26.25rem;
+        margin-left: 1rem;
+        margin-block: 0.5rem;
+        font-size: 1.25rem;
+      }
+      
+      .containerNumCasa {
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+      
+      .containerNumCasa div {
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+      
+      .containerNumCasa strong {
+        margin-left: 2rem;
+      }
+      
+      .containerNumCasa p {
+        border-bottom: 1px solid;
+        width: 15rem;
+        margin-left: 1rem;
+        margin-block: 0.5rem;
+      
+        font-size: 1.25rem;
+      }
+      
+      .containerNumCasa .numCasa {
+        margin-left: 2.5rem;
+        text-align: center;
+      }
+      
+      .containerNumCasa .numDepto {
+        width: 20rem;
+      }
+      
+      .containerCerro {
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+      
+      .containerCerro strong {
+        margin-left: 2rem;
+      }
+      
+      .containerCerro p {
+        border-bottom: 1px solid;
+        width: 34.9rem;
+        margin-left: 1rem;
+        margin-block: 0.5rem;
+        font-size: 1.25rem;
+      }
+      
+      .tittle {
+        text-decoration: underline;
+        text-align: center;
+        margin-top: 7em;
+        margin-left: 15em;
+      }
+      .containerNum {
+        border: 1px solid;
+        width: 12em;
+        height: 6em;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        margin-bottom: 1rem;
+      }
+      
+      .containerNum p {
+        font-size: 1.25rem;
+        margin-left: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.25rem;
+      }
+      
+      .establecimientoComercial {
+        display: flex;
+        justify-content: space-evenly;
+        margin-top: 1rem;
+      }
+      
+      .containerNombreSolicitante {
+        display: flex;
+        align-items: center;
+      }
+      
+      .containerNombreSolicitante strong {
+        width: 10rem;
+      }
+      
+      .containerNombreSolicitante p {
+        width: 54rem;
+        border-bottom: 1px solid;
+        margin-left: 1rem;
+        margin-block: 0.5rem;
+      
+        font-size: 1.25rem;
+      }
+      .containerTelefonoCorreo {
+        display: flex;
+      }
+      
+      .containerTelefonoCorreo div {
+        display: flex;
+        align-items: center;
+      }
+      
+      .containerTelefonoCorreo p {
+        width: 20rem;
+        margin-left: 1rem;
+        border-bottom: 1px solid;
+      
+        font-size: 1.25rem;
+      }
+      
+      .containerFecha {
+        display: flex;
+        align-items: center;
+      }
+      
+      .containerFecha p {
+        width: 20rem;
+        margin-left: 0.25rem;
+        border-bottom: 1px solid;
+      
+        font-size: 1.25rem;
+      }
+      
+      .tittleContainerNum {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        margin-right: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tittleContainerNum">
+      <div class="tittle">
+        <h1>SOLICITUD PARA PATENTE DE ALCOHOL</h1>
+        <h3>INFORME PARA EL DEPARTAMENTO DE ASESORIA URBANA</h3>
+      </div>
+      <div class="containerNum">
+        <p>ING: {{ solicitud.numero_ingreso }}</p>
+        <p>SAL: {{ salida.numero_salida }}</p>
+      </div>
+    </div>
+
+    <div class="establecimientoComercial">
+      <div class="section" style="width: 15%;">
+        <div class="containerTittle">
+          <h3>Rol de avalúo</h3>
+        </div>
+        <div class="containerRolAvaluo">
+          <strong>N°</strong>
+          <p>{{ solicitud.rol_avaluo }}</p>
+        </div>
+      </div>
+
+      <div class="section" style="width: 60%;">
+        <div class="containerTittle">
+          <h3>UBICACIÓN DEL ESTABLECIMIENTO COMERCIAL</h3>
+        </div>
+        <div class="containerCalle">
+          <strong>Avenida / Calle / Pasaje:</strong>
+          <p>{{ solicitud.calle }}</p>
+        </div>
+
+        <div class="containerNumCasa">
+          <div style="width: 25%;">
+            <strong>N°:</strong>
+            <p class="numCasa" style="margin-left: 2.5rem;">{{ solicitud.numero }}</p>
+          </div>
+          <div>
+            <strong>Departamento N°:</strong>
+            <p class="numDepto">{{ solicitud.departamento }}</p>
+          </div>
+        </div>
+        <div class="containerCerro">
+          <strong>Cerro:</strong>
+          <p>{{ solicitud.cerro }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="margin-left: 5rem;margin-top: 3rem;">
+      <div class="containerNombreSolicitante">
+        <strong>Nombre y Apellidos:</strong>
+        <p>{{ solicitud.solicitante }}</p>
+      </div>
+      <div class="containerTelefonoCorreo">
+        <div style="width: 30%;">
+          <strong>Teléfono:</strong>
+          <p style="margin-left: 2rem;">{{ solicitud.telefono }}</p>
+        </div>
+        <div style="width: 70%;margin-left: 1rem;">
+          <strong style="width: 10%;">E-Mail:</strong>
+          <p style="width: 38.3rem;">{{ solicitud.correo }}</p>
+        </div>
+      </div>
+      <div class="containerFecha">
+        <strong>Valparaíso</strong>
+        <p>{{ solicitud.fecha_ingreso|date:'d \d\e F \d\e Y' }}</p>
+      </div>
+      <!-- Separador Opcional -->
+      <!-- <div class="separator"></div> -->
+    </div>
+
+    <!-- Puedes agregar más secciones según tus necesidades -->
+  </body>
+</html>

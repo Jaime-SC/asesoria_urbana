@@ -497,3 +497,68 @@ def generate_combined_pdf(request):
     return JsonResponse(
         {"success": False, "message": "Método no permitido."}, status=400
     )
+
+@login_required
+def generate_solicitud_pdf(request, solicitud_id):
+    try:
+        # Obtener la solicitud
+        solicitud = SolicitudPatenteAlcohol.objects.select_related(
+            "solicitante", "ubicacion__cerro"
+        ).get(id=solicitud_id)
+
+        # Preparar el contexto para la plantilla
+        context = {
+            "solicitud": {
+                "numero_ingreso": solicitud.numero_ingreso or "Sin número",
+                "rol_avaluo": solicitud.rol_avaluo,
+                "fecha_ingreso": solicitud.fecha_ingreso,  # Pasar como objeto date
+                "solicitante": solicitud.solicitante.nombre,
+                "telefono": solicitud.solicitante.telefono or "No proporcionado",
+                "correo": solicitud.solicitante.correo or "No proporcionado",
+                "calle": solicitud.ubicacion.calle,
+                "numero": solicitud.ubicacion.numero or "No proporcionado",
+                "departamento": solicitud.ubicacion.departamento or "No proporcionado",
+                "cerro": (
+                    solicitud.ubicacion.cerro.nombre
+                    if solicitud.ubicacion.cerro
+                    else "No asignado"
+                ),
+            }
+        }
+
+        # Renderizar el HTML usando la plantilla
+        html_string = render_to_string("patente_alcohol/solicitud_pdf.html", context)
+
+        # Definir estilos para el PDF
+        css = CSS(
+            string=f"""
+            @page {{
+                size: 1224px 820px;
+                margin: 0; /* Ajustar márgenes si es necesario */
+            }}
+            body {{
+                font-family: 'Koh Santepheap', serif;
+                image-rendering: pixelated;
+            }}
+        """
+        )
+
+        # Generar el PDF
+        html = HTML(string=html_string, base_url=request.build_absolute_uri())
+        pdf = html.write_pdf(stylesheets=[css])
+
+        # Crear una respuesta HTTP con el PDF
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="Solicitud_{solicitud_id}.pdf"'
+
+        return response
+
+    except SolicitudPatenteAlcohol.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "message": "Solicitud no encontrada."}, status=404
+        )
+    except Exception as e:
+        return JsonResponse(
+            {"success": False, "message": f"Error al generar el PDF: {str(e)}"},
+            status=500,
+        )

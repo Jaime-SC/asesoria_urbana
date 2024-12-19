@@ -270,7 +270,6 @@ function openPatenteAlcoholDescripcionModal(solicitudId) {
     const spanClose = modal.querySelector('.close');
 
     // Limpiar contenido previo
-    document.getElementById('modalNumeroIngreso').textContent = '';
     document.getElementById('modalRolAvaluo').textContent = '';
     document.getElementById('modalFechaIngreso').textContent = '';
     document.getElementById('modalSolicitante').textContent = '';
@@ -287,7 +286,6 @@ function openPatenteAlcoholDescripcionModal(solicitudId) {
         .then(data => {
             if (data.success) {
                 const solicitud = data.data;
-                document.getElementById('modalNumeroIngreso').textContent = solicitud.numero_ingreso;
                 document.getElementById('modalRolAvaluo').textContent = solicitud.rol_avaluo;
                 document.getElementById('modalFechaIngreso').textContent = solicitud.fecha_ingreso;
                 document.getElementById('modalSolicitante').textContent = solicitud.solicitante;
@@ -297,6 +295,10 @@ function openPatenteAlcoholDescripcionModal(solicitudId) {
                 document.getElementById('modalNumero').textContent = solicitud.numero;
                 document.getElementById('modalDepartamento').textContent = solicitud.departamento;
                 document.getElementById('modalCerro').textContent = solicitud.cerro;
+
+                // Establecer el enlace del PDF
+                const pdfLink = document.getElementById('pdfSolicitudLink');
+                pdfLink.href = `/patente_alcohol/generate_solicitud_pdf/${solicitudId}/`;
 
                 // Mostrar el modal
                 modal.style.display = 'block';
@@ -333,6 +335,7 @@ function openPatenteAlcoholDescripcionModal(solicitudId) {
         }
     };
 }
+
 
 /**
  * Abre el modal para registrar una salida.

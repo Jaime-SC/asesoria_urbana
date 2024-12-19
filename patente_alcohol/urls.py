@@ -40,4 +40,9 @@ urlpatterns = [
         views.generate_combined_pdf,
         name="generate_combined_pdf",
     ),
+    path(
+        "generate_solicitud_pdf/<int:solicitud_id>/",
+        views.generate_solicitud_pdf,
+        name="generate_solicitud_pdf",
+    ),
 ]

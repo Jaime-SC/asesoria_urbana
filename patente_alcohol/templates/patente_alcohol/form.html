@@ -156,9 +156,6 @@
                 <div>
                   <h3>Solicitud</h3>
                   <p>
-                    <strong>Nº Ingreso:</strong> <span id="modalNumeroIngreso"></span>
-                  </p>
-                  <p>
                     <strong>Rol Avalúo:</strong> <span id="modalRolAvaluo"></span>
                   </p>
                   <p>
@@ -195,8 +192,16 @@
                   </p>
                 </div>
               </div>
+              <!-- Botón para Generar PDF de la Solicitud -->
+              <div style="text-align: center; margin-top: 1.5rem;">
+                <a id="pdfSolicitudLink" href="#" target="_blank" class="buttonLogin btn btn-secondary">
+                  <span class="material-symbols-outlined bell">picture_as_pdf</span>
+                  <span class="spanText">Generar PDF</span>
+                </a>
+              </div>
             </div>
           </div>
+
 
           <!-- Modal para Agregar Salida -->
           <div id="agregarSalidaModal" class="modal">
