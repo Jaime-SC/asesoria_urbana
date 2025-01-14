@@ -1,7 +1,6 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/bnup_form.css' %}" />
 
-
 <div id="bnupData" data-tipo-usuario="{{ tipo_usuario }}">
   <div class="cardContent" data-tipo-usuario="{{ tipo_usuario }}">
     <div class="card-details">
@@ -9,7 +8,7 @@
         <!-- Botones para abrir modales -->
         <div>
           {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
-            <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span> BNUP</button>
+            <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span>Ingresos</button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' %}
             <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
@@ -31,7 +30,7 @@
             <form id="bnupForm" method="post" action="{% url 'bnup_form' %}" enctype="multipart/form-data">
               {% csrf_token %}
               <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-                <h2>Solicitud de BNUP</h2>
+                <h2>Ingresos</h2>
                 <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
               </div>
               <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
@@ -45,19 +44,28 @@
                   </select>
                 </div>
                 <div id="memoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
-                  <label for="num_memo">Ingrese N° Doc:</label>
+                  <label for="num_memo">N° Doc:</label>
                   <input type="number" name="num_memo" id="num_memo" />
                 </div>
                 <div id="correoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
                   <label for="correoSolicitante">Ingrese Correo:</label>
                   <input type="email" name="correo_solicitante" id="correoSolicitante" />
                 </div>
+                <!-- Nuevo Campo: Fecha de Egreso (Opcional) -->
+                <div class="form-group">
+                  <label for="fecha_de_egreso">Fecha </label>
+                  <input type="date" name="fecha_de_egreso" id="fecha_de_egreso" />
+                </div>                
               </div>
 
               <div class="form-group" style="display: flex; justify-content: space-between;">
                 <div>
                   <label for="numeroIngreso">N° de Ingreso</label>
                   <input type="number" name="numero_ingreso" id="numeroIngreso" required />
+                </div>
+                <div class="form-group">
+                  <label for="fecha">Fecha de ingreso</label>
+                  <input type="date" name="fecha_ingreso" id="fecha" required />
                 </div>
                 <div class="btn-container">
                   <button type="button" id="openFileModal" class="btn">Adjuntar archivo</button>
@@ -66,9 +74,9 @@
               </div>
 
               <div class="form-group">
-                <label for="depto_solicitante">Departamento Solicitante</label>
+                <label for="depto_solicitante">Solicitante</label>
                 <div style="display: flex; align-items: center;">
-                  <select name="depto_solicitante" id="depto_solicitante" style="max-width: 20rem;"required>
+                  <select name="depto_solicitante" id="depto_solicitante" style="max-width: 20rem;" required>
                     <option value="" disabled selected>Seleccione un Departamento</option>
                     {% for depto in departamentos %}
                       <option value="{{ depto.id }}">{{ depto.nombre }}</option>
@@ -92,14 +100,23 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Nuevo Campo: Tipo de Solicitud -->
               <div class="form-group">
+                <label for="tipo_solicitud">Tipo de Solicitud</label>
+                <select name="tipo_solicitud" id="tipo_solicitud" required>
+                  <option value="" disabled selected>Seleccione un Tipo de Solicitud</option>
+                  {% for tipo in tipos_solicitud %}
+                    <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+                  {% endfor %}
+                </select>
+              </div>            
+
+              {% comment %} <div class="form-group">
                 <label for="nombreSolicitante">Nombre del Solicitante</label>
                 <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" class="standardize-input" required />
-              </div>
-              <div class="form-group">
-                <label for="fecha">Fecha</label>
-                <input type="date" name="fecha_ingreso" id="fecha" required />
-              </div>
+              </div> {% endcomment %}
+              
               <div class="form-group">
                 <label for="funcionarioAsignado">Funcionario asignado a BNUP</label>
                 <select name="funcionario_asignado" id="funcionarioAsignado" required>
@@ -141,7 +158,7 @@
                 <th class="shadow" data-type="date">Fecha</th>
                 <th class="shadow" data-type="string">Recepción</th>
                 <th class="shadow" data-type="number">N° Doc</th>
-                <th class="shadow" data-type="string">Correo</th>
+                {% comment %} <th class="shadow" data-type="string">Correo</th> {% endcomment %}
                 {% comment %} <th class="shadow" data-type="string">Solicitante</th> {% endcomment %}
                 <th class="shadow" data-type="string">Departamento</th>
                 <th class="shadow" data-type="string">Funcionario</th>
@@ -171,7 +188,7 @@
                       </div>
                     {% endif %}
                   </td>
-                  <td data-order="{% if solicitud.correo_solicitante %}{{ solicitud.correo_solicitante|lower }}{% else %}zzz{% endif %}">
+                  {% comment %} <td data-order="{% if solicitud.correo_solicitante %}{{ solicitud.correo_solicitante|lower }}{% else %}zzz{% endif %}">
                     {% if solicitud.correo_solicitante %}
                       {{ solicitud.correo_solicitante }}
                     {% else %}
@@ -180,7 +197,7 @@
                         <div class="tooltip">Sin Correo</div>
                       </div>
                     {% endif %}
-                  </td>
+                  </td> {% endcomment %}
                   <td>{{ solicitud.depto_solicitante.nombre }}</td>
                   <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                   <td>
@@ -237,6 +254,7 @@
   </div>
 </div>
 
+<!-- Modal para descripción -->
 <div id="descripcionModal" class="modal">
   <div class="modal-content">
     <div style="display: flex;align-items: center;justify-content: space-between;">
@@ -272,6 +290,7 @@
   </div>
 </div>
 
+<!-- Modal para adjuntar archivo -->
 <div id="fileModal" class="modal">
   <div class="modal-content">
     <div>
@@ -427,6 +446,23 @@
         </select>
       </div>
       
+      <!-- Nuevo Campo: Tipo de Solicitud -->
+      <div class="form-group">
+        <label for="edit_tipo_solicitud">Tipo de Solicitud</label>
+        <select name="tipo_solicitud" id="edit_tipo_solicitud" required>
+          <option value="" disabled selected>Seleccione un Tipo de Solicitud</option>
+          {% for tipo in tipos_solicitud %}
+            <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Nuevo Campo: Fecha de Egreso (Opcional) -->
+      <div class="form-group">
+        <label for="edit_fecha_de_egreso">Fecha de Egreso (opcional)</label>
+        <input type="date" name="fecha_de_egreso" id="edit_fecha_de_egreso" />
+      </div>
+
       <div class="form-group">
         <label for="edit_nombreSolicitante">Nombre del Solicitante</label>
         <input type="text" name="nombre_solicitante" id="edit_nombreSolicitante" placeholder="Nombre y apellido" class="standardize-input" required />

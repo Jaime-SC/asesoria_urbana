@@ -123,7 +123,6 @@ function initializePatenteAlcoholForm() {
                                 ${data.solicitud.numero_ingreso !== "Sin número" ? escapeHtml(data.solicitud.numero_ingreso) : `
                                     <button class="buttonLogin buttonAgregarIngreso" onclick="openAddNumeroIngresoModal('${data.solicitud.id}')">
                                         <span class="material-symbols-outlined">add_box</span>
-                                        <span class="spanText">Nº Ingreso</span>
                                     </button>
                                 `}
                             </td>
@@ -135,19 +134,17 @@ function initializePatenteAlcoholForm() {
                                 ${data.solicitud.numero_ingreso !== "Sin número" ? `
                                     <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('${data.solicitud.id}')">
                                         <span class="material-symbols-outlined bell">add_box</span>
-                                        <span class="spanText">Nº Salida</span>
                                     </button>
                                 ` : `
                                     <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()" title="Debe agregar Nº Ingreso primero">
                                         <span class="material-symbols-outlined bell">add_box</span>
-                                        <span class="spanText">Nº Salida</span>
                                     </button>
                                 `}
                             </td>
                             <td class="tdPreview">
                                 <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('${data.solicitud.id}')">
                                     <span class="material-symbols-outlined bell">preview</span>
-                                    <span class="spanText">Ver Ingreso</span>
+                                    <span class="spanText">Solicitud</span>
                                 </button>
                             </td>
                         `;
@@ -521,7 +518,6 @@ document.getElementById('salidaForm').addEventListener('submit', function (e) {
                             if (botonSalida) {
                                 botonSalida.innerHTML = `
                                     <span class="material-symbols-outlined bell">eye_tracking</span>
-                                    <span class="spanText">Ver Salida</span>
                                 `;
                                 botonSalida.setAttribute('onclick', `openVerSalidaModal('${solicitudId}')`);
                                 botonSalida.classList.remove('buttonAgregarSalida', 'disabled-button');
@@ -656,7 +652,6 @@ document.getElementById('numeroIngresoForm').addEventListener('submit', function
                             if (botonSalidaActual && botonSalidaActual.classList.contains('disabled-button')) {
                                 botonSalidaActual.innerHTML = `
                                     <span class="material-symbols-outlined bell">add_box</span>
-                                    <span class="spanText">Nº Salida</span>
                                 `;
                                 botonSalidaActual.setAttribute('onclick', `openAgregarSalidaModal('${solicitudId}')`);
                                 botonSalidaActual.classList.remove('disabled-button');

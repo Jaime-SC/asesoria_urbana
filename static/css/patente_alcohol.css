@@ -199,7 +199,7 @@
 .buttonAgregarSalida,
 .buttonVerSalida {
     height: 1.9rem;
-    width: -webkit-fill-available;
+    width: min-content;
     font-size: .924rem;
     justify-content: space-between;
 }
@@ -254,7 +254,7 @@
     /* Mantiene el color gris en hover */
 }
 
-.modal .btn span{
+.modal .btn span {
     color: #fff;
 }
 
@@ -265,7 +265,8 @@
 #tablaSolicitudes .tdPreview,
 .tdSalida,
 .tdIngreso {
-    width: 10rem;
+    width: 5rem;
+    justify-items: center;
 }
 
 .containerFormPatenteAlcohol {
@@ -313,8 +314,7 @@
     -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
     transition: all 250ms;
     overflow: hidden;
-    display: inline-flex
-;
+    display: inline-flex;
     font-family: 'Trebuchet MS', 'HelveticaNeue';
     justify-content: center;
     align-items: center;
@@ -323,36 +323,36 @@
 }
 
 .btn-combinarPDF::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 0;
-  border-radius: 10px;
-  background-color: #16233E;
-  z-index: -1;
-  -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
-  box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
-  transition: all 250ms;
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    border-radius: 10px;
+    background-color: #16233E;
+    z-index: -1;
+    -webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+    box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+    transition: all 250ms;
 }
 
 .btn-combinarPDF:hover {
-  color: #e8e8e8;
+    color: #e8e8e8;
 }
 
 .btn-combinarPDF:hover::before {
-  width: 100%;
+    width: 100%;
 }
 
 .btn-combinarPDF span {
-  margin-right: 5px;
-  /* Espacio entre el icono y el texto */
-  transition: inherit;
-  /* Asegura que los iconos hereden la transición de color */
+    margin-right: 5px;
+    /* Espacio entre el icono y el texto */
+    transition: inherit;
+    /* Asegura que los iconos hereden la transición de color */
 }
 
 .btn-combinarPDF:hover span {
-  color: #e8e8e8;
-  /* Cambia el color del ícono al color del texto al hacer hover */
+    color: #e8e8e8;
+    /* Cambia el color del ícono al color del texto al hacer hover */
 }

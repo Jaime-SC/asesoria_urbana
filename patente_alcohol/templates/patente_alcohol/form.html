@@ -18,6 +18,15 @@
           <h3>Ubicación</h3>
           <div class="formContainer">
             <div class="form-group">
+              <label for="cerro">Cerro</label>
+              <select name="cerro_id" id="cerro" required>
+                <option value="" disabled selected>Seleccione un cerro</option>
+                {% for cerro in cerros %}
+                  <option value="{{ cerro.id }}">{{ cerro.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
               <label for="calle">Calle</label>
               <input type="text" name="calle" id="calle" required class="standardize-input" />
             </div>
@@ -28,15 +37,6 @@
             <div class="form-group">
               <label for="departamento">Departamento (opcional)</label>
               <input type="text" name="departamento" id="departamento" />
-            </div>
-            <div class="form-group">
-              <label for="cerro">Cerro</label>
-              <select name="cerro_id" id="cerro" required>
-                <option value="" disabled selected>Seleccione un cerro</option>
-                {% for cerro in cerros %}
-                  <option value="{{ cerro.id }}">{{ cerro.nombre }}</option>
-                {% endfor %}
-              </select>
             </div>
           </div>
           <h3>Datos del Solicitante</h3>
@@ -81,12 +81,12 @@
                 <th>
                   <input type="checkbox" id="select-all" title="Seleccionar todas las solicitudes" />
                 </th>
-                <th data-type="number" class="nIngre">Nº Ingreso</th>
+                <th data-type="number" class="nIngre">Ingreso</th>
+                <th data-type="string">Salida</th>
                 <th data-type="date">Fecha Ingreso</th>
                 <th data-type="string">Rol Avalúo</th>
                 <th data-type="string">Cerro</th>
                 <th data-type="string">Solicitante</th>
-                <th data-type="string">Nº Salida</th>
                 <th data-type="string">Acciones</th>
               </tr>
             </thead>
@@ -103,39 +103,41 @@
                     {% else %}
                       <button class="buttonLogin buttonAgregarIngreso" onclick="openAddNumeroIngresoModal('{{ solicitud.id }}')">
                         <span class="material-symbols-outlined bell">add_box</span>
-                        <span class="spanText">Nº Ingreso</span>
+                        {% comment %} <span class="spanText">Nº Ingreso</span> {% endcomment %}
                       </button>
+                    {% endif %}
+                  </td>
+                  <td class="tdSalida">
+                    {% if solicitud.salida %}
+                      {{ solicitud.salida.numero_salida }}
+
+                    {% else %}
+                      {% if solicitud.numero_ingreso %}
+                        <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('{{ solicitud.id }}')">
+                          <span class="material-symbols-outlined bell">add_box</span>
+                          {% comment %} <span class="spanText">Nº Salida</span> {% endcomment %}
+                        </button>
+                      {% else %}
+                        <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()" title="Debe agregar Nº Ingreso primero">
+                          <span class="material-symbols-outlined bell">add_box</span>
+                          {% comment %} <span class="spanText">Nº Salida</span> {% endcomment %}
+                        </button>
+                      {% endif %}
                     {% endif %}
                   </td>
                   <td>{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
                   <td>{{ solicitud.rol_avaluo }}</td>
                   <td>{{ solicitud.ubicacion.cerro.nombre }}</td>
                   <td>{{ solicitud.solicitante.nombre }}</td>
-                  <td class="tdSalida">
-                    {% if solicitud.salida %}
-                      <button class="buttonLogin buttonVerSalida" onclick="openVerSalidaModal('{{ solicitud.id }}')">
-                        <span class="material-symbols-outlined bell">eye_tracking</span>
-                        <span class="spanText">Ver Salida</span>
-                      </button>
-                    {% else %}
-                      {% if solicitud.numero_ingreso %}
-                        <button class="buttonLogin buttonAgregarSalida" onclick="openAgregarSalidaModal('{{ solicitud.id }}')">
-                          <span class="material-symbols-outlined bell">add_box</span>
-                          <span class="spanText">Nº Salida</span>
-                        </button>
-                      {% else %}
-                        <button class="buttonLogin buttonAgregarSalida disabled-button" onclick="mostrarMensajeAgregarIngreso()" title="Debe agregar Nº Ingreso primero">
-                          <span class="material-symbols-outlined bell">add_box</span>
-                          <span class="spanText">Nº Salida</span>
-                        </button>
-                      {% endif %}
-                    {% endif %}
-                  </td>
 
                   <td class="tdPreview">
                     <button class="buttonLogin buttonPreview" onclick="openPatenteAlcoholDescripcionModal('{{ solicitud.id }}')">
                       <span class="material-symbols-outlined bell">preview</span>
-                      <span class="spanText">Ver Ingreso</span>
+                      <span class="spanText">Solicitud</span>
+                    </button>
+                    <button class="buttonLogin buttonVerSalida" onclick="openVerSalidaModal('{{ solicitud.id }}')">
+                      <span class="material-symbols-outlined bell">eye_tracking</span>
+                      {% comment %} <span class="spanText">Ver Salida</span> {% endcomment %}
                     </button>
                   </td>
                 </tr>
@@ -196,7 +198,7 @@
               <div style="text-align: center; margin-top: 1.5rem;">
                 <a id="pdfSolicitudLink" href="#" target="_blank" class="buttonLogin btn btn-secondary">
                   <span class="material-symbols-outlined bell">picture_as_pdf</span>
-                  <span class="spanText">Generar PDF</span>
+                  <span class="spanText">PDF</span>
                 </a>
               </div>
             </div>

@@ -347,18 +347,11 @@
                                             // Columna para el archivo adjunto
                                             const archivoCell = document.createElement('td');
                                             if (salida.archivo_url) {
-                                                const link = document.createElement('a');
-                                                link.href = salida.archivo_url;
-                                                link.target = '_blank';
-                                                link.setAttribute('aria-label', 'Ver Archivo');
-                                                link.setAttribute('title', 'Ver Archivo');
-
-                                                const iconSpan = document.createElement('span');
-                                                iconSpan.classList.add('material-symbols-outlined');
-                                                iconSpan.textContent = 'preview';
-
-                                                link.appendChild(iconSpan);
-                                                archivoCell.appendChild(link);
+                                                archivoCell.innerHTML = `
+                                                    <a href="${salida.archivo_url}" target="_blank" style="text-decoration: none;">
+                                                        <span class="material-symbols-outlined" style="color: green;">preview</span>
+                                                    </a>
+                                                `;
                                             } else {
                                                 archivoCell.textContent = 'No adjunto';
                                             }
@@ -471,10 +464,10 @@
         function toggleFields() {
             const selectedValue = tipoRecepcionSelect.value;
 
-            if (['1', '3', '4', '5'].includes(selectedValue)) {
+            if (['1', '3', '4', '5'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
                 memoFields.style.display = 'block';
                 correoFields.style.display = 'none';
-            } else if (selectedValue === '2') {
+            } else if (selectedValue === '2') { // ID para Correo
                 memoFields.style.display = 'none';
                 correoFields.style.display = 'block';
             } else {
@@ -970,14 +963,24 @@
                     tipoRecepcionSelect.value = data.data.tipo_recepcion;
                     updateEditBNUPFields();
 
-                    if (['1', '3', '4', '5'].includes(data.data.tipo_recepcion.toString())) {
+                    if (['1', '3', '4', '5'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
                         document.getElementById('edit_num_memo').value = data.data.numero_memo || '';
-                    } else if (data.data.tipo_recepcion.toString() === '2') {
+                    } else if (data.data.tipo_recepcion.toString() === '2') { // ID para Correo
                         document.getElementById('edit_correoSolicitante').value = data.data.correo_solicitante || '';
                     }
 
                     const deptoSelect = document.getElementById('edit_depto_solicitante');
                     deptoSelect.value = data.data.depto_solicitante;
+
+                    const tipoSolicitudSelect = document.getElementById('edit_tipo_solicitud');
+                    tipoSolicitudSelect.value = data.data.tipo_solicitud;
+
+                    const fechaEgresoInput = document.getElementById('edit_fecha_de_egreso');
+                    if (data.data.fecha_de_egreso) {
+                        fechaEgresoInput.value = data.data.fecha_de_egreso;
+                    } else {
+                        fechaEgresoInput.value = '';
+                    }
 
                     const funcionarioSelect = document.getElementById('edit_funcionarioAsignado');
                     funcionarioSelect.value = data.data.funcionario_asignado;
@@ -1110,10 +1113,10 @@
         function toggleFields() {
             const selectedValue = tipoRecepcionSelect.value;
 
-            if (['1', '3', '4', '5'].includes(selectedValue)) {  // IDs para Memo, Providencia, Oficio, Ordinario
+            if (['1', '3', '4', '5'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
                 memoFields.style.display = 'block';
                 correoFields.style.display = 'none';
-            } else if (selectedValue === '2') {  // ID para Correo
+            } else if (selectedValue === '2') { // ID para Correo
                 memoFields.style.display = 'none';
                 correoFields.style.display = 'block';
             } else {
@@ -1155,7 +1158,7 @@
                         cells[cellIndex++].textContent = formatDate(data.data.fecha_ingreso);
 
                         // Actualizar Recepción
-                        cells[cellIndex++].textContent = getTipoRecepcionText(data.data.tipo_recepcion);
+                        cells[cellIndex++].textContent = data.data.tipo_recepcion_text;
 
                         // Actualizar N° Doc
                         if (data.data.numero_memo) {
@@ -1196,6 +1199,9 @@
                                 ${data.data.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
                             </div>
                         `;
+
+                        // Aquí podrías actualizar los nuevos campos si los has añadido a la tabla
+
                     }
                 }
             })
@@ -1205,9 +1211,9 @@
     }
 
     /**
- * Agrega una nueva fila a la tabla de solicitudes con los datos proporcionados.
- * @param {Object} solicitud - Objeto que contiene los datos de la solicitud.
- */
+     * Agrega una nueva fila a la tabla de solicitudes con los datos proporcionados.
+     * @param {Object} solicitud - Objeto que contiene los datos de la solicitud.
+     */
     function addTableRow(solicitud) {
         const tablaSolicitudesBody = document.querySelector('#tablaSolicitudes tbody');
         if (!tablaSolicitudesBody) {
@@ -1275,11 +1281,11 @@
             numDocCell.textContent = solicitud.numero_memo;
         } else {
             numDocCell.innerHTML = `
-            <div class="icon-container">
-                <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
-                <div class="tooltip">Sin número de documento</div>
-            </div>
-        `;
+                <div class="icon-container">
+                    <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
+                    <div class="tooltip">Sin número de documento</div>
+                </div>
+            `;
         }
         row.appendChild(numDocCell);
 
@@ -1290,11 +1296,11 @@
             correoCell.setAttribute('data-order', solicitud.correo_solicitante.toLowerCase());
         } else {
             correoCell.innerHTML = `
-            <div class="icon-container">
-                <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
-                <div class="tooltip">Sin Correo</div>
-            </div>
-        `;
+                <div class="icon-container">
+                    <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
+                    <div class="tooltip">Sin Correo</div>
+                </div>
+            `;
             correoCell.setAttribute('data-order', 'zzz');
         }
         row.appendChild(correoCell);
@@ -1328,10 +1334,10 @@
         descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
         if (solicitud.descripcion.length > 1) {
             descripcionDiv.innerHTML += `
-            <span class="descripcion-icon">
-                <span class="material-symbols-outlined">preview</span>
-            </span>
-        `;
+                <span class="descripcion-icon">
+                    <span class="material-symbols-outlined">preview</span>
+                </span>
+            `;
         }
         descripcionCell.appendChild(descripcionDiv);
         row.appendChild(descripcionCell);
@@ -1340,38 +1346,37 @@
         const entradaCell = document.createElement('td');
         if (solicitud.archivo_adjunto_ingreso_url) {
             entradaCell.innerHTML = `
-            <div class="icon-container">                        
-                <a href="${solicitud.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
-                    <button class="buttonLogin buttonPreview">
-                        <span class="material-symbols-outlined bell">find_in_page</span>
-                    </button>
-                </a>                        
-                <div class="tooltip">Ver archivo de ingreso</div>
-            </div>
-        `;
+                <div class="icon-container">                        
+                    <a href="${solicitud.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
+                        <button class="buttonLogin buttonPreview">
+                            <span class="material-symbols-outlined bell">find_in_page</span>
+                        </button>
+                    </a>                        
+                    <div class="tooltip">Ver archivo de ingreso</div>
+                </div>
+            `;
         } else {
             entradaCell.innerHTML = `
-            <div class="icon-container">
-                <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
-                <div class="tooltip">Sin archivo de ingreso</div>
-            </div>
-        `;
+                <div class="icon-container">
+                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                    <div class="tooltip">Sin archivo de ingreso</div>
+                </div>
+            `;
         }
         row.appendChild(entradaCell);
 
         // Salidas
         const salidasCell = document.createElement('td');
         salidasCell.innerHTML = `
-        <div class="icon-container">
-            
-            <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                <button class="buttonLogin buttonSubirSalida">
-                    <span class="material-symbols-outlined bell">upload_file</span>
-                </button>
-            </a>
-            <div class="tooltip">Ver salidas</div>
-        </div>
-    `;
+            <div class="icon-container">
+                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
+                    <button class="buttonLogin buttonSubirSalida">
+                        <span class="material-symbols-outlined bell">upload_file</span>
+                    </button>
+                </a>
+                <div class="tooltip">Ver salidas</div>
+            </div>
+        `;
         row.appendChild(salidasCell);
 
         // Insertar la nueva fila al inicio de la tabla
