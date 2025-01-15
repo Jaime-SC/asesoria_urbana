@@ -41,10 +41,10 @@
      * @param {string} funcionario_asignado - Funcionario asignado.
      * @param {string} tablaOrigen - Identificador de la tabla de origen.
      */
-    function openBNUPDescripcionModal(descripcion, nombre, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
+    function openBNUPDescripcionModal(descripcion, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');
         const descripcionCompleta = document.getElementById('descripcionCompleta');
-        const nombreCompleto = document.getElementById('nombreCompleto');
+        // const nombreCompleto = document.getElementById('nombreCompleto');
         const fechaIngreso = document.getElementById('fechaIngreso');
         const numeroIngresoSpan = document.getElementById('numero_ingreso');
         const correoSolicitante = document.getElementById('correo_solicitante');
@@ -54,7 +54,7 @@
 
         // Rellenar los campos del modal con los datos proporcionados
         descripcionCompleta.textContent = descripcion;
-        nombreCompleto.textContent = nombre;
+        // nombreCompleto.textContent = nombre;
         fechaIngreso.textContent = fecha;
         numeroIngresoSpan.textContent = numero_ingreso;
         deptoSolicitante.textContent = departamento;
@@ -434,16 +434,8 @@
                     salidaFields.style.display = 'none';
                 }
             }
-        } else {
-            // Mostrar mensaje de acceso denegado si el usuario no tiene permisos
-            Swal.fire({
-                heightAuto: false,
-                scrollbarPadding: false,
-                icon: 'warning',
-                title: 'Acceso denegado',
-                text: 'No tiene permiso para realizar esta acción.',
-            });
         }
+
     }
 
     /**
@@ -471,7 +463,7 @@
                 memoFields.style.display = 'none';
                 correoFields.style.display = 'block';
             } else {
-                memoFields.style.display = 'none';
+                memoFields.style.display = 'block';
                 correoFields.style.display = 'none';
             }
         }
@@ -938,53 +930,65 @@
         const editModal = document.getElementById('editBNUPFormModal');
         const closeModalButton = editModal ? editModal.querySelector('.close') : null;
         const editForm = document.getElementById('editBNUPForm');
-
+    
         if (!editModal || !closeModalButton || !editForm) {
             console.error('Elementos del modal de edición no encontrados.');
             return;
         }
-
+    
         // Resetear el formulario antes de cargar nuevos datos
         editForm.reset();
-
+    
         // Obtener los datos de la solicitud mediante una solicitud AJAX
         fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     // Rellenar el formulario con los datos obtenidos
-                    document.getElementById('edit_solicitud_id').value = data.data.id;
-                    document.getElementById('edit_numeroIngreso').value = data.data.numero_ingreso;
-                    document.getElementById('edit_nombreSolicitante').value = data.data.nombre_solicitante;
-                    document.getElementById('edit_fecha').value = data.data.fecha_ingreso;
-                    document.getElementById('edit_descripcion').value = data.data.descripcion;
-
+                    const solicitudIdField = document.getElementById('edit_solicitud_id');
+                    if (solicitudIdField) solicitudIdField.value = data.data.id;
+    
+                    const numeroIngresoField = document.getElementById('edit_numeroIngreso');
+                    if (numeroIngresoField) numeroIngresoField.value = data.data.numero_ingreso;
+    
+                    const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
+                    if (fechaIngresoField) fechaIngresoField.value = data.data.fecha_ingreso_au;
+    
+                    const descripcionField = document.getElementById('edit_descripcion');
+                    if (descripcionField) descripcionField.value = data.data.descripcion;
+    
                     const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
-                    tipoRecepcionSelect.value = data.data.tipo_recepcion;
-                    updateEditBNUPFields();
-
+                    if (tipoRecepcionSelect) {
+                        tipoRecepcionSelect.value = data.data.tipo_recepcion;
+                        updateEditBNUPFields();
+                    }
+    
                     if (['1', '3', '4', '5'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
-                        document.getElementById('edit_num_memo').value = data.data.numero_memo || '';
+                        const numMemoField = document.getElementById('edit_num_memo');
+                        if (numMemoField) numMemoField.value = data.data.numero_memo || '';
                     } else if (data.data.tipo_recepcion.toString() === '2') { // ID para Correo
-                        document.getElementById('edit_correoSolicitante').value = data.data.correo_solicitante || '';
+                        const correoSolicitanteField = document.getElementById('edit_correoSolicitante');
+                        if (correoSolicitanteField) correoSolicitanteField.value = data.data.correo_solicitante || '';
                     }
-
+    
                     const deptoSelect = document.getElementById('edit_depto_solicitante');
-                    deptoSelect.value = data.data.depto_solicitante;
-
+                    if (deptoSelect) deptoSelect.value = data.data.depto_solicitante;
+    
                     const tipoSolicitudSelect = document.getElementById('edit_tipo_solicitud');
-                    tipoSolicitudSelect.value = data.data.tipo_solicitud;
-
-                    const fechaEgresoInput = document.getElementById('edit_fecha_de_egreso');
-                    if (data.data.fecha_de_egreso) {
-                        fechaEgresoInput.value = data.data.fecha_de_egreso;
-                    } else {
-                        fechaEgresoInput.value = '';
+                    if (tipoSolicitudSelect) tipoSolicitudSelect.value = data.data.tipo_solicitud;
+    
+                    const fechaEgresoInput = document.getElementById('edit_fecha_salida_solicitante');
+                    if (fechaEgresoInput) {
+                        if (data.data.fecha_salida_solicitante) {
+                            fechaEgresoInput.value = data.data.fecha_salida_solicitante;
+                        } else {
+                            fechaEgresoInput.value = '';
+                        }
                     }
-
+    
                     const funcionarioSelect = document.getElementById('edit_funcionarioAsignado');
-                    funcionarioSelect.value = data.data.funcionario_asignado;
-
+                    if (funcionarioSelect) funcionarioSelect.value = data.data.funcionario_asignado;
+    
                     // Mostrar el modal de edición
                     editModal.style.display = 'block';
                 } else {
@@ -1007,25 +1011,25 @@
                     text: 'Ha ocurrido un error al cargar los datos.',
                 });
             });
-
+    
         // Evento para cerrar el modal al hacer clic en el botón de cerrar
         closeModalButton.onclick = () => {
             editModal.style.display = 'none';
         };
-
+    
         // Evento para cerrar el modal al hacer clic fuera de él
         document.addEventListener('click', (event) => {
             if (event.target === editModal) {
                 editModal.style.display = 'none';
             }
         });
-
+    
         // Evento para manejar el guardado de cambios con confirmación previa
         const saveButton = document.getElementById('guardarEdicionBNUP');
         if (saveButton) {
             saveButton.onclick = (event) => {
                 event.preventDefault();
-
+    
                 // Mostrar ventana de confirmación
                 Swal.fire({
                     heightAuto: false,
@@ -1060,10 +1064,10 @@
                                         showConfirmButton: false,
                                         timer: 2000,
                                     });
-
+    
                                     // Actualizar la fila correspondiente en la tabla
                                     updateTableRow(solicitudId);
-
+    
                                     // Cerrar el modal de edición
                                     const editModal = document.getElementById('editBNUPFormModal');
                                     if (editModal) {
@@ -1094,6 +1098,7 @@
             };
         }
     }
+    
 
     /**
      * Actualiza la visibilidad de los campos en el formulario de edición BNUP según el tipo de recepción seleccionado.
@@ -1120,7 +1125,7 @@
                 memoFields.style.display = 'none';
                 correoFields.style.display = 'block';
             } else {
-                memoFields.style.display = 'none';
+                memoFields.style.display = 'block';
                 correoFields.style.display = 'none';
             }
         }
@@ -1155,7 +1160,10 @@
                         cells[cellIndex++].textContent = data.data.numero_ingreso;
 
                         // Actualizar Fecha
-                        cells[cellIndex++].textContent = formatDate(data.data.fecha_ingreso);
+                        cells[cellIndex++].textContent = formatDate(data.data.fecha_ingreso_au);
+
+                        // Actualizar Departamento
+                        cells[cellIndex++].textContent = getDepartamentoText(data.data.depto_solicitante);
 
                         // Actualizar Recepción
                         cells[cellIndex++].textContent = data.data.tipo_recepcion_text;
@@ -1173,28 +1181,27 @@
                         }
 
                         // Actualizar Correo
-                        if (data.data.correo_solicitante) {
-                            cells[cellIndex++].textContent = data.data.correo_solicitante;
-                            cells[cellIndex - 1].setAttribute('data-order', data.data.correo_solicitante.toLowerCase());
-                        } else {
-                            cells[cellIndex++].innerHTML = `
-                                <div class="icon-container">
-                                    <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
-                                    <div class="tooltip">Sin Correo</div>
-                                </div>
-                            `;
-                            cells[cellIndex - 1].setAttribute('data-order', 'zzz');
-                        }
+                        // if (data.data.correo_solicitante) {
+                        //     cells[cellIndex++].textContent = data.data.correo_solicitante;
+                        //     cells[cellIndex - 1].setAttribute('data-order', data.data.correo_solicitante.toLowerCase());
+                        // } else {
+                        //     cells[cellIndex++].innerHTML = `
+                        //         <div class="icon-container">
+                        //             <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
+                        //             <div class="tooltip">Sin Correo</div>
+                        //         </div>
+                        //     `;
+                        //     cells[cellIndex - 1].setAttribute('data-order', 'zzz');
+                        // }
 
-                        // Actualizar Departamento
-                        cells[cellIndex++].textContent = getDepartamentoText(data.data.depto_solicitante);
+                        
 
                         // Actualizar Funcionario
                         cells[cellIndex++].textContent = getFuncionarioText(data.data.funcionario_asignado);
 
                         // Actualizar Descripción
                         cells[cellIndex++].innerHTML = `
-                            <div class="descripcion-preview" onclick="openDescripcionModal('${escapeHtml(data.data.descripcion)}', '${escapeHtml(data.data.nombre_solicitante)}', '${formatDate(data.data.fecha_ingreso)}', '${data.data.numero_ingreso}', '${escapeHtml(data.data.correo_solicitante)}', '${escapeHtml(getDepartamentoText(data.data.depto_solicitante))}', '${escapeHtml(getFuncionarioText(data.data.funcionario_asignado))}', 'tablaSolicitudes')">
+                            <div class="descripcion-preview" onclick="openDescripcionModal('${escapeHtml(data.data.descripcion)}', '${escapeHtml(data.data.nombre_solicitante)}', '${formatDate(data.data.fecha_ingreso_au)}', '${data.data.numero_ingreso}', '${escapeHtml(data.data.correo_solicitante)}', '${escapeHtml(getDepartamentoText(data.data.depto_solicitante))}', '${escapeHtml(getFuncionarioText(data.data.funcionario_asignado))}', 'tablaSolicitudes')">
                                 ${truncateText(data.data.descripcion, 20)}
                                 ${data.data.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
                             </div>
@@ -1267,8 +1274,13 @@
         // Fecha
         const fechaCell = document.createElement('td');
         fechaCell.classList.add('fechaTable');
-        fechaCell.textContent = formatDate(solicitud.fecha_ingreso);
+        fechaCell.textContent = formatDate(solicitud.fecha_ingreso_au);
         row.appendChild(fechaCell);
+
+        // Departamento
+        const deptoCell = document.createElement('td');
+        deptoCell.textContent = solicitud.depto_solicitante_text;
+        row.appendChild(deptoCell);
 
         // Recepción
         const recepcionCell = document.createElement('td');
@@ -1290,25 +1302,22 @@
         row.appendChild(numDocCell);
 
         // Correo
-        const correoCell = document.createElement('td');
-        if (solicitud.correo_solicitante) {
-            correoCell.textContent = solicitud.correo_solicitante;
-            correoCell.setAttribute('data-order', solicitud.correo_solicitante.toLowerCase());
-        } else {
-            correoCell.innerHTML = `
-                <div class="icon-container">
-                    <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
-                    <div class="tooltip">Sin Correo</div>
-                </div>
-            `;
-            correoCell.setAttribute('data-order', 'zzz');
-        }
-        row.appendChild(correoCell);
+        // const correoCell = document.createElement('td');
+        // if (solicitud.correo_solicitante) {
+        //     correoCell.textContent = solicitud.correo_solicitante;
+        //     correoCell.setAttribute('data-order', solicitud.correo_solicitante.toLowerCase());
+        // } else {
+        //     correoCell.innerHTML = `
+        //         <div class="icon-container">
+        //             <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
+        //             <div class="tooltip">Sin Correo</div>
+        //         </div>
+        //     `;
+        //     correoCell.setAttribute('data-order', 'zzz');
+        // }
+        // row.appendChild(correoCell);
 
-        // Departamento
-        const deptoCell = document.createElement('td');
-        deptoCell.textContent = solicitud.depto_solicitante_text;
-        row.appendChild(deptoCell);
+        
 
         // Funcionario
         const funcionarioCell = document.createElement('td');
@@ -1320,10 +1329,9 @@
         const descripcionDiv = document.createElement('div');
         descripcionDiv.classList.add('descripcion-preview');
         descripcionDiv.onclick = function () {
-            openDescripcionModal(
+            openBNUPDescripcionModal(
                 escapeHtml(solicitud.descripcion),
-                escapeHtml(solicitud.nombre_solicitante),
-                formatDate(solicitud.fecha_ingreso),
+                formatDate(solicitud.fecha_ingreso_au),
                 solicitud.numero_ingreso,
                 escapeHtml(solicitud.correo_solicitante),
                 escapeHtml(solicitud.depto_solicitante_text),
@@ -1331,6 +1339,7 @@
                 'tablaSolicitudes'
             );
         };
+        
         descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
         if (solicitud.descripcion.length > 1) {
             descripcionDiv.innerHTML += `

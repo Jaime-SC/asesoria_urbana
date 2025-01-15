@@ -8,17 +8,25 @@
         <!-- Botones para abrir modales -->
         <div>
           {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
-            <button style="background-color: #4BBFE0;justify-content: flex-start;width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span>Ingresos</button>
+            <button style="background-color: #4BBFE0; justify-content: flex-start; width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP">
+              <span class="material-symbols-outlined">note_add</span>Ingresar
+            </button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' %}
-            <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
+            <button style="background-color: #E73C45; justify-content: flex-start; width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled>
+              <span class="material-symbols-outlined">delete</span> Eliminar
+            </button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
-            <button style="background-color: #F7EA53;justify-content: flex-start;width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
+            <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled>
+              <span class="material-symbols-outlined">edit</span> Editar
+            </button>
           {% endif %}
         </div>
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
-          <button style="justify-content: flex-start;width: 150px;background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+          <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP">
+            <span class="material-symbols-outlined">query_stats</span> Estadísticas
+          </button>
         {% endif %}
       </div>
 
@@ -31,11 +39,13 @@
               {% csrf_token %}
               <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                 <h2>Ingresos</h2>
-                <span class="close"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+                <span class="close">
+                  <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+                </span>
               </div>
               <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
                 <div>
-                  <label>Tipo de Recepción</label>
+                  <label for="tipo_recepcion">Tipo de Recepción</label>
                   <select name="tipo_recepcion" id="tipo_recepcion" required>
                     <option value="" disabled selected>Seleccione un tipo de recepción</option>
                     {% for tipo in tipos_recepcion %}
@@ -43,19 +53,19 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div id="memoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
+                <div id="memoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
                   <label for="num_memo">N° Doc:</label>
                   <input type="number" name="num_memo" id="num_memo" />
                 </div>
-                <div id="correoFields" class="form-group" style="display: block;margin-bottom: 0;display: flex;flex-direction: column;">
+                <div id="correoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
                   <label for="correoSolicitante">Ingrese Correo:</label>
                   <input type="email" name="correo_solicitante" id="correoSolicitante" />
                 </div>
-                <!-- Nuevo Campo: Fecha de Egreso (Opcional) -->
+                <!-- Nuevo Campo: Fecha -->
                 <div class="form-group">
-                  <label for="fecha_de_egreso">Fecha </label>
-                  <input type="date" name="fecha_de_egreso" id="fecha_de_egreso" />
-                </div>                
+                  <label for="fecha_salida_solicitante">Fecha</label>
+                  <input type="date" name="fecha_salida_solicitante" id="fecha_salida_solicitante" />
+                </div>
               </div>
 
               <div class="form-group" style="display: flex; justify-content: space-between;">
@@ -64,8 +74,8 @@
                   <input type="number" name="numero_ingreso" id="numeroIngreso" required />
                 </div>
                 <div class="form-group">
-                  <label for="fecha">Fecha de ingreso</label>
-                  <input type="date" name="fecha_ingreso" id="fecha" required />
+                  <label for="fecha_ingreso_au">Fecha de Ingreso</label>
+                  <input type="date" name="fecha_ingreso_au" id="fecha_ingreso_au" required />
                 </div>
                 <div class="btn-container">
                   <button type="button" id="openFileModal" class="btn">Adjuntar archivo</button>
@@ -89,8 +99,8 @@
                 </div>
                 <!-- Contenedor para agregar nuevo departamento -->
                 <div id="newDeptoContainer" style="display: none; justify-content: space-between; align-items: center;">
-                  <input type="text" id="newDeptoInput" placeholder="Ingrese nuevo departamento" style="max-width: 20rem;min-width: 20rem;" class="standardize-input"/>
-                  <div style="display: flex;width: 100%;justify-content: space-between;">
+                  <input type="text" id="newDeptoInput" placeholder="Ingrese nuevo departamento" style="max-width: 20rem; min-width: 20rem;" class="standardize-input" />
+                  <div style="display: flex; width: 100%; justify-content: space-between;">
                     <button type="button" id="saveNewDeptoButton" class="btn btn-icon" style="margin-left: 10px;">
                       <span class="material-symbols-outlined">save</span>
                     </button>
@@ -110,13 +120,15 @@
                     <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
                   {% endfor %}
                 </select>
-              </div>            
+              </div>
 
+              <!-- Eliminado: Campo de Nombre del Solicitante
               {% comment %} <div class="form-group">
                 <label for="nombreSolicitante">Nombre del Solicitante</label>
                 <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" class="standardize-input" required />
               </div> {% endcomment %}
-              
+              -->
+
               <div class="form-group">
                 <label for="funcionarioAsignado">Funcionario asignado a BNUP</label>
                 <select name="funcionario_asignado" id="funcionarioAsignado" required>
@@ -142,7 +154,7 @@
           <div class="tittleTable">
             <div class="searchContainer">
               <span class="material-symbols-outlined">search</span>
-              <input style="width: 500px;margin-top: 0px;border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
+              <input style="width: 500px; margin-top: 0px; border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
             </div>
             <div id="paginationSolicitudes" class="pagination"></div>
           </div>
@@ -154,13 +166,11 @@
                     <input type="checkbox" id="selectAll" />
                   </th>
                 {% endif %}
-                <th class="shadow nIngre" data-type="number">Nº Ingre</th>
-                <th class="shadow" data-type="date">Fecha</th>
-                <th class="shadow" data-type="string">Recepción</th>
+                <th class="shadow nIngre" data-type="number">Nº Ingreso</th>
+                <th class="shadow" data-type="date">Fecha Ingreso</th>
+                <th class="shadow" data-type="string">Solicitante</th>
+                <th class="shadow" data-type="string">Tipo Recepción</th>
                 <th class="shadow" data-type="number">N° Doc</th>
-                {% comment %} <th class="shadow" data-type="string">Correo</th> {% endcomment %}
-                {% comment %} <th class="shadow" data-type="string">Solicitante</th> {% endcomment %}
-                <th class="shadow" data-type="string">Departamento</th>
                 <th class="shadow" data-type="string">Funcionario</th>
                 <th class="shadow" data-type="string">Descripción</th>
                 <th class="shadow" data-type="string">Entrada</th>
@@ -176,7 +186,8 @@
                     </td>
                   {% endif %}
                   <td>{{ solicitud.numero_ingreso }}</td>
-                  <td class="fechaTable">{{ solicitud.fecha_ingreso|date:'d/m/Y' }}</td>
+                  <td class="fechaTable">{{ solicitud.fecha_ingreso_au|date:'d/m/Y' }}</td>
+                  <td>{{ solicitud.depto_solicitante.nombre }}</td>
                   <td>{{ solicitud.tipo_recepcion.tipo }}</td>
                   <td>
                     {% if solicitud.numero_memo %}
@@ -188,34 +199,25 @@
                       </div>
                     {% endif %}
                   </td>
-                  {% comment %} <td data-order="{% if solicitud.correo_solicitante %}{{ solicitud.correo_solicitante|lower }}{% else %}zzz{% endif %}">
-                    {% if solicitud.correo_solicitante %}
-                      {{ solicitud.correo_solicitante }}
-                    {% else %}
-                      <div class="icon-container">
-                        <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
-                        <div class="tooltip">Sin Correo</div>
-                      </div>
-                    {% endif %}
-                  </td> {% endcomment %}
-                  <td>{{ solicitud.depto_solicitante.nombre }}</td>
                   <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                   <td>
-                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.nombre_solicitante|escapejs }}', '{{ solicitud.fecha_ingreso|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
+                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.fecha_ingreso_au|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
-                          <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
+                        <span class="descripcion-icon">
+                          <span class="material-symbols-outlined">preview</span>
+                        </span>
                       {% endif %}
                     </div>
                   </td>
-                  <td style="display: flex;justify-content: center; border-inline: 0;">
+                  <td style="display: flex; justify-content: center; border-inline: 0;">
                     {% if solicitud.archivo_adjunto_ingreso %}
-                      <div class="icon-container">                        
+                      <div class="icon-container">
                         <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;">
                           <button class="buttonLogin buttonPreview">
                             <span class="material-symbols-outlined bell">find_in_page</span>
                           </button>
-                        </a>                        
+                        </a>
                         <div class="tooltip">Ver archivo de ingreso</div>
                       </div>
                     {% else %}
@@ -228,7 +230,7 @@
                   <td>
                     <div class="icon-container">
                       <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
-                        {% if solicitud.numero_salida and solicitud.archivo_adjunto_salida %}
+                        {% if solicitud.salidas.all %}
                           <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
                         {% else %}
                           <button class="buttonLogin buttonSubirSalida">
@@ -242,7 +244,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="11">No hay solicitudes</td>
+                  <td colspan="{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}10{% else %}9{% endif %}">No hay solicitudes</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -257,9 +259,11 @@
 <!-- Modal para descripción -->
 <div id="descripcionModal" class="modal">
   <div class="modal-content">
-    <div style="display: flex;align-items: center;justify-content: space-between;">
-      <h2 for="archivo_adjunto_salida">Vista Previa</h2>
-      <span class="close" onclick="closeDescripcionModal()"><span class="material-symbols-outlined" style="color: #E73C45;font-size: 40px;">close</span></span>
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <h2>Vista Previa</h2>
+      <span class="close" onclick="closeDescripcionModal()">
+        <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+      </span>
     </div>
     <div class="modal-info" style="font-family: 'Space Mono';">
       <div class="modal-field modal-field-field">
@@ -268,9 +272,11 @@
       <div class="modal-field modal-field-field">
         <strong>Fecha de Ingreso:</strong> <span id="fechaIngreso"></span>
       </div>
+      <!-- Eliminado: Nombre del Solicitante
       <div class="modal-field modal-field-field">
         <strong>Nombre del Solicitante:</strong> <span id="nombreCompleto"></span>
       </div>
+      -->
       <!-- Condicional para mostrar u ocultar el correo -->
       <div class="modal-field modal-field-field" id="correoField" style="display: none;">
         <strong>Correo del Solicitante:</strong> <span id="correo_solicitante"></span>
@@ -296,7 +302,9 @@
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <label for="archivo_adjunto">Adjuntar archivo</label>
-        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+        <span class="close">
+          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+        </span>
       </div>
       <input type="file" id="fileModalInput" class="file" />
 
@@ -323,50 +331,48 @@
           <h2>Salidas Registradas</h2>
         {% endif %}
 
-        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+        <span class="close">
+          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+        </span>
       </div>
-      <div style="display: flex;justify-content: space-between;gap: 50px;">
+      <div style="display: flex; justify-content: space-between; gap: 50px;">
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
-        <!-- Formulario para crear salidas -->
-        <!-- ... -->
+          <!-- Formulario para crear salidas -->
+          <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
-          {% csrf_token %}
+            <!-- Sección de campos de salida (siempre visible) -->
+            <div id="salidaFields" style="margin-top: 10px; width: 500px;">
+              <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <!-- Campos del formulario -->
+                <div class="form-group" style="width: 48%;">
+                  <label for="numero_salida">N° de Salida</label>
+                  <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
+                </div>
 
-          <!-- Sección de campos de salida (siempre visible) -->
-          <div id="salidaFields" style="margin-top: 10px;width: 500px;">
-            <div style="display: flex; justify-content: space-between; gap: 10px;">
-              <!-- Campos del formulario -->
-              <div class="form-group" style="width: 48%;">
-                <label for="numero_salida">N° de Salida</label>
-                <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
+                <div class="form-group" style="width: 48%;">
+                  <label for="fecha_salida">Fecha de Salida</label>
+                  <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="archivo_adjunto_salida">Adjuntar archivo</label>
+                <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" class="file" required />
               </div>
 
-              <div class="form-group" style="width: 48%;">
-                <label for="fecha_salida">Fecha de Salida</label>
-                <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="archivo_adjunto_salida">Adjuntar archivo</label>
-              <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" class="file" required />
-            </div>
+              <!-- Campo oculto para el ID de la solicitud -->
+              <input type="hidden" name="solicitud_id" id="solicitud_id" />
 
-            <!-- Campo oculto para el ID de la solicitud -->
-            <input type="hidden" name="solicitud_id" id="solicitud_id" />
-
-            <!-- Botón de guardar -->
-            <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
-          </div>
-        </form>
+              <!-- Botón de guardar -->
+              <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+          </form>
         {% endif %}
 
-
         <!-- Tabla para mostrar las salidas asociadas -->
-        <div style="display: flex;flex-direction: column;justify-content: space-between;">
-          <div style="margin: 0px;width: -webkit-fill-available;">
-            <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
-              {% comment %} <h3 style="width: -webkit-fill-available;">Salidas Registradas</h3> {% endcomment %}
+        <div style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="margin: 0px; width: -webkit-fill-available;">
+            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
               <!-- Campo de búsqueda -->
               <div class="search-container" style="width: -webkit-fill-available;">
                 <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
@@ -375,9 +381,9 @@
             <table style="width: 350px;" id="tablaSalidas" class="table table-bordered">
               <thead>
                 <tr>
-                  <th style="border: 0px;border-radius: 10px 0px 0px;" data-type="number">Nº Salida</th>
+                  <th style="border: 0px; border-radius: 10px 0px 0px;" data-type="number">Nº Salida</th>
                   <th data-type="date">Fecha</th>
-                  <th style="border: 0px;border-radius: 0px 10px 0px 0px;" data-type="text">Adjunto</th>
+                  <th style="border: 0px; border-radius: 0px 10px 0px 0px;" data-type="text">Adjunto</th>
                 </tr>
               </thead>
               <tbody>
@@ -405,13 +411,14 @@
         </span>
       </div>
       
+      
       <!-- Campo oculto para el ID de la solicitud -->
       <input type="hidden" name="solicitud_id" id="edit_solicitud_id" />
 
       <!-- Campos del formulario, similares al formulario de creación -->
       <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
         <div>
-          <label>Tipo de Recepción</label>
+          <label for="edit_tipo_recepcion">Tipo de Recepción</label>
           <select name="tipo_recepcion" id="edit_tipo_recepcion" required>
             <option value="" disabled selected>Seleccione un tipo de recepción</option>
             {% for tipo in tipos_recepcion %}
@@ -419,13 +426,18 @@
             {% endfor %}
           </select>
         </div>
-        <div id="edit_memoFields" class="form-group" style="display: block; margin-bottom: 0; flex-direction: column;">
+        <div id="edit_memoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
           <label for="edit_num_memo">Ingrese N° Doc:</label>
           <input type="number" name="num_memo" id="edit_num_memo" />
         </div>
-        <div id="edit_correoFields" class="form-group" style="display: block; margin-bottom: 0; flex-direction: column;">
+        <div id="edit_correoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
           <label for="edit_correoSolicitante">Ingrese Correo:</label>
           <input type="email" name="correo_solicitante" id="edit_correoSolicitante" />
+        </div>
+        <!-- Nuevo Campo: Fecha de Egreso (Opcional) -->
+        <div class="form-group">
+          <label for="edit_fecha_salida_solicitante">Fecha</label>
+          <input type="date" name="fecha_salida_solicitante" id="edit_fecha_salida_solicitante" />
         </div>
       </div>
 
@@ -434,7 +446,13 @@
           <label for="edit_numeroIngreso">N° de Ingreso</label>
           <input type="number" name="numero_ingreso" id="edit_numeroIngreso" required />
         </div>
+        <div class="form-group">
+          <label for="edit_fecha_ingreso_au">Fecha de Ingreso</label>
+          <input type="date" name="fecha_ingreso_au" id="edit_fecha_ingreso_au" required />
+        </div>
       </div>
+      <!-- Nuevo Campo: Fecha de Ingreso -->
+      
 
       <div class="form-group">
         <label for="edit_depto_solicitante">Departamento Solicitante</label>
@@ -457,23 +475,15 @@
         </select>
       </div>
 
-      <!-- Nuevo Campo: Fecha de Egreso (Opcional) -->
-      <div class="form-group">
-        <label for="edit_fecha_de_egreso">Fecha de Egreso (opcional)</label>
-        <input type="date" name="fecha_de_egreso" id="edit_fecha_de_egreso" />
-      </div>
+      
 
+      <!-- Eliminado: Campo de Nombre del Solicitante
       <div class="form-group">
         <label for="edit_nombreSolicitante">Nombre del Solicitante</label>
         <input type="text" name="nombre_solicitante" id="edit_nombreSolicitante" placeholder="Nombre y apellido" class="standardize-input" required />
       </div>
-      
-      <div class="form-group">
-        <label for="edit_fecha">Fecha</label>
-        <input type="date" name="fecha_ingreso" id="edit_fecha" required />
-      </div>
+      -->
 
-      <!-- Funcionario asignado (editable solo para ADMIN) -->
       <div class="form-group">
         <label for="edit_funcionarioAsignado">Funcionario asignado a BNUP</label>
         <select name="funcionario_asignado" id="edit_funcionarioAsignado" required {% if tipo_usuario != "ADMIN" %}disabled{% endif %}>
