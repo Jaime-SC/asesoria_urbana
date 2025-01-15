@@ -1,5 +1,4 @@
 env/
-bnup/__pycache__/
 informe_terreno/__pycache__/
 patente_alcohol/__pycache__/
 principal/__pycache__/
@@ -12,8 +11,6 @@ principal/__pycache__/apps.cpython-312.pyc
 principal/__pycache__/models.cpython-312.pyc
 principal/__pycache__/views.cpython-312.pyc
 principal/migrations/__pycache__/__init__.cpython-312.pyc
-bnup/migrations/__pycache__/__init__.cpython-312.pyc
-bnup/migrations/__pycache__/0001_initial.cpython-312.pyc
 asesoriaUrbana/__pycache__/
 asesoriaUrbana/__pycache__/__init__.cpython-312.pyc
 asesoriaUrbana/__pycache__/settings.cpython-312.pyc
