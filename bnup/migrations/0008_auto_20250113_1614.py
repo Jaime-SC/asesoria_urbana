@@ -4,6 +4,13 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def create_default_tipo_solicitud(apps, schema_editor):
+    TipoSolicitud = apps.get_model('bnup', 'TipoSolicitud')
+    # Verificar si ya existe el registro para evitar duplicados
+    if not TipoSolicitud.objects.filter(id=13012025).exists():
+        TipoSolicitud.objects.create(id=13012025, tipo='Tipo de Solicitud Predeterminado')
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -18,6 +25,7 @@ class Migration(migrations.Migration):
                 ('tipo', models.CharField(max_length=100, unique=True)),
             ],
         ),
+        migrations.RunPython(create_default_tipo_solicitud, migrations.RunPython.noop),
         migrations.AddField(
             model_name='solicitudbnup',
             name='fecha_egreso',
