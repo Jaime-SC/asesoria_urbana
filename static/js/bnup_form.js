@@ -826,7 +826,7 @@
         const newDeptoContainer = document.getElementById('newDeptoContainer');
         const newDeptoInput = document.getElementById('newDeptoInput');
         const saveNewDeptoButton = document.getElementById('saveNewDeptoButton');
-        const cancelNewDeptoButton = document.getElementById('cancelNewDeptoButton');
+        const cancelNewDeptoButton = document.getElementById('cancelNewDeptoButton');editAddDeptoButton
 
         if (!addDeptoButton || !deptoSelect || !newDeptoContainer || !newDeptoInput || !saveNewDeptoButton || !cancelNewDeptoButton) {
             console.error('Elementos para la funcionalidad de nuevo departamento no encontrados.');

@@ -1319,13 +1319,19 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .btn-container {
   display: flex;
+  align-items: flex-end;
+  margin-bottom: 15px;
+  width: 15%;
+  justify-content: center;
+
 }
 
 
 .btn-container .btn {
   padding: 5px;
   font-size: 15px;
-  width: -webkit-fill-available;
+  width: 60%;
+  height: 2.2rem;
   margin-top: 0px;
 }
 
@@ -1333,9 +1339,9 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   width: 150px !important;
 } */
 
-.form-group #numeroIngreso {
+/* .form-group #numeroIngreso {
   width: 150px;
-}
+} */
 
 .input-group-sm span {
   color: ghostwhite;

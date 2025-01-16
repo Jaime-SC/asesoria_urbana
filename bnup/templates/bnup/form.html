@@ -44,41 +44,51 @@
                 </span>
               </div>
               <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
-                <div>
+                <div style="width: 33%">
                   <label for="tipo_recepcion">Tipo de Recepción</label>
                   <select name="tipo_recepcion" id="tipo_recepcion" required>
-                    <option value="" disabled selected>Seleccione un tipo de recepción</option>
+                    <option value="" disabled selected>Seleccione</option>
                     {% for tipo in tipos_recepcion %}
                       <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
                     {% endfor %}
                   </select>
                 </div>
-                <div id="memoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
+                <div id="memoFields" class="form-group" style="display: block;margin-bottom: 0px;flex-direction: column;width: 20%;">
                   <label for="num_memo">N° Doc:</label>
                   <input type="number" name="num_memo" id="num_memo" />
                 </div>
-                <div id="correoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
+                <div id="correoFields" class="form-group" style="display: none;margin-bottom: 0px;flex-direction: column;width: 33%;">
                   <label for="correoSolicitante">Ingrese Correo:</label>
                   <input type="email" name="correo_solicitante" id="correoSolicitante" />
                 </div>
                 <!-- Nuevo Campo: Fecha -->
-                <div class="form-group">
+                <div class="form-group" style="width: 33%;">
                   <label for="fecha_salida_solicitante">Fecha</label>
                   <input type="date" name="fecha_salida_solicitante" id="fecha_salida_solicitante" />
                 </div>
               </div>
 
               <div class="form-group" style="display: flex; justify-content: space-between;">
-                <div>
+                <div style="width: 20%;">
                   <label for="numeroIngreso">N° de Ingreso</label>
                   <input type="number" name="numero_ingreso" id="numeroIngreso" required />
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="width: 27%;">
                   <label for="fecha_ingreso_au">Fecha de Ingreso</label>
                   <input type="date" name="fecha_ingreso_au" id="fecha_ingreso_au" required />
                 </div>
+                <!-- Nuevo Campo: Tipo de Solicitud -->
+                <div class="form-group" style="width: 27%;">
+                  <label for="tipo_solicitud">Tipo de Solicitud</label>
+                  <select name="tipo_solicitud" id="tipo_solicitud" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    {% for tipo in tipos_solicitud %}
+                      <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
                 <div class="btn-container">
-                  <button type="button" id="openFileModal" class="btn">Adjuntar archivo</button>
+                  <button type="button" id="openFileModal" class="btn"><span class="material-symbols-outlined" style="color: ghostwhite;">attach_file</span></button>
                   <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" required /> <!-- Mantén el input en el formulario pero oculto -->
                 </div>
               </div>
@@ -87,7 +97,7 @@
                 <label for="depto_solicitante">Solicitante</label>
                 <div style="display: flex; align-items: center;">
                   <select name="depto_solicitante" id="depto_solicitante" style="max-width: 20rem;" required>
-                    <option value="" disabled selected>Seleccione un Departamento</option>
+                    <option value="" disabled selected>Seleccione</option>
                     {% for depto in departamentos %}
                       <option value="{{ depto.id }}">{{ depto.nombre }}</option>
                     {% endfor %}
@@ -110,29 +120,10 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Nuevo Campo: Tipo de Solicitud -->
               <div class="form-group">
-                <label for="tipo_solicitud">Tipo de Solicitud</label>
-                <select name="tipo_solicitud" id="tipo_solicitud" required>
-                  <option value="" disabled selected>Seleccione un Tipo de Solicitud</option>
-                  {% for tipo in tipos_solicitud %}
-                    <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-
-              <!-- Eliminado: Campo de Nombre del Solicitante
-              {% comment %} <div class="form-group">
-                <label for="nombreSolicitante">Nombre del Solicitante</label>
-                <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" class="standardize-input" required />
-              </div> {% endcomment %}
-              -->
-
-              <div class="form-group">
-                <label for="funcionarioAsignado">Funcionario asignado a BNUP</label>
+                <label for="funcionarioAsignado">Funcionario asignado</label>
                 <select name="funcionario_asignado" id="funcionarioAsignado" required>
-                  <option value="" disabled selected>Seleccione un Funcionario</option>
+                  <option value="" disabled selected>Seleccione</option>
                   {% for funcionario in funcionarios %}
                     <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
                   {% endfor %}
@@ -420,7 +411,7 @@
         <div>
           <label for="edit_tipo_recepcion">Tipo de Recepción</label>
           <select name="tipo_recepcion" id="edit_tipo_recepcion" required>
-            <option value="" disabled selected>Seleccione un tipo de recepción</option>
+            <option value="" disabled selected>Seleccione</option>
             {% for tipo in tipos_recepcion %}
               <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
             {% endfor %}
@@ -457,7 +448,7 @@
       <div class="form-group">
         <label for="edit_depto_solicitante">Departamento Solicitante</label>
         <select name="depto_solicitante" id="edit_depto_solicitante" required>
-          <option value="" disabled selected>Seleccione un Departamento</option>
+          <option value="" disabled selected>Seleccione</option>
           {% for depto in departamentos %}
             <option value="{{ depto.id }}">{{ depto.nombre }}</option>
           {% endfor %}
@@ -468,7 +459,7 @@
       <div class="form-group">
         <label for="edit_tipo_solicitud">Tipo de Solicitud</label>
         <select name="tipo_solicitud" id="edit_tipo_solicitud" required>
-          <option value="" disabled selected>Seleccione un Tipo de Solicitud</option>
+          <option value="" disabled selected>Seleccione</option>
           {% for tipo in tipos_solicitud %}
             <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
           {% endfor %}
@@ -487,7 +478,7 @@
       <div class="form-group">
         <label for="edit_funcionarioAsignado">Funcionario asignado a BNUP</label>
         <select name="funcionario_asignado" id="edit_funcionarioAsignado" required {% if tipo_usuario != "ADMIN" %}disabled{% endif %}>
-          <option value="" disabled selected>Seleccione un Funcionario</option>
+          <option value="" disabled selected>Seleccione</option>
           {% for funcionario in funcionarios %}
             <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
           {% endfor %}
