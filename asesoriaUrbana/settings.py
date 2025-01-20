@@ -159,3 +159,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
 SASS_OUTPUT_DIR = 'css'
+
+
+# settings.py
+
+# Tamaño máximo de la solicitud (en bytes)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
+
+# Tamaño máximo de archivo individual (en bytes)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600

@@ -529,7 +529,7 @@
                 Swal.fire({
                     heightAuto: false,
                     scrollbarPadding: false,
-                    title: '¿Desea confirmar la Solicitud de BNUP?',
+                    title: '¿Desea confirmar la Solicitud?',
                     text: "Se guardará la solicitud junto con el archivo adjunto.",
                     icon: 'warning',
                     showCancelButton: true,
@@ -829,7 +829,7 @@
         const cancelNewDeptoButton = document.getElementById('cancelNewDeptoButton');
 
         if (!addDeptoButton || !deptoSelect || !newDeptoContainer || !newDeptoInput || !saveNewDeptoButton || !cancelNewDeptoButton) {
-            console.error('Elementos para la funcionalidad de nuevo departamento no encontrados.');
+            console.error('Elementos para la funcionalidad de nuevo solicitante no encontrados.');
             return;
         }
 
@@ -850,7 +850,7 @@
                     scrollbarPadding: false,
                     icon: 'warning',
                     title: 'Nombre inválido',
-                    text: 'Por favor, ingrese un nombre para el nuevo departamento.',
+                    text: 'Por favor, ingrese un nombre para el nuevo solicitante.',
                 });
                 return;
             }
@@ -886,8 +886,8 @@
                             heightAuto: false,
                             scrollbarPadding: false,
                             icon: 'success',
-                            title: 'Departamento agregado',
-                            text: 'El nuevo departamento ha sido agregado y seleccionado.',
+                            title: 'Solicitante agregado',
+                            text: 'El nuevo solicitante ha sido agregado y seleccionado.',
                             timer: 2000,
                             showConfirmButton: false,
                         });
@@ -897,7 +897,7 @@
                             scrollbarPadding: false,
                             icon: 'error',
                             title: 'Error',
-                            text: data.error || 'Ocurrió un error al agregar el departamento.',
+                            text: data.error || 'Ocurrió un error al agregar el solicitante.',
                         });
                     }
                 })
@@ -908,7 +908,7 @@
                         scrollbarPadding: false,
                         icon: 'error',
                         title: 'Error',
-                        text: 'Ocurrió un error al agregar el departamento.',
+                        text: 'Ocurrió un error al agregar el solicitante.',
                     });
                 });
         });

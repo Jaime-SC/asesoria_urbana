@@ -33,11 +33,11 @@ def bnup_form(request):
 
     if request.method == "POST":
         if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
-            return JsonResponse({"success": False, "error": "No tiene permiso para crear solicitudes de BNUP."})
+            return JsonResponse({"success": False, "error": "No tiene permiso para crear solicitudes."})
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
-        numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" else None
+        numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" and tipo_solicitud_id != "10" else None
         correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
         # nombre_solicitante = request.POST.get("nombre_solicitante")  # Eliminado
@@ -467,7 +467,7 @@ def add_departamento(request):
 
         # Verificar si el departamento ya existe
         if Departamento.objects.filter(nombre__iexact=nombre).exists():
-            return JsonResponse({"success": False, "error": "El departamento ya existe."})
+            return JsonResponse({"success": False, "error": "El solicitante ya existe."})
 
         # Crear el nuevo departamento
         departamento = Departamento(nombre=nombre)

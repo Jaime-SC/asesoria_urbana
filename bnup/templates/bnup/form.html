@@ -273,11 +273,6 @@
       <div class="modal-field modal-field-field">
         <strong>Fecha de Ingreso:</strong> <span id="fechaIngreso"></span>
       </div>
-      <!-- Eliminado: Nombre del Solicitante
-      <div class="modal-field modal-field-field">
-        <strong>Nombre del Solicitante:</strong> <span id="nombreCompleto"></span>
-      </div>
-      -->
       <!-- Condicional para mostrar u ocultar el correo -->
       <div class="modal-field modal-field-field" id="correoField" style="display: none;">
         <strong>Correo del Solicitante:</strong> <span id="correo_solicitante"></span>
@@ -406,7 +401,7 @@
     <form id="editBNUPForm" method="post" action="{% url 'edit_bnup_record' %}" enctype="multipart/form-data">
       {% csrf_token %}
       <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-        <h2>Editar Solicitud de BNUP</h2>
+        <h2>Editar Solicitud</h2>
         <span class="close">
           <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
         </span>
@@ -486,7 +481,7 @@
       -->
 
       <div class="form-group">
-        <label for="edit_funcionarioAsignado">Funcionario asignado a BNUP</label>
+        <label for="edit_funcionarioAsignado">Funcionario asignado</label>
         <select name="funcionario_asignado" id="edit_funcionarioAsignado" required {% if tipo_usuario != "ADMIN" %}disabled{% endif %}>
           <option value="" disabled selected>Seleccione</option>
           {% for funcionario in funcionarios %}
