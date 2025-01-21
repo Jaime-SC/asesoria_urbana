@@ -202,14 +202,14 @@
                   </td>
                   <td>{{ solicitud.funcionario_asignado.nombre }}</td>
                   <td>
-                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.fecha_ingreso_au|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
+                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.fecha_ingreso_au|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
                         <span class="descripcion-icon">
                           <span class="material-symbols-outlined">preview</span>
                         </span>
                       {% endif %}
-                    </div>
+                    </div>                    
                   </td>
                   <td style="display: flex; justify-content: center; border-inline: 0;">
                     {% if solicitud.archivo_adjunto_ingreso %}
@@ -278,7 +278,7 @@
         <strong>Correo del Solicitante:</strong> <span id="correo_solicitante"></span>
       </div>
       <div class="modal-field modal-field-field">
-        <strong>Departamento Solicitante:</strong> <span id="deptoSolicitante"></span>
+        <strong>Solicitante:</strong> <span id="deptoSolicitante"></span>
       </div>
       <div class="modal-field modal-field-field">
         <strong>Funcionario Asignado:</strong> <span id="funcionario_asignado"></span>
@@ -291,6 +291,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Modal para adjuntar archivo -->
 <div id="fileModal" class="modal">

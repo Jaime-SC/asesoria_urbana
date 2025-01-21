@@ -158,7 +158,7 @@ def edit_bnup_record(request):
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
-        numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" else None
+        numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" and tipo_solicitud_id != "10" else None
         correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
         # nombre_solicitante = request.POST.get("nombre_solicitante")  # Eliminado
