@@ -161,6 +161,22 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     // Inicializar paginación y ordenamiento
     paginateTable(tableId, paginationId, rowsPerPage);
     attachSortHandlers(tableId);
+
+    // Ordenar por defecto la columna 'Nº Ingreso' de mayor a menor
+    const headers = table.querySelectorAll('thead th');
+    let sortColumnIndex = -1;
+
+    headers.forEach((header, index) => {
+        if (header.textContent.trim() === 'Nº Ingreso') {
+            sortColumnIndex = index;
+        }
+    });
+
+    if (sortColumnIndex !== -1) {
+        sortTable(table, sortColumnIndex, 'number', false); // false para descendente
+        // Actualizar el indicador de ordenamiento en el encabezado
+        headers[sortColumnIndex].classList.add('descending');
+    }
 }
 
 /**

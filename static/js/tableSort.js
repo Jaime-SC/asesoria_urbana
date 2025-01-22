@@ -1,9 +1,6 @@
-// tableSort.js
-
 /**
  * Abre el modal de descripción con los datos proporcionados.
  * @param {string} descripcion - El texto de la descripción.
- * @param {string} nombre - El nombre del solicitante.
  * @param {string} fecha - La fecha de la solicitud.
  * @param {string} numero_ingreso - El número de ingreso.
  * @param {string} correo_solicitante - El correo del solicitante.
@@ -11,10 +8,9 @@
  * @param {string} funcionario_asignado - El funcionario asignado.
  * @param {string} tablaOrigen - El identificador de la tabla de origen.
  */
-window.openDescripcionModal = function (descripcion, nombre, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
+window.openDescripcionModal = function (descripcion, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
     const modal = document.getElementById('descripcionModal');
     const descripcionCompleta = document.getElementById('descripcionCompleta');
-    const nombreCompleto = document.getElementById('nombreCompleto');
     const fechaIngreso = document.getElementById('fechaIngreso');
     const numeroIngresoSpan = document.getElementById('numero_ingreso');
     const correoSolicitante = document.getElementById('correo_solicitante');
@@ -24,7 +20,6 @@ window.openDescripcionModal = function (descripcion, nombre, fecha, numero_ingre
 
     // Rellenar los campos del modal con los datos proporcionados
     descripcionCompleta.textContent = descripcion;
-    nombreCompleto.textContent = nombre;
     fechaIngreso.textContent = fecha;
     numeroIngresoSpan.textContent = numero_ingreso;
     deptoSolicitante.textContent = departamento;

@@ -22,10 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /**
-   * Carga contenido vía AJAX e inicializa scripts específicos de la página.
-   * @param {string} url - La URL desde la cual obtener el contenido.
-   * @param {Function} [callback] - Función de devolución de llamada opcional para ejecutar después de cargar el contenido.
-   */
+ * Carga contenido vía AJAX e inicializa scripts específicos de la página.
+ * @param {string} url - La URL desde la cual obtener el contenido.
+ * @param {Function} [callback] - Función de devolución de llamada opcional para ejecutar después de cargar el contenido.
+ */
   function loadContent(url, callback) {
     fetch(url)
       .then(response => response.text())
@@ -63,12 +63,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
               });
 
-              // Si se encontró la columna, ordenar la tabla inicialmente
+              // Si se encontró la columna, ordenar la tabla inicialmente de mayor a menor
               if (columnIndex !== -1) {
-                sortTable(table, columnIndex, 'number', true);
+                sortTable(table, columnIndex, 'number', false); // Orden descendente
                 // Añadir indicador visual de ordenamiento al encabezado
                 headers.forEach(h => h.classList.remove('ascending', 'descending'));
-                headers[columnIndex].classList.add('ascending');
+                headers[columnIndex].classList.add('descending'); // Indicador descendente
               }
 
               // Elimina la clase 'hidden-table' después de inicializar la tabla
@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
+
 
   /**
    * Cambia el color de fondo de los detalles de la tarjeta.

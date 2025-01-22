@@ -14,22 +14,22 @@
             <a href="{% url 'bnup_form' %}" data-content="BNUP">Ingresos y Salidas</a>
           </li>
         {% endif %}
-        <li>
+        {% comment %} <li>
           <a href="{% url 'patente_form' %}" data-content="PatenteAlcohol">Patente de Alcohol</a>
-        </li>
-        <li>
+        </li> {% endcomment %}
+        {% comment %} <li>
           <a href="{% url 'informe_form' %}" data-content="InformeTerreno">Informe de Terreno</a>
-        </li>
+        </li> {% endcomment %}
         {% if user.is_authenticated %}
-          <li>
+          {% comment %} <li>
             <a href="#" data-content="PortalTransparencia">Portal de Transparencia</a>
-          </li>
+          </li> {% endcomment %}
         {% endif %}
 
         {% if user.is_authenticated %}
-          <li>
+          {% comment %} <li>
             <a style="border-radius: 0px 10px 0px 0px;" href="#" data-content="mapoteca">Mapoteca</a>
-          </li>
+          </li> {% endcomment %}
         {% endif %}
       </ul>
     </div>
