@@ -232,11 +232,7 @@
                     <div class="icon-container">
                       <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
                         {% if solicitud.salidas.all %}
-                          <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;">
-                            <button class="buttonLogin buttonPreview" style="background-color: #bfff00;">
-                              <span class="material-symbols-outlined bell">find_in_page</span>
-                            </button>
-                          </a>
+                          <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
                           <div class="tooltip">Ver archivo de salida</div>
                         {% else %}
                           <button class="buttonLogin buttonSubirSalida">
