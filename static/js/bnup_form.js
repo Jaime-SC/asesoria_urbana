@@ -1367,7 +1367,7 @@
             entradaCell.innerHTML = `
                 <div class="icon-container">                        
                     <a href="${solicitud.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
-                        <button class="buttonLogin buttonPreview">
+                        <button class="buttonLogin buttonPreview" style="background-color: #bfff00;">
                             <span class="material-symbols-outlined bell">find_in_page</span>
                         </button>
                     </a>                        
@@ -1393,7 +1393,7 @@
                         <span class="material-symbols-outlined bell">upload_file</span>
                     </button>
                 </a>
-                <div class="tooltip">Ver salidas</div>
+                <div class="tooltip">Subir Salidas</div>
             </div>
         `;
         row.appendChild(salidasCell);
