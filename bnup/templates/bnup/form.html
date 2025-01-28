@@ -120,25 +120,6 @@
                   </div>
                 </div>
               </div>
-
-              
-
-              <!-- Eliminado: Campo de Nombre del Solicitante
-              {% comment %} <div class="form-group">
-                <label for="nombreSolicitante">Nombre del Solicitante</label>
-                <input type="text" name="nombre_solicitante" id="nombreSolicitante" placeholder="Nombre y apellido" class="standardize-input" required />
-              </div> {% endcomment %}
-              -->
-
-              {% comment %} <div class="form-group">
-                <label for="funcionarioAsignado">Funcionario asignado</label>
-                <select name="funcionario_asignado" id="funcionarioAsignado" required>
-                  <option value="" disabled selected>Seleccione</option>
-                  {% for funcionario in funcionarios %}
-                    <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
-                  {% endfor %}
-                </select>
-              </div> {% endcomment %}
               <div class="form-group">
                 <label>Funcionarios asignados</label>
                 <div id="funcionariosContainer">
@@ -188,6 +169,7 @@
                 <th class="shadow" data-type="date">Fecha Ingreso</th>
                 <th class="shadow" data-type="string">Solicitante</th>
                 <th class="shadow" data-type="string">Tipo Recepción</th>
+                <th class="shadow" data-type="string">Tipo Solicitud</th>
                 <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Funcionario</th>
                 <th class="shadow" data-type="string">Descripción</th>
@@ -207,6 +189,7 @@
                   <td class="fechaTable">{{ solicitud.fecha_ingreso_au|date:'d/m/Y' }}</td>
                   <td>{{ solicitud.depto_solicitante.nombre }}</td>
                   <td>{{ solicitud.tipo_recepcion.tipo }}</td>
+                  <td>{{ solicitud.tipo_solicitud.tipo }}</td>
                   <td>
                     {% if solicitud.numero_memo %}
                       {{ solicitud.numero_memo }}
@@ -256,8 +239,10 @@
                     <div class="icon-container">
                       <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
                         {% if solicitud.salidas.all %}
-                          <span style="color: green;" class="material-symbols-outlined">find_in_page</span>
-                          <div class="tooltip">Ver archivo de salida</div>
+                          <button class="buttonLogin buttonPreview" style="background: #bfff00;">
+                            <span class="material-symbols-outlined bell">find_in_page</span>
+                            <div class="tooltip">Ver archivo de salida</div>
+                          </button>
                         {% else %}
                           <button class="buttonLogin buttonSubirSalida">
                             <span class="material-symbols-outlined bell">upload_file</span>
@@ -501,12 +486,12 @@
       <div class="form-group">
         <label>Funcionarios asignados</label>
         <div id="editFuncionariosContainer">
-          <div class="funcionario-select-group">
+          <div class="funcionario-select-group" style="display: flex; align-items: center;">
             <select name="funcionarios_asignados" class="funcionarioSelect" required>
               <option value="" disabled selected>Seleccione</option>
               <!-- Opciones se clonan desde #allFuncionariosOptions -->
             </select>
-            <button type="button" class="addFuncionarioBtn btn btn-icon">
+            <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
               <span class="material-symbols-outlined">add</span>
             </button>
           </div>

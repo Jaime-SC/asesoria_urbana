@@ -66,11 +66,13 @@
             // Crear un nuevo grupo de selección
             const newGroup = document.createElement('div');
             newGroup.classList.add('funcionario-select-group');
+            newGroup.style="display: flex; align-items: center;"
 
             // Crear el nuevo <select>
             const newSelect = document.createElement('select');
             newSelect.name = 'funcionarios_asignados';
             newSelect.classList.add('funcionarioSelect');
+            newSelect.style="max-width: 20rem;";
             newSelect.required = true;
 
             // Añadir la opción por defecto
@@ -99,6 +101,7 @@
             newAddBtn.type = 'button';
             newAddBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
             newAddBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+            newAddBtn.style="margin-left: 10px; padding: 0;";
             newGroup.appendChild(newAddBtn);
 
             // Añadir el nuevo grupo al contenedor
@@ -543,7 +546,7 @@
         function toggleFields() {
             const selectedValue = tipoRecepcionSelect.value;
 
-            if (['1', '3', '4', '5'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
+            if (['1', '3', '4', '5', '6', '7'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
                 memoFields.style.display = 'block';
                 correoFields.style.display = 'none';
             } else if (selectedValue === '2') { // ID para Correo
@@ -1036,6 +1039,8 @@
             })
             .then(data => {
                 if (data.success) {
+                    console.log('Tipo de Recepción:', data.data.tipo_recepcion);
+                    console.log('Número de Memo:', data.data.numero_memo);
                     // Rellenar el formulario con los datos obtenidos
                     const solicitudIdField = document.getElementById('edit_solicitud_id');
                     if (solicitudIdField) solicitudIdField.value = data.data.id;
@@ -1055,7 +1060,7 @@
                         updateEditBNUPFields();
                     }
 
-                    if (['1', '3', '4', '5'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
+                    if (['1', '3', '4', '5', '6', '7'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
                         const numMemoField = document.getElementById('edit_num_memo');
                         if (numMemoField) numMemoField.value = data.data.numero_memo || '';
                     } else if (data.data.tipo_recepcion.toString() === '2') { // ID para Correo
@@ -1197,9 +1202,9 @@
     }
 
     /**
- * Carga los datos de una solicitud en el formulario de edición.
- * @param {Object} data - Datos de la solicitud.
- */
+     * Carga los datos de una solicitud en el formulario de edición.
+     * @param {Object} data - Datos de la solicitud.
+     */
     function loadEditFormData(data) {
         // Limpiar los selects actuales de funcionarios asignados
         const funcionariosContainer = document.getElementById('editFuncionariosContainer');
@@ -1213,6 +1218,8 @@
                 const select = document.createElement('select');
                 select.name = 'funcionarios_asignados';
                 select.classList.add('funcionarioSelect');
+                select.style="max-width: 20rem;";
+
                 select.required = true;
 
                 const defaultOption = document.createElement('option');
@@ -1240,6 +1247,7 @@
                     addBtn.type = 'button';
                     addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
                     addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+                    addBtn.style="margin-left: 10px; padding: 0;";
                     group.appendChild(addBtn);
                 }
 
@@ -1276,6 +1284,7 @@
                 addBtn.type = 'button';
                 addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
                 addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+                addBtn.style="margin-left: 10px; padding: 0;";
                 group.appendChild(addBtn);
 
                 funcionariosContainer.appendChild(group);
@@ -1321,6 +1330,7 @@
             const newSelect = document.createElement('select');
             newSelect.name = 'funcionarios_asignados';
             newSelect.classList.add('funcionarioSelect');
+            newSelect.style="max-width: 20rem;";
             newSelect.required = true;
 
             const defaultOption = document.createElement('option');
@@ -1344,6 +1354,7 @@
             newAddBtn.type = 'button';
             newAddBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
             newAddBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+            newAddBtn.style="margin-left: 10px; padding: 0;";
             newGroup.appendChild(newAddBtn);
 
             // Añadir el nuevo grupo al contenedor
@@ -1370,7 +1381,7 @@
         function toggleFields() {
             const selectedValue = tipoRecepcionSelect.value;
 
-            if (['1', '3', '4', '5'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
+            if (['1', '3', '4', '5', '6', '7'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
                 memoFields.style.display = 'block';
                 correoFields.style.display = 'none';
             } else if (selectedValue === '2') { // ID para Correo
@@ -1426,31 +1437,12 @@
                         } else {
                             cells[cellIndex++].innerHTML = `
                                 <div class="icon-container">
-                                    <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
+                                    <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
                                     <div class="tooltip">Sin número de documento</div>
                                 </div>
                             `;
                         }
-
-                        // Actualizar Correo
-                        // if (data.data.correo_solicitante) {
-                        //     cells[cellIndex++].textContent = data.data.correo_solicitante;
-                        //     cells[cellIndex - 1].setAttribute('data-order', data.data.correo_solicitante.toLowerCase());
-                        // } else {
-                        //     cells[cellIndex++].innerHTML = `
-                        //         <div class="icon-container">
-                        //             <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
-                        //             <div class="tooltip">Sin Correo</div>
-                        //         </div>
-                        //     `;
-                        //     cells[cellIndex - 1].setAttribute('data-order', 'zzz');
-                        // }
-
-
-
-                        // Actualizar Funcionario
-                        // cells[cellIndex++].textContent = getFuncionarioText(data.data.funcionario_asignado);
-                        // Actualizar Funcionarios
+                        
                         const funcionarios = data.data.funcionarios_asignados; // Array de funcionarios
                         const funcionariosList = funcionarios.map(func => func.nombre).join(', ');
                         cells[cellIndex++].textContent = funcionariosList;
@@ -1551,7 +1543,7 @@
         } else {
             numDocCell.innerHTML = `
                 <div class="icon-container">
-                    <span class="material-symbols-outlined" style="color: #E73C45;">error</span>
+                    <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
                     <div class="tooltip">Sin número de documento</div>
                 </div>
             `;
@@ -1645,8 +1637,8 @@
         salidasCell.innerHTML = `
             <div class="icon-container">
                 <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                    <button class="buttonLogin buttonSubirSalida">
-                        <span class="material-symbols-outlined bell">upload_file</span>
+                    <button class="buttonLogin buttonSubirSalida" style="background: #bfff00;">
+                        <span class="material-symbols-outlined bell">find_in_page</span>
                     </button>
                 </a>
                 <div class="tooltip">Subir Salidas</div>
