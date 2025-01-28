@@ -130,7 +130,7 @@
               </div> {% endcomment %}
               -->
 
-              <div class="form-group">
+              {% comment %} <div class="form-group">
                 <label for="funcionarioAsignado">Funcionario asignado</label>
                 <select name="funcionario_asignado" id="funcionarioAsignado" required>
                   <option value="" disabled selected>Seleccione</option>
@@ -138,7 +138,24 @@
                     <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
                   {% endfor %}
                 </select>
+              </div> {% endcomment %}
+              <div class="form-group">
+                <label>Funcionarios asignados</label>
+                <div id="funcionariosContainer">
+                  <div class="funcionario-select-group" style="display: flex; align-items: center;">
+                    <select name="funcionarios_asignados" class="funcionarioSelect" style="max-width: 20rem;" required>
+                      <option value="" disabled selected>Seleccione</option>
+                      {% for funcionario in funcionarios %}
+                        <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                  </div>
+                </div>
               </div>
+              
               <div class="form-group">
                 <label for="descripcion">Descripción</label>
                 <textarea name="descripcion" id="descripcion" placeholder="Ingrese la descripción" rows="4" class="standardize-input"></textarea>
@@ -200,7 +217,14 @@
                       </div>
                     {% endif %}
                   </td>
-                  <td>{{ solicitud.funcionario_asignado.nombre }}</td>
+                  <td>
+                    {% for funcionario in solicitud.funcionarios_asignados.all %}
+                      {{ funcionario.nombre }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                      <em>No hay funcionarios asignados</em>
+                    {% endfor %}
+                  </td>
+                  
                   <td>
                     <div class="descripcion-preview" onclick="openBNUPDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.fecha_ingreso_au|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
@@ -473,24 +497,22 @@
         </select>
       </div>
 
-      
-
-      <!-- Eliminado: Campo de Nombre del Solicitante
+      <!-- Funcionarios asignados en el formulario de edición -->
       <div class="form-group">
-        <label for="edit_nombreSolicitante">Nombre del Solicitante</label>
-        <input type="text" name="nombre_solicitante" id="edit_nombreSolicitante" placeholder="Nombre y apellido" class="standardize-input" required />
+        <label>Funcionarios asignados</label>
+        <div id="editFuncionariosContainer">
+          <div class="funcionario-select-group">
+            <select name="funcionarios_asignados" class="funcionarioSelect" required>
+              <option value="" disabled selected>Seleccione</option>
+              <!-- Opciones se clonan desde #allFuncionariosOptions -->
+            </select>
+            <button type="button" class="addFuncionarioBtn btn btn-icon">
+              <span class="material-symbols-outlined">add</span>
+            </button>
+          </div>
+        </div>
       </div>
-      -->
 
-      <div class="form-group">
-        <label for="edit_funcionarioAsignado">Funcionario asignado</label>
-        <select name="funcionario_asignado" id="edit_funcionarioAsignado" required {% if tipo_usuario != "ADMIN" %}disabled{% endif %}>
-          <option value="" disabled selected>Seleccione</option>
-          {% for funcionario in funcionarios %}
-            <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
-          {% endfor %}
-        </select>
-      </div>
       
       <div class="form-group">
         <label for="edit_descripcion">Descripción</label>
@@ -501,3 +523,11 @@
     </form>
   </div>
 </div>
+
+
+<!-- Fuente Oculta de Opciones de Funcionarios -->
+<select id="allFuncionariosOptions" style="display: none;">
+  {% for funcionario in funcionarios %}
+      <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+  {% endfor %}
+</select>

@@ -37,7 +37,8 @@ class IngresoSOLICITUD(models.Model):  # Renombrado de SolicitudBNUP
     numero_ingreso = models.IntegerField()
     fecha_ingreso_au = models.DateField()  # Renombrado
     fecha_salida_solicitante = models.DateField(null=True, blank=True)  # Renombrado
-    funcionario_asignado = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
+    # funcionario_asignado = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
+    funcionarios_asignados = models.ManyToManyField(Funcionario, related_name='ingresos')
     descripcion = models.TextField(null=True, blank=True)
     archivo_adjunto_ingreso = models.FileField(upload_to='archivos_adjuntos/', null=True, blank=True)
     

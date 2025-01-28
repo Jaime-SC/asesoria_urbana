@@ -44,7 +44,11 @@ def bnup_form(request):
         numero_ingreso = request.POST.get("numero_ingreso")
         fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")  # Renombrado
         fecha_salida_solicitante_str = request.POST.get("fecha_salida_solicitante")  # Renombrado
-        funcionario_asignado_id = request.POST.get("funcionario_asignado")
+        # funcionario_asignado_id = request.POST.get("funcionario_asignado")
+        funcionarios_asignados_ids = request.POST.getlist("funcionarios_asignados")
+        # Validar que al menos un funcionario está asignado
+        if not funcionarios_asignados_ids:
+            return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
@@ -68,7 +72,11 @@ def bnup_form(request):
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)  # Obtener el tipo de solicitud
             depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
-            funcionario_asignado = Funcionario.objects.get(id=funcionario_asignado_id)
+            # funcionario_asignado = Funcionario.objects.get(id=funcionario_asignado_id)
+            # Obtener los funcionarios asignados
+            funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_asignados_ids)
+            if not funcionarios_asignados.exists():
+                return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
 
             ingreso_solicitud = IngresoSOLICITUD(
                 tipo_recepcion=tipo_recepcion,
@@ -80,11 +88,14 @@ def bnup_form(request):
                 numero_ingreso=numero_ingreso,
                 fecha_ingreso_au=fecha_ingreso_au,  # Asignar la fecha de ingreso
                 fecha_salida_solicitante=fecha_salida_solicitante,  # Asignar la fecha de salida
-                funcionario_asignado=funcionario_asignado,
+                # funcionario_asignado=funcionario_asignado,
                 descripcion=descripcion,
                 archivo_adjunto_ingreso=archivo_adjunto,
             )
             ingreso_solicitud.save()
+
+            # Asignar múltiples funcionarios
+            ingreso_solicitud.funcionarios_asignados.set(funcionarios_asignados)
 
             # Construir datos de la solicitud para devolver en la respuesta
             solicitud_data = {
@@ -101,8 +112,13 @@ def bnup_form(request):
                 "numero_ingreso": ingreso_solicitud.numero_ingreso,
                 "fecha_ingreso_au": ingreso_solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
                 "fecha_salida_solicitante": ingreso_solicitud.fecha_salida_solicitante.strftime("%Y-%m-%d") if ingreso_solicitud.fecha_salida_solicitante else "",
-                "funcionario_asignado": ingreso_solicitud.funcionario_asignado.id,
-                "funcionario_asignado_text": ingreso_solicitud.funcionario_asignado.nombre,
+                # "funcionario_asignado": ingreso_solicitud.funcionario_asignado.id,
+                # "funcionario_asignado_text": ingreso_solicitud.funcionario_asignado.nombre,
+                "funcionarios_asignados": [
+                    {"id": funcionario.id, "nombre": funcionario.nombre}
+                    for funcionario in ingreso_solicitud.funcionarios_asignados.all()
+                ],
+
                 "descripcion": ingreso_solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": ingreso_solicitud.archivo_adjunto_ingreso.url if ingreso_solicitud.archivo_adjunto_ingreso else "",
             }
@@ -161,7 +177,6 @@ def edit_bnup_record(request):
         numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" and tipo_solicitud_id != "10" else None
         correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
-        # nombre_solicitante = request.POST.get("nombre_solicitante")  # Eliminado
         numero_ingreso = request.POST.get("numero_ingreso")
         fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")  # Renombrado
         fecha_salida_solicitante_str = request.POST.get("fecha_salida_solicitante")  # Renombrado
@@ -188,25 +203,35 @@ def edit_bnup_record(request):
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)  # Obtener el tipo de solicitud
             depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
+
             if tipo_usuario == "ADMIN":
-                funcionario_asignado_id = request.POST.get("funcionario_asignado")
-                funcionario_asignado = Funcionario.objects.get(id=funcionario_asignado_id)
+                funcionarios_asignados_ids = request.POST.getlist("funcionarios_asignados")
+
+                # Validar que al menos un funcionario está asignado
+                if not funcionarios_asignados_ids:
+                    return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
+
+                # Obtener los funcionarios asignados
+                funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_asignados_ids)
+                if not funcionarios_asignados.exists():
+                    return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
             else:
-                funcionario_asignado = solicitud.funcionario_asignado  # Mantener el funcionario asignado existente
+                # Mantener los funcionarios existentes si el usuario no es ADMIN
+                funcionarios_asignados = solicitud.funcionarios_asignados.all()
 
             solicitud.tipo_recepcion = tipo_recepcion
             solicitud.tipo_solicitud = tipo_solicitud  # Asignar el tipo de solicitud
             solicitud.numero_memo = numero_memo
             solicitud.correo_solicitante = correo_solicitante
             solicitud.depto_solicitante = depto_solicitante
-            # solicitud.nombre_solicitante = nombre_solicitante  # Eliminado
             solicitud.numero_ingreso = numero_ingreso
             solicitud.fecha_ingreso_au = fecha_ingreso_au
             solicitud.fecha_salida_solicitante = fecha_salida_solicitante  # Asignar la fecha de salida
             solicitud.descripcion = descripcion
 
             if tipo_usuario == "ADMIN":
-                solicitud.funcionario_asignado = funcionario_asignado
+                solicitud.funcionarios_asignados.set(funcionarios_asignados)
+            # Si otros tipos de usuarios pueden editar funcionarios, añade lógica aquí.
 
             if archivo_adjunto:
                 solicitud.archivo_adjunto_ingreso = archivo_adjunto
@@ -224,12 +249,12 @@ def edit_bnup_record(request):
                 "correo_solicitante": solicitud.correo_solicitante,
                 "depto_solicitante": solicitud.depto_solicitante.id,
                 "depto_solicitante_text": solicitud.depto_solicitante.nombre,
-                # "nombre_solicitante": solicitud.nombre_solicitante,  # Eliminado
                 "numero_ingreso": solicitud.numero_ingreso,
                 "fecha_ingreso_au": solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
                 "fecha_salida_solicitante": solicitud.fecha_salida_solicitante.strftime("%Y-%m-%d") if solicitud.fecha_salida_solicitante else "",
-                "funcionario_asignado": solicitud.funcionario_asignado.id,
-                "funcionario_asignado_text": solicitud.funcionario_asignado.nombre,
+                "funcionarios_asignados": [
+                    {"id": f.id, "nombre": f.nombre} for f in solicitud.funcionarios_asignados.all()
+                ],
                 "descripcion": solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
             }
@@ -260,12 +285,12 @@ def edit_bnup_record(request):
             "correo_solicitante": solicitud.correo_solicitante,
             "depto_solicitante": solicitud.depto_solicitante.id,
             "depto_solicitante_text": solicitud.depto_solicitante.nombre,
-            # "nombre_solicitante": solicitud.nombre_solicitante,  # Eliminado
             "numero_ingreso": solicitud.numero_ingreso,
             "fecha_ingreso_au": solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
             "fecha_salida_solicitante": solicitud.fecha_salida_solicitante.strftime("%Y-%m-%d") if solicitud.fecha_salida_solicitante else "",
-            "funcionario_asignado": solicitud.funcionario_asignado.id,
-            "funcionario_asignado_text": solicitud.funcionario_asignado.nombre,
+            "funcionarios_asignados": [
+                {"id": f.id, "nombre": f.nombre} for f in solicitud.funcionarios_asignados.all()
+            ],
             "descripcion": solicitud.descripcion,
             "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
         }

@@ -1834,7 +1834,8 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 
 #addDeptoButton,
 #saveNewDeptoButton,
-#cancelNewDeptoButton {
+#cancelNewDeptoButton,
+.addFuncionarioBtn {
   margin: 0rem;
   padding: 0rem;
   max-width: 2.5rem;
@@ -1842,8 +1843,9 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 
 }
 
-#addDeptoButton {
-  background-color: #00bb2d;
+#addDeptoButton,
+.addFuncionarioBtn {
+  background-color: #00bb2d !important;
 }
 
 #saveNewDeptoButton {
