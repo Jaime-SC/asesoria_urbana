@@ -40,25 +40,27 @@ def bnup_form(request):
         numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" and tipo_solicitud_id != "10" else None
         correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
-        # nombre_solicitante = request.POST.get("nombre_solicitante")  # Eliminado
         numero_ingreso = request.POST.get("numero_ingreso")
         fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")  # Renombrado
         fecha_salida_solicitante_str = request.POST.get("fecha_salida_solicitante")  # Renombrado
-        # funcionario_asignado_id = request.POST.get("funcionario_asignado")
         funcionarios_asignados_ids = request.POST.getlist("funcionarios_asignados")
-        # Validar que al menos un funcionario está asignado
-        if not funcionarios_asignados_ids:
-            return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
-        # Convertir fecha_ingreso_au_str a objeto datetime.date
+        # Validar que al menos un funcionario está asignado
+        if not funcionarios_asignados_ids:
+            return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
+
+        # Validar duplicidad de funcionarios
+        if len(funcionarios_asignados_ids) != len(set(funcionarios_asignados_ids)):
+            return JsonResponse({"success": False, "error": "No puede asignar el mismo funcionario más de una vez."})
+
+        # Convertir fechas
         try:
             fecha_ingreso_au = datetime.strptime(fecha_ingreso_au_str, "%Y-%m-%d").date()
         except ValueError:
             return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
 
-        # Convertir fecha_salida_solicitante_str a objeto datetime.date (si se proporcionó)
         fecha_salida_solicitante = None
         if fecha_salida_solicitante_str:
             try:
@@ -72,8 +74,6 @@ def bnup_form(request):
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)  # Obtener el tipo de solicitud
             depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
-            # funcionario_asignado = Funcionario.objects.get(id=funcionario_asignado_id)
-            # Obtener los funcionarios asignados
             funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_asignados_ids)
             if not funcionarios_asignados.exists():
                 return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
@@ -84,11 +84,9 @@ def bnup_form(request):
                 numero_memo=numero_memo,
                 correo_solicitante=correo_solicitante,
                 depto_solicitante=depto_solicitante,
-                # nombre_solicitante=nombre_solicitante,  # Eliminado
                 numero_ingreso=numero_ingreso,
                 fecha_ingreso_au=fecha_ingreso_au,  # Asignar la fecha de ingreso
                 fecha_salida_solicitante=fecha_salida_solicitante,  # Asignar la fecha de salida
-                # funcionario_asignado=funcionario_asignado,
                 descripcion=descripcion,
                 archivo_adjunto_ingreso=archivo_adjunto,
             )
@@ -108,17 +106,13 @@ def bnup_form(request):
                 "correo_solicitante": ingreso_solicitud.correo_solicitante,
                 "depto_solicitante": ingreso_solicitud.depto_solicitante.id,
                 "depto_solicitante_text": ingreso_solicitud.depto_solicitante.nombre,
-                # "nombre_solicitante": ingreso_solicitud.nombre_solicitante,  # Eliminado
                 "numero_ingreso": ingreso_solicitud.numero_ingreso,
                 "fecha_ingreso_au": ingreso_solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
                 "fecha_salida_solicitante": ingreso_solicitud.fecha_salida_solicitante.strftime("%Y-%m-%d") if ingreso_solicitud.fecha_salida_solicitante else "",
-                # "funcionario_asignado": ingreso_solicitud.funcionario_asignado.id,
-                # "funcionario_asignado_text": ingreso_solicitud.funcionario_asignado.nombre,
                 "funcionarios_asignados": [
                     {"id": funcionario.id, "nombre": funcionario.nombre}
                     for funcionario in ingreso_solicitud.funcionarios_asignados.all()
                 ],
-
                 "descripcion": ingreso_solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": ingreso_solicitud.archivo_adjunto_ingreso.url if ingreso_solicitud.archivo_adjunto_ingreso else "",
             }
@@ -150,6 +144,7 @@ def bnup_form(request):
             "tipos_recepcion": tipos_recepcion,
             "tipos_solicitud": tipos_solicitud,  # Incluir en el contexto
             "tipo_usuario": tipo_usuario,
+            "total_funcionarios": funcionarios.count(),  # Añadido
         }
         return render(request, "bnup/form.html", context)
 

@@ -1,3 +1,5 @@
+<!-- bnup/templates/bnup/form.html -->
+
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/bnup_form.css' %}" />
 
@@ -8,25 +10,17 @@
         <!-- Botones para abrir modales -->
         <div>
           {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
-            <button style="background-color: #4BBFE0; justify-content: flex-start; width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP">
-              <span class="material-symbols-outlined">note_add</span>Ingresar
-            </button>
+            <button style="background-color: #4BBFE0; justify-content: flex-start; width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span>Ingresar</button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' %}
-            <button style="background-color: #E73C45; justify-content: flex-start; width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled>
-              <span class="material-symbols-outlined">delete</span> Eliminar
-            </button>
+            <button style="background-color: #E73C45; justify-content: flex-start; width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
-            <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled>
-              <span class="material-symbols-outlined">edit</span> Editar
-            </button>
+            <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
           {% endif %}
         </div>
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
-          <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP">
-            <span class="material-symbols-outlined">query_stats</span> Estadísticas
-          </button>
+          <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
         {% endif %}
       </div>
 
@@ -39,9 +33,7 @@
               {% csrf_token %}
               <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                 <h2>Ingresos</h2>
-                <span class="close">
-                  <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-                </span>
+                <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
               </div>
               <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
                 <div style="width: 33%">
@@ -53,11 +45,11 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div id="memoFields" class="form-group" style="display: block;margin-bottom: 0px;flex-direction: column;width: 20%;">
+                <div id="memoFields" class="form-group" style="display: block; margin-bottom: 0px; flex-direction: column; width: 20%;">
                   <label for="num_memo">N° Doc:</label>
                   <input type="number" name="num_memo" id="num_memo" />
                 </div>
-                <div id="correoFields" class="form-group" style="display: none;margin-bottom: 0px;flex-direction: column;width: 33%;">
+                <div id="correoFields" class="form-group" style="display: none; margin-bottom: 0px; flex-direction: column; width: 33%;">
                   <label for="correoSolicitante">Ingrese Correo:</label>
                   <input type="email" name="correo_solicitante" id="correoSolicitante" />
                 </div>
@@ -103,26 +95,20 @@
                     {% endfor %}
                   </select>
                   <!-- Botón para agregar nuevo departamento -->
-                  <button type="button" id="addDeptoButton" class="btn btn-icon" style="margin-left: 10px;">
-                    <span class="material-symbols-outlined">add</span>
-                  </button>
+                  <button type="button" id="addDeptoButton" class="btn btn-icon" style="margin-left: 10px;"><span class="material-symbols-outlined">add</span></button>
                 </div>
                 <!-- Contenedor para agregar nuevo departamento -->
-                <div id="newDeptoContainer" style="display: none; justify-content: space-between; align-items: center;">
+                <div id="newDeptoContainer" style="display: none; justify-content: space-between; align-items: center; margin-top: 10px;">
                   <input type="text" id="newDeptoInput" placeholder="Ingrese nuevo departamento" style="max-width: 20rem; min-width: 20rem;" class="standardize-input" />
                   <div style="display: flex; width: 100%; justify-content: space-between;">
-                    <button type="button" id="saveNewDeptoButton" class="btn btn-icon" style="margin-left: 10px;">
-                      <span class="material-symbols-outlined">save</span>
-                    </button>
-                    <button type="button" id="cancelNewDeptoButton" class="btn btn-icon" style="margin-left: 10px;">
-                      <span class="material-symbols-outlined">close</span>
-                    </button>
+                    <button type="button" id="saveNewDeptoButton" class="btn btn-icon" style="margin-left: 10px;"><span class="material-symbols-outlined">save</span></button>
+                    <button type="button" id="cancelNewDeptoButton" class="btn btn-icon" style="margin-left: 10px;"><span class="material-symbols-outlined">close</span></button>
                   </div>
                 </div>
               </div>
               <div class="form-group">
                 <label>Funcionarios asignados</label>
-                <div id="funcionariosContainer">
+                <div id="funcionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
                   <div class="funcionario-select-group" style="display: flex; align-items: center;">
                     <select name="funcionarios_asignados" class="funcionarioSelect" style="max-width: 20rem;" required>
                       <option value="" disabled selected>Seleccione</option>
@@ -130,13 +116,11 @@
                         <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
                       {% endfor %}
                     </select>
-                    <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
-                      <span class="material-symbols-outlined">add</span>
-                    </button>
+                    <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;"><span class="material-symbols-outlined">add</span></button>
                   </div>
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <label for="descripcion">Descripción</label>
                 <textarea name="descripcion" id="descripcion" placeholder="Ingrese la descripción" rows="4" class="standardize-input"></textarea>
@@ -207,25 +191,19 @@
                       <em>No hay funcionarios asignados</em>
                     {% endfor %}
                   </td>
-                  
+
                   <td>
                     <div class="descripcion-preview" onclick="openBNUPDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.fecha_ingreso_au|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
-                        <span class="descripcion-icon">
-                          <span class="material-symbols-outlined">preview</span>
-                        </span>
+                        <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
                       {% endif %}
-                    </div>                    
+                    </div>
                   </td>
                   <td style="display: flex; justify-content: center; border-inline: 0;">
                     {% if solicitud.archivo_adjunto_ingreso %}
                       <div class="icon-container">
-                        <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;">
-                          <button class="buttonLogin buttonPreview">
-                            <span class="material-symbols-outlined bell">find_in_page</span>
-                          </button>
-                        </a>
+                        <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;"><button class="buttonLogin buttonPreview"><span class="material-symbols-outlined bell">find_in_page</span></button></a>
                         <div class="tooltip">Ver archivo de ingreso</div>
                       </div>
                     {% else %}
@@ -244,9 +222,7 @@
                             <div class="tooltip">Ver archivo de salida</div>
                           </button>
                         {% else %}
-                          <button class="buttonLogin buttonSubirSalida">
-                            <span class="material-symbols-outlined bell">upload_file</span>
-                          </button>
+                          <button class="buttonLogin buttonSubirSalida"><span class="material-symbols-outlined bell">upload_file</span></button>
                           <div class="tooltip">Subir Salidas</div>
                         {% endif %}
                       </a>
@@ -255,11 +231,14 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}10{% else %}9{% endif %}">No hay solicitudes</td>
+                  <td colspan="{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+                      10
+                    {% else %}
+                      9
+                    {% endif %}">No hay solicitudes</td>
                 </tr>
               {% endfor %}
             </tbody>
-            
           </table>
         </div>
       </div>
@@ -272,9 +251,7 @@
   <div class="modal-content">
     <div style="display: flex; align-items: center; justify-content: space-between;">
       <h2>Vista Previa</h2>
-      <span class="close" onclick="closeDescripcionModal()">
-        <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-      </span>
+      <span class="close" onclick="closeDescripcionModal()"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
     </div>
     <div class="modal-info" style="font-family: 'Space Mono';">
       <div class="modal-field modal-field-field">
@@ -302,16 +279,13 @@
   </div>
 </div>
 
-
 <!-- Modal para adjuntar archivo -->
 <div id="fileModal" class="modal">
   <div class="modal-content">
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <label for="archivo_adjunto">Adjuntar archivo</label>
-        <span class="close">
-          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-        </span>
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
       </div>
       <input type="file" id="fileModalInput" class="file" />
 
@@ -324,7 +298,6 @@
 </div>
 
 {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' or tipo_usuario == 'VISUALIZADOR' %}
-
   <!-- Mostrar botón para crear salida -->
   <!-- Código del modal salidaModal -->
   <!-- Modal para gestionar la salida -->
@@ -338,9 +311,7 @@
           <h2>Salidas Registradas</h2>
         {% endif %}
 
-        <span class="close">
-          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-        </span>
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
       </div>
       <div style="display: flex; justify-content: space-between; gap: 50px;">
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
@@ -413,12 +384,9 @@
       {% csrf_token %}
       <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
         <h2>Editar Solicitud</h2>
-        <span class="close">
-          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-        </span>
+        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
       </div>
-      
-      
+
       <!-- Campo oculto para el ID de la solicitud -->
       <input type="hidden" name="solicitud_id" id="edit_solicitud_id" />
 
@@ -433,11 +401,11 @@
             {% endfor %}
           </select>
         </div>
-        <div id="edit_memoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
+        <div id="edit_memoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column; width: 20%;">
           <label for="edit_num_memo">Ingrese N° Doc:</label>
           <input type="number" name="num_memo" id="edit_num_memo" />
         </div>
-        <div id="edit_correoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column;">
+        <div id="edit_correoFields" class="form-group" style="display: none; margin-bottom: 0; flex-direction: column; width: 33%;">
           <label for="edit_correoSolicitante">Ingrese Correo:</label>
           <input type="email" name="correo_solicitante" id="edit_correoSolicitante" />
         </div>
@@ -459,7 +427,6 @@
         </div>
       </div>
       <!-- Nuevo Campo: Fecha de Ingreso -->
-      
 
       <div class="form-group">
         <label for="edit_depto_solicitante">Departamento Solicitante</label>
@@ -470,7 +437,7 @@
           {% endfor %}
         </select>
       </div>
-      
+
       <!-- Nuevo Campo: Tipo de Solicitud -->
       <div class="form-group">
         <label for="edit_tipo_solicitud">Tipo de Solicitud</label>
@@ -483,36 +450,45 @@
       </div>
 
       <!-- Funcionarios asignados en el formulario de edición -->
-      <div class="form-group">
-        <label>Funcionarios asignados</label>
-        <div id="editFuncionariosContainer">
-          <div class="funcionario-select-group" style="display: flex; align-items: center;">
-            <select name="funcionarios_asignados" class="funcionarioSelect" required>
-              <option value="" disabled selected>Seleccione</option>
-              <!-- Opciones se clonan desde #allFuncionariosOptions -->
-            </select>
-            <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
-              <span class="material-symbols-outlined">add</span>
-            </button>
+      {% if tipo_usuario == 'ADMIN' %}
+        <div class="form-group">
+          <label>Funcionarios asignados</label>
+          <div id="editFuncionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
+            <div class="funcionario-select-group" style="display: flex; align-items: center;">
+              <select name="funcionarios_asignados" class="funcionarioSelect" style="max-width: 20rem;" required>
+                <option value="" disabled selected>Seleccione</option>
+                {% for funcionario in funcionarios %}
+                  <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                {% endfor %}
+              </select>
+              <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;"><span class="material-symbols-outlined">add</span></button>
+            </div>
+            <!-- Aquí se agregarán dinámicamente más selects si es necesario -->
           </div>
         </div>
-      </div>
+      {% else %}
+        <div class="form-group">
+          <label>Funcionarios asignados</label>
+          <div class="notificacion-no-edit">
+            <span class="material-symbols-outlined">warning</span>
+            <p>No puede editar funcionarios asignados.</p>
+          </div>
+        </div>
+      {% endif %}
 
-      
       <div class="form-group">
         <label for="edit_descripcion">Descripción</label>
         <textarea name="descripcion" id="edit_descripcion" placeholder="Ingrese la descripción" rows="4" class="standardize-input"></textarea>
       </div>
-      
+
       <button id="guardarEdicionBNUP" type="submit" class="btn btn-primary">Guardar Cambios</button>
     </form>
   </div>
 </div>
 
-
 <!-- Fuente Oculta de Opciones de Funcionarios -->
 <select id="allFuncionariosOptions" style="display: none;">
   {% for funcionario in funcionarios %}
-      <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+    <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
   {% endfor %}
 </select>

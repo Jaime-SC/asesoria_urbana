@@ -1725,6 +1725,20 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   display: none;
 }
 
+.notificacion-no-edit {
+  background: lightyellow;
+    border: 0.5px solid darkgoldenrod;
+    border-radius: 10px;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-content: space-evenly;
+
+    span {
+      color: darkgoldenrod;
+    }
+}
 
 /* ------------------------------ */
 

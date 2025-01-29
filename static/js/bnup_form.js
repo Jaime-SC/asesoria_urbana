@@ -34,92 +34,15 @@
     }
 
     /**
-     * Inicializa la funcionalidad para agregar múltiples funcionarios asignados.
+     * Función específica para abrir el modal de descripción en BNUP.
+     * @param {string} descripcion - Descripción de la solicitud.
+     * @param {string} fecha - Fecha de ingreso.
+     * @param {string} numero_ingreso - Número de ingreso.
+     * @param {string} correo_solicitante - Correo del solicitante.
+     * @param {string} departamento - Departamento del solicitante.
+     * @param {string} funcionario_asignado - Funcionario asignado.
+     * @param {string} tablaOrigen - Identificador de la tabla de origen.
      */
-    function initializeMultipleFuncionarios() {
-        const funcionariosContainer = document.getElementById('funcionariosContainer');
-
-        if (!funcionariosContainer) {
-            console.error('No se encontró el contenedor de funcionarios.');
-            return;
-        }
-
-        // Delegar el evento de clic en el contenedor
-        funcionariosContainer.addEventListener('click', function (event) {
-            if (event.target.closest('.addFuncionarioBtn')) {
-                const currentGroup = event.target.closest('.funcionario-select-group');
-                addFuncionarioSelect(currentGroup);
-            }
-        });
-
-        /**
-         * Añade un nuevo grupo de selección de funcionario.
-         * @param {HTMLElement} currentGroup - El grupo actual donde se hizo clic en "+"
-         */
-        function addFuncionarioSelect(currentGroup) {
-            // Remover el botón "+" del grupo actual
-            const addBtn = currentGroup.querySelector('.addFuncionarioBtn');
-            if (addBtn) {
-                addBtn.remove();
-            }
-
-            // Crear un nuevo grupo de selección
-            const newGroup = document.createElement('div');
-            newGroup.classList.add('funcionario-select-group');
-            newGroup.style="display: flex; align-items: center;"
-
-            // Crear el nuevo <select>
-            const newSelect = document.createElement('select');
-            newSelect.name = 'funcionarios_asignados';
-            newSelect.classList.add('funcionarioSelect');
-            newSelect.style="max-width: 20rem;";
-            newSelect.required = true;
-
-            // Añadir la opción por defecto
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            defaultOption.textContent = 'Seleccione';
-            newSelect.appendChild(defaultOption);
-
-            // Clonar las opciones del primer select
-            const firstSelect = funcionariosContainer.querySelector('.funcionarioSelect');
-            if (firstSelect) {
-                Array.from(firstSelect.options).forEach(option => {
-                    if (option.value !== '') { // Excluir la opción por defecto
-                        const clonedOption = option.cloneNode(true);
-                        newSelect.appendChild(clonedOption);
-                    }
-                });
-            }
-
-            newGroup.appendChild(newSelect);
-
-            // Crear y añadir el nuevo botón "+"
-            const newAddBtn = document.createElement('button');
-            newAddBtn.type = 'button';
-            newAddBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
-            newAddBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-            newAddBtn.style="margin-left: 10px; padding: 0;";
-            newGroup.appendChild(newAddBtn);
-
-            // Añadir el nuevo grupo al contenedor
-            funcionariosContainer.appendChild(newGroup);
-        }
-    }
-
-
-    /**
- * Función específica para abrir el modal de descripción en BNUP.
- * @param {string} descripcion - Descripción de la solicitud.
- * @param {string} fecha - Fecha de ingreso.
- * @param {string} numero_ingreso - Número de ingreso.
- * @param {string} correo_solicitante - Correo del solicitante.
- * @param {string} departamento - Departamento del solicitante.
- * @param {string} funcionario_asignado - Funcionario asignado.
- * @param {string} tablaOrigen - Identificador de la tabla de origen.
- */
     function openBNUPDescripcionModal(descripcion, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');
         const descripcionCompleta = document.getElementById('descripcionCompleta');
@@ -1218,7 +1141,7 @@
                 const select = document.createElement('select');
                 select.name = 'funcionarios_asignados';
                 select.classList.add('funcionarioSelect');
-                select.style="max-width: 20rem;";
+                select.style = "max-width: 20rem;";
 
                 select.required = true;
 
@@ -1247,7 +1170,7 @@
                     addBtn.type = 'button';
                     addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
                     addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-                    addBtn.style="margin-left: 10px; padding: 0;";
+                    addBtn.style = "margin-left: 10px; padding: 0;";
                     group.appendChild(addBtn);
                 }
 
@@ -1284,7 +1207,7 @@
                 addBtn.type = 'button';
                 addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
                 addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-                addBtn.style="margin-left: 10px; padding: 0;";
+                addBtn.style = "margin-left: 10px; padding: 0;";
                 group.appendChild(addBtn);
 
                 funcionariosContainer.appendChild(group);
@@ -1293,29 +1216,71 @@
     }
 
     /**
-     * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de edición.
+     * Inicializa la funcionalidad para agregar múltiples funcionarios asignados.
      */
-    function initializeMultipleFuncionariosEdit() {
-        const funcionariosContainer = document.getElementById('editFuncionariosContainer');
+    function initializeMultipleFuncionarios() {
+        const funcionariosContainer = document.getElementById('funcionariosContainer');
+        const totalFuncionarios = parseInt(funcionariosContainer.getAttribute('data-total-funcionarios'), 10) || 12; // Default a 12 si no se proporciona
 
         if (!funcionariosContainer) {
-            console.error('No se encontró el contenedor de funcionarios en el formulario de edición.');
+            console.error('No se encontró el contenedor de funcionarios.');
             return;
         }
 
-        // Delegar el evento de clic en el contenedor
-        funcionariosContainer.addEventListener('click', function (event) {
-            if (event.target.closest('.addFuncionarioBtn')) {
-                const currentGroup = event.target.closest('.funcionario-select-group');
-                addFuncionarioSelectEdit(currentGroup);
-            }
-        });
+        // Limite máximo de selects
+        const maxSelects = totalFuncionarios;
+
+        // Función para obtener todos los valores seleccionados
+        function getSelectedFuncionarios() {
+            const selects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+            const selected = [];
+            selects.forEach(select => {
+                if (select.value) {
+                    selected.push(select.value);
+                }
+            });
+            return selected;
+        }
+
+        // Función para actualizar las opciones de todos los selects
+        function updateSelectOptions() {
+            const selected = getSelectedFuncionarios();
+            const selects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+
+            selects.forEach(select => {
+                const currentValue = select.value;
+                const options = select.querySelectorAll('option');
+
+                options.forEach(option => {
+                    if (option.value === '') return; // Ignorar la opción por defecto
+
+                    if (selected.includes(option.value) && option.value !== currentValue) {
+                        option.disabled = true;
+                    } else {
+                        option.disabled = false;
+                    }
+                });
+            });
+        }
 
         /**
-         * Añade un nuevo grupo de selección de funcionario en el formulario de edición.
+         * Añade un nuevo grupo de selección de funcionario.
          * @param {HTMLElement} currentGroup - El grupo actual donde se hizo clic en "+"
          */
-        function addFuncionarioSelectEdit(currentGroup) {
+        function addFuncionarioSelect(currentGroup) {
+            // Verificar si ya se alcanzó el límite máximo
+            const currentSelects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+            if (currentSelects.length >= maxSelects) {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'warning',
+                    title: 'Límite alcanzado',
+                    text: `No puedes agregar más de ${maxSelects} funcionarios.`,
+                });
+                return;
+            }
+
             // Remover el botón "+" del grupo actual
             const addBtn = currentGroup.querySelector('.addFuncionarioBtn');
             if (addBtn) {
@@ -1325,14 +1290,16 @@
             // Crear un nuevo grupo de selección
             const newGroup = document.createElement('div');
             newGroup.classList.add('funcionario-select-group');
+            newGroup.style = "display: flex; align-items: center; margin-top: 10px;";
 
             // Crear el nuevo <select>
             const newSelect = document.createElement('select');
             newSelect.name = 'funcionarios_asignados';
             newSelect.classList.add('funcionarioSelect');
-            newSelect.style="max-width: 20rem;";
+            newSelect.style = "max-width: 20rem;";
             newSelect.required = true;
 
+            // Añadir la opción por defecto
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.disabled = true;
@@ -1340,7 +1307,7 @@
             defaultOption.textContent = 'Seleccione';
             newSelect.appendChild(defaultOption);
 
-            // Clone options from #allFuncionariosOptions
+            // Clonar las opciones desde #allFuncionariosOptions
             const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
             allOptions.forEach(option => {
                 const clonedOption = option.cloneNode(true);
@@ -1354,13 +1321,203 @@
             newAddBtn.type = 'button';
             newAddBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
             newAddBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-            newAddBtn.style="margin-left: 10px; padding: 0;";
+            newAddBtn.style = "margin-left: 10px; padding: 0;";
             newGroup.appendChild(newAddBtn);
 
             // Añadir el nuevo grupo al contenedor
             funcionariosContainer.appendChild(newGroup);
+
+            // Inicializar Select2 en el nuevo select si estás usando Select2
+            if (typeof $(newSelect).select2 === 'function') {
+                $(newSelect).select2({
+                    placeholder: "Seleccione",
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+
+            // Actualizar las opciones de todos los selects
+            updateSelectOptions();
         }
+
+        // Delegar el evento de clic en el contenedor
+        funcionariosContainer.addEventListener('click', function (event) {
+            if (event.target.closest('.addFuncionarioBtn')) {
+                const currentGroup = event.target.closest('.funcionario-select-group');
+                addFuncionarioSelect(currentGroup);
+            }
+        });
+
+        // Delegar el evento de cambio en los selects para actualizar las opciones
+        funcionariosContainer.addEventListener('change', function (event) {
+            if (event.target.classList.contains('funcionarioSelect')) {
+                updateSelectOptions();
+            }
+        });
+
+        // Inicializar el primer select
+        updateSelectOptions();
     }
+
+    /**
+     * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de edición.
+     */
+    function initializeMultipleFuncionariosEdit() {
+        const funcionariosContainer = document.getElementById('editFuncionariosContainer');
+
+        // Verificar si el contenedor existe antes de proceder
+        if (!funcionariosContainer) {
+            console.warn('No se encontró el contenedor de funcionarios en el formulario de edición. Es posible que el usuario no tenga permisos para editar funcionarios asignados.');
+            return; // Salir de la función si el contenedor no existe
+        }
+
+        const totalFuncionarios = parseInt(funcionariosContainer.getAttribute('data-total-funcionarios'), 10) || 12; // Default a 12 si no se proporciona
+
+        // Límite máximo de selects
+        const maxSelects = totalFuncionarios;
+
+        // Función para obtener todos los valores seleccionados
+        function getSelectedFuncionarios() {
+            const selects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+            const selected = [];
+            selects.forEach(select => {
+                if (select.value) {
+                    selected.push(select.value);
+                }
+            });
+            return selected;
+        }
+
+        // Función para actualizar las opciones de todos los selects
+        function updateSelectOptions() {
+            const selected = getSelectedFuncionarios();
+            const selects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+
+            selects.forEach(select => {
+                const currentValue = select.value;
+                const options = select.querySelectorAll('option');
+
+                options.forEach(option => {
+                    if (option.value === '') return; // Ignorar la opción por defecto
+
+                    if (selected.includes(option.value) && option.value !== currentValue) {
+                        option.disabled = true;
+                    } else {
+                        option.disabled = false;
+                    }
+                });
+
+                // Si estás usando Select2, actualiza el estado
+                if (typeof $(select).select2 === 'function') {
+                    $(select).trigger('change.select2');
+                }
+            });
+        }
+
+        /**
+         * Añade un nuevo grupo de selección de funcionario en el formulario de edición.
+         * @param {HTMLElement} currentGroup - El grupo actual donde se hizo clic en "+"
+         */
+        function addFuncionarioSelectEdit(currentGroup) {
+            // Verificar si ya se alcanzó el límite máximo
+            const currentSelects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+            if (currentSelects.length >= maxSelects) {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'warning',
+                    title: 'Límite alcanzado',
+                    text: `No puedes agregar más de ${maxSelects} funcionarios.`,
+                });
+                return;
+            }
+
+            // Remover el botón "+" del grupo actual
+            const addBtn = currentGroup.querySelector('.addFuncionarioBtn');
+            if (addBtn) {
+                addBtn.remove();
+            }
+
+            // Crear un nuevo grupo de selección
+            const newGroup = document.createElement('div');
+            newGroup.classList.add('funcionario-select-group');
+            newGroup.style = "display: flex; align-items: center; margin-top: 10px;";
+
+            // Crear el nuevo <select>
+            const newSelect = document.createElement('select');
+            newSelect.name = 'funcionarios_asignados';
+            newSelect.classList.add('funcionarioSelect');
+            newSelect.style = "max-width: 20rem;";
+            newSelect.required = true;
+
+            // Añadir la opción por defecto
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            defaultOption.textContent = 'Seleccione';
+            newSelect.appendChild(defaultOption);
+
+            // Clonar las opciones desde #allFuncionariosOptions
+            const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
+            allOptions.forEach(option => {
+                const clonedOption = option.cloneNode(true);
+                newSelect.appendChild(clonedOption);
+            });
+
+            newGroup.appendChild(newSelect);
+
+            // Crear y añadir el nuevo botón "+"
+            const newAddBtn = document.createElement('button');
+            newAddBtn.type = 'button';
+            newAddBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
+            newAddBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+            newAddBtn.style = "margin-left: 10px; padding: 0;";
+            newGroup.appendChild(newAddBtn);
+
+            // Añadir el nuevo grupo al contenedor
+            funcionariosContainer.appendChild(newGroup);
+
+            // Inicializar Select2 en el nuevo select si estás usando Select2
+            if (typeof $(newSelect).select2 === 'function') {
+                $(newSelect).select2({
+                    placeholder: "Seleccione",
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+
+            // Actualizar las opciones de todos los selects
+            updateSelectOptions();
+        }
+
+        // Delegar el evento de clic en el contenedor
+        funcionariosContainer.addEventListener('click', function (event) {
+            if (event.target.closest('.addFuncionarioBtn')) {
+                const currentGroup = event.target.closest('.funcionario-select-group');
+                addFuncionarioSelectEdit(currentGroup);
+            }
+        });
+
+        // Delegar el evento de cambio en los selects para actualizar las opciones
+        funcionariosContainer.addEventListener('change', function (event) {
+            if (event.target.classList.contains('funcionarioSelect')) {
+                updateSelectOptions();
+            }
+        });
+
+        // Inicializar los selects existentes
+        // Disparar eventos 'change' para cada select preseleccionado para actualizar las opciones
+        const existingSelects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+        existingSelects.forEach(select => {
+            if (select.value) {
+                // Disparar manualmente el evento 'change' para cada select con un valor preseleccionado
+                const event = new Event('change');
+                select.dispatchEvent(event);
+            }
+        });
+    }
+
 
 
     /**
@@ -1442,7 +1599,7 @@
                                 </div>
                             `;
                         }
-                        
+
                         const funcionarios = data.data.funcionarios_asignados; // Array de funcionarios
                         const funcionariosList = funcionarios.map(func => func.nombre).join(', ');
                         cells[cellIndex++].textContent = funcionariosList;
