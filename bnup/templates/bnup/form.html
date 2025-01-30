@@ -106,20 +106,22 @@
                   </div>
                 </div>
               </div>
+              <!-- Formularios de creación y edición comparten una estructura similar para funcionarios asignados -->
               <div class="form-group">
                 <label>Funcionarios asignados</label>
                 <div id="funcionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
-                  <div class="funcionario-select-group" style="display: flex; align-items: center;">
-                    <select name="funcionarios_asignados" class="funcionarioSelect" style="max-width: 20rem;" required>
-                      <option value="" disabled selected>Seleccione</option>
-                      {% for funcionario in funcionarios %}
-                        <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
-                      {% endfor %}
-                    </select>
-                    <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;"><span class="material-symbols-outlined">add</span></button>
-                  </div>
+                    <div class="funcionario-select-group" style="display: flex; align-items: center;">
+                        <select name="funcionarios_asignados" class="funcionarioSelect" style="max-width: 20rem;" required>
+                            <option value="" disabled selected>Seleccione</option>
+                            {% for funcionario in funcionarios %}
+                                <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                            {% endfor %}
+                        </select>                        
+                    </div>
+                    <!-- Aquí se agregarán dinámicamente más selects si es necesario -->
                 </div>
               </div>
+
 
               <div class="form-group">
                 <label for="descripcion">Descripción</label>
@@ -461,7 +463,9 @@
                   <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
                 {% endfor %}
               </select>
-              <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;"><span class="material-symbols-outlined">add</span></button>
+              <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
+                <span class="material-symbols-outlined">add</span>
+              </button>
             </div>
             <!-- Aquí se agregarán dinámicamente más selects si es necesario -->
           </div>
@@ -469,10 +473,7 @@
       {% else %}
         <div class="form-group">
           <label>Funcionarios asignados</label>
-          <div class="notificacion-no-edit">
-            <span class="material-symbols-outlined">warning</span>
-            <p>No puede editar funcionarios asignados.</p>
-          </div>
+          <p>No puede editar funcionarios asignados.</p>
         </div>
       {% endif %}
 

@@ -1216,8 +1216,78 @@
     }
 
     /**
+     * Crea un nuevo grupo de selección de funcionario.
+     * @param {boolean} isLast - Indica si este grupo es el último (tiene botón de añadir).
+     * @returns {HTMLElement} - El elemento del grupo de selección.
+     */
+    function createFuncionarioSelectGroup(isLast = false) {
+        const group = document.createElement('div');
+        group.classList.add('funcionario-select-group');
+        group.style = "display: flex; align-items: center; margin-top: 10px;";
+
+        // Crear el <select>
+        const select = document.createElement('select');
+        select.name = 'funcionarios_asignados';
+        select.classList.add('funcionarioSelect');
+        select.style = "max-width: 20rem;";
+        select.required = true;
+
+        // Añadir la opción por defecto
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        defaultOption.textContent = 'Seleccione';
+        select.appendChild(defaultOption);
+
+        // Clonar las opciones desde #allFuncionariosOptions
+        const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
+        allOptions.forEach(option => {
+            const clonedOption = option.cloneNode(true);
+            select.appendChild(clonedOption);
+        });
+
+        group.appendChild(select);
+
+        // Si no es el último, añadir el botón de "Cancelar"
+        if (!isLast) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.classList.add('removeFuncionarioBtn', 'btn-icon');
+            cancelBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+            cancelBtn.style = "margin-left: 10px; padding: 0;";
+            group.appendChild(cancelBtn);
+        }
+
+        // Si es el último, añadir el botón de "Añadir"
+        if (isLast) {
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
+            addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+            addBtn.style = "margin-left: 10px; padding: 0;";
+            group.appendChild(addBtn);
+        }
+
+        // Inicializar Select2 en el nuevo select si estás usando Select2
+        if (typeof $(select).select2 === 'function') {
+            $(select).select2({
+                placeholder: "Seleccione",
+                allowClear: true,
+                width: '100%'
+            });
+        }
+
+        return group;
+    }
+
+
+    /**
      * Inicializa la funcionalidad para agregar múltiples funcionarios asignados.
      */
+    /**
+ * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de creación.
+ */
     function initializeMultipleFuncionarios() {
         const funcionariosContainer = document.getElementById('funcionariosContainer');
         const totalFuncionarios = parseInt(funcionariosContainer.getAttribute('data-total-funcionarios'), 10) || 12; // Default a 12 si no se proporciona
@@ -1227,7 +1297,7 @@
             return;
         }
 
-        // Limite máximo de selects
+        // Límite máximo de selects
         const maxSelects = totalFuncionarios;
 
         // Función para obtener todos los valores seleccionados
@@ -1260,6 +1330,11 @@
                         option.disabled = false;
                     }
                 });
+
+                // Si estás usando Select2, actualiza el estado
+                if (typeof $(select).select2 === 'function') {
+                    $(select).trigger('change.select2');
+                }
             });
         }
 
@@ -1287,76 +1362,94 @@
                 addBtn.remove();
             }
 
-            // Crear un nuevo grupo de selección
-            const newGroup = document.createElement('div');
-            newGroup.classList.add('funcionario-select-group');
-            newGroup.style = "display: flex; align-items: center; margin-top: 10px;";
+            // Añadir el botón de "Cancelar" al grupo actual
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.classList.add('removeFuncionarioBtn', 'btn-icon');
+            cancelBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+            cancelBtn.style = "margin-left: 10px; padding: 0;";
+            currentGroup.appendChild(cancelBtn);
 
-            // Crear el nuevo <select>
-            const newSelect = document.createElement('select');
-            newSelect.name = 'funcionarios_asignados';
-            newSelect.classList.add('funcionarioSelect');
-            newSelect.style = "max-width: 20rem;";
-            newSelect.required = true;
-
-            // Añadir la opción por defecto
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            defaultOption.textContent = 'Seleccione';
-            newSelect.appendChild(defaultOption);
-
-            // Clonar las opciones desde #allFuncionariosOptions
-            const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
-            allOptions.forEach(option => {
-                const clonedOption = option.cloneNode(true);
-                newSelect.appendChild(clonedOption);
-            });
-
-            newGroup.appendChild(newSelect);
-
-            // Crear y añadir el nuevo botón "+"
-            const newAddBtn = document.createElement('button');
-            newAddBtn.type = 'button';
-            newAddBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
-            newAddBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-            newAddBtn.style = "margin-left: 10px; padding: 0;";
-            newGroup.appendChild(newAddBtn);
-
-            // Añadir el nuevo grupo al contenedor
+            // Crear y añadir un nuevo grupo de selección con botón de "Añadir"
+            const newGroup = createFuncionarioSelectGroup(true);
             funcionariosContainer.appendChild(newGroup);
-
-            // Inicializar Select2 en el nuevo select si estás usando Select2
-            if (typeof $(newSelect).select2 === 'function') {
-                $(newSelect).select2({
-                    placeholder: "Seleccione",
-                    allowClear: true,
-                    width: '100%'
-                });
-            }
 
             // Actualizar las opciones de todos los selects
             updateSelectOptions();
         }
 
-        // Delegar el evento de clic en el contenedor
+        /**
+         * Elimina un grupo de selección de funcionario.
+         * @param {HTMLElement} group - El grupo de selección a eliminar.
+         */
+        function removeFuncionarioSelect(group) {
+            // Obtener el valor seleccionado en este grupo antes de eliminarlo
+            const select = group.querySelector('.funcionarioSelect');
+            const selectedValue = select.value;
+
+            // Eliminar el grupo del DOM
+            group.remove();
+
+            // Actualizar las opciones de todos los selects
+            updateSelectOptions();
+        }
+
+        // Delegar el evento de clic en el contenedor para manejar "Añadir" y "Cancelar"
         funcionariosContainer.addEventListener('click', function (event) {
             if (event.target.closest('.addFuncionarioBtn')) {
                 const currentGroup = event.target.closest('.funcionario-select-group');
                 addFuncionarioSelect(currentGroup);
             }
-        });
 
-        // Delegar el evento de cambio en los selects para actualizar las opciones
-        funcionariosContainer.addEventListener('change', function (event) {
-            if (event.target.classList.contains('funcionarioSelect')) {
-                updateSelectOptions();
+            if (event.target.closest('.removeFuncionarioBtn')) {
+                const currentGroup = event.target.closest('.funcionario-select-group');
+                removeFuncionarioSelect(currentGroup);
             }
         });
 
-        // Inicializar el primer select
-        updateSelectOptions();
+        // Inicializar los selects existentes
+        // Si hay múltiples selects predefinidos, se manejarán adecuadamente
+        const existingSelects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+        existingSelects.forEach((select, index) => {
+            if (index === 0) {
+                // Primer select: tiene botón de "Añadir"
+                const currentGroup = select.closest('.funcionario-select-group');
+                currentGroup.appendChild(createAddButton());
+            } else {
+                // Otros selects: tienen botón de "Cancelar"
+                const currentGroup = select.closest('.funcionario-select-group');
+                currentGroup.appendChild(createCancelButton());
+            }
+        });
+
+        // Función para crear el botón de "Añadir"
+        function createAddButton() {
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
+            addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+            addBtn.style = "margin-left: 10px; padding: 0;";
+            return addBtn;
+        }
+
+        // Función para crear el botón de "Cancelar"
+        function createCancelButton() {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.classList.add('removeFuncionarioBtn', 'btn-icon');
+            cancelBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+            cancelBtn.style = "margin-left: 10px; padding: 0;";
+            return cancelBtn;
+        }
+
+        // Disparar eventos 'change' para cada select preseleccionado para actualizar las opciones
+        existingSelects.forEach(select => {
+            if (select.value) {
+                // Disparar manualmente el evento 'change' para cada select con un valor preseleccionado
+                const event = new Event('change');
+                select.dispatchEvent(event);
+            }
+        });
     }
 
     /**
@@ -1438,77 +1531,87 @@
                 addBtn.remove();
             }
 
-            // Crear un nuevo grupo de selección
-            const newGroup = document.createElement('div');
-            newGroup.classList.add('funcionario-select-group');
-            newGroup.style = "display: flex; align-items: center; margin-top: 10px;";
+            // Añadir el botón de "Cancelar" al grupo actual
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.classList.add('removeFuncionarioBtn', 'btn-icon');
+            cancelBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+            cancelBtn.style = "margin-left: 10px; padding: 0;";
+            currentGroup.appendChild(cancelBtn);
 
-            // Crear el nuevo <select>
-            const newSelect = document.createElement('select');
-            newSelect.name = 'funcionarios_asignados';
-            newSelect.classList.add('funcionarioSelect');
-            newSelect.style = "max-width: 20rem;";
-            newSelect.required = true;
-
-            // Añadir la opción por defecto
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            defaultOption.textContent = 'Seleccione';
-            newSelect.appendChild(defaultOption);
-
-            // Clonar las opciones desde #allFuncionariosOptions
-            const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
-            allOptions.forEach(option => {
-                const clonedOption = option.cloneNode(true);
-                newSelect.appendChild(clonedOption);
-            });
-
-            newGroup.appendChild(newSelect);
-
-            // Crear y añadir el nuevo botón "+"
-            const newAddBtn = document.createElement('button');
-            newAddBtn.type = 'button';
-            newAddBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
-            newAddBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-            newAddBtn.style = "margin-left: 10px; padding: 0;";
-            newGroup.appendChild(newAddBtn);
-
-            // Añadir el nuevo grupo al contenedor
+            // Crear y añadir un nuevo grupo de selección con botón de "Añadir"
+            const newGroup = createFuncionarioSelectGroup(true);
             funcionariosContainer.appendChild(newGroup);
-
-            // Inicializar Select2 en el nuevo select si estás usando Select2
-            if (typeof $(newSelect).select2 === 'function') {
-                $(newSelect).select2({
-                    placeholder: "Seleccione",
-                    allowClear: true,
-                    width: '100%'
-                });
-            }
 
             // Actualizar las opciones de todos los selects
             updateSelectOptions();
         }
 
-        // Delegar el evento de clic en el contenedor
+        /**
+         * Elimina un grupo de selección de funcionario.
+         * @param {HTMLElement} group - El grupo de selección a eliminar.
+         */
+        function removeFuncionarioSelect(group) {
+            // Obtener el valor seleccionado en este grupo antes de eliminarlo
+            const select = group.querySelector('.funcionarioSelect');
+            const selectedValue = select.value;
+
+            // Eliminar el grupo del DOM
+            group.remove();
+
+            // Actualizar las opciones de todos los selects
+            updateSelectOptions();
+        }
+
+        // Delegar el evento de clic en el contenedor para manejar "Añadir" y "Cancelar"
         funcionariosContainer.addEventListener('click', function (event) {
             if (event.target.closest('.addFuncionarioBtn')) {
                 const currentGroup = event.target.closest('.funcionario-select-group');
                 addFuncionarioSelectEdit(currentGroup);
             }
-        });
 
-        // Delegar el evento de cambio en los selects para actualizar las opciones
-        funcionariosContainer.addEventListener('change', function (event) {
-            if (event.target.classList.contains('funcionarioSelect')) {
-                updateSelectOptions();
+            if (event.target.closest('.removeFuncionarioBtn')) {
+                const currentGroup = event.target.closest('.funcionario-select-group');
+                removeFuncionarioSelect(currentGroup);
             }
         });
 
         // Inicializar los selects existentes
-        // Disparar eventos 'change' para cada select preseleccionado para actualizar las opciones
+        // Si hay múltiples selects predefinidos, se manejarán adecuadamente
         const existingSelects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
+        existingSelects.forEach((select, index) => {
+            if (index === 0) {
+                // Primer select: tiene botón de "Añadir"
+                const currentGroup = select.closest('.funcionario-select-group');
+                currentGroup.appendChild(createAddButton());
+            } else {
+                // Otros selects: tienen botón de "Cancelar"
+                const currentGroup = select.closest('.funcionario-select-group');
+                currentGroup.appendChild(createCancelButton());
+            }
+        });
+
+        // Función para crear el botón de "Añadir"
+        function createAddButton() {
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
+            addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+            addBtn.style = "margin-left: 10px; padding: 0;";
+            return addBtn;
+        }
+
+        // Función para crear el botón de "Cancelar"
+        function createCancelButton() {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.classList.add('removeFuncionarioBtn', 'btn', 'btn-icon');
+            cancelBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+            cancelBtn.style = "margin-left: 10px; padding: 0;";
+            return cancelBtn;
+        }
+
+        // Disparar eventos 'change' para cada select preseleccionado para actualizar las opciones
         existingSelects.forEach(select => {
             if (select.value) {
                 // Disparar manualmente el evento 'change' para cada select con un valor preseleccionado
@@ -1517,8 +1620,6 @@
             }
         });
     }
-
-
 
     /**
      * Actualiza la visibilidad de los campos en el formulario de edición BNUP según el tipo de recepción seleccionado.
