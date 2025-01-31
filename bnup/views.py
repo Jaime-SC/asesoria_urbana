@@ -100,8 +100,8 @@ def bnup_form(request):
                 "id": ingreso_solicitud.id,
                 "tipo_recepcion": ingreso_solicitud.tipo_recepcion.id,
                 "tipo_recepcion_text": ingreso_solicitud.tipo_recepcion.tipo,
-                "tipo_solicitud": ingreso_solicitud.tipo_solicitud.id,  # Nuevo campo
-                "tipo_solicitud_text": ingreso_solicitud.tipo_solicitud.tipo,  # Texto del tipo de solicitud
+                "tipo_solicitud": ingreso_solicitud.tipo_solicitud.id,
+                "tipo_solicitud_text": ingreso_solicitud.tipo_solicitud.tipo,
                 "numero_memo": ingreso_solicitud.numero_memo,
                 "correo_solicitante": ingreso_solicitud.correo_solicitante,
                 "depto_solicitante": ingreso_solicitud.depto_solicitante.id,
@@ -463,7 +463,6 @@ def create_salida(request):
             return JsonResponse({"success": False, "error": f"Error al crear la salida: {e}"})
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
-
 
 @require_POST
 def add_departamento(request):

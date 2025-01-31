@@ -32,49 +32,104 @@
         initializeRowSelection();
         borde_thead();
     }
-
     /**
-     * Función específica para abrir el modal de descripción en BNUP.
-     * @param {string} descripcion - Descripción de la solicitud.
-     * @param {string} fecha - Fecha de ingreso.
-     * @param {string} numero_ingreso - Número de ingreso.
-     * @param {string} correo_solicitante - Correo del solicitante.
-     * @param {string} departamento - Departamento del solicitante.
-     * @param {string} funcionario_asignado - Funcionario asignado.
-     * @param {string} tablaOrigen - Identificador de la tabla de origen.
-     */
-    function openBNUPDescripcionModal(descripcion, fecha, numero_ingreso, correo_solicitante, departamento, funcionario_asignado, tablaOrigen) {
+ * Función específica para abrir el modal de descripción en BNUP.
+ * @param {string} descripcion - Descripción de la solicitud.
+ * @param {string} fecha_ingreso - Fecha de ingreso (formato: d/m/Y).
+ * @param {string} numero_ingreso - Número de ingreso.
+ * @param {string} correo_solicitante - Correo del solicitante.
+ * @param {string} departamento - Departamento del solicitante.
+ * @param {string} funcionarios_asignados - Funcionarios asignados (cadena separada por comas y saltos de línea).
+ * @param {string} tipo_recepcion - Tipo de recepción.
+ * @param {string} tipo_solicitud - Tipo de solicitud.
+ * @param {string} numero_memo - Número de memo.
+ * @param {string} fecha_salida_solicitante - Fecha de salida (formato: d/m/Y).
+ * @param {string} tablaOrigen - Identificador de la tabla de origen.
+ */
+    function openBNUPDescripcionModal(descripcion, fecha_ingreso, numero_ingreso, correo_solicitante, departamento, funcionarios_asignados, tipo_recepcion, tipo_solicitud, numero_memo, fecha_salida_solicitante, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');
+        if (!modal) {
+            console.error("Modal 'descripcionModal' no encontrado.");
+            return;
+        }
+
         const descripcionCompleta = document.getElementById('descripcionCompleta');
         const fechaIngreso = document.getElementById('fechaIngreso');
         const numeroIngresoSpan = document.getElementById('numero_ingreso');
         const correoSolicitante = document.getElementById('correo_solicitante');
         const deptoSolicitante = document.getElementById('deptoSolicitante');
-        const funcionarioAsignado = document.getElementById('funcionario_asignado');
+        const funcionariosAsignados = document.getElementById('funcionarios_asignados');
+        const tipoRecepcion = document.getElementById('tipoRecepcion');
+        const tipoSolicitud = document.getElementById('tipoSolicitud');
+        const numeroMemoElement = document.getElementById('numeroMemo');
+        const fechaSalida = document.getElementById('fechaSalida');
         const correoField = document.getElementById('correoField');
 
+        // Verificar la existencia de cada elemento
+        if (!descripcionCompleta) { console.error("Elemento 'descripcionCompleta' no encontrado."); }
+        if (!fechaIngreso) { console.error("Elemento 'fechaIngreso' no encontrado."); }
+        if (!numeroIngresoSpan) { console.error("Elemento 'numero_ingreso' no encontrado."); }
+        if (!correoSolicitante) { console.error("Elemento 'correo_solicitante' no encontrado."); }
+        if (!deptoSolicitante) { console.error("Elemento 'deptoSolicitante' no encontrado."); }
+        if (!funcionariosAsignados) { console.error("Elemento 'funcionarios_asignados' no encontrado."); }
+        if (!tipoRecepcion) { console.error("Elemento 'tipoRecepcion' no encontrado."); }
+        if (!tipoSolicitud) { console.error("Elemento 'tipoSolicitud' no encontrado."); }
+        if (!numeroMemoElement) { console.error("Elemento 'numeroMemo' no encontrado."); }
+        if (!fechaSalida) { console.error("Elemento 'fechaSalida' no encontrado."); }
+        if (!correoField) { console.error("Elemento 'correoField' no encontrado."); }
+
         // Rellenar los campos del modal con los datos proporcionados
-        descripcionCompleta.textContent = descripcion;
-        fechaIngreso.textContent = fecha;
-        numeroIngresoSpan.textContent = numero_ingreso;
-        deptoSolicitante.textContent = departamento;
-        funcionarioAsignado.textContent = funcionario_asignado;
+        if (descripcionCompleta) descripcionCompleta.textContent = descripcion;
+        if (fechaIngreso) fechaIngreso.textContent = fecha_ingreso;
+        if (numeroIngresoSpan) numeroIngresoSpan.textContent = numero_ingreso;
+        if (tipoRecepcion) tipoRecepcion.textContent = tipo_recepcion;
+        if (tipoSolicitud) tipoSolicitud.textContent = tipo_solicitud;
+        if (numeroMemoElement) numeroMemoElement.textContent = numero_memo;
+        if (fechaSalida) fechaSalida.textContent = fecha_salida_solicitante;
+        if (deptoSolicitante) deptoSolicitante.textContent = departamento;
+
+        // Reemplazar comas con saltos de línea
+        if (funcionariosAsignados) funcionariosAsignados.textContent = funcionarios_asignados;
 
         // Mostrar u ocultar el campo de correo según la tabla de origen
-        if (tablaOrigen === 'tablaSolicitudesCorreo' && correo_solicitante) {
-            correoSolicitante.textContent = correo_solicitante;
-            correoField.style.display = 'flex';
-        } else {
-            correoField.style.display = 'none';
+        if (correoField) {
+            if (tablaOrigen === 'tablaSolicitudesCorreo' && correo_solicitante) {
+                if (correoSolicitante) {
+                    correoSolicitante.textContent = correo_solicitante;
+                }
+                correoField.style.display = 'flex';
+            } else {
+                correoField.style.display = 'none';
+            }
+        }
+
+        // Mostrar u ocultar el campo de número de memo según si tiene un valor
+        if (numeroMemoElement) {
+            if (numero_memo) {
+                numeroMemoElement.parentElement.style.display = 'flex';
+            } else {
+                numeroMemoElement.parentElement.style.display = 'none';
+            }
+        }
+
+        // Mostrar u ocultar el campo de fecha de salida
+        if (fechaSalida) {
+            if (fecha_salida_solicitante) {
+                fechaSalida.parentElement.style.display = 'flex';
+            } else {
+                fechaSalida.parentElement.style.display = 'none';
+            }
         }
 
         modal.style.display = 'block';
 
         // Manejar el cierre del modal
         const spanClose = modal.querySelector('.close');
-        spanClose.onclick = function () {
-            modal.style.display = 'none';
-        };
+        if (spanClose) {
+            spanClose.onclick = function () {
+                modal.style.display = 'none';
+            };
+        }
 
         window.onclick = function (event) {
             if (event.target == modal) {

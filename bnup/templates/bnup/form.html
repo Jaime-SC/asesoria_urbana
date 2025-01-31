@@ -154,9 +154,9 @@
                 <th class="shadow nIngre" data-type="number">Nº Ingreso</th>
                 <th class="shadow" data-type="date">Fecha Ingreso</th>
                 <th class="shadow" data-type="string">Solicitante</th>
+                <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Tipo Recepción</th>
                 <th class="shadow" data-type="string">Tipo Solicitud</th>
-                <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Funcionario</th>
                 <th class="shadow" data-type="string">Descripción</th>
                 <th class="shadow" data-type="string">Entradas</th>
@@ -174,8 +174,6 @@
                   <td>{{ solicitud.numero_ingreso }}</td>
                   <td class="fechaTable">{{ solicitud.fecha_ingreso_au|date:'d/m/Y' }}</td>
                   <td>{{ solicitud.depto_solicitante.nombre }}</td>
-                  <td>{{ solicitud.tipo_recepcion.tipo }}</td>
-                  <td>{{ solicitud.tipo_solicitud.tipo }}</td>
                   <td>
                     {% if solicitud.numero_memo %}
                       {{ solicitud.numero_memo }}
@@ -186,6 +184,8 @@
                       </div>
                     {% endif %}
                   </td>
+                  <td>{{ solicitud.tipo_recepcion.tipo }}</td>
+                  <td>{{ solicitud.tipo_solicitud.tipo }}</td>
                   <td>
                     {% for funcionario in solicitud.funcionarios_asignados.all %}
                       {{ funcionario.nombre }}{% if not forloop.last %}, {% endif %}
@@ -195,13 +195,25 @@
                   </td>
 
                   <td>
-                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal('{{ solicitud.descripcion|escapejs }}', '{{ solicitud.fecha_ingreso_au|date:'d/m/Y'|escapejs }}', '{{ solicitud.numero_ingreso|escapejs }}', '{{ solicitud.correo_solicitante|escapejs }}', '{{ solicitud.depto_solicitante.nombre|escapejs }}', '{{ solicitud.funcionario_asignado.nombre|escapejs }}', 'tablaSolicitudes')">
+                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal(
+                        '{{ solicitud.descripcion|escapejs }}',
+                        '{{ solicitud.fecha_ingreso_au|date:"d/m/Y"|escapejs }}',
+                        '{{ solicitud.numero_ingreso|escapejs }}',
+                        '{{ solicitud.correo_solicitante|escapejs }}',
+                        '{{ solicitud.depto_solicitante.nombre|escapejs }}',
+                        '{% for funcionario in solicitud.funcionarios_asignados.all %}{{ funcionario.nombre }}{% if not forloop.last %}\n{% endif %}{% endfor %}',
+                        '{{ solicitud.tipo_recepcion.tipo|escapejs }}',
+                        '{{ solicitud.tipo_solicitud.tipo|escapejs }}',
+                        '{{ solicitud.numero_memo|default_if_none:""|escapejs }}',
+                        '{{ solicitud.fecha_salida_solicitante|date:"d/m/Y"|escapejs }}',
+                        'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
                         <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
                       {% endif %}
                     </div>
                   </td>
+                  
                   <td style="display: flex; justify-content: center; border-inline: 0;">
                     {% if solicitud.archivo_adjunto_ingreso %}
                       <div class="icon-container">
@@ -253,7 +265,9 @@
   <div class="modal-content">
     <div style="display: flex; align-items: center; justify-content: space-between;">
       <h2>Vista Previa</h2>
-      <span class="close" onclick="closeDescripcionModal()"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+      <span class="close" onclick="closeDescripcionModal()">
+        <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+      </span>
     </div>
     <div class="modal-info" style="font-family: 'Space Mono';">
       <div class="modal-field modal-field-field">
@@ -261,6 +275,15 @@
       </div>
       <div class="modal-field modal-field-field">
         <strong>Fecha de Ingreso:</strong> <span id="fechaIngreso"></span>
+      </div>
+      <div class="modal-field modal-field-field">
+        <strong>Tipo de Recepción:</strong> <span id="tipoRecepcion"></span>
+      </div>
+      <div class="modal-field modal-field-field">
+        <strong>Tipo de Solicitud:</strong> <span id="tipoSolicitud"></span>
+      </div>
+      <div class="modal-field modal-field-field">
+        <strong>Número de Memo:</strong> <span id="numeroMemo"></span>
       </div>
       <!-- Condicional para mostrar u ocultar el correo -->
       <div class="modal-field modal-field-field" id="correoField" style="display: none;">
@@ -270,8 +293,11 @@
         <strong>Solicitante:</strong> <span id="deptoSolicitante"></span>
       </div>
       <div class="modal-field modal-field-field">
-        <strong>Funcionario Asignado:</strong> <span id="funcionario_asignado"></span>
+        <strong>Funcionarios Asignados:</strong> <span id="funcionarios_asignados"></span>
       </div>
+      {% comment %} <div class="modal-field modal-field-field">
+        <strong>Fecha de Salida:</strong> <span id="fechaSalida"></span>
+      </div> {% endcomment %}
       <div class="modal-field">
         <strong>Descripción:</strong>
         <br />
@@ -280,6 +306,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Modal para adjuntar archivo -->
 <div id="fileModal" class="modal">
@@ -301,7 +328,6 @@
 
 {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' or tipo_usuario == 'VISUALIZADOR' %}
   <!-- Mostrar botón para crear salida -->
-  <!-- Código del modal salidaModal -->
   <!-- Modal para gestionar la salida -->
   <div id="salidaModal" class="modal">
     <div style="max-width: max-content;" class="modal-content animate__animated animate__fadeInDown">

@@ -1876,3 +1876,7 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 .btn-icon span {
   color: ghostwhite;
 }
+
+#funcionarios_asignados {
+  white-space: pre-wrap;
+}
