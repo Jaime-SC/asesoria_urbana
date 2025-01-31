@@ -19,7 +19,8 @@
             <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
           {% endif %}
         </div>
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+        {% comment %} {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %} {% endcomment %}
+        {% if tipo_usuario == 'ADMIN' %}
           <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
         {% endif %}
       </div>
@@ -204,9 +205,7 @@
                         '{% for funcionario in solicitud.funcionarios_asignados.all %}{{ funcionario.nombre }}{% if not forloop.last %}\n{% endif %}{% endfor %}',
                         '{{ solicitud.tipo_recepcion.tipo|escapejs }}',
                         '{{ solicitud.tipo_solicitud.tipo|escapejs }}',
-                        '{{ solicitud.numero_memo|default_if_none:""|escapejs }}',
-                        '{{ solicitud.fecha_salida_solicitante|date:"d/m/Y"|escapejs }}',
-                        'tablaSolicitudes')">
+                        '{{ solicitud.numero_memo|default_if_none:""|escapejs }}','tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
                         <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
@@ -231,7 +230,7 @@
                     <div class="icon-container">
                       <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
                         {% if solicitud.salidas.all %}
-                          <button class="buttonLogin buttonPreview" style="background: #bfff00;">
+                          <button class="buttonLogin buttonPreview" style="background: #ffa420;">
                             <span class="material-symbols-outlined bell">find_in_page</span>
                             <div class="tooltip">Ver archivo de salida</div>
                           </button>

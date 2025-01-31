@@ -46,7 +46,7 @@
  * @param {string} fecha_salida_solicitante - Fecha de salida (formato: d/m/Y).
  * @param {string} tablaOrigen - Identificador de la tabla de origen.
  */
-    function openBNUPDescripcionModal(descripcion, fecha_ingreso, numero_ingreso, correo_solicitante, departamento, funcionarios_asignados, tipo_recepcion, tipo_solicitud, numero_memo, fecha_salida_solicitante, tablaOrigen) {
+    function openBNUPDescripcionModal(descripcion, fecha_ingreso, numero_ingreso, correo_solicitante, departamento, funcionarios_asignados, tipo_recepcion, tipo_solicitud, numero_memo, tablaOrigen) {
         const modal = document.getElementById('descripcionModal');
         if (!modal) {
             console.error("Modal 'descripcionModal' no encontrado.");
@@ -62,7 +62,6 @@
         const tipoRecepcion = document.getElementById('tipoRecepcion');
         const tipoSolicitud = document.getElementById('tipoSolicitud');
         const numeroMemoElement = document.getElementById('numeroMemo');
-        const fechaSalida = document.getElementById('fechaSalida');
         const correoField = document.getElementById('correoField');
 
         // Verificar la existencia de cada elemento
@@ -75,7 +74,6 @@
         if (!tipoRecepcion) { console.error("Elemento 'tipoRecepcion' no encontrado."); }
         if (!tipoSolicitud) { console.error("Elemento 'tipoSolicitud' no encontrado."); }
         if (!numeroMemoElement) { console.error("Elemento 'numeroMemo' no encontrado."); }
-        if (!fechaSalida) { console.error("Elemento 'fechaSalida' no encontrado."); }
         if (!correoField) { console.error("Elemento 'correoField' no encontrado."); }
 
         // Rellenar los campos del modal con los datos proporcionados
@@ -85,7 +83,6 @@
         if (tipoRecepcion) tipoRecepcion.textContent = tipo_recepcion;
         if (tipoSolicitud) tipoSolicitud.textContent = tipo_solicitud;
         if (numeroMemoElement) numeroMemoElement.textContent = numero_memo;
-        if (fechaSalida) fechaSalida.textContent = fecha_salida_solicitante;
         if (deptoSolicitante) deptoSolicitante.textContent = departamento;
 
         // Reemplazar comas con saltos de línea
@@ -109,15 +106,6 @@
                 numeroMemoElement.parentElement.style.display = 'flex';
             } else {
                 numeroMemoElement.parentElement.style.display = 'none';
-            }
-        }
-
-        // Mostrar u ocultar el campo de fecha de salida
-        if (fechaSalida) {
-            if (fecha_salida_solicitante) {
-                fechaSalida.parentElement.style.display = 'flex';
-            } else {
-                fechaSalida.parentElement.style.display = 'none';
             }
         }
 
@@ -1017,8 +1005,6 @@
             })
             .then(data => {
                 if (data.success) {
-                    console.log('Tipo de Recepción:', data.data.tipo_recepcion);
-                    console.log('Número de Memo:', data.data.numero_memo);
                     // Rellenar el formulario con los datos obtenidos
                     const solicitudIdField = document.getElementById('edit_solicitud_id');
                     if (solicitudIdField) solicitudIdField.value = data.data.id;
@@ -1712,9 +1698,9 @@
     }
 
     /**
-     * Actualiza una fila específica de la tabla con los datos más recientes de la solicitud.
-     * @param {string} solicitudId - ID de la solicitud a actualizar.
-     */
+ * Actualiza una fila específica de la tabla con los datos más recientes de la solicitud.
+ * @param {string} solicitudId - ID de la solicitud a actualizar.
+ */
     function updateTableRow(solicitudId) {
         const bnupData = document.getElementById('bnupData');
         const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
@@ -1735,42 +1721,103 @@
                         // Actualizar Nº Ingreso
                         cells[cellIndex++].textContent = data.data.numero_ingreso;
 
-                        // Actualizar Fecha
+                        // Actualizar Fecha Ingreso
                         cells[cellIndex++].textContent = formatDate(data.data.fecha_ingreso_au);
 
-                        // Actualizar Departamento
-                        cells[cellIndex++].textContent = getDepartamentoText(data.data.depto_solicitante);
-
-                        // Actualizar Recepción
-                        cells[cellIndex++].textContent = data.data.tipo_recepcion_text;
+                        // Actualizar Solicitante
+                        cells[cellIndex++].textContent = data.data.depto_solicitante_text;
 
                         // Actualizar N° Doc
                         if (data.data.numero_memo) {
                             cells[cellIndex++].textContent = data.data.numero_memo;
                         } else {
                             cells[cellIndex++].innerHTML = `
-                                <div class="icon-container">
-                                    <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
-                                    <div class="tooltip">Sin número de documento</div>
-                                </div>
-                            `;
+                            <div class="icon-container">
+                                <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
+                                <div class="tooltip">Sin número de documento</div>
+                            </div>
+                        `;
                         }
 
-                        const funcionarios = data.data.funcionarios_asignados; // Array de funcionarios
-                        const funcionariosList = funcionarios.map(func => func.nombre).join(', ');
-                        cells[cellIndex++].textContent = funcionariosList;
+                        // Actualizar Tipo Recepción
+                        cells[cellIndex++].textContent = data.data.tipo_recepcion_text;
 
+                        // Actualizar Tipo Solicitud
+                        cells[cellIndex++].textContent = data.data.tipo_solicitud_text;
+
+                        // Actualizar Funcionarios Asignados
+                        const funcionarios = data.data.funcionarios_asignados; // Array de funcionarios
+                        const funcionariosList = funcionarios.map(func => func.nombre).join('\n'); // Usar saltos de línea
+                        cells[cellIndex++].textContent = funcionariosList;
 
                         // Actualizar Descripción
                         cells[cellIndex++].innerHTML = `
-                            <div class="descripcion-preview" onclick="openDescripcionModal('${escapeHtml(data.data.descripcion)}', '${escapeHtml(data.data.nombre_solicitante)}', '${formatDate(data.data.fecha_ingreso_au)}', '${data.data.numero_ingreso}', '${escapeHtml(data.data.correo_solicitante)}', '${escapeHtml(getDepartamentoText(data.data.depto_solicitante))}', '${escapeHtml(getFuncionarioText(data.data.funcionario_asignado))}', 'tablaSolicitudes')">
-                                ${truncateText(data.data.descripcion, 20)}
-                                ${data.data.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
+                        <div class="descripcion-preview" onclick="openBNUPDescripcionModal(
+                            '${escapeHtml(data.data.descripcion)}',
+                            '${formatDate(data.data.fecha_ingreso_au)}',
+                            '${data.data.numero_ingreso}',
+                            '${escapeHtml(data.data.correo_solicitante)}',
+                            '${escapeHtml(data.data.depto_solicitante_text)}',
+                            '${escapeHtml(funcionarios.map(f => f.nombre).join('\n'))}',
+                            '${escapeHtml(data.data.tipo_recepcion_text)}',
+                            '${escapeHtml(data.data.tipo_solicitud_text)}',
+                            '${data.data.numero_memo || ""}',
+                            '${data.data.fecha_salida_solicitante}',
+                            'tablaSolicitudes')">
+                            ${truncateText(data.data.descripcion, 20)}
+                            ${data.data.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
+                        </div>
+                    `;
+
+                        // Actualizar Entradas
+                        const entradaCell = cells[cellIndex++];
+                        if (data.data.archivo_adjunto_ingreso_url) {
+                            entradaCell.innerHTML = `
+                            <div class="icon-container">                        
+                                <a href="${data.data.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
+                                    <button class="buttonLogin buttonPreview">
+                                        <span class="material-symbols-outlined bell">find_in_page</span>
+                                    </button>
+                                </a>                        
+                                <div class="tooltip">Ver archivo de ingreso</div>
                             </div>
                         `;
+                        } else {
+                            entradaCell.innerHTML = `
+                            <div class="icon-container">
+                                <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                                <div class="tooltip">Sin archivo de ingreso</div>
+                            </div>
+                        `;
+                        }
 
-                        // Aquí podrías actualizar los nuevos campos si los has añadido a la tabla
+                        // Actualizar Salidas
+                        const salidasCell = cells[cellIndex++];
+                        if (data.data.salidas && data.data.salidas.length > 0) {
+                            salidasCell.innerHTML = `
+                            <div class="icon-container">
+                                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                    <button class="buttonLogin buttonPreview" style="background: #ffa420;">
+                                        <span class="material-symbols-outlined bell">find_in_page</span>
+                                        <div class="tooltip">Ver archivo de salida</div>
+                                    </button>
+                                </a>
+                            </div>
+                        `;
+                        } else {
+                            salidasCell.innerHTML = `
+                            <div class="icon-container">
+                                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                    <button class="buttonLogin buttonSubirSalida">
+                                        <span class="material-symbols-outlined bell">upload_file</span>
+                                        <div class="tooltip">Subir Salidas</div>
+                                    </button>
+                                </a>
+                            </div>
+                        `;
+                        }
 
+                        // Reasignar los event listeners si es necesario
                     }
                 }
             })
@@ -1796,6 +1843,9 @@
 
         let cellIndex = 0;
 
+        // Obtener el tipo de usuario
+        const tipo_usuario = document.getElementById('bnupData') ? document.getElementById('bnupData').getAttribute('data-tipo-usuario') : null;
+
         // Si el usuario es ADMIN o PRIVILEGIADO, añadir la celda del checkbox
         if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
             // Crear la celda y el checkbox
@@ -1811,12 +1861,13 @@
 
             // Añadir event listener al checkbox
             checkbox.addEventListener('change', () => {
-                const row = checkbox.closest('tr');
-                toggleRowHighlight(row, checkbox.checked);
+                const currentRow = checkbox.closest('tr');
+                toggleRowHighlight(currentRow, checkbox.checked);
 
                 // Verificar si todas las filas están seleccionadas
-                rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+                const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
                 const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+                const selectAllCheckbox = document.getElementById('selectAll');
                 if (selectAllCheckbox) {
                     selectAllCheckbox.checked = allChecked;
                 }
@@ -1833,21 +1884,16 @@
         numIngresoCell.textContent = solicitud.numero_ingreso;
         row.appendChild(numIngresoCell);
 
-        // Fecha
+        // Fecha Ingreso
         const fechaCell = document.createElement('td');
         fechaCell.classList.add('fechaTable');
         fechaCell.textContent = formatDate(solicitud.fecha_ingreso_au);
         row.appendChild(fechaCell);
 
-        // Departamento
+        // Solicitante
         const deptoCell = document.createElement('td');
         deptoCell.textContent = solicitud.depto_solicitante_text;
         row.appendChild(deptoCell);
-
-        // Recepción
-        const recepcionCell = document.createElement('td');
-        recepcionCell.textContent = solicitud.tipo_recepcion_text;
-        row.appendChild(recepcionCell);
 
         // N° Doc
         const numDocCell = document.createElement('td');
@@ -1855,43 +1901,30 @@
             numDocCell.textContent = solicitud.numero_memo;
         } else {
             numDocCell.innerHTML = `
-                <div class="icon-container">
-                    <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
-                    <div class="tooltip">Sin número de documento</div>
-                </div>
-            `;
+            <div class="icon-container">
+                <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
+                <div class="tooltip">Sin número de documento</div>
+            </div>
+        `;
         }
         row.appendChild(numDocCell);
 
-        // Correo
-        // const correoCell = document.createElement('td');
-        // if (solicitud.correo_solicitante) {
-        //     correoCell.textContent = solicitud.correo_solicitante;
-        //     correoCell.setAttribute('data-order', solicitud.correo_solicitante.toLowerCase());
-        // } else {
-        //     correoCell.innerHTML = `
-        //         <div class="icon-container">
-        //             <span class="material-symbols-outlined" style="color: #E73C45;">mail_off</span>
-        //             <div class="tooltip">Sin Correo</div>
-        //         </div>
-        //     `;
-        //     correoCell.setAttribute('data-order', 'zzz');
-        // }
-        // row.appendChild(correoCell);
+        // Tipo Recepción
+        const recepcionCell = document.createElement('td');
+        recepcionCell.textContent = solicitud.tipo_recepcion_text;
+        row.appendChild(recepcionCell);
 
+        // Tipo Solicitud
+        const tipoSolicitudCell = document.createElement('td');
+        tipoSolicitudCell.textContent = solicitud.tipo_solicitud_text;
+        row.appendChild(tipoSolicitudCell);
 
-
-        // Funcionario
-        // const funcionarioCell = document.createElement('td');
-        // funcionarioCell.textContent = solicitud.funcionario_asignado_text;
-        // row.appendChild(funcionarioCell);
-
-        // Funcionarios
+        // Funcionarios Asignados
         const funcionariosCell = document.createElement('td');
         const funcionarios = solicitud.funcionarios_asignados; // Array de funcionarios asignados
 
-        // Crear una lista o cadena de nombres
-        const funcionariosList = funcionarios.map(func => func.nombre).join(', ');
+        // Crear una cadena de nombres separados por saltos de línea
+        const funcionariosList = funcionarios.map(func => func.nombre).join('\n');
         funcionariosCell.textContent = funcionariosList;
         row.appendChild(funcionariosCell);
 
@@ -1906,7 +1939,11 @@
                 solicitud.numero_ingreso,
                 escapeHtml(solicitud.correo_solicitante),
                 escapeHtml(solicitud.depto_solicitante_text),
-                escapeHtml(solicitud.funcionario_asignado_text),
+                escapeHtml(funcionarios.map(f => f.nombre).join('\n')),
+                escapeHtml(solicitud.tipo_recepcion_text),
+                escapeHtml(solicitud.tipo_solicitud_text),
+                solicitud.numero_memo || "",
+                solicitud.fecha_salida_solicitante || "",
                 'tablaSolicitudes'
             );
         };
@@ -1914,55 +1951,67 @@
         descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
         if (solicitud.descripcion.length > 1) {
             descripcionDiv.innerHTML += `
-                <span class="descripcion-icon">
-                    <span class="material-symbols-outlined">preview</span>
-                </span>
-            `;
+            <span class="descripcion-icon">
+                <span class="material-symbols-outlined">preview</span>
+            </span>
+        `;
         }
         descripcionCell.appendChild(descripcionDiv);
         row.appendChild(descripcionCell);
 
-        // Entrada
+        // Entradas
         const entradaCell = document.createElement('td');
         if (solicitud.archivo_adjunto_ingreso_url) {
             entradaCell.innerHTML = `
-                <div class="icon-container">                        
-                    <a href="${solicitud.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
-                        <button class="buttonLogin buttonPreview" style="background-color: #bfff00;">
-                            <span class="material-symbols-outlined bell">find_in_page</span>
-                        </button>
-                    </a>                        
-                    <div class="tooltip">Ver archivo de ingreso</div>
-                </div>
-            `;
+            <div class="icon-container">                        
+                <a href="${solicitud.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
+                    <button class="buttonLogin buttonPreview">
+                        <span class="material-symbols-outlined bell">find_in_page</span>
+                    </button>
+                </a>                        
+                <div class="tooltip">Ver archivo de ingreso</div>
+            </div>
+        `;
         } else {
             entradaCell.innerHTML = `
-                <div class="icon-container">
-                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
-                    <div class="tooltip">Sin archivo de ingreso</div>
-                </div>
-            `;
+            <div class="icon-container">
+                <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                <div class="tooltip">Sin archivo de ingreso</div>
+            </div>
+        `;
         }
         row.appendChild(entradaCell);
 
         // Salidas
         const salidasCell = document.createElement('td');
-        salidasCell.innerHTML = `
+        if (solicitud.salidas && solicitud.salidas.length > 0) {
+            salidasCell.innerHTML = `
             <div class="icon-container">
                 <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                    <button class="buttonLogin buttonSubirSalida" style="background: #bfff00;">
+                    <button class="buttonLogin buttonPreview" style="background: #ffa420;">
                         <span class="material-symbols-outlined bell">find_in_page</span>
+                        <div class="tooltip">Ver archivo de salida</div>
                     </button>
                 </a>
-                <div class="tooltip">Subir Salidas</div>
             </div>
         `;
+        } else {
+            salidasCell.innerHTML = `
+            <div class="icon-container">
+                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
+                    <button class="buttonLogin buttonSubirSalida">
+                        <span class="material-symbols-outlined bell">upload_file</span>
+                        <div class="tooltip">Subir Salidas</div>
+                    </button>
+                </a>
+            </div>
+        `;
+        }
         row.appendChild(salidasCell);
 
         // Insertar la nueva fila al inicio de la tabla
         tablaSolicitudesBody.insertBefore(row, tablaSolicitudesBody.firstChild);
     }
-
 
 
     /**
