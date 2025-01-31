@@ -19,8 +19,8 @@
             <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
           {% endif %}
         </div>
-        {% comment %} {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %} {% endcomment %}
-        {% if tipo_usuario == 'ADMIN' %}
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+        {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
           <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
         {% endif %}
       </div>

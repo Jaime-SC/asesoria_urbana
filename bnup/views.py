@@ -407,19 +407,22 @@ def statistics_view(request):
     solicitudes_por_depto = active_solicitudes.values(
         "depto_solicitante__nombre"
     ).annotate(total=Count("id"))
+
+    # Corrección aquí: cambiar 'funcionario_asignado__nombre' por 'funcionarios_asignados__nombre'
     solicitudes_por_funcionario = active_solicitudes.values(
-        "funcionario_asignado__nombre"
+        "funcionarios_asignados__nombre"
     ).annotate(total=Count("id"))
+
     solicitudes_por_tipo = active_solicitudes.values("tipo_recepcion__tipo").annotate(
         total=Count("id")
     )
     solicitudes_por_anio = (
-        active_solicitudes.annotate(anio=ExtractYear("fecha_ingreso_au"))  # Renombrado
+        active_solicitudes.annotate(anio=ExtractYear("fecha_ingreso_au"))
         .values("anio")
         .annotate(total=Count("id"))
     )
     solicitudes_por_mes = (
-        active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au"))  # Renombrado
+        active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au"))
         .values("mes")
         .annotate(total=Count("id"))
     )
@@ -441,7 +444,7 @@ def statistics_view(request):
         ),
         "solicitudes_por_funcionario": json.dumps(
             {
-                item["funcionario_asignado__nombre"]: item["total"]
+                item["funcionarios_asignados__nombre"]: item["total"]
                 for item in solicitudes_por_funcionario
             },
             cls=DjangoJSONEncoder,
