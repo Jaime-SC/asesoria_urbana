@@ -37,9 +37,9 @@
                 }]
             },
             options: {
-                indexAxis: 'x', // Barras horizontales
+                indexAxis: 'y', // Barras horizontales
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true
                     }
                 }
