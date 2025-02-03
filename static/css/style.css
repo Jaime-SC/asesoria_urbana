@@ -1076,11 +1076,24 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .divStatistics {
   display: flex;
+  flex-direction: row;
+  height: 100%;
+  gap: 1rem;
+}
+
+.containerStatistics-v1 {
+  display: flex;
   gap: 1rem;
   height: -webkit-fill-available;
   flex-direction: column;
-  width: 100%;
+  width: 50%;
   justify-content: space-between;
+}
+
+.containerStatistics-v2 {
+  display: flex;
+  width: 50%;
+  align-items: flex-end;
 }
 
 .containerStatistics {
@@ -1093,6 +1106,12 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   /* Establece que cada div ocupe un tercio del contenedor, menos el espacio del gap */
   box-sizing: border-box;
   /* Asegura que el padding y border estén incluidos en el tamaño del div */
+}
+
+.containerStatistics #deptoChart {
+  width: 100% !important;
+  max-height: 100%;
+  margin-top: 0px;
 }
 
 .containerDivStatistics {
