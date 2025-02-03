@@ -3,8 +3,9 @@
     let deptoChartInstance;
     let funcionarioChartInstance;
     let tipoChartInstance;
-    let anioChartInstance;
-    let mesChartInstance;
+    let tipoSolicitudChartInstance; // Nueva instancia para tipo de solicitud
+    // let anioChartInstance;
+    // let mesChartInstance; // Eliminado
 
     /**
      * Crea y muestra los gráficos estadísticos basados en los datos proporcionados.
@@ -13,9 +14,10 @@
         // Obtener los datos estadísticos desde los elementos del DOM
         const solicitudesPorDepto = JSON.parse(document.getElementById('solicitudesPorDepto').innerText);
         const solicitudesPorFuncionario = JSON.parse(document.getElementById('solicitudesPorFuncionario').innerText);
-        const solicitudesPorTipo = JSON.parse(document.getElementById('solicitudesPorTipo').innerText);
-        const solicitudesPorAnio = JSON.parse(document.getElementById('solicitudesPorAnio').innerText);
-        const solicitudesPorMes = JSON.parse(document.getElementById('solicitudesPorMes').innerText);
+        const solicitudesPorTipoRecepcion = JSON.parse(document.getElementById('solicitudesPorTipo').innerText);
+        const solicitudesPorTipoSolicitud = JSON.parse(document.getElementById('solicitudesPorTipoSolicitud').innerText);
+        // const solicitudesPorAnio = JSON.parse(document.getElementById('solicitudesPorAnio').innerText);
+        // const solicitudesPorMes = JSON.parse(document.getElementById('solicitudesPorMes').innerText); // Eliminado
 
         // Gráfico de barras horizontales para Solicitudes por Departamento
         const deptoCtx = document.getElementById('deptoChart').getContext('2d');
@@ -35,9 +37,9 @@
                 }]
             },
             options: {
-                indexAxis: 'y', // Barras horizontales
+                indexAxis: 'x', // Barras horizontales
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true
                     }
                 }
@@ -62,8 +64,10 @@
                 }]
             },
             options: {
+                indexAxis: 'y', // Esto hará que las barras se muestren de forma horizontal
+
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true
                     }
                 }
@@ -78,10 +82,10 @@
         tipoChartInstance = new Chart(tipoCtx, {
             type: 'bar',
             data: {
-                labels: Object.keys(solicitudesPorTipo),
+                labels: Object.keys(solicitudesPorTipoRecepcion),
                 datasets: [{
                     label: 'Solicitudes por Tipo de Recepción',
-                    data: Object.values(solicitudesPorTipo),
+                    data: Object.values(solicitudesPorTipoRecepcion),
                     backgroundColor: 'rgba(75, 192, 192, 0.6)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
@@ -96,64 +100,60 @@
             }
         });
 
-        // Gráfico de líneas para Solicitudes por Año
-        const anioCtx = document.getElementById('anioChart').getContext('2d');
-        if (anioChartInstance) {
-            anioChartInstance.destroy();
+        // Gráfico de barras para Solicitudes por Tipo de Solicitud (Nuevo Gráfico en barras horizontales)
+        const tipoSolicitudCtx = document.getElementById('tipoSolicitudChart').getContext('2d');
+        const solicitudesPorTipoSolicitudData = solicitudesPorTipoSolicitud;
+        if (tipoSolicitudChartInstance) {
+            tipoSolicitudChartInstance.destroy();
         }
-        anioChartInstance = new Chart(anioCtx, {
-            type: 'line',
-            data: {
-                labels: Object.keys(solicitudesPorAnio),
-                datasets: [{
-                    label: 'Solicitudes por Año',
-                    data: Object.values(solicitudesPorAnio),
-                    fill: false,
-                    borderColor: 'rgba(255, 206, 86, 1)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Gráfico de barras para Solicitudes por Mes
-        const mesCtx = document.getElementById('mesChart').getContext('2d');
-        const nombresMeses = [
-            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-        ];
-        // Convertir números de mes a nombres de meses
-        const etiquetasMeses = Object.keys(solicitudesPorMes).map(numeroMes => nombresMeses[parseInt(numeroMes) - 1]);
-
-        if (mesChartInstance) {
-            mesChartInstance.destroy();
-        }
-        mesChartInstance = new Chart(mesCtx, {
+        tipoSolicitudChartInstance = new Chart(tipoSolicitudCtx, {
             type: 'bar',
             data: {
-                labels: etiquetasMeses,
+                labels: Object.keys(solicitudesPorTipoSolicitudData),
                 datasets: [{
-                    label: 'Solicitudes por Mes',
-                    data: Object.values(solicitudesPorMes),
-                    backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
+                    label: 'Solicitudes por Tipo de Solicitud',
+                    data: Object.values(solicitudesPorTipoSolicitudData),
+                    backgroundColor: 'rgba(255, 159, 64, 0.6)', // Puedes ajustar el color según tu preferencia
+                    borderColor: 'rgba(255, 159, 64, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
+                indexAxis: 'y', // Esto hará que las barras se muestren de forma horizontal
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true
                     }
                 }
             }
         });
+
+
+        // Gráfico de líneas para Solicitudes por Año
+        // const anioCtx = document.getElementById('anioChart').getContext('2d');
+        // if (anioChartInstance) {
+        //     anioChartInstance.destroy();
+        // }
+        // anioChartInstance = new Chart(anioCtx, {
+        //     type: 'line',
+        //     data: {
+        //         labels: Object.keys(solicitudesPorAnio),
+        //         datasets: [{
+        //             label: 'Solicitudes por Año',
+        //             data: Object.values(solicitudesPorAnio),
+        //             fill: false,
+        //             borderColor: 'rgba(255, 206, 86, 1)',
+        //             tension: 0.1
+        //         }]
+        //     },
+        //     options: {
+        //         scales: {
+        //             y: {
+        //                 beginAtZero: true
+        //             }
+        //         }
+        //     }
+        // });
     }
 
     // Exponer la función createCharts al ámbito global

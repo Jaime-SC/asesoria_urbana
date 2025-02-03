@@ -404,28 +404,39 @@ def statistics_view(request):
     # Filtrar solo las solicitudes activas
     active_solicitudes = IngresoSOLICITUD.objects.filter(is_active=True)
 
+    # Solicitudes por Departamento
     solicitudes_por_depto = active_solicitudes.values(
         "depto_solicitante__nombre"
     ).annotate(total=Count("id"))
 
-    # Corrección aquí: cambiar 'funcionario_asignado__nombre' por 'funcionarios_asignados__nombre'
+    # Solicitudes por Funcionario
     solicitudes_por_funcionario = active_solicitudes.values(
         "funcionarios_asignados__nombre"
     ).annotate(total=Count("id"))
 
-    solicitudes_por_tipo = active_solicitudes.values("tipo_recepcion__tipo").annotate(
-        total=Count("id")
-    )
+    # Solicitudes por Tipo de Recepción
+    solicitudes_por_tipo_recepcion = active_solicitudes.values(
+        "tipo_recepcion__tipo"
+    ).annotate(total=Count("id"))
+
+    # Solicitudes por Tipo de Solicitud (Nueva Consulta)
+    solicitudes_por_tipo_solicitud = active_solicitudes.values(
+        "tipo_solicitud__tipo"
+    ).annotate(total=Count("id"))
+
+    # Solicitudes por Año
     solicitudes_por_anio = (
         active_solicitudes.annotate(anio=ExtractYear("fecha_ingreso_au"))
         .values("anio")
         .annotate(total=Count("id"))
     )
-    solicitudes_por_mes = (
-        active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au"))
-        .values("mes")
-        .annotate(total=Count("id"))
-    )
+
+    # Solicitudes por Mes (Eliminado)
+    # solicitudes_por_mes = (
+    #     active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au"))
+    #     .values("mes")
+    #     .annotate(total=Count("id"))
+    # )
 
     total_solicitudes = active_solicitudes.count()
 
@@ -449,10 +460,17 @@ def statistics_view(request):
             },
             cls=DjangoJSONEncoder,
         ),
-        "solicitudes_por_tipo": json.dumps(
+        "solicitudes_por_tipo_recepcion": json.dumps(
             {
                 item["tipo_recepcion__tipo"]: item["total"]
-                for item in solicitudes_por_tipo
+                for item in solicitudes_por_tipo_recepcion
+            },
+            cls=DjangoJSONEncoder,
+        ),
+        "solicitudes_por_tipo_solicitud": json.dumps(
+            {
+                item["tipo_solicitud__tipo"]: item["total"]
+                for item in solicitudes_por_tipo_solicitud
             },
             cls=DjangoJSONEncoder,
         ),
@@ -460,10 +478,10 @@ def statistics_view(request):
             {str(int(item["anio"])): item["total"] for item in solicitudes_por_anio},
             cls=DjangoJSONEncoder,
         ),
-        "solicitudes_por_mes": json.dumps(
-            {str(int(item["mes"])): item["total"] for item in solicitudes_por_mes},
-            cls=DjangoJSONEncoder,
-        ),
+        # "solicitudes_por_mes": json.dumps(
+        #     {str(int(item["mes"])): item["total"] for item in solicitudes_por_mes},
+        #     cls=DjangoJSONEncoder,
+        # ),
         "total_solicitudes": total_solicitudes,
         "total_salidas": total_salidas,
     }
