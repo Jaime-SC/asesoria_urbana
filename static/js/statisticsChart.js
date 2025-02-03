@@ -119,9 +119,9 @@
                 }]
             },
             options: {
-                indexAxis: 'y', // Esto hará que las barras se muestren de forma horizontal
+                indexAxis: 'x', // Esto hará que las barras se muestren de forma horizontal
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true
                     }
                 }
