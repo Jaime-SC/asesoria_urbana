@@ -6,28 +6,9 @@
         <h2>Estadísticas de Solicitudes</h2>
       </div>
       <div class="divStatistics">
-        <div class="subDivStatics">
-          <!-- Gráfico de solicitudes por tipo de solicitud -->
-          <div class="containerStatistics" style="max-height: 50%;">
-            <p id="solicitudesPorTipoSolicitud" style="display:none;">{{ solicitudes_por_tipo_solicitud|safe }}</p>
-            <canvas id="tipoSolicitudChart"></canvas>
-          </div>
-          <div style="display: flex;height: 50%;gap: 1rem;">
-            <!-- Gráfico de solicitudes por funcionario -->
-            <div class="containerStatistics" style="display: flex;align-items: flex-end;">
-              <p id="solicitudesPorFuncionario" style="display:none;">{{ solicitudes_por_funcionario|safe }}</p>
-              <canvas id="funcionarioChart"></canvas>
-            </div>
-            <!-- Gráfico de solicitudes por tipo de recepcion -->
-            <div class="containerStatistics" style="display: flex;align-items: flex-end;">
-              <p id="solicitudesPorTipo" style="display:none;">{{ solicitudes_por_tipo_recepcion|safe }}</p>
-              <canvas id="tipoChart"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="subDivStatics">
+        <div class="subDivStatics-v1">
           <!-- Indicadores de totales -->
-          <div class="containerStatistics" style="display: flex;max-height: 25%;gap: 1rem;">
+          <div class="containerStatistics" style="max-width: 35%;display: flex;flex-direction: column;gap: 1rem;">
             <div class="cardTotalEstadisticas">
               <div class="contentEstadisticas">
                 <h3>Total de Entradas</h3>
@@ -41,6 +22,22 @@
               </div>
             </div>
           </div>
+          <!-- Gráfico de solicitudes por tipo de solicitud -->
+          <div class="containerStatistics">
+            <p id="solicitudesPorTipoSolicitud" style="display:none;">{{ solicitudes_por_tipo_solicitud|safe }}</p>
+            <canvas id="tipoSolicitudChart"></canvas>
+          </div>
+          <div class="containerStatistics">
+            <p id="solicitudesPorFuncionario" style="display:none;">{{ solicitudes_por_funcionario|safe }}</p>
+            <canvas id="funcionarioChart"></canvas>
+          </div>
+          <!-- Gráfico de solicitudes por tipo de recepcion -->
+          <div class="containerStatistics">
+            <p id="solicitudesPorTipo" style="display:none;">{{ solicitudes_por_tipo_recepcion|safe }}</p>
+            <canvas id="tipoChart"></canvas>
+          </div>
+        </div>
+        <div class="subDivStatics-v2">          
           <div class="containerStatistics">
             <p id="solicitudesPorDepto" style="display:none;">{{ solicitudes_por_depto|safe }}</p>
             <canvas id="deptoChart"></canvas>
