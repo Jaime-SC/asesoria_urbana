@@ -55,9 +55,7 @@ def bnup_form(request):
         depto_solicitante_id = request.POST.get("depto_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
         fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")  # Renombrado
-        fecha_salida_solicitante_str = request.POST.get(
-            "fecha_salida_solicitante"
-        )  # Renombrado
+        fecha_solicitud_str = request.POST.get("fecha_solicitud")  # Renombrado
         funcionarios_asignados_ids = request.POST.getlist("funcionarios_asignados")
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
@@ -87,23 +85,14 @@ def bnup_form(request):
                 {"success": False, "error": "Fecha de ingreso inválida."}
             )
 
-        fecha_salida_solicitante = None
-        if fecha_salida_solicitante_str:
+        fecha_solicitud = None
+        if fecha_solicitud_str:
             try:
-                fecha_salida_solicitante = datetime.strptime(
-                    fecha_salida_solicitante_str, "%Y-%m-%d"
-                ).date()
-                if fecha_ingreso_au < fecha_salida_solicitante:
-                    return JsonResponse(
-                        {
-                            "success": False,
-                            "error": "La fecha del documento recepcionado no puede ser posterior a la fecha de ingreso.",
-                        }
-                    )
+                fecha_solicitud = datetime.strptime(fecha_solicitud_str, "%Y-%m-%d").date()
+                if fecha_ingreso_au < fecha_solicitud:
+                    return JsonResponse({"success": False, "error": "La fecha del documento recepcionado no puede ser posterior a la fecha de ingreso."})
             except ValueError:
-                return JsonResponse(
-                    {"success": False, "error": "Fecha de egreso inválida."}
-                )
+                return JsonResponse({"success": False, "error": "Fecha de solicitud inválida."})
 
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
@@ -127,7 +116,7 @@ def bnup_form(request):
                 depto_solicitante=depto_solicitante,
                 numero_ingreso=numero_ingreso,
                 fecha_ingreso_au=fecha_ingreso_au,  # Asignar la fecha de ingreso
-                fecha_salida_solicitante=fecha_salida_solicitante,  # Asignar la fecha de salida
+                fecha_solicitud=fecha_solicitud,  # Asignar la fecha de salida
                 descripcion=descripcion,
                 archivo_adjunto_ingreso=archivo_adjunto,
             )
@@ -151,11 +140,7 @@ def bnup_form(request):
                 "fecha_ingreso_au": ingreso_solicitud.fecha_ingreso_au.strftime(
                     "%Y-%m-%d"
                 ),
-                "fecha_salida_solicitante": (
-                    ingreso_solicitud.fecha_salida_solicitante.strftime("%Y-%m-%d")
-                    if ingreso_solicitud.fecha_salida_solicitante
-                    else ""
-                ),
+                "fecha_solicitud": ingreso_solicitud.fecha_solicitud.strftime("%Y-%m-%d") if ingreso_solicitud.fecha_solicitud else "",
                 "funcionarios_asignados": [
                     {"id": funcionario.id, "nombre": funcionario.nombre}
                     for funcionario in ingreso_solicitud.funcionarios_asignados.all()
@@ -240,6 +225,7 @@ def edit_bnup_record(request):
         depto_solicitante_id = request.POST.get("depto_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
         fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")  # Renombrado
+        fecha_solicitud_str = request.POST.get("fecha_solicitud")
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
@@ -249,6 +235,19 @@ def edit_bnup_record(request):
         except ValueError:
             return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
 
+        # Convertir fecha de solicitud
+        fecha_solicitud = None
+        if fecha_solicitud_str:
+            try:
+                fecha_solicitud = datetime.strptime(fecha_solicitud_str, "%Y-%m-%d").date()
+                # Si la fecha de solicitud es mayor (posterior) que la de ingreso, se lanza error
+                if fecha_ingreso_au < fecha_solicitud:
+                    return JsonResponse({
+                        "success": False,
+                        "error": "La fecha de solicitud no puede ser posterior a la fecha de ingreso."
+                    })
+            except ValueError:
+                return JsonResponse({"success": False, "error": "Fecha de solicitud inválida."})
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
             tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)  # Obtener el tipo de solicitud
@@ -280,6 +279,7 @@ def edit_bnup_record(request):
             solicitud.depto_solicitante = depto_solicitante
             solicitud.numero_ingreso = numero_ingreso
             solicitud.fecha_ingreso_au = fecha_ingreso_au
+            solicitud.fecha_solicitud = fecha_solicitud
             solicitud.descripcion = descripcion
 
             if tipo_usuario == "ADMIN":
@@ -304,6 +304,7 @@ def edit_bnup_record(request):
                 "depto_solicitante_text": solicitud.depto_solicitante.nombre,
                 "numero_ingreso": solicitud.numero_ingreso,
                 "fecha_ingreso_au": solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
+                "fecha_solicitud": solicitud.fecha_solicitud.strftime("%Y-%m-%d") if solicitud.fecha_solicitud else "",
                 "funcionarios_asignados": [
                     {"id": funcionario.id, "nombre": funcionario.nombre}
                     for funcionario in solicitud.funcionarios_asignados.all()
@@ -344,6 +345,7 @@ def edit_bnup_record(request):
             "depto_solicitante_text": solicitud.depto_solicitante.nombre,
             "numero_ingreso": solicitud.numero_ingreso,
             "fecha_ingreso_au": solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
+            "fecha_solicitud": solicitud.fecha_solicitud.strftime("%Y-%m-%d") if solicitud.fecha_solicitud else "",
             "funcionarios_asignados": [
                 {"id": f.id, "nombre": f.nombre} for f in solicitud.funcionarios_asignados.all()
             ],

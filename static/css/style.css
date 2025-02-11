@@ -1874,6 +1874,11 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   background-color: #00bb2d !important;
 }
 
+#addDeptoButton:hover,
+.addFuncionarioBtn:hover {
+  background-color: #04e639 !important;
+}
+
 #saveNewDeptoButton {
   background-color: #4BBFE0;
 }
@@ -1881,6 +1886,11 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 #cancelNewDeptoButton,
 .removeFuncionarioBtn {
   background-color: #E73C45 !important;
+}
+
+#cancelNewDeptoButton:hover,
+.removeFuncionarioBtn:hover {
+  background-color: #e65a61 !important;
 }
 
 

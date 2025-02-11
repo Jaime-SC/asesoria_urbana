@@ -29,15 +29,13 @@ class TipoSolicitud(models.Model):
 
 class IngresoSOLICITUD(models.Model):  # Renombrado de SolicitudBNUP
     tipo_recepcion = models.ForeignKey(TipoRecepcion, on_delete=models.CASCADE)
-    tipo_solicitud = models.ForeignKey(TipoSolicitud, on_delete=models.CASCADE)  # Nuevo campo
+    tipo_solicitud = models.ForeignKey(TipoSolicitud, on_delete=models.CASCADE)
     numero_memo = models.IntegerField(null=True, blank=True)
     correo_solicitante = models.EmailField(null=True, blank=True)
     depto_solicitante = models.ForeignKey(Departamento, on_delete=models.CASCADE)
-    # nombre_solicitante = models.CharField(max_length=255)  # Campo eliminado
     numero_ingreso = models.IntegerField()
     fecha_ingreso_au = models.DateField()  # Renombrado
-    fecha_salida_solicitante = models.DateField(null=True, blank=True)  # Renombrado
-    # funcionario_asignado = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
+    fecha_solicitud = models.DateField(null=True, blank=True)
     funcionarios_asignados = models.ManyToManyField(Funcionario, related_name='ingresos')
     descripcion = models.TextField(null=True, blank=True)
     archivo_adjunto_ingreso = models.FileField(upload_to='archivos_adjuntos/', null=True, blank=True)

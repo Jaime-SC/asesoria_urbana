@@ -56,8 +56,8 @@
                 </div>
                 <!-- Nuevo Campo: Fecha -->
                 <div class="form-group" style="width: 33%;">
-                  <label for="fecha_salida_solicitante">Fecha</label>
-                  <input type="date" name="fecha_salida_solicitante" id="fecha_salida_solicitante" />
+                  <label for="fecha_solicitud">Fecha de Solicitud</label>
+                  <input type="date" name="fecha_solicitud" id="fecha_solicitud" />
                 </div>
               </div>
 
@@ -80,8 +80,9 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div class="btn-container">
-                  <button type="button" id="openFileModal" class="btn"><span class="material-symbols-outlined" style="color: ghostwhite;">attach_file</span></button>
+                <div class="form-group">
+                  <label for="openFileModal">Adjuntar</label>
+                  <button type="button" id="openFileModal" class="btn" style="margin-top: 5px;height: 2.2rem;padding: 5px 0px;"><span class="material-symbols-outlined bell" style="color: ghostwhite;">attach_file</span></button>
                   <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" required /> <!-- Mantén el input en el formulario pero oculto -->
                 </div>
               </div>
@@ -205,7 +206,9 @@
                         '{% for funcionario in solicitud.funcionarios_asignados.all %}{{ funcionario.nombre }}{% if not forloop.last %}\n{% endif %}{% endfor %}',
                         '{{ solicitud.tipo_recepcion.tipo|escapejs }}',
                         '{{ solicitud.tipo_solicitud.tipo|escapejs }}',
-                        '{{ solicitud.numero_memo|default_if_none:""|escapejs }}','tablaSolicitudes')">
+                        '{{ solicitud.numero_memo|default_if_none:""|escapejs }}',
+                        '{{ solicitud.fecha_solicitud|date:"d/m/Y"|escapejs }}',
+                        'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
                         <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
@@ -284,6 +287,9 @@
       <div class="modal-field modal-field-field">
         <strong>Número de Memo:</strong> <span id="numeroMemo"></span>
       </div>
+      <div class="modal-field modal-field-field">
+        <strong>Fecha de Solicitud:</strong> <span id="fechaSolicitud"></span>
+      </div>
       <!-- Condicional para mostrar u ocultar el correo -->
       <div class="modal-field modal-field-field" id="correoField" style="display: none;">
         <strong>Correo del Solicitante:</strong> <span id="correo_solicitante"></span>
@@ -294,9 +300,6 @@
       <div class="modal-field modal-field-field">
         <strong>Funcionarios Asignados:</strong> <span id="funcionarios_asignados"></span>
       </div>
-      {% comment %} <div class="modal-field modal-field-field">
-        <strong>Fecha de Salida:</strong> <span id="fechaSalida"></span>
-      </div> {% endcomment %}
       <div class="modal-field">
         <strong>Descripción:</strong>
         <br />
@@ -305,6 +308,7 @@
     </div>
   </div>
 </div>
+
 
 
 <!-- Modal para adjuntar archivo -->
@@ -438,8 +442,8 @@
         </div>
         <!-- Nuevo Campo: Fecha de Egreso (Opcional) -->
         <div class="form-group">
-          <label for="edit_fecha_salida_solicitante">Fecha</label>
-          <input type="date" name="fecha_salida_solicitante" id="edit_fecha_salida_solicitante" />
+          <label for="edit_fecha_solicitud">Fecha de Solicitud</label>
+          <input type="date" name="fecha_solicitud" id="edit_fecha_solicitud" />
         </div>
       </div>
 
