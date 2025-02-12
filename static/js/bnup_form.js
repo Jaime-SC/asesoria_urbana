@@ -162,37 +162,39 @@
      */
     function initializeFileModal() {
         const modalButton = document.getElementById('openFileModal');
-        const fileModal = document.getElementById('fileModal');
+        const fileModal = document.getElementById('fileModal'); // Asegúrate de tener un modal definido para archivos
         const closeModalButton = fileModal ? fileModal.querySelector('.close') : null;
         const confirmButton = document.getElementById('confirmButton');
         const fileModalInput = document.getElementById('fileModalInput');
+        // El input del formulario lo dejamos en el modal o lo vinculamos a este
         const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
-
-        // Verificar la existencia de elementos necesarios
+    
+        // Verificar que existan todos los elementos necesarios
         if (!modalButton || !fileModal || !closeModalButton || !confirmButton || !fileModalInput || !archivoAdjuntoInput) {
             return;
         }
-
-        // Evento para abrir el modal
+    
+        // Cuando se hace clic en el botón de adjuntar, se muestra el modal para archivos
         modalButton.onclick = () => {
             fileModal.style.display = 'block';
         };
-
-        // Evento para cerrar el modal al hacer clic en el botón de cerrar
+    
+        // Cerrar el modal al hacer clic en el botón de cerrar
         closeModalButton.onclick = () => {
             fileModal.style.display = 'none';
         };
-
-        // Evento para cerrar el modal al hacer clic fuera de él
+    
+        // Cerrar el modal al hacer clic fuera de él
         fileModal.addEventListener('click', (event) => {
             if (event.target === fileModal) {
                 fileModal.style.display = 'none';
             }
         });
-
-        // Evento para confirmar la selección del archivo
+    
+        // Confirmar la selección del archivo
         confirmButton.onclick = () => {
             if (fileModalInput.files.length > 0) {
+                // Asignar los archivos seleccionados al input del formulario
                 archivoAdjuntoInput.files = fileModalInput.files;
                 fileModal.style.display = 'none';
                 Swal.fire({
@@ -214,8 +216,8 @@
                 });
             }
         };
-
-        // Configurar el plugin fileinput para mejorar la experiencia de carga de archivos
+    
+        // Inicializar el plugin fileinput (si usas uno)
         $(fileModalInput).fileinput({
             showUpload: false,
             showRemove: true,
@@ -238,12 +240,13 @@
                 actionCancel: ''
             }
         });
-
+    
         // Sincronizar la selección de archivos entre los inputs
         fileModalInput.onchange = () => {
             archivoAdjuntoInput.files = fileModalInput.files;
         };
     }
+    
 
     /**
      * Abre el modal de salidas, mostrando o no el formulario de creación según el tipo de usuario.
@@ -254,49 +257,37 @@
             const salidaModal = document.getElementById('salidaModal');
             const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
             const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-
+    
             if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
                 console.error('Elementos del modal de salida no encontrados.');
                 return;
             }
-
-            // Mostrar el modal de salidas
+    
             salidaModal.style.display = 'block';
-
-            // Evento para cerrar el modal al hacer clic en el botón de cerrar
-            salidaCloseButton.onclick = () => {
-                salidaModal.style.display = 'none';
-            };
-
-            // Evento para cerrar el modal al hacer clic fuera de él
-            window.onclick = (event) => {
-                if (event.target === salidaModal) {
-                    salidaModal.style.display = 'none';
-                }
-            };
-
-            // Limpiar la tabla de salidas
+            salidaCloseButton.onclick = () => { salidaModal.style.display = 'none'; };
+            window.onclick = (event) => { if (event.target === salidaModal) salidaModal.style.display = 'none'; };
+    
             tablaSalidasBody.innerHTML = '';
-
-            // Obtener las salidas asociadas a la solicitud mediante una solicitud AJAX
+    
             fetch(`/bnup/get_salidas/${solicitudId}/`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         data.salidas.forEach(salida => {
                             const row = document.createElement('tr');
-
-                            // Columna para el número de salida
                             const numeroSalidaCell = document.createElement('td');
                             numeroSalidaCell.textContent = salida.numero_salida;
                             row.appendChild(numeroSalidaCell);
-
-                            // Columna para la fecha de salida
+    
                             const fechaSalidaCell = document.createElement('td');
                             fechaSalidaCell.textContent = salida.fecha_salida;
                             row.appendChild(fechaSalidaCell);
-
-                            // Columna para el archivo adjunto
+    
                             const archivoCell = document.createElement('td');
                             if (salida.archivo_url) {
                                 const link = document.createElement('a');
@@ -304,22 +295,22 @@
                                 link.target = '_blank';
                                 link.setAttribute('aria-label', 'Ver Archivo');
                                 link.setAttribute('title', 'Ver Archivo');
-
+    
                                 const iconSpan = document.createElement('span');
                                 iconSpan.classList.add('material-symbols-outlined');
                                 iconSpan.textContent = 'preview';
-
+    
                                 link.appendChild(iconSpan);
                                 archivoCell.appendChild(link);
                             } else {
                                 archivoCell.textContent = 'No adjunto';
                             }
                             row.appendChild(archivoCell);
-
+    
                             tablaSalidasBody.appendChild(row);
                         });
-
-                        // Inicializar funciones adicionales después de llenar la tabla
+    
+                        // Inicializar la tabla, etc.
                         initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
                     } else {
                         console.error('Error al obtener las salidas:', data.error);

@@ -82,9 +82,16 @@
                 </div>
                 <div class="form-group">
                   <label for="openFileModal">Adjuntar</label>
-                  <button type="button" id="openFileModal" class="btn" style="margin-top: 5px;height: 2.2rem;padding: 5px 0px;"><span class="material-symbols-outlined bell" style="color: ghostwhite;">attach_file</span></button>
-                  <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" style="display: none;" required /> <!-- Mantén el input en el formulario pero oculto -->
+                  <button type="button" id="openFileModal" class="btn" style="margin-top: 5px; height: 2.2rem; padding: 5px 0px;">
+                    <span class="material-symbols-outlined bell" style="color: ghostwhite;">attach_file</span>
+                  </button>
+                  <!-- Elimina o mueve este bloque para que no se muestre por defecto -->
+                  <div id="hiddenFileInput" style="display: none;">
+                    <!-- Este es el bloque generado por el plugin (por ejemplo, bootstrap-fileinput) -->
+                    <input type="file" name="archivo_adjunto_ingreso" id="archivo_adjunto" class="file" required>
+                  </div>
                 </div>
+                
               </div>
 
               <div class="form-group">
@@ -311,23 +318,24 @@
 
 
 
-<!-- Modal para adjuntar archivo -->
-<div id="fileModal" class="modal">
+<!-- Modal para adjuntar archivo (fuera del formulario principal) -->
+<div id="fileModal" class="modal" style="display: none;">
   <div class="modal-content">
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <label for="archivo_adjunto">Adjuntar archivo</label>
-        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+        <span class="close">
+          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+        </span>
       </div>
-      <input type="file" id="fileModalInput" class="file" />
-
-      <!-- Nuevo botón de Confirmar -->
+      <input type="file" id="fileModalInput" class="file">
       <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
         <button id="confirmButton" class="btn">Confirmar</button>
       </div>
     </div>
   </div>
 </div>
+
 
 {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' or tipo_usuario == 'VISUALIZADOR' %}
   <!-- Mostrar botón para crear salida -->

@@ -9,6 +9,7 @@ from .models import (
     TipoRecepcion,
     TipoSolicitud,
 )
+from django.contrib.auth.decorators import login_required
 from django.db.models.functions import ExtractYear, ExtractMonth
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.serializers.json import DjangoJSONEncoder
@@ -50,13 +51,16 @@ def bnup_form(request):
             else None
         )
         correo_solicitante = (
-            request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
+            request.POST.get(
+                "correo_solicitante") if tipo_recepcion_id == "2" else None
         )
         depto_solicitante_id = request.POST.get("depto_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
-        fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")  # Renombrado
+        fecha_ingreso_au_str = request.POST.get(
+            "fecha_ingreso_au")  # Renombrado
         fecha_solicitud_str = request.POST.get("fecha_solicitud")  # Renombrado
-        funcionarios_asignados_ids = request.POST.getlist("funcionarios_asignados")
+        funcionarios_asignados_ids = request.POST.getlist(
+            "funcionarios_asignados")
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
@@ -88,7 +92,8 @@ def bnup_form(request):
         fecha_solicitud = None
         if fecha_solicitud_str:
             try:
-                fecha_solicitud = datetime.strptime(fecha_solicitud_str, "%Y-%m-%d").date()
+                fecha_solicitud = datetime.strptime(
+                    fecha_solicitud_str, "%Y-%m-%d").date()
                 if fecha_ingreso_au < fecha_solicitud:
                     return JsonResponse({"success": False, "error": "La fecha del documento recepcionado no puede ser posterior a la fecha de ingreso."})
             except ValueError:
@@ -99,7 +104,8 @@ def bnup_form(request):
             tipo_solicitud = TipoSolicitud.objects.get(
                 id=tipo_solicitud_id
             )  # Obtener el tipo de solicitud
-            depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
+            depto_solicitante = Departamento.objects.get(
+                id=depto_solicitante_id)
             funcionarios_asignados = Funcionario.objects.filter(
                 id__in=funcionarios_asignados_ids
             )
@@ -123,7 +129,8 @@ def bnup_form(request):
             ingreso_solicitud.save()
 
             # Asignar múltiples funcionarios
-            ingreso_solicitud.funcionarios_asignados.set(funcionarios_asignados)
+            ingreso_solicitud.funcionarios_asignados.set(
+                funcionarios_asignados)
 
             # Construir datos de la solicitud para devolver en la respuesta
             solicitud_data = {
@@ -220,18 +227,22 @@ def edit_bnup_record(request):
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
-        numero_memo = request.POST.get("num_memo") if tipo_recepcion_id != "2" and tipo_solicitud_id != "10" else None
-        correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id == "2" else None
+        numero_memo = request.POST.get(
+            "num_memo") if tipo_recepcion_id != "2" and tipo_solicitud_id != "10" else None
+        correo_solicitante = request.POST.get(
+            "correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
-        fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")  # Renombrado
+        fecha_ingreso_au_str = request.POST.get(
+            "fecha_ingreso_au")  # Renombrado
         fecha_solicitud_str = request.POST.get("fecha_solicitud")
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
         # Convertir fecha_ingreso_au_str a objeto datetime.date
         try:
-            fecha_ingreso_au = datetime.strptime(fecha_ingreso_au_str, "%Y-%m-%d").date()
+            fecha_ingreso_au = datetime.strptime(
+                fecha_ingreso_au_str, "%Y-%m-%d").date()
         except ValueError:
             return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
 
@@ -239,7 +250,8 @@ def edit_bnup_record(request):
         fecha_solicitud = None
         if fecha_solicitud_str:
             try:
-                fecha_solicitud = datetime.strptime(fecha_solicitud_str, "%Y-%m-%d").date()
+                fecha_solicitud = datetime.strptime(
+                    fecha_solicitud_str, "%Y-%m-%d").date()
                 # Si la fecha de solicitud es mayor (posterior) que la de ingreso, se lanza error
                 if fecha_ingreso_au < fecha_solicitud:
                     return JsonResponse({
@@ -250,11 +262,14 @@ def edit_bnup_record(request):
                 return JsonResponse({"success": False, "error": "Fecha de solicitud inválida."})
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
-            tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)  # Obtener el tipo de solicitud
-            depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
+            tipo_solicitud = TipoSolicitud.objects.get(
+                id=tipo_solicitud_id)  # Obtener el tipo de solicitud
+            depto_solicitante = Departamento.objects.get(
+                id=depto_solicitante_id)
 
             if tipo_usuario == "ADMIN":
-                funcionarios_asignados_ids = request.POST.getlist("funcionarios_asignados")
+                funcionarios_asignados_ids = request.POST.getlist(
+                    "funcionarios_asignados")
 
                 # Validar que al menos un funcionario está asignado
                 if not funcionarios_asignados_ids:
@@ -265,7 +280,8 @@ def edit_bnup_record(request):
                     return JsonResponse({"success": False, "error": "No puede asignar el mismo funcionario más de una vez."})
 
                 # Obtener los funcionarios asignados
-                funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_asignados_ids)
+                funcionarios_asignados = Funcionario.objects.filter(
+                    id__in=funcionarios_asignados_ids)
                 if not funcionarios_asignados.exists():
                     return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
             else:
@@ -359,6 +375,7 @@ def edit_bnup_record(request):
 
         return JsonResponse({"success": True, "data": data})
 
+
 def delete_bnup_records(request):
     """
     Maneja la eliminación lógica de solicitudes de BNUP.
@@ -368,7 +385,8 @@ def delete_bnup_records(request):
         if not request.user.is_authenticated:
             return JsonResponse({"success": False, "error": "No autenticado."})
 
-        perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
+        perfil_usuario = PerfilUsuario.objects.filter(
+            user=request.user).first()
         tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
         if tipo_usuario != "ADMIN":
@@ -388,6 +406,7 @@ def delete_bnup_records(request):
             return JsonResponse({"success": False, "error": str(e)})
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
+
 
 def statistics_view(request):
     """
@@ -477,7 +496,8 @@ def statistics_view(request):
             cls=DjangoJSONEncoder,
         ),
         "solicitudes_por_anio": json.dumps(
-            {str(int(item["anio"])): item["total"] for item in solicitudes_por_anio},
+            {str(int(item["anio"])): item["total"]
+             for item in solicitudes_por_anio},
             cls=DjangoJSONEncoder,
         ),
         # "solicitudes_por_mes": json.dumps(
@@ -490,48 +510,48 @@ def statistics_view(request):
 
     return render(request, "bnup/statistics.html", context)
 
+
+@login_required
 def get_salidas(request, solicitud_id):
-    """
-    Devuelve las salidas asociadas a una solicitud específica en formato JSON.
-    """
     if request.method == "GET":
         try:
-            solicitud = IngresoSOLICITUD.objects.get(id=solicitud_id, is_active=True)
+            solicitud = IngresoSOLICITUD.objects.get(
+                id=solicitud_id, is_active=True)
         except IngresoSOLICITUD.DoesNotExist:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "La solicitud no existe o ha sido eliminada.",
-                }
-            )
+            return JsonResponse({
+                "success": False,
+                "error": "La solicitud no existe o ha sido eliminada."
+            })
 
-        salidas = SalidaSOLICITUD.objects.filter(ingreso_solicitud=solicitud)
-        salidas_data = [
-            {
-                "numero_salida": salida.numero_salida,
-                "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
-                "archivo_url": (
-                    salida.archivo_adjunto_salida.url
-                    if salida.archivo_adjunto_salida
-                    else ""
-                ),
+        try:
+            salidas = SalidaSOLICITUD.objects.filter(
+                ingreso_solicitud=solicitud)
+            salidas_data = []
+            for salida in salidas:
+                # Si por alguna razón el archivo no está disponible, se captura la excepción
+                try:
+                    archivo_url = salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else ""
+                except Exception:
+                    archivo_url = ""
+                salidas_data.append({
+                    "numero_salida": salida.numero_salida,
+                    "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y") if salida.fecha_salida else "",
+                    "archivo_url": archivo_url,
+                })
+
+            solicitud_data = {
+                "tipo_solicitud": solicitud.tipo_solicitud.id,
+                "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,
+                "fecha_solicitud": solicitud.fecha_solicitud.strftime("%Y-%m-%d") if solicitud.fecha_solicitud else ""
             }
-            for salida in salidas
-        ]
 
-        solicitud_data = {
-            "tipo_solicitud": solicitud.tipo_solicitud.id,
-            "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,
-            "fecha_salida_solicitante": (
-                solicitud.fecha_salida_solicitante.strftime("%Y-%m-%d")
-                if solicitud.fecha_salida_solicitante
-                else ""
-            ),
-        }
-
-        return JsonResponse(
-            {"success": True, "salidas": salidas_data, "solicitud": solicitud_data}
-        )
+            return JsonResponse({
+                "success": True,
+                "salidas": salidas_data,
+                "solicitud": solicitud_data
+            })
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
 
@@ -557,10 +577,12 @@ def create_salida(request):
         archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
 
         try:
-            solicitud = IngresoSOLICITUD.objects.get(id=solicitud_id, is_active=True)
+            solicitud = IngresoSOLICITUD.objects.get(
+                id=solicitud_id, is_active=True)
 
             # Convertir la cadena de fecha a objeto datetime.date
-            fecha_salida = datetime.strptime(fecha_salida_str, "%Y-%m-%d").date()
+            fecha_salida = datetime.strptime(
+                fecha_salida_str, "%Y-%m-%d").date()
 
             salida = SalidaSOLICITUD(
                 ingreso_solicitud=solicitud,
