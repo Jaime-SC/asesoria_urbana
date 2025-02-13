@@ -105,15 +105,16 @@
 
         // Mostrar u ocultar el campo de correo según la tabla de origen
         if (correoField) {
-            if (tablaOrigen === 'tablaSolicitudesCorreo' && correo_solicitante) {
-                if (correoSolicitante) {
-                    correoSolicitante.textContent = correo_solicitante;
-                }
-                correoField.style.display = 'flex';
+            if (!correo_solicitante || correo_solicitante === "None") {
+                correoSolicitante.textContent = "Sin correo asignado";
+                correoSolicitante.style = "color: red;";
             } else {
-                correoField.style.display = 'none';
+                correoSolicitante.textContent = correo_solicitante;
+                correoSolicitante.style = "color: black;";
             }
+            correoField.style.display = 'flex';
         }
+        
 
         // Mostrar u ocultar el campo de número de memo según si tiene un valor
         if (numeroMemoElement) {

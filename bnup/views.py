@@ -184,16 +184,11 @@ def bnup_form(request):
             )
 
     else:
-        solicitudes = IngresoSOLICITUD.objects.filter(is_active=True).select_related(
-            "tipo_recepcion", "tipo_solicitud"
-        )
-        departamentos = Departamento.objects.all()
-        funcionarios = Funcionario.objects.all()
-        tipos_recepcion = TipoRecepcion.objects.all()
-        tipos_solicitud = (
-            TipoSolicitud.objects.all()
-        )  # Obtener todos los tipos de solicitud
-
+        solicitudes = IngresoSOLICITUD.objects.filter(is_active=True).select_related("tipo_recepcion", "tipo_solicitud")
+        departamentos = Departamento.objects.all().order_by('nombre')
+        funcionarios = Funcionario.objects.all().order_by('nombre')
+        tipos_recepcion = TipoRecepcion.objects.all().order_by('tipo')
+        tipos_solicitud = TipoSolicitud.objects.all().order_by('tipo')
         context = {
             "departamentos": departamentos,
             "funcionarios": funcionarios,
@@ -204,7 +199,6 @@ def bnup_form(request):
             "total_funcionarios": funcionarios.count(),  # Añadido
         }
         return render(request, "bnup/form.html", context)
-
 
 def edit_bnup_record(request):
     """
@@ -375,7 +369,6 @@ def edit_bnup_record(request):
 
         return JsonResponse({"success": True, "data": data})
 
-
 def delete_bnup_records(request):
     """
     Maneja la eliminación lógica de solicitudes de BNUP.
@@ -406,7 +399,6 @@ def delete_bnup_records(request):
             return JsonResponse({"success": False, "error": str(e)})
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
-
 
 def statistics_view(request):
     """
@@ -509,7 +501,6 @@ def statistics_view(request):
     }
 
     return render(request, "bnup/statistics.html", context)
-
 
 @login_required
 def get_salidas(request, solicitud_id):

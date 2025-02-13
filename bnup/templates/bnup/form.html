@@ -204,24 +204,26 @@
                   </td>
 
                   <td>
-                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal(
-                        '{{ solicitud.descripcion|escapejs }}',
-                        '{{ solicitud.fecha_ingreso_au|date:"d/m/Y"|escapejs }}',
-                        '{{ solicitud.numero_ingreso|escapejs }}',
-                        '{{ solicitud.correo_solicitante|escapejs }}',
-                        '{{ solicitud.depto_solicitante.nombre|escapejs }}',
-                        '{% for funcionario in solicitud.funcionarios_asignados.all %}{{ funcionario.nombre }}{% if not forloop.last %}\n{% endif %}{% endfor %}',
-                        '{{ solicitud.tipo_recepcion.tipo|escapejs }}',
-                        '{{ solicitud.tipo_solicitud.tipo|escapejs }}',
-                        '{{ solicitud.numero_memo|default_if_none:""|escapejs }}',
-                        '{{ solicitud.fecha_solicitud|date:"d/m/Y"|escapejs }}',
-                        'tablaSolicitudes')">
+                    <div class="descripcion-preview" 
+                         data-fulltext="{{ solicitud.descripcion|escapejs }}"
+                         onclick="openBNUPDescripcionModal(
+                           '{{ solicitud.descripcion|escapejs }}',
+                           '{{ solicitud.fecha_ingreso_au|date:"d/m/Y"|escapejs }}',
+                           '{{ solicitud.numero_ingreso|escapejs }}',
+                           '{{ solicitud.correo_solicitante|escapejs }}',
+                           '{{ solicitud.depto_solicitante.nombre|escapejs }}',
+                           '{% for funcionario in solicitud.funcionarios_asignados.all %}{{ funcionario.nombre }}{% if not forloop.last %}\n{% endif %}{% endfor %}',
+                           '{{ solicitud.tipo_recepcion.tipo|escapejs }}',
+                           '{{ solicitud.tipo_solicitud.tipo|escapejs }}',
+                           '{{ solicitud.numero_memo|default_if_none:""|escapejs }}',
+                           '{{ solicitud.fecha_solicitud|date:"d/m/Y"|escapejs }}',
+                           'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
                         <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
                       {% endif %}
                     </div>
-                  </td>
+                  </td>                  
                   
                   <td style="display: flex; justify-content: center; border-inline: 0;">
                     {% if solicitud.archivo_adjunto_ingreso %}
@@ -297,10 +299,9 @@
       <div class="modal-field modal-field-field">
         <strong>Fecha de Solicitud:</strong> <span id="fechaSolicitud"></span>
       </div>
-      <!-- Condicional para mostrar u ocultar el correo -->
-      <div class="modal-field modal-field-field" id="correoField" style="display: none;">
+      <div class="modal-field modal-field-field" id="correoField">
         <strong>Correo del Solicitante:</strong> <span id="correo_solicitante"></span>
-      </div>
+      </div>      
       <div class="modal-field modal-field-field">
         <strong>Solicitante:</strong> <span id="deptoSolicitante"></span>
       </div>

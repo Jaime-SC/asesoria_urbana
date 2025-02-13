@@ -125,7 +125,7 @@ function getRowsPerPage() {
     if (window.matchMedia("(min-width: 1280px) and (max-width: 1366px)").matches) {
         return 7;
     } else {
-        return 10;
+        return 9;
     }
 }
 
@@ -426,14 +426,16 @@ function searchTable(state) {
         // Filtrar filas basadas en el término de búsqueda
         state.filteredRows = state.rows.filter(row => {
             const cells = Array.from(row.getElementsByTagName('td'));
-            const found = cells.some(cell => cell.innerText.toLowerCase().includes(filter));
-
-            if (found) {
-                row.classList.add('highlight-row');
-            }
-
-            return found;
+            return cells.some(cell => {
+                // Si la celda contiene un elemento con la clase "descripcion-preview"
+                const previewElem = cell.querySelector('.descripcion-preview');
+                const cellText = previewElem
+                    ? (previewElem.getAttribute('data-fulltext') || previewElem.innerText)
+                    : cell.innerText;
+                return cellText.toLowerCase().includes(filter);
+            });
         });
+
 
         updatePaginationAfterSearch(state);
     });
