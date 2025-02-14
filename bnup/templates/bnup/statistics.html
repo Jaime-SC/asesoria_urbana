@@ -1,46 +1,87 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <div class="cardContent">
   <div class="card-details">
     <div class="statistics">
       <div class="tittleStatistics">
-        <button id="backToBNUP" class="btn-back"><span class="material-symbols-outlined">arrow_back</span> Volver a Solicitudes</button>
+        <button id="backToBNUP" class="btn-back">
+          <span class="material-symbols-outlined">arrow_back</span> Volver a Solicitudes
+        </button>
         <h2>Estadísticas de Solicitudes</h2>
+        <!-- Contenedor para los botones de paginación -->
+        <div id="paginationStatistics" class="pagination"></div>
+        <!-- Botón para exportar a Excel -->
+        <button id="exportExcel" class="btn">Exportar a Excel</button>
       </div>
-      <div class="divStatistics">
-        <div class="subDivStatics-v1">
-          <!-- Indicadores de totales -->
-          <div class="containerStatistics" style="max-width: 35%;display: flex;flex-direction: column;gap: 1rem;">
-            <div class="cardTotalEstadisticas">
-              <div class="contentEstadisticas">
-                <h3>Total de Entradas</h3>
-                <p>{{ total_solicitudes }}</p>
+      
+
+      <!-- Contenedor que agrupa las "páginas" de estadísticas -->
+      <div id="statisticsPages">
+        <!-- Página 1: Contiene los gráficos actuales -->
+        <div class="stats-page" id="statsPage1">
+          <div class="divStatistics">
+            <div class="subDivStatics-v1">
+              <!-- Indicadores de totales -->
+              <div class="containerStatistics" style="max-width: 35%;display: flex;flex-direction: column;gap: 1rem;">
+                <div class="cardTotalEstadisticas">
+                  <div class="contentEstadisticas">
+                    <h3>Total de Entradas</h3>
+                    <p>{{ total_solicitudes }}</p>
+                  </div>
+                </div>
+                <div class="cardTotalEstadisticas inverse">
+                  <div class="contentEstadisticas">
+                    <h3>Total de Salidas</h3>
+                    <p>{{ total_salidas }}</p>
+                  </div>
+                </div>
+              </div>
+              <!-- Gráfico de solicitudes por tipo de solicitud -->
+              <div class="containerStatistics">
+                <p id="solicitudesPorTipoSolicitud" style="display: none;">{{ solicitudes_por_tipo_solicitud|safe }}</p>
+                <canvas id="tipoSolicitudChart"></canvas>
+              </div>
+              <div class="containerStatistics">
+                <p id="solicitudesPorFuncionario" style="display: none;">{{ solicitudes_por_funcionario|safe }}</p>
+                <canvas id="funcionarioChart"></canvas>
+              </div>
+              <!-- Gráfico de solicitudes por tipo de recepción -->
+              <div class="containerStatistics">
+                <p id="solicitudesPorTipo" style="display: none;">{{ solicitudes_por_tipo_recepcion|safe }}</p>
+                <canvas id="tipoChart"></canvas>
               </div>
             </div>
-            <div class="cardTotalEstadisticas inverse">
-              <div class="contentEstadisticas">
-                <h3>Total de Salidas</h3>
-                <p>{{ total_salidas }}</p>
+            <div class="subDivStatics-v2">
+              <div class="containerStatistics">
+                <p id="solicitudesPorDepto" style="display: none;">{{ solicitudes_por_depto|safe }}</p>
+                <canvas id="deptoChart"></canvas>
               </div>
             </div>
-          </div>
-          <!-- Gráfico de solicitudes por tipo de solicitud -->
-          <div class="containerStatistics">
-            <p id="solicitudesPorTipoSolicitud" style="display:none;">{{ solicitudes_por_tipo_solicitud|safe }}</p>
-            <canvas id="tipoSolicitudChart"></canvas>
-          </div>
-          <div class="containerStatistics">
-            <p id="solicitudesPorFuncionario" style="display:none;">{{ solicitudes_por_funcionario|safe }}</p>
-            <canvas id="funcionarioChart"></canvas>
-          </div>
-          <!-- Gráfico de solicitudes por tipo de recepcion -->
-          <div class="containerStatistics">
-            <p id="solicitudesPorTipo" style="display:none;">{{ solicitudes_por_tipo_recepcion|safe }}</p>
-            <canvas id="tipoChart"></canvas>
           </div>
         </div>
-        <div class="subDivStatics-v2">          
-          <div class="containerStatistics">
-            <p id="solicitudesPorDepto" style="display:none;">{{ solicitudes_por_depto|safe }}</p>
-            <canvas id="deptoChart"></canvas>
+
+        <!-- Página 2: Nuevos gráficos -->
+        <div class="stats-page" id="statsPage2" style="display: none;">
+          <div class="divStatistics">
+            <!-- Entradas por Mes -->
+            <div class="containerStatistics">
+              <p id="entradasPorMes" style="display: none;">{{ entradas_por_mes|safe }}</p>
+              <canvas id="entradasMesChart"></canvas>
+            </div>
+            <!-- Salidas por Mes -->
+            <div class="containerStatistics">
+              <p id="salidasPorMes" style="display: none;">{{ salidas_por_mes|safe }}</p>
+              <canvas id="salidasMesChart"></canvas>
+            </div>
+            <!-- Entradas por Semana -->
+            <div class="containerStatistics">
+              <p id="entradasPorSemana" style="display: none;">{{ entradas_por_semana|safe }}</p>
+              <canvas id="entradasSemanaChart"></canvas>
+            </div>
+            <!-- Salidas por Semana -->
+            <div class="containerStatistics">
+              <p id="salidasPorSemana" style="display: none;">{{ salidas_por_semana|safe }}</p>
+              <canvas id="salidasSemanaChart"></canvas>
+            </div>
           </div>
         </div>
       </div>

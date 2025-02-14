@@ -1110,14 +1110,14 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .subDivStatics-v1>div {
-  height: 45%;
+  height: auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 }
 
 .subDivStatics-v2>div {
-  
+
   display: flex;
   flex-direction: column;
   justify-content: flex-end;

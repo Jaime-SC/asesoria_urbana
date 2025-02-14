@@ -128,35 +128,211 @@
             }
         });
 
+        // Array de nombres de meses (índice 0 = Enero, etc.)
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
-        // Gráfico de líneas para Solicitudes por Año
-        // const anioCtx = document.getElementById('anioChart').getContext('2d');
-        // if (anioChartInstance) {
-        //     anioChartInstance.destroy();
-        // }
-        // anioChartInstance = new Chart(anioCtx, {
-        //     type: 'line',
-        //     data: {
-        //         labels: Object.keys(solicitudesPorAnio),
-        //         datasets: [{
-        //             label: 'Solicitudes por Año',
-        //             data: Object.values(solicitudesPorAnio),
-        //             fill: false,
-        //             borderColor: 'rgba(255, 206, 86, 1)',
-        //             tension: 0.1
-        //         }]
-        //     },
-        //     options: {
-        //         scales: {
-        //             y: {
-        //                 beginAtZero: true
-        //             }
-        //         }
-        //     }
-        // });
+        const entradasMesElem = document.getElementById('entradasPorMes');
+        if (entradasMesElem) {
+            const entradasPorMes = JSON.parse(entradasMesElem.innerText);
+            // Convertir las claves numéricas a nombres de meses
+            const mesesNumericos = Object.keys(entradasPorMes);
+            const meses = mesesNumericos.map(m => monthNames[parseInt(m) - 1] || m);
+            const dataMes = Object.values(entradasPorMes);
+            const ctxEntradasMes = document.getElementById('entradasMesChart').getContext('2d');
+            new Chart(ctxEntradasMes, {
+                type: 'bar',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Entradas por Mes',
+                        data: dataMes,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        const salidasMesElem = document.getElementById('salidasPorMes');
+        if (salidasMesElem) {
+            const salidasPorMes = JSON.parse(salidasMesElem.innerText);
+            const mesesNumericos = Object.keys(salidasPorMes);
+            const meses = mesesNumericos.map(m => monthNames[parseInt(m) - 1] || m);
+            const dataMes = Object.values(salidasPorMes);
+            const ctxSalidasMes = document.getElementById('salidasMesChart').getContext('2d');
+            new Chart(ctxSalidasMes, {
+                type: 'bar',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Salidas por Mes',
+                        data: dataMes,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        const entradasSemanaElem = document.getElementById('entradasPorSemana');
+        if (entradasSemanaElem) {
+            const entradasPorSemana = JSON.parse(entradasSemanaElem.innerText);
+            const semanasNumericos = Object.keys(entradasPorSemana);
+            const semanas = semanasNumericos.map(w => "Semana " + w);
+            const dataSemana = Object.values(entradasPorSemana);
+            const ctxEntradasSemana = document.getElementById('entradasSemanaChart').getContext('2d');
+            new Chart(ctxEntradasSemana, {
+                type: 'bar',
+                data: {
+                    labels: semanas,
+                    datasets: [{
+                        label: 'Entradas por Semana',
+                        data: dataSemana,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        const salidasSemanaElem = document.getElementById('salidasPorSemana');
+        if (salidasSemanaElem) {
+            const salidasPorSemana = JSON.parse(salidasSemanaElem.innerText);
+            const semanasNumericos = Object.keys(salidasPorSemana);
+            const semanas = semanasNumericos.map(w => "Semana " + w);
+            const dataSemana = Object.values(salidasPorSemana);
+            const ctxSalidasSemana = document.getElementById('salidasSemanaChart').getContext('2d');
+            new Chart(ctxSalidasSemana, {
+                type: 'bar',
+                data: {
+                    labels: semanas,
+                    datasets: [{
+                        label: 'Salidas por Semana',
+                        data: dataSemana,
+                        backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+        attachExportListener();
+
+
     }
 
-    // Exponer la función createCharts al ámbito global
+    function exportStatisticsToExcel() {
+        // Crear un nuevo libro de Excel
+        var wb = XLSX.utils.book_new();
+
+        // Helper: Convierte un objeto en un array de arrays con encabezado.
+        function objectToArray(dataObj, header, mapKeys) {
+            var data = [];
+            data.push(header);
+            for (var key in dataObj) {
+                if (dataObj.hasOwnProperty(key)) {
+                    var newKey = key;
+                    if (mapKeys) {
+                        var monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                        var monthIndex = parseInt(key);
+                        if (!isNaN(monthIndex) && monthIndex >= 1 && monthIndex <= 12) {
+                            newKey = monthNames[monthIndex - 1];
+                        }
+                    }
+                    data.push([newKey, dataObj[key]]);
+                }
+            }
+            return data;
+        }
+
+        // Lista de hojas a crear
+        var sheets = [
+            { id: "solicitudesPorDepto", sheetName: "Por Solicitante", header: ["Solicitante", "Solicitudes"] },
+            { id: "solicitudesPorFuncionario", sheetName: "Por Solicitante", header: ["Funcionario", "Solicitudes"] },
+            { id: "solicitudesPorTipo", sheetName: "Por Tipo Recepción", header: ["Tipo Recepción", "Solicitudes"] },
+            { id: "solicitudesPorTipoSolicitud", sheetName: "Por Tipo Solicitud", header: ["Tipo Solicitud", "Solicitudes"] },
+            { id: "entradasPorMes", sheetName: "Entradas por Mes", header: ["Mes", "Entradas"] },
+            { id: "salidasPorMes", sheetName: "Salidas por Mes", header: ["Mes", "Salidas"] },
+            { id: "entradasPorSemana", sheetName: "Entradas por Semana", header: ["Semana", "Entradas"] },
+            { id: "salidasPorSemana", sheetName: "Salidas por Semana", header: ["Semana", "Salidas"] }
+        ];
+
+        sheets.forEach(function (sheetInfo) {
+            var pElem = document.getElementById(sheetInfo.id);
+            if (pElem) {
+                try {
+                    var dataObj = JSON.parse(pElem.innerText);
+                    var mapKeys = (sheetInfo.id === "entradasPorMes" || sheetInfo.id === "salidasPorMes");
+                    var dataArray = objectToArray(dataObj, sheetInfo.header, mapKeys);
+                    var ws = XLSX.utils.aoa_to_sheet(dataArray);
+                    XLSX.utils.book_append_sheet(wb, ws, sheetInfo.sheetName);
+                } catch (e) {
+                    console.error("Error procesando hoja " + sheetInfo.sheetName, e);
+                }
+            }
+        });
+
+        XLSX.writeFile(wb, "Estadisticas.xlsx");
+    }
+
+    function attachExportListener() {
+        var exportBtn = document.getElementById("exportExcel");
+        if (exportBtn) {
+            exportBtn.addEventListener("click", exportStatisticsToExcel);
+        } else {
+            console.warn("No se encontró el botón exportExcel");
+        }
+    }
+
+    // También mantenemos la función de paginación
+    function initializeStatisticsPagination() {
+        const pages = document.querySelectorAll('#statisticsPages .stats-page');
+        const paginationContainer = document.getElementById('paginationStatistics');
+        if (!pages.length || !paginationContainer) return;
+        paginationContainer.innerHTML = '';
+        pages.forEach((page, index) => {
+            const btn = document.createElement('button');
+            btn.textContent = index + 1;
+            btn.className = 'page-btn';
+            if (index === 0) btn.classList.add('active');
+            btn.addEventListener('click', function () {
+                pages.forEach(p => p.style.display = 'none');
+                page.style.display = 'block';
+                document.querySelectorAll('#paginationStatistics .page-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+            paginationContainer.appendChild(btn);
+        });
+    }
+
+    // Si la página se carga dinámicamente, asegúrate de llamar a createCharts() y initializeStatisticsPagination()
+    // cuando el contenido de estadísticas ya esté en el DOM.
+
     window.createCharts = createCharts;
+    window.initializeStatisticsPagination = initializeStatisticsPagination;
+    window.exportStatisticsToExcel = exportStatisticsToExcel;
 
 })();

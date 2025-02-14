@@ -10,7 +10,7 @@ from .models import (
     TipoSolicitud,
 )
 from django.contrib.auth.decorators import login_required
-from django.db.models.functions import ExtractYear, ExtractMonth
+from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponseRedirect
@@ -444,12 +444,26 @@ def statistics_view(request):
         .annotate(total=Count("id"))
     )
 
-    # Solicitudes por Mes (Eliminado)
-    # solicitudes_por_mes = (
-    #     active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au"))
-    #     .values("mes")
-    #     .annotate(total=Count("id"))
-    # )
+    # Para Entradas por Mes
+    solicitudes_por_mes = active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au")) \
+        .values("mes").annotate(total=Count("id"))
+    entradas_por_mes = {str(item["mes"]): item["total"] for item in solicitudes_por_mes}
+
+    # Para Salidas por Mes
+    salidas_por_mes_qs = SalidaSOLICITUD.objects.filter(ingreso_solicitud__is_active=True) \
+        .annotate(mes=ExtractMonth("fecha_salida")).values("mes").annotate(total=Count("id"))
+    salidas_por_mes = {str(item["mes"]): item["total"] for item in salidas_por_mes_qs}
+
+    # Para Entradas por Semana (usando ExtractWeek)
+    solicitudes_por_semana = active_solicitudes.annotate(semana=ExtractWeek("fecha_ingreso_au")) \
+        .values("semana").annotate(total=Count("id"))
+    entradas_por_semana = {str(item["semana"]): item["total"] for item in solicitudes_por_semana}
+
+    # Para Salidas por Semana
+    salidas_por_semana_qs = SalidaSOLICITUD.objects.filter(ingreso_solicitud__is_active=True) \
+        .annotate(semana=ExtractWeek("fecha_salida")).values("semana").annotate(total=Count("id"))
+    salidas_por_semana = {str(item["semana"]): item["total"] for item in salidas_por_semana_qs}
+
 
     total_solicitudes = active_solicitudes.count()
 
@@ -492,10 +506,10 @@ def statistics_view(request):
              for item in solicitudes_por_anio},
             cls=DjangoJSONEncoder,
         ),
-        # "solicitudes_por_mes": json.dumps(
-        #     {str(int(item["mes"])): item["total"] for item in solicitudes_por_mes},
-        #     cls=DjangoJSONEncoder,
-        # ),
+        "entradas_por_mes": json.dumps(entradas_por_mes, cls=DjangoJSONEncoder),
+        "salidas_por_mes": json.dumps(salidas_por_mes, cls=DjangoJSONEncoder),
+        "entradas_por_semana": json.dumps(entradas_por_semana, cls=DjangoJSONEncoder),
+        "salidas_por_semana": json.dumps(salidas_por_semana, cls=DjangoJSONEncoder),
         "total_solicitudes": total_solicitudes,
         "total_salidas": total_salidas,
     }

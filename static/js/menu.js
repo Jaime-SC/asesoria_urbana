@@ -91,6 +91,9 @@ document.addEventListener('DOMContentLoaded', function () {
           // Maneja la carga de scripts de estadísticas
           changeCardDetailsBgColor('#C9E8F4');
           loadStatisticsScript();
+          // Llama a la inicialización de paginación después de insertar el contenido
+          setTimeout(initializeStatisticsPagination, 300);
+          if (typeof callback === 'function') callback();
 
           // Ejecuta la función de devolución de llamada si se proporciona
           if (typeof callback === 'function') callback();
@@ -169,7 +172,10 @@ document.addEventListener('DOMContentLoaded', function () {
     'Inicio': '/inicio/',
     'PortalTransparencia': '/portal_transparencia/',
     'mapoteca': '/mapoteca/',
-    'login': '/login/'
+    'login': '/login/',
+    'Estadísticas': '/bnup/statistics/',  // Página de estadísticas 1 (la actual)
+    'Estadísticas 2': '/bnup/statistics2/' // Nueva ruta para estadísticas 2 (opcional)
+    
   };
 
   // Configura los event listeners para los elementos del menú
