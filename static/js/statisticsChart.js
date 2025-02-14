@@ -271,7 +271,7 @@
         // Lista de hojas a crear
         var sheets = [
             { id: "solicitudesPorDepto", sheetName: "Por Solicitante", header: ["Solicitante", "Solicitudes"] },
-            { id: "solicitudesPorFuncionario", sheetName: "Por Solicitante", header: ["Funcionario", "Solicitudes"] },
+            { id: "solicitudesPorFuncionario", sheetName: "Por Funcioinario", header: ["Funcionario", "Solicitudes"] },
             { id: "solicitudesPorTipo", sheetName: "Por Tipo Recepción", header: ["Tipo Recepción", "Solicitudes"] },
             { id: "solicitudesPorTipoSolicitud", sheetName: "Por Tipo Solicitud", header: ["Tipo Solicitud", "Solicitudes"] },
             { id: "entradasPorMes", sheetName: "Entradas por Mes", header: ["Mes", "Entradas"] },
