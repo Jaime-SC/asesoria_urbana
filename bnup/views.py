@@ -417,7 +417,7 @@ def statistics_view(request):
     # Filtrar solo las solicitudes activas
     active_solicitudes = IngresoSOLICITUD.objects.filter(is_active=True)
 
-    # Solicitudes por Departamento
+    # Solicitudes por Solicitante
     solicitudes_por_depto = active_solicitudes.values(
         "depto_solicitante__nombre"
     ).annotate(total=Count("id"))

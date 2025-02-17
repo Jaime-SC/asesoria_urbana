@@ -1053,6 +1053,13 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   /* Cambia el color del ícono al color del texto al hacer hover */
 }
 
+#statisticsPages {
+  height: 100%;
+}
+
+.stats-page {
+  height: 100%;
+}
 
 .statistics {
   display: flex;
@@ -1069,9 +1076,19 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .tittleStatistics {
   display: flex;
-  /* margin-bottom: 20px; */
   align-items: center;
   gap: 20px;
+  justify-content: space-between;
+}
+
+.subTittleStatistics {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.subTittleStatistics #paginationStatistics {
+  min-width: 190px;
 }
 
 .divStatistics {
@@ -1085,6 +1102,13 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   display: flex;
   flex-direction: column;
   width: 50%;
+  gap: 1rem;
+}
+
+.subDivStatics-v3 {
+  display: flex;
+  height: max-content;
+  width: 100%;
   gap: 1rem;
 }
 
@@ -1102,10 +1126,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .subDivStatics-v1 {
   display: flex;
-  /* flex-flow: wrap; */
   flex-wrap: wrap;
-  align-content: space-between;
-  height: 100%;
   gap: 1rem;
 }
 

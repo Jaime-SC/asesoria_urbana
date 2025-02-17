@@ -19,7 +19,7 @@
         // const solicitudesPorAnio = JSON.parse(document.getElementById('solicitudesPorAnio').innerText);
         // const solicitudesPorMes = JSON.parse(document.getElementById('solicitudesPorMes').innerText); // Eliminado
 
-        // Gráfico de barras horizontales para Solicitudes por Departamento
+        // Gráfico de barras horizontales para Solicitudes por Solicitante
         const deptoCtx = document.getElementById('deptoChart').getContext('2d');
         if (deptoChartInstance) {
             deptoChartInstance.destroy();
@@ -29,7 +29,7 @@
             data: {
                 labels: Object.keys(solicitudesPorDepto),
                 datasets: [{
-                    label: 'Solicitudes por Departamento',
+                    label: 'Solicitudes por Solicitante',
                     data: Object.values(solicitudesPorDepto),
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                     borderColor: 'rgba(54, 162, 235, 1)',
@@ -307,26 +307,56 @@
         }
     }
 
-    // También mantenemos la función de paginación
     function initializeStatisticsPagination() {
         const pages = document.querySelectorAll('#statisticsPages .stats-page');
         const paginationContainer = document.getElementById('paginationStatistics');
         if (!pages.length || !paginationContainer) return;
         paginationContainer.innerHTML = '';
+    
+        // Botón "Anterior" con icono
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back_2</span>';
+        prevBtn.className = "page-btn prev";
+        prevBtn.addEventListener('click', function() {
+            const pageButtons = Array.from(paginationContainer.querySelectorAll('.page-num'));
+            const activeIndex = pageButtons.findIndex(btn => btn.classList.contains('active'));
+            if (activeIndex > 0) {
+                pageButtons[activeIndex - 1].click();
+            }
+        });
+        paginationContainer.appendChild(prevBtn);
+    
+        // Crear botones de número de página (con clase 'page-num')
         pages.forEach((page, index) => {
             const btn = document.createElement('button');
             btn.textContent = index + 1;
-            btn.className = 'page-btn';
+            btn.className = 'page-btn page-num';
             if (index === 0) btn.classList.add('active');
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function() {
                 pages.forEach(p => p.style.display = 'none');
                 page.style.display = 'block';
-                document.querySelectorAll('#paginationStatistics .page-btn').forEach(b => b.classList.remove('active'));
+                // Quitar clase activa de todos los botones de página
+                paginationContainer.querySelectorAll('.page-num').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             });
             paginationContainer.appendChild(btn);
         });
+    
+        // Botón "Siguiente" con icono
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span>';
+        nextBtn.className = "page-btn next";
+        nextBtn.addEventListener('click', function() {
+            const pageButtons = Array.from(paginationContainer.querySelectorAll('.page-num'));
+            const activeIndex = pageButtons.findIndex(btn => btn.classList.contains('active'));
+            if (activeIndex < pageButtons.length - 1) {
+                pageButtons[activeIndex + 1].click();
+            }
+        });
+        paginationContainer.appendChild(nextBtn);
     }
+    
+    
 
     // Si la página se carga dinámicamente, asegúrate de llamar a createCharts() y initializeStatisticsPagination()
     // cuando el contenido de estadísticas ya esté en el DOM.

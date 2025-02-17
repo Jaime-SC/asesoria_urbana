@@ -3,16 +3,17 @@
   <div class="card-details">
     <div class="statistics">
       <div class="tittleStatistics">
-        <button id="backToBNUP" class="btn-back">
-          <span class="material-symbols-outlined">arrow_back</span> Volver a Solicitudes
-        </button>
-        <h2>Estadísticas de Solicitudes</h2>
-        <!-- Contenedor para los botones de paginación -->
-        <div id="paginationStatistics" class="pagination"></div>
-        <!-- Botón para exportar a Excel -->
-        <button id="exportExcel" class="btn">Exportar a Excel</button>
+        <div class="subTittleStatistics">
+          <button id="backToBNUP" class="btn-back"><span class="material-symbols-outlined">arrow_back</span> Volver a Solicitudes</button>
+          <h2>Estadísticas de Solicitudes</h2>
+        </div>
+        <div class="subTittleStatistics">
+          <!-- Botón para exportar a Excel -->
+          <button id="exportExcel" class="btn-stats btnStatsBNUP" style="justify-content: flex-start;background-color: #bfff00;"><span class="material-symbols-outlined bell">docs</span>Generar Reporte</button>
+          <!-- Contenedor para los botones de paginación -->
+          <div id="paginationStatistics" class="pagination"></div>
+        </div>
       </div>
-      
 
       <!-- Contenedor que agrupa las "páginas" de estadísticas -->
       <div id="statisticsPages">
@@ -62,25 +63,27 @@
         <!-- Página 2: Nuevos gráficos -->
         <div class="stats-page" id="statsPage2" style="display: none;">
           <div class="divStatistics">
-            <!-- Entradas por Mes -->
-            <div class="containerStatistics">
-              <p id="entradasPorMes" style="display: none;">{{ entradas_por_mes|safe }}</p>
-              <canvas id="entradasMesChart"></canvas>
-            </div>
-            <!-- Salidas por Mes -->
-            <div class="containerStatistics">
-              <p id="salidasPorMes" style="display: none;">{{ salidas_por_mes|safe }}</p>
-              <canvas id="salidasMesChart"></canvas>
-            </div>
-            <!-- Entradas por Semana -->
-            <div class="containerStatistics">
-              <p id="entradasPorSemana" style="display: none;">{{ entradas_por_semana|safe }}</p>
-              <canvas id="entradasSemanaChart"></canvas>
-            </div>
-            <!-- Salidas por Semana -->
-            <div class="containerStatistics">
-              <p id="salidasPorSemana" style="display: none;">{{ salidas_por_semana|safe }}</p>
-              <canvas id="salidasSemanaChart"></canvas>
+            <div class="subDivStatics-v3">
+              <!-- Entradas por Mes -->
+              <div class="containerStatistics">
+                <p id="entradasPorMes" style="display: none;">{{ entradas_por_mes|safe }}</p>
+                <canvas id="entradasMesChart"></canvas>
+              </div>
+              <!-- Salidas por Mes -->
+              <div class="containerStatistics">
+                <p id="salidasPorMes" style="display: none;">{{ salidas_por_mes|safe }}</p>
+                <canvas id="salidasMesChart"></canvas>
+              </div>
+              <!-- Entradas por Semana -->
+              <div class="containerStatistics">
+                <p id="entradasPorSemana" style="display: none;">{{ entradas_por_semana|safe }}</p>
+                <canvas id="entradasSemanaChart"></canvas>
+              </div>
+              <!-- Salidas por Semana -->
+              <div class="containerStatistics">
+                <p id="salidasPorSemana" style="display: none;">{{ salidas_por_semana|safe }}</p>
+                <canvas id="salidasSemanaChart"></canvas>
+              </div>
             </div>
           </div>
         </div>
