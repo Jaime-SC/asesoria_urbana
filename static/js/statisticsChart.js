@@ -37,6 +37,8 @@
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false, // Desactiva la relación de aspecto fija
                 indexAxis: 'y',
                 scales: {
                     x: {
@@ -44,12 +46,13 @@
                     },
                     y: {
                         ticks: {
-                            autoSkip: false  // Forzar que se muestren todos los labels
+                            autoSkip: false
                         }
                     }
                 }
             }
         });
+        
 
 
         // Gráfico de barras para Solicitudes por Funcionario
