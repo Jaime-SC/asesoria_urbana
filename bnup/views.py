@@ -1,5 +1,3 @@
-# bnup/views.py
-
 import json
 from .models import (
     SalidaSOLICITUD,

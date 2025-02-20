@@ -52,7 +52,7 @@
                 }
             }
         });
-        
+
 
 
         // Gráfico de barras para Solicitudes por Funcionario
@@ -307,10 +307,105 @@
         XLSX.writeFile(wb, "Estadisticas.xlsx");
     }
 
+    function exportStatisticsToPDF() {
+        // Extraer la instancia de jsPDF (asegúrate de que jsPDF y autoTable estén cargados)
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Agregar título del reporte
+        doc.setFontSize(16);
+        doc.text("Reporte de Estadísticas de Solicitudes", 14, 20);
+
+        // Agregar algunos datos generales (por ejemplo, totales)
+        const totalEntradas = document.querySelector('.cardTotalEstadisticas .contentEstadisticas p')?.textContent || "N/D";
+        const totalSalidas = document.querySelector('.cardTotalEstadisticas.inverse .contentEstadisticas p')?.textContent || "N/D";
+        doc.setFontSize(12);
+        doc.text(`Total de Entradas: ${totalEntradas}`, 14, 30);
+        doc.text(`Total de Salidas: ${totalSalidas}`, 14, 38);
+
+        // Función helper para convertir un objeto en un array de arrays (para autoTable)
+        function objectToArray(dataObj, header, mapKeys = false) {
+            const rows = [];
+            rows.push(header);
+            for (let key in dataObj) {
+                if (dataObj.hasOwnProperty(key)) {
+                    let newKey = key;
+                    if (mapKeys) {
+                        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                        const monthIndex = parseInt(key);
+                        if (!isNaN(monthIndex) && monthIndex >= 1 && monthIndex <= 12) {
+                            newKey = monthNames[monthIndex - 1];
+                        }
+                    }
+                    rows.push([newKey, dataObj[key]]);
+                }
+            }
+            return rows;
+        }
+
+        // Lista de secciones a incluir en el reporte
+        const sheets = [
+            { id: "solicitudesPorDepto", title: "Solicitudes por Solicitante", header: ["Solicitante", "Solicitudes"], mapKeys: false },
+            { id: "solicitudesPorFuncionario", title: "Solicitudes por Funcionario", header: ["Funcionario", "Solicitudes"], mapKeys: false },
+            { id: "solicitudesPorTipo", title: "Solicitudes por Tipo de Recepción", header: ["Tipo Recepción", "Solicitudes"], mapKeys: false },
+            { id: "solicitudesPorTipoSolicitud", title: "Solicitudes por Tipo de Solicitud", header: ["Tipo Solicitud", "Solicitudes"], mapKeys: false },
+            { id: "entradasPorMes", title: "Entradas por Mes", header: ["Mes", "Entradas"], mapKeys: true },
+            { id: "salidasPorMes", title: "Salidas por Mes", header: ["Mes", "Salidas"], mapKeys: true },
+            { id: "entradasPorSemana", title: "Entradas por Semana", header: ["Semana", "Entradas"], mapKeys: false },
+            { id: "salidasPorSemana", title: "Salidas por Semana", header: ["Semana", "Salidas"], mapKeys: false }
+        ];
+
+        // Variable para llevar el control vertical (Y) en el PDF
+        let currentY = 45;
+
+        sheets.forEach(sheetInfo => {
+            // Si el título es "Solicitudes por Tipo de Solicitud", insertar un salto de página
+            if (sheetInfo.title === "Solicitudes por Tipo de Solicitud") {
+                doc.addPage();
+                currentY = 20; // Reinicia el margen superior para la nueva página
+            }
+        
+            const elem = document.getElementById(sheetInfo.id);
+            if (elem) {
+                try {
+                    const dataObj = JSON.parse(elem.innerText);
+                    const dataArray = objectToArray(dataObj, sheetInfo.header, sheetInfo.mapKeys);
+        
+                    // Agregar el título de la sección
+                    doc.setFontSize(14);
+                    doc.text(sheetInfo.title, 14, currentY);
+                    currentY += 4;
+        
+                    // Agregar la tabla usando autoTable
+                    doc.autoTable({
+                        head: [sheetInfo.header],
+                        body: dataArray.slice(1), // Excluye el encabezado ya agregado
+                        startY: currentY,
+                        theme: 'grid',
+                        styles: { fontSize: 10 },
+                        margin: { left: 14, right: 14 }
+                    });
+        
+                    // Actualizar currentY para la siguiente sección
+                    currentY = doc.lastAutoTable.finalY + 10;
+                } catch (e) {
+                    console.error("Error procesando la sección " + sheetInfo.title, e);
+                }
+            }
+        });
+        
+        // Guardar el PDF
+        doc.save("Reporte_Estadisticas.pdf");
+    }
+
+
     function attachExportListener() {
         var exportBtn = document.getElementById("exportExcel");
         if (exportBtn) {
-            exportBtn.addEventListener("click", exportStatisticsToExcel);
+            exportBtn.addEventListener("click", function () {
+                exportStatisticsToExcel();
+                exportStatisticsToPDF();
+            });
         } else {
             console.warn("No se encontró el botón exportExcel");
         }
@@ -373,5 +468,6 @@
     window.createCharts = createCharts;
     window.initializeStatisticsPagination = initializeStatisticsPagination;
     window.exportStatisticsToExcel = exportStatisticsToExcel;
+    window.exportStatisticsToPDF = exportStatisticsToPDF;
 
 })();
