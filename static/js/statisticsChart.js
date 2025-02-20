@@ -345,10 +345,10 @@
     
         // Lista de secciones a incluir en el reporte
         var sheets = [
-            { id: "solicitudesPorDepto", sheetName: "Por Solicitante", title: "Solicitudes por Solicitante", header: ["Solicitante", "Solicitudes"], mapKeys: false },
             { id: "solicitudesPorFuncionario", sheetName: "Por Funcionario", title: "Solicitudes por Funcionario", header: ["Funcionario", "Solicitudes"], mapKeys: false },
             { id: "solicitudesPorTipo", sheetName: "Por Tipo Recepción", title: "Solicitudes por Tipo de Recepción", header: ["Tipo Recepción", "Solicitudes"], mapKeys: false },
             { id: "solicitudesPorTipoSolicitud", sheetName: "Por Tipo Solicitud", title: "Solicitudes por Tipo de Solicitud", header: ["Tipo Solicitud", "Solicitudes"], mapKeys: false },
+            { id: "solicitudesPorDepto", sheetName: "Por Solicitante", title: "Solicitudes por Solicitante", header: ["Solicitante", "Solicitudes"], mapKeys: false },
             { id: "entradasPorMes", sheetName: "Entradas por Mes", title: "Entradas por Mes", header: ["Mes", "Entradas"], mapKeys: true },
             { id: "salidasPorMes", sheetName: "Salidas por Mes", title: "Salidas por Mes", header: ["Mes", "Salidas"], mapKeys: true },
             { id: "entradasPorSemana", sheetName: "Entradas por Semana", title: "Entradas por Semana", header: ["Semana", "Entradas"], mapKeys: false },
