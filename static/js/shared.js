@@ -425,18 +425,19 @@ function searchTable(state) {
 
         // Filtrar filas basadas en el término de búsqueda
         state.filteredRows = state.rows.filter(row => {
+            // Obtener el texto de todas las celdas
             const cells = Array.from(row.getElementsByTagName('td'));
-            return cells.some(cell => {
-                // Si la celda contiene un elemento con la clase "descripcion-preview"
+            let rowText = cells.map(cell => {
                 const previewElem = cell.querySelector('.descripcion-preview');
-                const cellText = previewElem
+                return previewElem 
                     ? (previewElem.getAttribute('data-fulltext') || previewElem.innerText)
                     : cell.innerText;
-                return cellText.toLowerCase().includes(filter);
-            });
+            }).join(' ').toLowerCase();
+            // Agregar el correo electrónico almacenado en data-email
+            const email = row.getAttribute('data-email') || '';
+            rowText += " " + email.toLowerCase();
+            return rowText.includes(filter);
         });
-
-
         updatePaginationAfterSearch(state);
     });
 }
