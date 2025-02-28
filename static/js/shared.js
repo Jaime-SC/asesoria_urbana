@@ -8,8 +8,11 @@
 function toggleRowHighlight(row, isChecked) {
     if (isChecked) {
         row.classList.add('fila-marcada');
+        row.classList.add('animate__headShake');
     } else {
         row.classList.remove('fila-marcada');
+        row.classList.remove('animate__headShake');
+
     }
 }
 

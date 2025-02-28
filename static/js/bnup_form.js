@@ -157,98 +157,6 @@
 
     window.closeDescripcionModal = closeDescripcionModal;
 
-
-    /**
-     * Inicializa el modal para la selección y confirmación de archivos.
-     */
-    function initializeFileModal() {
-        const modalButton = document.getElementById('openFileModal');
-        const fileModal = document.getElementById('fileModal'); // Asegúrate de tener un modal definido para archivos
-        const closeModalButton = fileModal ? fileModal.querySelector('.close') : null;
-        const confirmButton = document.getElementById('confirmButton');
-        const fileModalInput = document.getElementById('fileModalInput');
-        // El input del formulario lo dejamos en el modal o lo vinculamos a este
-        const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
-    
-        // Verificar que existan todos los elementos necesarios
-        if (!modalButton || !fileModal || !closeModalButton || !confirmButton || !fileModalInput || !archivoAdjuntoInput) {
-            return;
-        }
-    
-        // Cuando se hace clic en el botón de adjuntar, se muestra el modal para archivos
-        modalButton.onclick = () => {
-            fileModal.style.display = 'block';
-        };
-    
-        // Cerrar el modal al hacer clic en el botón de cerrar
-        closeModalButton.onclick = () => {
-            fileModal.style.display = 'none';
-        };
-    
-        // Cerrar el modal al hacer clic fuera de él
-        fileModal.addEventListener('click', (event) => {
-            if (event.target === fileModal) {
-                fileModal.style.display = 'none';
-            }
-        });
-    
-        // Confirmar la selección del archivo
-        confirmButton.onclick = () => {
-            if (fileModalInput.files.length > 0) {
-                // Asignar los archivos seleccionados al input del formulario
-                archivoAdjuntoInput.files = fileModalInput.files;
-                fileModal.style.display = 'none';
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    title: 'Archivo adjuntado',
-                    text: 'El archivo se ha adjuntado correctamente.',
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar',
-                });
-            } else {
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    title: 'Error',
-                    text: 'Debe seleccionar un archivo antes de confirmar.',
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar',
-                });
-            }
-        };
-    
-        // Inicializar el plugin fileinput (si usas uno)
-        $(fileModalInput).fileinput({
-            showUpload: false,
-            showRemove: true,
-            showPreview: true,
-            showCaption: false,
-            browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-            removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
-            mainClass: 'input-group-sm',
-            dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-            fileActionSettings: {
-                showRemove: true,
-                showUpload: false,
-                showZoom: false,
-                showDrag: false,
-                showDelete: false,
-            },
-            layoutTemplates: {
-                close: '',
-                indicator: '',
-                actionCancel: ''
-            }
-        });
-    
-        // Sincronizar la selección de archivos entre los inputs
-        fileModalInput.onchange = () => {
-            archivoAdjuntoInput.files = fileModalInput.files;
-        };
-    }
-    
-
     /**
      * Abre el modal de salidas, mostrando o no el formulario de creación según el tipo de usuario.
      * @param {string} solicitudId - ID de la solicitud para la cual se mostrarán las salidas.
@@ -903,6 +811,126 @@
                 });
             };
         }
+    }
+
+    /**
+     * Inicializa el modal para la selección y confirmación de archivos.
+     */
+    function initializeFileModal() {
+        const modalButton = document.getElementById('openFileModal');
+        const fileModal = document.getElementById('fileModal'); // Asegúrate de tener un modal definido para archivos
+        const closeModalButton = fileModal ? fileModal.querySelector('.close') : null;
+        const confirmButton = document.getElementById('confirmButton');
+        const fileModalInput = document.getElementById('fileModalInput');
+        // El input del formulario lo dejamos en el modal o lo vinculamos a este
+        const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
+        const content = fileModal.querySelector('.modal-content');
+
+    
+        // Verificar que existan todos los elementos necesarios
+        if (!modalButton || !fileModal || !closeModalButton || !confirmButton || !fileModalInput || !archivoAdjuntoInput) {
+            return;
+        }
+    
+        // Cuando se hace clic en el botón de adjuntar, se muestra el modal para archivos
+        modalButton.onclick = () => {
+            fileModal.style.display = 'block';
+            content.classList.add('animate__bounceIn');
+            content.classList.remove('animate__bounceOut');
+        };
+    
+        // Cerrar el modal al hacer clic en el botón de cerrar
+        closeModalButton.onclick = () => {
+            // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            // fileModal.style.display = 'none';
+
+            // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
+            content.addEventListener('animationend', function handleAnimationEnd() {
+                fileModal.style.display = 'none';
+                // Limpia la clase de salida para que la próxima vez se use la de entrada
+                content.classList.remove('animate__bounceOut');
+                content.classList.add('animate__bounceIn');
+                // Remover el listener para no duplicar eventos
+                content.removeEventListener('animationend', handleAnimationEnd);
+            });
+        };
+    
+        // Cerrar el modal al hacer clic fuera de él
+        fileModal.addEventListener('click', (event) => {
+            if (event.target === fileModal) {
+                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+                content.classList.remove('animate__bounceIn');
+                content.classList.add('animate__bounceOut');
+                // fileModal.style.display = 'none';
+
+                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
+                content.addEventListener('animationend', function handleAnimationEnd() {
+                    fileModal.style.display = 'none';
+                    // Limpia la clase de salida para que la próxima vez se use la de entrada
+                    content.classList.remove('animate__bounceOut');
+                    content.classList.add('animate__bounceIn');
+                    // Remover el listener para no duplicar eventos
+                    content.removeEventListener('animationend', handleAnimationEnd);
+                });
+            }
+        });
+    
+        // Confirmar la selección del archivo
+        confirmButton.onclick = () => {
+            if (fileModalInput.files.length > 0) {
+                // Asignar los archivos seleccionados al input del formulario
+                archivoAdjuntoInput.files = fileModalInput.files;
+                fileModal.style.display = 'none';
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    title: 'Archivo adjuntado',
+                    text: 'El archivo se ha adjuntado correctamente.',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar',
+                });
+            } else {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    title: 'Error',
+                    text: 'Debe seleccionar un archivo antes de confirmar.',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar',
+                });
+            }
+        };
+    
+        // Inicializar el plugin fileinput (si usas uno)
+        $(fileModalInput).fileinput({
+            showUpload: false,
+            showRemove: true,
+            showPreview: true,
+            showCaption: false,
+            browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+            removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+            mainClass: 'input-group-sm',
+            dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+            fileActionSettings: {
+                showRemove: true,
+                showUpload: false,
+                showZoom: false,
+                showDrag: false,
+                showDelete: false,
+            },
+            layoutTemplates: {
+                close: '',
+                indicator: '',
+                actionCancel: ''
+            }
+        });
+    
+        // Sincronizar la selección de archivos entre los inputs
+        fileModalInput.onchange = () => {
+            archivoAdjuntoInput.files = fileModalInput.files;
+        };
     }
 
     /**
