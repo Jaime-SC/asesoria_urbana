@@ -425,7 +425,6 @@ function searchTable(state) {
 
         // Filtrar filas basadas en el término de búsqueda
         state.filteredRows = state.rows.filter(row => {
-            // Obtener el texto de todas las celdas
             const cells = Array.from(row.getElementsByTagName('td'));
             let rowText = cells.map(cell => {
                 const previewElem = cell.querySelector('.descripcion-preview');
@@ -433,14 +432,19 @@ function searchTable(state) {
                     ? (previewElem.getAttribute('data-fulltext') || previewElem.innerText)
                     : cell.innerText;
             }).join(' ').toLowerCase();
-            // Agregar el correo electrónico almacenado en data-email
+            
+            // Agregar el correo (data-email) y las salidas (data-salidas)
             const email = row.getAttribute('data-email') || '';
-            rowText += " " + email.toLowerCase();
+            const salidas = row.getAttribute('data-salidas') || '';
+            rowText += " " + email.toLowerCase() + " " + salidas.toLowerCase();
+
             return rowText.includes(filter);
         });
+
         updatePaginationAfterSearch(state);
     });
 }
+
 
 /**
  * Actualiza la paginación y muestra la primera página después de una búsqueda.
