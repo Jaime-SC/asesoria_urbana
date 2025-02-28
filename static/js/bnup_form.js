@@ -542,6 +542,8 @@
      */
     function initializeBNUPFormModal() {
         const modal = document.getElementById('bnupFormModal');
+        // const formModal = document.getElementById('modal-content');
+        const content = modal.querySelector('.modal-content');
         const btn = document.getElementById('openBNUPFormModal');
         const closeModalButton = modal ? modal.querySelector('.close') : null;
 
@@ -552,17 +554,45 @@
         // Evento para abrir el modal del formulario BNUP
         btn.onclick = () => {
             modal.style.display = 'block';
+            content.classList.add('animate__bounceIn');
+            content.classList.remove('animate__bounceOut');
         };
 
         // Evento para cerrar el modal al hacer clic en el botón de cerrar
         closeModalButton.onclick = () => {
-            modal.style.display = 'none';
+            // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            // modal.style.display = 'none';
+
+            // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
+            content.addEventListener('animationend', function handleAnimationEnd() {
+                modal.style.display = 'none';
+                // Limpia la clase de salida para que la próxima vez se use la de entrada
+                content.classList.remove('animate__bounceOut');
+                content.classList.add('animate__bounceIn');
+                // Remover el listener para no duplicar eventos
+                content.removeEventListener('animationend', handleAnimationEnd);
+            });
         };
 
         // Evento para cerrar el modal al hacer clic fuera de él
         document.addEventListener('click', (event) => {
             if (event.target === modal) {
-                modal.style.display = 'none';
+                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+                content.classList.remove('animate__bounceIn');
+                content.classList.add('animate__bounceOut');
+                // modal.style.display = 'none';
+
+                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
+                content.addEventListener('animationend', function handleAnimationEnd() {
+                    modal.style.display = 'none';
+                    // Limpia la clase de salida para que la próxima vez se use la de entrada
+                    content.classList.remove('animate__bounceOut');
+                    content.classList.add('animate__bounceIn');
+                    // Remover el listener para no duplicar eventos
+                    content.removeEventListener('animationend', handleAnimationEnd);
+                });
             }
         });
 
@@ -661,6 +691,218 @@
             };
         }
 
+    }
+
+    /**
+    * Inicializa el modal de edición de una solicitud específica.
+    * @param {string} solicitudId - ID de la solicitud a editar.
+    */
+    function openEditModal(solicitudId) {
+        const editModal = document.getElementById('editBNUPFormModal');
+        const content = editModal.querySelector('.modal-content');
+        const closeModalButton = editModal ? editModal.querySelector('.close') : null;
+        const editForm = document.getElementById('editBNUPForm');
+
+
+        if (!editModal || !closeModalButton || !editForm) {
+            console.error('Elementos del modal de edición no encontrados.');
+            return;
+        }
+
+        // Resetear el formulario antes de cargar nuevos datos
+        editForm.reset();
+
+        // Evento para cerrar el modal al hacer clic en el botón de cerrar
+        closeModalButton.onclick = () => {
+            // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            // modal.style.display = 'none';
+
+            // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
+            content.addEventListener('animationend', function handleAnimationEnd() {
+                editModal.style.display = 'none';
+                // Limpia la clase de salida para que la próxima vez se use la de entrada
+                content.classList.remove('animate__bounceOut');
+                content.classList.add('animate__bounceIn');
+                // Remover el listener para no duplicar eventos
+                content.removeEventListener('animationend', handleAnimationEnd);
+            });
+        };
+
+        // Evento para cerrar el modal al hacer clic fuera de él
+        document.addEventListener('click', (event) => {
+            if (event.target === editModal) {
+                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+                content.classList.remove('animate__bounceIn');
+                content.classList.add('animate__bounceOut');
+                // modal.style.display = 'none';
+
+                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
+                content.addEventListener('animationend', function handleAnimationEnd() {
+                    editModal.style.display = 'none';
+                    // Limpia la clase de salida para que la próxima vez se use la de entrada
+                    content.classList.remove('animate__bounceOut');
+                    content.classList.add('animate__bounceIn');
+                    // Remover el listener para no duplicar eventos
+                    content.removeEventListener('animationend', handleAnimationEnd);
+                });
+            }
+        });
+
+        // Obtener los datos de la solicitud mediante una solicitud AJAX
+        fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Rellenar el formulario con los datos obtenidos
+                    const solicitudIdField = document.getElementById('edit_solicitud_id');
+                    if (solicitudIdField) solicitudIdField.value = data.data.id;
+
+                    const numeroIngresoField = document.getElementById('edit_numeroIngreso');
+                    if (numeroIngresoField) numeroIngresoField.value = data.data.numero_ingreso;
+
+                    const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
+                    if (fechaIngresoField) fechaIngresoField.value = data.data.fecha_ingreso_au;
+
+                    // NUEVO CAMPO: Fecha de Solicitud
+                    const fechaSolicitudInput = document.getElementById('edit_fecha_solicitud');
+                    if (fechaSolicitudInput) {
+                        if (data.data.fecha_solicitud) {
+                            fechaSolicitudInput.value = data.data.fecha_solicitud;
+                        } else {
+                            fechaSolicitudInput.value = '';
+                        }
+                    }
+
+                    const descripcionField = document.getElementById('edit_descripcion');
+                    if (descripcionField) descripcionField.value = data.data.descripcion;
+
+                    const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
+                    if (tipoRecepcionSelect) {
+                        tipoRecepcionSelect.value = data.data.tipo_recepcion;
+                        updateEditBNUPFields();
+                    }
+
+                    if (['1', '3', '4', '5', '6', '7'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
+                        const numMemoField = document.getElementById('edit_num_memo');
+                        if (numMemoField) numMemoField.value = data.data.numero_memo || '';
+                    } else if (data.data.tipo_recepcion.toString() === '2') { // ID para Correo
+                        const correoSolicitanteField = document.getElementById('edit_correoSolicitante');
+                        if (correoSolicitanteField) correoSolicitanteField.value = data.data.correo_solicitante || '';
+                    }
+
+                    const deptoSelect = document.getElementById('edit_depto_solicitante');
+                    if (deptoSelect) deptoSelect.value = data.data.depto_solicitante;
+
+                    const tipoSolicitudSelect = document.getElementById('edit_tipo_solicitud');
+                    if (tipoSolicitudSelect) tipoSolicitudSelect.value = data.data.tipo_solicitud;
+
+                    // (Se elimina la antigua referencia a "fecha_salida_solicitante" ya que ahora usamos "fecha_solicitud")
+
+                    // Cargar los funcionarios asignados en el formulario de edición
+                    loadEditFormData(data.data);
+
+                    // Mostrar el modal de edición
+                    editModal.style.display = 'block';
+                } else {
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudieron cargar los datos para editar.',
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ha ocurrido un error al cargar los datos.',
+                });
+            });
+
+        
+
+        // Evento para manejar el guardado de cambios con confirmación previa
+        const saveButton = document.getElementById('guardarEdicionBNUP');
+        if (saveButton) {
+            saveButton.onclick = (event) => {
+                event.preventDefault();
+
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    title: '¿Desea guardar los cambios?',
+                    text: "Se actualizará la solicitud con los datos ingresados.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4BBFE0',
+                    cancelButtonColor: '#E73C45',
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData(editForm);
+                        fetch('/bnup/edit/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCSRFToken(),
+                            },
+                            body: formData
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Error en la respuesta del servidor');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'success',
+                                        title: 'Solicitud actualizada',
+                                        text: 'Los cambios han sido guardados correctamente.',
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                    });
+                                    updateTableRow(solicitudId);
+                                    editModal.style.display = 'none';
+                                } else {
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.error || 'Ha ocurrido un error al actualizar la solicitud.',
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire({
+                                    heightAuto: false,
+                                    scrollbarPadding: false,
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Ha ocurrido un error al actualizar la solicitud.',
+                                });
+                            });
+                    }
+                });
+            };
+        }
     }
 
     /**
@@ -985,189 +1227,6 @@
             newDeptoInput.value = '';
         });
     }
-
-    /**
-    * Inicializa el modal de edición de una solicitud específica.
-    * @param {string} solicitudId - ID de la solicitud a editar.
-    */
-    function openEditModal(solicitudId) {
-        const editModal = document.getElementById('editBNUPFormModal');
-        const closeModalButton = editModal ? editModal.querySelector('.close') : null;
-        const editForm = document.getElementById('editBNUPForm');
-
-        if (!editModal || !closeModalButton || !editForm) {
-            console.error('Elementos del modal de edición no encontrados.');
-            return;
-        }
-
-        // Resetear el formulario antes de cargar nuevos datos
-        editForm.reset();
-
-        // Obtener los datos de la solicitud mediante una solicitud AJAX
-        fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Rellenar el formulario con los datos obtenidos
-                    const solicitudIdField = document.getElementById('edit_solicitud_id');
-                    if (solicitudIdField) solicitudIdField.value = data.data.id;
-
-                    const numeroIngresoField = document.getElementById('edit_numeroIngreso');
-                    if (numeroIngresoField) numeroIngresoField.value = data.data.numero_ingreso;
-
-                    const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
-                    if (fechaIngresoField) fechaIngresoField.value = data.data.fecha_ingreso_au;
-
-                    // NUEVO CAMPO: Fecha de Solicitud
-                    const fechaSolicitudInput = document.getElementById('edit_fecha_solicitud');
-                    if (fechaSolicitudInput) {
-                        if (data.data.fecha_solicitud) {
-                            fechaSolicitudInput.value = data.data.fecha_solicitud;
-                        } else {
-                            fechaSolicitudInput.value = '';
-                        }
-                    }
-
-                    const descripcionField = document.getElementById('edit_descripcion');
-                    if (descripcionField) descripcionField.value = data.data.descripcion;
-
-                    const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
-                    if (tipoRecepcionSelect) {
-                        tipoRecepcionSelect.value = data.data.tipo_recepcion;
-                        updateEditBNUPFields();
-                    }
-
-                    if (['1', '3', '4', '5', '6', '7'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
-                        const numMemoField = document.getElementById('edit_num_memo');
-                        if (numMemoField) numMemoField.value = data.data.numero_memo || '';
-                    } else if (data.data.tipo_recepcion.toString() === '2') { // ID para Correo
-                        const correoSolicitanteField = document.getElementById('edit_correoSolicitante');
-                        if (correoSolicitanteField) correoSolicitanteField.value = data.data.correo_solicitante || '';
-                    }
-
-                    const deptoSelect = document.getElementById('edit_depto_solicitante');
-                    if (deptoSelect) deptoSelect.value = data.data.depto_solicitante;
-
-                    const tipoSolicitudSelect = document.getElementById('edit_tipo_solicitud');
-                    if (tipoSolicitudSelect) tipoSolicitudSelect.value = data.data.tipo_solicitud;
-
-                    // (Se elimina la antigua referencia a "fecha_salida_solicitante" ya que ahora usamos "fecha_solicitud")
-
-                    // Cargar los funcionarios asignados en el formulario de edición
-                    loadEditFormData(data.data);
-
-                    // Mostrar el modal de edición
-                    editModal.style.display = 'block';
-                } else {
-                    Swal.fire({
-                        heightAuto: false,
-                        scrollbarPadding: false,
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'No se pudieron cargar los datos para editar.',
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ha ocurrido un error al cargar los datos.',
-                });
-            });
-
-        // Evento para cerrar el modal al hacer clic en el botón de cerrar
-        closeModalButton.onclick = () => {
-            editModal.style.display = 'none';
-        };
-
-        // Evento para cerrar el modal al hacer clic fuera de él
-        document.addEventListener('click', (event) => {
-            if (event.target === editModal) {
-                editModal.style.display = 'none';
-            }
-        });
-
-        // Evento para manejar el guardado de cambios con confirmación previa
-        const saveButton = document.getElementById('guardarEdicionBNUP');
-        if (saveButton) {
-            saveButton.onclick = (event) => {
-                event.preventDefault();
-
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    title: '¿Desea guardar los cambios?',
-                    text: "Se actualizará la solicitud con los datos ingresados.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#4BBFE0',
-                    cancelButtonColor: '#E73C45',
-                    confirmButtonText: 'Guardar',
-                    cancelButtonText: 'Cancelar',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const formData = new FormData(editForm);
-                        fetch('/bnup/edit/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': getCSRFToken(),
-                            },
-                            body: formData
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Error en la respuesta del servidor');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        heightAuto: false,
-                                        scrollbarPadding: false,
-                                        icon: 'success',
-                                        title: 'Solicitud actualizada',
-                                        text: 'Los cambios han sido guardados correctamente.',
-                                        showConfirmButton: false,
-                                        timer: 2000,
-                                    });
-                                    updateTableRow(solicitudId);
-                                    editModal.style.display = 'none';
-                                } else {
-                                    Swal.fire({
-                                        heightAuto: false,
-                                        scrollbarPadding: false,
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: data.error || 'Ha ocurrido un error al actualizar la solicitud.',
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire({
-                                    heightAuto: false,
-                                    scrollbarPadding: false,
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Ha ocurrido un error al actualizar la solicitud.',
-                                });
-                            });
-                    }
-                });
-            };
-        }
-    }
-
 
     /**
      * Carga los datos de una solicitud en el formulario de edición.
