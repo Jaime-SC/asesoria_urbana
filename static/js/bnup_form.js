@@ -64,6 +64,7 @@
             console.error("Modal 'descripcionModal' no encontrado.");
             return;
         }
+        const modalContent = modal.querySelector('.modal-content');
 
         const descripcionCompleta = document.getElementById('descripcionCompleta');
         const fechaIngreso = document.getElementById('fechaIngreso');
@@ -126,18 +127,46 @@
         }
 
         modal.style.display = 'block';
+        modalContent.classList.add('animate__bounceIn');
+        // modalContent.classList.remove('animate__bounceOut');
 
         // Manejar el cierre del modal
         const spanClose = modal.querySelector('.close');
         if (spanClose) {
             spanClose.onclick = function () {
-                modal.style.display = 'none';
+
+                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+                modalContent.classList.remove('animate__bounceIn');
+                modalContent.classList.add('animate__bounceOut');
+                // modal.style.display = 'none';
+
+                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
+                modalContent.addEventListener('animationend', function handleAnimationEnd() {
+                    modal.style.display = 'none';
+                    // Limpia la clase de salida para que la próxima vez se use la de entrada
+                    modalContent.classList.remove('animate__bounceOut');
+                    modalContent.classList.add('animate__bounceIn');
+                    // Remover el listener para no duplicar eventos
+                    modalContent.removeEventListener('animationend', handleAnimationEnd);
+                });
+
             };
         }
 
         window.onclick = function (event) {
             if (event.target == modal) {
-                modal.style.display = 'none';
+                modal.style.display = 'block';
+                modalContent.classList.add('animate__bounceOut');
+                
+                setTimeout(() => {
+                    modalContent.style.display = 'none';
+                    modal.style.display = 'none';
+                    modalContent.classList.remove('animate__animated', 'animate__bounceOut');
+                    modalContent.style.display = 'block';
+
+                }, 700);
+
+
             }
         };
     }
