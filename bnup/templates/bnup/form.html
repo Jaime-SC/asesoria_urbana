@@ -94,7 +94,7 @@
 
               <div class="form-group">
                 <label for="depto_solicitante">Solicitante</label>
-                <div style="display: flex; align-items: center;">
+                <div id="deptoContainer" style="display: flex; align-items: center;">
                   <select name="depto_solicitante" id="depto_solicitante" style="max-width: 20rem;" required>
                     <option value="" disabled selected>Seleccione</option>
                     {% for depto in departamentos %}
@@ -105,7 +105,7 @@
                   <button type="button" id="addDeptoButton" class="btn btn-icon" style="margin-left: 10px;"><span class="material-symbols-outlined">add</span></button>
                 </div>
                 <!-- Contenedor para agregar nuevo departamento -->
-                <div id="newDeptoContainer" style="display: none; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <div id="newDeptoContainer" style="display: none; justify-content: space-between; align-items: center;">
                   <input type="text" id="newDeptoInput" placeholder="Ingrese nuevo departamento" style="max-width: 20rem; min-width: 20rem;" class="standardize-input" />
                   <div style="display: flex; width: 100%; justify-content: space-between;">
                     <button type="button" id="saveNewDeptoButton" class="btn btn-icon" style="margin-left: 10px;"><span class="material-symbols-outlined">save</span></button>
@@ -271,7 +271,7 @@
 
 <!-- Modal para descripción -->
 <div id="descripcionModal" class="modal">
-  <div class="modal-content">
+  <div id='descripcionModalContent' class="modal-content">
     <div style="display: flex; align-items: center; justify-content: space-between;">
       <h2>Vista Previa</h2>
       <span class="close" onclick="closeDescripcionModal()">
@@ -340,7 +340,7 @@
   <!-- Mostrar botón para crear salida -->
   <!-- Modal para gestionar la salida -->
   <div id="salidaModal" class="modal">
-    <div style="max-width: max-content;" class="modal-content animate__animated">
+    <div id="salidaModalContent" style="max-width: max-content;" class="modal-content animate__animated">
       <!-- Encabezado del modal con título y botón de cerrar -->
       <div style="display: flex; align-items: center; justify-content: space-between;">
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}

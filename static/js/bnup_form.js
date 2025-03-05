@@ -159,25 +159,46 @@
 
     /**
      * Abre el modal de salidas, mostrando o no el formulario de creación según el tipo de usuario.
+     * Agrega animaciones de entrada (bounceIn) y de salida (bounceOut).
      * @param {string} solicitudId - ID de la solicitud para la cual se mostrarán las salidas.
      */
     function openSalidaModal(solicitudId) {
         if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR', 'VISUALIZADOR'].includes(tipo_usuario)) {
             const salidaModal = document.getElementById('salidaModal');
+            const salidaModalContent = document.getElementById('salidaModalContent');
             const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
             const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-    
+
             if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
                 console.error('Elementos del modal de salida no encontrados.');
                 return;
             }
-    
+
+            // Quitar cualquier animación previa y agregar la de entrada
+            salidaModalContent.classList.remove('animate__bounceOut');
+            salidaModalContent.classList.add('animate__animated', 'animate__bounceIn');
             salidaModal.style.display = 'block';
-            salidaCloseButton.onclick = () => { salidaModal.style.display = 'none'; };
-            window.onclick = (event) => { if (event.target === salidaModal) salidaModal.style.display = 'none'; };
-    
+
+            // Función para cerrar el modal con animación de salida
+            function closeModal() {
+                salidaModalContent.classList.remove('animate__bounceIn');
+                salidaModalContent.classList.add('animate__bounceOut');
+                // Suponiendo que la duración de la animación es de 800ms (ajustar si es necesario)
+                setTimeout(() => {
+                    salidaModal.style.display = 'none';
+                    salidaModalContent.classList.remove('animate__animated', 'animate__bounceOut');
+                }, 800);
+            }
+
+            salidaCloseButton.onclick = closeModal;
+            window.onclick = function (event) {
+                if (event.target === salidaModal) {
+                    closeModal();
+                }
+            };
+
             tablaSalidasBody.innerHTML = '';
-    
+
             fetch(`/bnup/get_salidas/${solicitudId}/`)
                 .then(response => {
                     if (!response.ok) {
@@ -192,11 +213,11 @@
                             const numeroSalidaCell = document.createElement('td');
                             numeroSalidaCell.textContent = salida.numero_salida;
                             row.appendChild(numeroSalidaCell);
-    
+
                             const fechaSalidaCell = document.createElement('td');
                             fechaSalidaCell.textContent = salida.fecha_salida;
                             row.appendChild(fechaSalidaCell);
-    
+
                             const archivoCell = document.createElement('td');
                             if (salida.archivo_url) {
                                 const link = document.createElement('a');
@@ -204,21 +225,21 @@
                                 link.target = '_blank';
                                 link.setAttribute('aria-label', 'Ver Archivo');
                                 link.setAttribute('title', 'Ver Archivo');
-    
+
                                 const iconSpan = document.createElement('span');
                                 iconSpan.classList.add('material-symbols-outlined');
                                 iconSpan.textContent = 'preview';
-    
+
                                 link.appendChild(iconSpan);
                                 archivoCell.appendChild(link);
                             } else {
                                 archivoCell.textContent = 'No adjunto';
                             }
                             row.appendChild(archivoCell);
-    
+
                             tablaSalidasBody.appendChild(row);
                         });
-    
+
                         // Inicializar la tabla, etc.
                         initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
                     } else {
@@ -407,7 +428,6 @@
                 }
             }
         }
-
     }
 
     /**
@@ -1158,20 +1178,28 @@
         const addDeptoButton = document.getElementById('addDeptoButton');
         const deptoSelect = document.getElementById('depto_solicitante');
         const newDeptoContainer = document.getElementById('newDeptoContainer');
+        const deptoContainer = document.getElementById('deptoContainer');
         const newDeptoInput = document.getElementById('newDeptoInput');
         const saveNewDeptoButton = document.getElementById('saveNewDeptoButton');
         const cancelNewDeptoButton = document.getElementById('cancelNewDeptoButton');
 
-        if (!addDeptoButton || !deptoSelect || !newDeptoContainer || !newDeptoInput || !saveNewDeptoButton || !cancelNewDeptoButton) {
+        if (!addDeptoButton || !deptoSelect || !newDeptoContainer || !deptoContainer || !newDeptoInput || !saveNewDeptoButton || !cancelNewDeptoButton) {
             console.error('Elementos para la funcionalidad de nuevo solicitante no encontrados.');
             return;
         }
 
-        // Mostrar el campo para ingresar nuevo departamento
+        // Mostrar el campo para ingresar nuevo departamento con animación "animate__bounce"
         addDeptoButton.addEventListener('click', () => {
             deptoSelect.style.display = 'none';
             addDeptoButton.style.display = 'none';
             newDeptoContainer.style.display = 'flex';
+            // Agregar animación de aparición
+            newDeptoContainer.style.setProperty('--animate-duration', '0.5s');
+            newDeptoContainer.classList.add('animate__animated', 'animate__bounce');
+            // Remover la clase de animación una vez finalizada la animación
+            newDeptoContainer.addEventListener('animationend', function () {
+                newDeptoContainer.classList.remove('animate__animated', 'animate__bounce');
+            }, { once: true });
             newDeptoInput.focus();
         });
 
@@ -1207,13 +1235,22 @@
                         newOption.textContent = data.departamento.nombre;
                         deptoSelect.appendChild(newOption);
 
-                        // Establecer el select en el nuevo departamento
+                        // Establecer el select en el nuevo departamento y mostrarlo con animación
                         deptoSelect.value = data.departamento.id;
-
-                        // Restaurar el select y ocultar el contenedor de nuevo departamento
                         deptoSelect.style.display = '';
+                        deptoSelect.classList.add('animate__animated', 'animate__bounce');
+                        deptoSelect.addEventListener('animationend', function () {
+                            deptoSelect.classList.remove('animate__animated', 'animate__bounce');
+                        }, { once: true });
+
+                        // Restaurar el botón de agregar y ocultar el contenedor con animación de salida
                         addDeptoButton.style.display = '';
                         newDeptoContainer.style.display = 'none';
+                        deptoContainer.style.setProperty('--animate-duration', '0.5s');
+                        deptoSelect.classList.add('animate__animated', 'animate__bounce');
+                        deptoSelect.addEventListener('animationend', function () {
+                            deptoSelect.classList.remove('animate__animated', 'animate__bounce');
+                        }, { once: true });
                         newDeptoInput.value = '';
 
                         Swal.fire({
@@ -1247,14 +1284,21 @@
                 });
         });
 
-        // Cancelar la adición de nuevo departamento
+        // Cancelar la adición de nuevo departamento con animación de salida
         cancelNewDeptoButton.addEventListener('click', () => {
+            // Agregar animación de salida al contenedor
+            newDeptoContainer.style.display = 'none';
+            deptoContainer.style.setProperty('--animate-duration', '0.5s');
+            deptoContainer.classList.add('animate__animated', 'animate__bounce');
+            deptoContainer.addEventListener('animationend', function () {
+                deptoContainer.classList.remove('animate__animated', 'animate__bounce');
+            }, { once: true });
             deptoSelect.style.display = '';
             addDeptoButton.style.display = '';
-            newDeptoContainer.style.display = 'none';
             newDeptoInput.value = '';
         });
     }
+
 
     /**
      * Carga los datos de una solicitud en el formulario de edición.
@@ -1415,11 +1459,8 @@
 
 
     /**
-     * Inicializa la funcionalidad para agregar múltiples funcionarios asignados.
+     * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de creación.
      */
-    /**
- * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de creación.
- */
     function initializeMultipleFuncionarios() {
         const funcionariosContainer = document.getElementById('funcionariosContainer');
         const totalFuncionarios = parseInt(funcionariosContainer.getAttribute('data-total-funcionarios'), 10) || 12; // Default a 12 si no se proporciona
@@ -1463,7 +1504,7 @@
                     }
                 });
 
-                // Si estás usando Select2, actualiza el estado
+                // Si usas Select2, actualiza el estado
                 if (typeof $(select).select2 === 'function') {
                     $(select).trigger('change.select2');
                 }
@@ -1471,7 +1512,7 @@
         }
 
         /**
-         * Añade un nuevo grupo de selección de funcionario.
+         * Añade un nuevo grupo de selección de funcionario con animación de aparición.
          * @param {HTMLElement} currentGroup - El grupo actual donde se hizo clic en "+"
          */
         function addFuncionarioSelect(currentGroup) {
@@ -1504,26 +1545,34 @@
 
             // Crear y añadir un nuevo grupo de selección con botón de "Añadir"
             const newGroup = createFuncionarioSelectGroup(true);
+            // Asignar duración rápida (0.5s, por ejemplo)
+            newGroup.style.setProperty('--animate-duration', '0.5s');
+            // Agregar animación de aparición
+            newGroup.classList.add('animate__animated', 'animate__fadeInDown');
             funcionariosContainer.appendChild(newGroup);
+            // Remover las clases de animación una vez finalizada
+            newGroup.addEventListener('animationend', function() {
+                newGroup.classList.remove('animate__animated', 'animate__fadeInDown');
+            });
 
             // Actualizar las opciones de todos los selects
             updateSelectOptions();
         }
 
         /**
-         * Elimina un grupo de selección de funcionario.
+         * Elimina un grupo de selección de funcionario con animación de salida.
          * @param {HTMLElement} group - El grupo de selección a eliminar.
          */
         function removeFuncionarioSelect(group) {
-            // Obtener el valor seleccionado en este grupo antes de eliminarlo
-            const select = group.querySelector('.funcionarioSelect');
-            const selectedValue = select.value;
-
-            // Eliminar el grupo del DOM
-            group.remove();
-
-            // Actualizar las opciones de todos los selects
-            updateSelectOptions();
+            // Asignar duración rápida (0.5s, por ejemplo)
+            group.style.setProperty('--animate-duration', '0.5s');
+            // Agregar animación de salida (usamos 'animate__fadeOutUp' para salida)
+            group.classList.add('animate__animated', 'animate__fadeOutUp');
+            // Al terminar la animación, eliminar el grupo y actualizar las opciones
+            group.addEventListener('animationend', function() {
+                group.remove();
+                updateSelectOptions();
+            }, { once: true });
         }
 
         // Delegar el evento de clic en el contenedor para manejar "Añadir" y "Cancelar"
@@ -1540,7 +1589,6 @@
         });
 
         // Inicializar los selects existentes
-        // Si hay múltiples selects predefinidos, se manejarán adecuadamente
         const existingSelects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
         existingSelects.forEach((select, index) => {
             if (index === 0) {
@@ -1577,12 +1625,13 @@
         // Disparar eventos 'change' para cada select preseleccionado para actualizar las opciones
         existingSelects.forEach(select => {
             if (select.value) {
-                // Disparar manualmente el evento 'change' para cada select con un valor preseleccionado
                 const event = new Event('change');
                 select.dispatchEvent(event);
             }
         });
     }
+
+
 
     /**
      * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de edición.
@@ -1632,7 +1681,7 @@
                     }
                 });
 
-                // Si estás usando Select2, actualiza el estado
+                // Si usas Select2, actualiza el estado
                 if (typeof $(select).select2 === 'function') {
                     $(select).trigger('change.select2');
                 }
@@ -1640,7 +1689,7 @@
         }
 
         /**
-         * Añade un nuevo grupo de selección de funcionario en el formulario de edición.
+         * Añade un nuevo grupo de selección de funcionario en el formulario de edición con animación de aparición.
          * @param {HTMLElement} currentGroup - El grupo actual donde se hizo clic en "+"
          */
         function addFuncionarioSelectEdit(currentGroup) {
@@ -1673,26 +1722,34 @@
 
             // Crear y añadir un nuevo grupo de selección con botón de "Añadir"
             const newGroup = createFuncionarioSelectGroup(true);
+            // Asignar duración rápida a la animación (0.5s)
+            newGroup.style.setProperty('--animate-duration', '0.5s');
+            // Agregar animación de aparición: 'animate__fadeInDown'
+            newGroup.classList.add('animate__animated', 'animate__fadeInDown');
             funcionariosContainer.appendChild(newGroup);
+            // Remover las clases de animación una vez finalizada la animación
+            newGroup.addEventListener('animationend', function() {
+                newGroup.classList.remove('animate__animated', 'animate__fadeInDown');
+            });
 
             // Actualizar las opciones de todos los selects
             updateSelectOptions();
         }
 
         /**
-         * Elimina un grupo de selección de funcionario.
+         * Elimina un grupo de selección de funcionario con animación de salida.
          * @param {HTMLElement} group - El grupo de selección a eliminar.
          */
         function removeFuncionarioSelect(group) {
-            // Obtener el valor seleccionado en este grupo antes de eliminarlo
-            const select = group.querySelector('.funcionarioSelect');
-            const selectedValue = select.value;
-
-            // Eliminar el grupo del DOM
-            group.remove();
-
-            // Actualizar las opciones de todos los selects
-            updateSelectOptions();
+            // Asignar duración rápida a la animación (0.5s)
+            group.style.setProperty('--animate-duration', '0.5s');
+            // Agregar animación de salida: 'animate__fadeOutUp'
+            group.classList.add('animate__animated', 'animate__fadeOutUp');
+            // Una vez finalizada la animación, eliminar el grupo y actualizar las opciones
+            group.addEventListener('animationend', function() {
+                group.remove();
+                updateSelectOptions();
+            }, { once: true });
         }
 
         // Delegar el evento de clic en el contenedor para manejar "Añadir" y "Cancelar"
@@ -1709,7 +1766,6 @@
         });
 
         // Inicializar los selects existentes
-        // Si hay múltiples selects predefinidos, se manejarán adecuadamente
         const existingSelects = funcionariosContainer.querySelectorAll('.funcionarioSelect');
         existingSelects.forEach((select, index) => {
             if (index === 0) {
@@ -1752,6 +1808,7 @@
             }
         });
     }
+
 
     /**
      * Actualiza la visibilidad de los campos en el formulario de edición BNUP según el tipo de recepción seleccionado.
