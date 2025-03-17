@@ -1919,7 +1919,9 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 #addDeptoButton,
 #saveNewDeptoButton,
 #cancelNewDeptoButton,
+.addSalidaFuncionarioBtn,
 .addFuncionarioBtn,
+.removeSalidaFuncionarioBtn,
 .removeFuncionarioBtn {
   margin: 0rem;
   padding: 0rem;
@@ -1929,12 +1931,14 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 }
 
 #addDeptoButton,
-.addFuncionarioBtn {
+.addFuncionarioBtn,
+.addSalidaFuncionarioBtn {
   background-color: #00bb2d !important;
 }
 
 #addDeptoButton:hover,
-.addFuncionarioBtn:hover {
+.addFuncionarioBtn:hover,
+.addSalidaFuncionarioBtn:hover {
   background-color: #04e639 !important;
 }
 
@@ -1943,12 +1947,14 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 }
 
 #cancelNewDeptoButton,
-.removeFuncionarioBtn {
+.removeFuncionarioBtn,
+.removeSalidaFuncionarioBtn {
   background-color: #E73C45 !important;
 }
 
 #cancelNewDeptoButton:hover,
-.removeFuncionarioBtn:hover {
+.removeFuncionarioBtn:hover,
+.removeSalidaFuncionarioBtn:hover {
   background-color: #e65a61 !important;
 }
 
