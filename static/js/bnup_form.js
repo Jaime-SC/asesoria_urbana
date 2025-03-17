@@ -115,7 +115,7 @@
             }
             correoField.style.display = 'flex';
         }
-        
+
 
         // Mostrar u ocultar el campo de número de memo según si tiene un valor
         if (numeroMemoElement) {
@@ -157,7 +157,7 @@
             if (event.target == modal) {
                 modal.style.display = 'block';
                 modalContent.classList.add('animate__bounceOut');
-                
+
                 setTimeout(() => {
                     modalContent.style.display = 'none';
                     modal.style.display = 'none';
@@ -185,279 +185,6 @@
     }
 
     window.closeDescripcionModal = closeDescripcionModal;
-
-    /**
-     * Abre el modal de salidas, mostrando o no el formulario de creación según el tipo de usuario.
-     * Agrega animaciones de entrada (bounceIn) y de salida (bounceOut).
-     * @param {string} solicitudId - ID de la solicitud para la cual se mostrarán las salidas.
-     */
-    function openSalidaModal(solicitudId) {
-        if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR', 'VISUALIZADOR'].includes(tipo_usuario)) {
-            const salidaModal = document.getElementById('salidaModal');
-            const salidaModalContent = document.getElementById('salidaModalContent');
-            const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
-            const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-
-            if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
-                console.error('Elementos del modal de salida no encontrados.');
-                return;
-            }
-
-            // Quitar cualquier animación previa y agregar la de entrada
-            salidaModalContent.classList.remove('animate__bounceOut');
-            salidaModalContent.classList.add('animate__animated', 'animate__bounceIn');
-            salidaModal.style.display = 'block';
-
-            // Función para cerrar el modal con animación de salida
-            function closeModal() {
-                salidaModalContent.classList.remove('animate__bounceIn');
-                salidaModalContent.classList.add('animate__bounceOut');
-                // Suponiendo que la duración de la animación es de 800ms (ajustar si es necesario)
-                setTimeout(() => {
-                    salidaModal.style.display = 'none';
-                    salidaModalContent.classList.remove('animate__animated', 'animate__bounceOut');
-                }, 800);
-            }
-
-            salidaCloseButton.onclick = closeModal;
-            window.onclick = function (event) {
-                if (event.target === salidaModal) {
-                    closeModal();
-                }
-            };
-
-            tablaSalidasBody.innerHTML = '';
-
-            fetch(`/bnup/get_salidas/${solicitudId}/`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        data.salidas.forEach(salida => {
-                            const row = document.createElement('tr');
-                            const numeroSalidaCell = document.createElement('td');
-                            numeroSalidaCell.textContent = salida.numero_salida;
-                            row.appendChild(numeroSalidaCell);
-
-                            const fechaSalidaCell = document.createElement('td');
-                            fechaSalidaCell.textContent = salida.fecha_salida;
-                            row.appendChild(fechaSalidaCell);
-
-                            const archivoCell = document.createElement('td');
-                            if (salida.archivo_url) {
-                                const link = document.createElement('a');
-                                link.href = salida.archivo_url;
-                                link.target = '_blank';
-                                link.setAttribute('aria-label', 'Ver Archivo');
-                                link.setAttribute('title', 'Ver Archivo');
-
-                                const iconSpan = document.createElement('span');
-                                iconSpan.classList.add('material-symbols-outlined');
-                                iconSpan.textContent = 'preview';
-
-                                link.appendChild(iconSpan);
-                                archivoCell.appendChild(link);
-                            } else {
-                                archivoCell.textContent = 'No adjunto';
-                            }
-                            row.appendChild(archivoCell);
-
-                            tablaSalidasBody.appendChild(row);
-                        });
-
-                        // Inicializar la tabla, etc.
-                        initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
-                    } else {
-                        console.error('Error al obtener las salidas:', data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al obtener las salidas:', error);
-                });
-
-            // Si el usuario no es 'VISUALIZADOR', inicializar el formulario para crear salidas
-            if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR'].includes(tipo_usuario)) {
-                const solicitudInput = document.getElementById('solicitud_id');
-                if (!solicitudInput) {
-                    console.error('Elemento solicitud_id no encontrado.');
-                    return;
-                }
-                solicitudInput.value = solicitudId;
-
-                // Resetear el formulario
-                const salidaForm = document.getElementById('salidaForm');
-                if (salidaForm) {
-                    salidaForm.reset();
-                }
-
-                // Manejo del botón "Guardar" con confirmación previa usando SweetAlert2
-                const saveButton = document.getElementById('guardarSalida');
-                if (saveButton) {
-                    saveButton.onclick = (event) => {
-                        event.preventDefault();
-
-                        // Obtener valores de los campos del formulario
-                        const numeroSalida = document.getElementById('numero_salida').value.trim();
-                        const fechaSalida = document.getElementById('fecha_salida').value.trim();
-                        const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
-                        const archivoAdjunto = archivoAdjuntoInput.files[0];
-
-                        // Validar que todos los campos estén completos
-                        if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
-                            Swal.fire({
-                                heightAuto: false,
-                                scrollbarPadding: false,
-                                icon: 'error',
-                                title: 'Campos incompletos',
-                                text: 'Por favor, complete todos los campos antes de guardar.',
-                                confirmButtonColor: '#E73C45',
-                            });
-                            return;
-                        }
-
-                        // Mostrar ventana de confirmación
-                        Swal.fire({
-                            heightAuto: false,
-                            scrollbarPadding: false,
-                            title: '¿Desea confirmar la salida?',
-                            text: "Se guardará la salida con los datos ingresados.",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#4BBFE0',
-                            cancelButtonColor: '#E73C45',
-                            confirmButtonText: 'Guardar',
-                            cancelButtonText: 'Cancelar',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Enviar el formulario vía AJAX
-                                const formData = new FormData();
-                                formData.append('solicitud_id', solicitudId);
-                                formData.append('numero_salida', numeroSalida);
-                                formData.append('fecha_salida', fechaSalida);
-                                formData.append('archivo_adjunto_salida', archivoAdjunto);
-
-                                fetch('/bnup/create_salida/', {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRFToken': getCSRFToken(),
-                                    },
-                                    body: formData,
-                                })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            // Actualizar la tabla de salidas con el nuevo registro
-                                            const salida = data.salida;
-                                            const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-
-                                            const row = document.createElement('tr');
-
-                                            // Columna para el número de salida
-                                            const numeroSalidaCell = document.createElement('td');
-                                            numeroSalidaCell.textContent = salida.numero_salida;
-                                            row.appendChild(numeroSalidaCell);
-
-                                            // Columna para la fecha de salida
-                                            const fechaSalidaCell = document.createElement('td');
-                                            fechaSalidaCell.textContent = salida.fecha_salida;
-                                            row.appendChild(fechaSalidaCell);
-
-                                            // Columna para el archivo adjunto
-                                            const archivoCell = document.createElement('td');
-                                            if (salida.archivo_url) {
-                                                archivoCell.innerHTML = `
-                                                    <a href="${salida.archivo_url}" target="_blank" style="text-decoration: none;">
-                                                        <span class="material-symbols-outlined" style="color: green;">preview</span>
-                                                    </a>
-                                                `;
-                                            } else {
-                                                archivoCell.textContent = 'No adjunto';
-                                            }
-                                            row.appendChild(archivoCell);
-
-                                            // Añadir la nueva fila al principio de la tabla
-                                            tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
-
-                                            // Limpiar los campos del formulario
-                                            document.getElementById('numero_salida').value = '';
-                                            document.getElementById('fecha_salida').value = '';
-                                            archivoAdjuntoInput.value = '';
-                                            // Si estás usando fileinput plugin:
-                                            $(archivoAdjuntoInput).fileinput('clear');
-
-                                            Swal.fire({
-                                                heightAuto: false,
-                                                scrollbarPadding: false,
-                                                icon: 'success',
-                                                title: 'Salida creada',
-                                                text: 'La salida ha sido registrada correctamente.',
-                                                showConfirmButton: false,
-                                                timer: 2000,
-                                            });
-                                        } else {
-                                            Swal.fire({
-                                                heightAuto: false,
-                                                scrollbarPadding: false,
-                                                icon: 'error',
-                                                title: 'Error',
-                                                text: data.error || 'Ha ocurrido un error al crear la salida.',
-                                            });
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Error al crear la salida:', error);
-                                        Swal.fire({
-                                            heightAuto: false,
-                                            scrollbarPadding: false,
-                                            icon: 'error',
-                                            title: 'Error',
-                                            text: 'Ha ocurrido un error al crear la salida.',
-                                        });
-                                    });
-                            }
-                        });
-                    };
-                }
-
-                // Inicializar el plugin fileinput para el input de adjuntar archivo en salidas
-                const archivoAdjuntoSalidaInput = document.getElementById('archivo_adjunto_salida');
-                if (archivoAdjuntoSalidaInput) {
-                    $(archivoAdjuntoSalidaInput).fileinput({
-                        showUpload: false,
-                        showRemove: true,
-                        showPreview: true,
-                        showCaption: false,
-                        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-                        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
-                        mainClass: 'input-group-sm',
-                        dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-                        fileActionSettings: {
-                            showRemove: true,
-                            showUpload: false,
-                            showZoom: false,
-                            showDrag: false,
-                            showDelete: false,
-                        },
-                        layoutTemplates: {
-                            close: '',
-                            indicator: '',
-                            actionCancel: ''
-                        }
-                    });
-                }
-            } else {
-                // Si el usuario es 'VISUALIZADOR', asegurarse de que el formulario no se muestre
-                const salidaFields = document.getElementById('salidaFields');
-                if (salidaFields) {
-                    salidaFields.style.display = 'none';
-                }
-            }
-        }
-    }
 
     /**
      * Actualiza la visibilidad de los campos en el formulario BNUP según el tipo de recepción seleccionado.
@@ -788,7 +515,7 @@
                 });
             });
 
-        
+
 
         // Evento para manejar el guardado de cambios con confirmación previa
         const saveButton = document.getElementById('guardarEdicionBNUP');
@@ -875,19 +602,19 @@
         const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
         const content = fileModal.querySelector('.modal-content');
 
-    
+
         // Verificar que existan todos los elementos necesarios
         if (!modalButton || !fileModal || !closeModalButton || !confirmButton || !fileModalInput || !archivoAdjuntoInput) {
             return;
         }
-    
+
         // Cuando se hace clic en el botón de adjuntar, se muestra el modal para archivos
         modalButton.onclick = () => {
             fileModal.style.display = 'block';
             content.classList.add('animate__bounceIn');
             content.classList.remove('animate__bounceOut');
         };
-    
+
         // Cerrar el modal al hacer clic en el botón de cerrar
         closeModalButton.onclick = () => {
             // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
@@ -905,7 +632,7 @@
                 content.removeEventListener('animationend', handleAnimationEnd);
             });
         };
-    
+
         // Cerrar el modal al hacer clic fuera de él
         fileModal.addEventListener('click', (event) => {
             if (event.target === fileModal) {
@@ -925,7 +652,7 @@
                 });
             }
         });
-    
+
         // Confirmar la selección del archivo
         confirmButton.onclick = () => {
             if (fileModalInput.files.length > 0) {
@@ -951,7 +678,7 @@
                 });
             }
         };
-    
+
         // Inicializar el plugin fileinput (si usas uno)
         $(fileModalInput).fileinput({
             showUpload: false,
@@ -975,11 +702,88 @@
                 actionCancel: ''
             }
         });
-    
+
         // Sincronizar la selección de archivos entre los inputs
         fileModalInput.onchange = () => {
             archivoAdjuntoInput.files = fileModalInput.files;
         };
+
+        $(document).ready(function () {
+            $("#archivo_adjunto_salida").fileinput({
+                uploadUrl: "/bnup/upload_salida/",  // Cambia esta URL según tu backend
+                deleteUrl: '/bnup/delete_file/',  // Ajusta según corresponda
+                showUpload: false,
+                showRemove: true,
+                showPreview: true,
+                showCaption: false,
+                browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+                removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                mainClass: 'input-group-sm',
+                dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+                fileActionSettings: {
+                    showRemove: false,
+                    showUpload: false,
+                    showZoom: false,
+                    showDrag: false,
+                    showDelete: false,
+                    zoomIcon: '<span class="material-symbols-outlined">zoom_in</span>',
+                    // Puedes mantener tu función para mostrar el zoom si es imagen o pdf
+                    showZoom: function (config) {
+                        return (config.type === 'pdf' || config.type === 'image');
+                    }
+                },
+                layoutTemplates: {
+                    close: '',
+                    indicator: '',
+                    actionCancel: '',
+                    modal: '<div class="modal-dialog modal-lg{rtl}" role="document">\n' +
+                        '  <div class="modal-content animate__animated animate__bounceIn">\n' +
+                        '    <div class="modal-header kv-zoom-header">\n' +
+                        '      <h6 class="modal-title kv-zoom-title" id="kvFileinputModalLabel"><span class="kv-zoom-caption"></span> <span class="kv-zoom-size"></span></h6>\n' +
+                        '      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>' +
+                        '    </div>\n' +
+                        '    <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
+                        '    <div class="kv-zoom-description"></div>\n' +
+                        '  </div>\n' +
+                        '</div>\n'
+
+                },
+                previewZoomButtonIcons: {
+                    prev: '',
+                    next: '',
+                    rotate: '',
+                    toggleheader: '',
+                    fullscreen: '',
+                    borderless: '',
+                    close: ''
+                }
+            });
+            $(document).on('click', '#kvFileinputModal .kv-zoom-header .close', function (e) {
+                e.preventDefault();
+                var $modal = $('#kvFileinputModal');
+                var $content = $modal.find('.modal-content');
+                // Remover la clase de entrada y agregar la de salida
+                $content.removeClass('animate__bounceIn').addClass('animate__bounceOut');
+                // Esperar a que termine la animación y luego remover el modal
+                $content.one('animationend', function () {
+                    $modal.remove();
+                });
+            });
+            $(document).on('click', '#kvFileinputModal', function(e) {
+                // Si el clic NO ocurrió dentro de un elemento con clase 'modal-content'
+                if ($(e.target).closest('.modal-content').length === 0) {
+                    var $modal = $('#kvFileinputModal');
+                    var $content = $modal.find('.modal-content');
+                    $content.removeClass('animate__bounceIn').addClass('animate__bounceOut');
+                    $content.one('animationend', function () {
+                        $modal.remove();
+                    });
+                }
+            });
+            
+            
+        });
+
     }
 
     /**
@@ -1580,7 +1384,7 @@
             newGroup.classList.add('animate__animated', 'animate__fadeInDown');
             funcionariosContainer.appendChild(newGroup);
             // Remover las clases de animación una vez finalizada
-            newGroup.addEventListener('animationend', function() {
+            newGroup.addEventListener('animationend', function () {
                 newGroup.classList.remove('animate__animated', 'animate__fadeInDown');
             });
 
@@ -1598,7 +1402,7 @@
             // Agregar animación de salida (usamos 'animate__fadeOutUp' para salida)
             group.classList.add('animate__animated', 'animate__fadeOutUp');
             // Al terminar la animación, eliminar el grupo y actualizar las opciones
-            group.addEventListener('animationend', function() {
+            group.addEventListener('animationend', function () {
                 group.remove();
                 updateSelectOptions();
             }, { once: true });
@@ -1757,7 +1561,7 @@
             newGroup.classList.add('animate__animated', 'animate__fadeInDown');
             funcionariosContainer.appendChild(newGroup);
             // Remover las clases de animación una vez finalizada la animación
-            newGroup.addEventListener('animationend', function() {
+            newGroup.addEventListener('animationend', function () {
                 newGroup.classList.remove('animate__animated', 'animate__fadeInDown');
             });
 
@@ -1775,7 +1579,7 @@
             // Agregar animación de salida: 'animate__fadeOutUp'
             group.classList.add('animate__animated', 'animate__fadeOutUp');
             // Una vez finalizada la animación, eliminar el grupo y actualizar las opciones
-            group.addEventListener('animationend', function() {
+            group.addEventListener('animationend', function () {
                 group.remove();
                 updateSelectOptions();
             }, { once: true });
@@ -1838,6 +1642,569 @@
         });
     }
 
+    /**
+     * Inicializa la funcionalidad para agregar múltiples funcionarios en el formulario de creación de salidas.
+     */
+    function initializeMultipleFuncionariosSalida() {
+        const container = document.getElementById('salidaFuncionariosContainer');
+        if (!container) {
+            console.error('No se encontró el contenedor de funcionarios de salida.');
+            return;
+        }
+        // Limpiar el contenedor para evitar duplicados
+        container.innerHTML = "";
+
+        // Definir el total de funcionarios y el máximo de selects
+        const totalFuncionarios = parseInt(container.getAttribute('data-total-funcionarios'), 10) || 12;
+        const maxSelects = totalFuncionarios;
+
+        // Crear el grupo inicial con botón "Añadir"
+        const defaultGroup = createSalidaFuncionarioSelectGroup(true);
+        container.appendChild(defaultGroup);
+
+        container.addEventListener('click', function handleSalidaFuncionariosClick(event) {
+            const addBtn = event.target.closest('.addSalidaFuncionarioBtn');
+            const removeBtn = event.target.closest('.removeSalidaFuncionarioBtn');
+            if (addBtn) {
+                // Usamos el padre directo del botón
+                const currentGroup = addBtn.parentElement;
+                if (!currentGroup || !currentGroup.classList.contains('funcionario-select-group')) {
+                    console.error("No se encontró el grupo de selección ('.funcionario-select-group') para el botón 'Añadir'.");
+                    return;
+                }
+                addSalidaFuncionarioSelect(currentGroup, container, maxSelects);
+            } else if (removeBtn) {
+                const currentGroup = removeBtn.parentElement;
+                if (!currentGroup || !currentGroup.classList.contains('funcionario-select-group')) {
+                    console.error("No se encontró el grupo de selección para el botón 'Cancelar'.");
+                    return;
+                }
+                removeSalidaFuncionarioSelect(currentGroup);
+            }
+        });
+
+
+        // Función para obtener los funcionarios seleccionados en salidas
+        function getSelectedFuncionariosSalida() {
+            const selects = container.querySelectorAll('.salidaFuncionarioSelect');
+            const selected = [];
+            selects.forEach(select => {
+                if (select.value) {
+                    selected.push(select.value);
+                }
+            });
+            return selected;
+        }
+
+        // Actualiza las opciones de cada select para evitar duplicados
+        function updateSalidaSelectOptions() {
+            const selected = getSelectedFuncionariosSalida();
+            const selects = container.querySelectorAll('.salidaFuncionarioSelect');
+            selects.forEach(select => {
+                const currentValue = select.value;
+                const options = select.querySelectorAll('option');
+                options.forEach(option => {
+                    if (option.value === '') return;
+                    option.disabled = (selected.includes(option.value) && option.value !== currentValue);
+                });
+                if (typeof $(select).select2 === 'function') {
+                    $(select).trigger('change.select2');
+                }
+            });
+        }
+
+        // Crea un nuevo grupo de selección para funcionarios en salidas
+        function createSalidaFuncionarioSelectGroup(isLast = false) {
+            const group = document.createElement('div');
+            group.classList.add('funcionario-select-group');
+            group.style.cssText = "display: flex; align-items: center; margin-top: 10px;";
+
+            const select = document.createElement('select');
+            select.name = 'funcionarios_salidas';
+            select.classList.add('salidaFuncionarioSelect');
+            select.style.maxWidth = "20rem";
+            select.required = true;
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            defaultOption.textContent = 'Seleccione';
+            select.appendChild(defaultOption);
+
+            // Clonar opciones desde un elemento oculto (asegúrate de tenerlo en el HTML con id "allFuncionariosOptions")
+            const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
+            allOptions.forEach(option => {
+                const clonedOption = option.cloneNode(true);
+                select.appendChild(clonedOption);
+            });
+
+            group.appendChild(select);
+
+            if (isLast) {
+                const addBtn = createAddSalidaButton();
+                group.appendChild(addBtn);
+            } else {
+                const cancelBtn = createCancelSalidaButton();
+                group.appendChild(cancelBtn);
+            }
+
+            if (typeof $(select).select2 === 'function') {
+                $(select).select2({
+                    placeholder: "Seleccione",
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+            return group;
+        }
+
+        function createAddSalidaButton() {
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.classList.add('addSalidaFuncionarioBtn', 'btn', 'btn-icon');
+            addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+            addBtn.style.cssText = "margin-left: 10px; padding: 0;";
+            return addBtn;
+        }
+
+        function createCancelSalidaButton() {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.classList.add('removeSalidaFuncionarioBtn', 'btn', 'btn-icon');
+            cancelBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+            cancelBtn.style.cssText = "margin-left: 10px; padding: 0;";
+            return cancelBtn;
+        }
+
+        // Función para agregar un nuevo grupo de selección de funcionario
+        function addSalidaFuncionarioSelect(currentGroup, container, maxSelects) {
+            if (!currentGroup) {
+                console.error("addSalidaFuncionarioSelect: currentGroup es null o undefined");
+                return;
+            }
+            const currentSelects = container.querySelectorAll('.salidaFuncionarioSelect');
+            if (currentSelects.length >= maxSelects) {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'warning',
+                    title: 'Límite alcanzado',
+                    text: `No puedes agregar más de ${maxSelects} funcionarios.`,
+                });
+                return;
+            }
+            // Remover el botón "Añadir" del grupo actual
+            const addBtn = currentGroup.querySelector('.addSalidaFuncionarioBtn');
+            if (addBtn) {
+                addBtn.remove();
+            }
+            // Si no existe ya el botón "Cancelar", lo añadimos
+            if (!currentGroup.querySelector('.removeSalidaFuncionarioBtn')) {
+                const cancelBtn = createCancelSalidaButton();
+                currentGroup.appendChild(cancelBtn);
+            }
+            // Crear y añadir un nuevo grupo de selección con botón "Añadir"
+            const newGroup = createSalidaFuncionarioSelectGroup(true);
+            newGroup.style.setProperty('--animate-duration', '0.5s');
+            newGroup.classList.add('animate__animated', 'animate__fadeInDown');
+            container.appendChild(newGroup);
+            newGroup.addEventListener('animationend', function () {
+                newGroup.classList.remove('animate__animated', 'animate__fadeInDown');
+            });
+            updateSalidaSelectOptions();
+        }
+
+        function removeSalidaFuncionarioSelect(group) {
+            group.style.setProperty('--animate-duration', '0.5s');
+            group.classList.add('animate__animated', 'animate__fadeOutUp');
+            group.addEventListener('animationend', function () {
+                group.remove();
+                updateSalidaSelectOptions();
+            }, { once: true });
+        }
+    }
+
+
+    /**
+     * Actualiza la función que abre el modal de salidas para incluir los nuevos campos:
+     * - Múltiples funcionarios (a través de la función initializeMultipleFuncionariosSalida)
+     * - Campo de descripción de salida
+     * Además, se modifica la lógica de envío del formulario para incluir estos nuevos datos.
+     */
+    function openSalidaModal(solicitudId) {
+        if (!['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR', 'VISUALIZADOR'].includes(tipo_usuario)) {
+            return;
+        }
+
+        const salidaModal = document.getElementById('salidaModal');
+        const salidaModalContent = document.getElementById('salidaModalContent');
+        const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
+        const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
+
+        if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
+            console.error('Elementos del modal de salida no encontrados.');
+            return;
+        }
+
+        // Reiniciamos cualquier animación previa y mostramos el modal con animación de entrada
+        salidaModalContent.classList.remove('animate__bounceOut');
+        salidaModalContent.classList.add('animate__animated', 'animate__bounceIn');
+        salidaModal.style.display = 'block';
+
+        // Inicializamos el contenedor para funcionarios de salida (si existe)
+        initializeMultipleFuncionariosSalida();
+
+        // Función para cerrar el modal con animación
+        function closeModal() {
+            salidaModalContent.classList.remove('animate__bounceIn');
+            salidaModalContent.classList.add('animate__bounceOut');
+            setTimeout(() => {
+                salidaModal.style.display = 'none';
+                salidaModalContent.classList.remove('animate__animated', 'animate__bounceOut');
+            }, 800);
+        }
+
+        salidaCloseButton.onclick = closeModal;
+        window.onclick = function (event) {
+            if (event.target === salidaModal) {
+                closeModal();
+            }
+        };
+
+        tablaSalidasBody.innerHTML = '';
+
+        // Cargar las salidas existentes mediante AJAX
+        fetch(`/bnup/get_salidas/${solicitudId}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Dentro del bloque que recorre data.salidas en openSalidaModal():
+                    // Dentro del callback del fetch en openSalidaModal:
+                    data.salidas.forEach(salida => {
+                        const row = document.createElement('tr');
+
+                        // Columna Nº Salida
+                        const numeroSalidaCell = document.createElement('td');
+                        numeroSalidaCell.textContent = salida.numero_salida;
+                        row.appendChild(numeroSalidaCell);
+
+                        // Columna Fecha
+                        const fechaSalidaCell = document.createElement('td');
+                        fechaSalidaCell.textContent = salida.fecha_salida;
+                        row.appendChild(fechaSalidaCell);
+
+
+
+                        // Nueva Columna: Descripción
+                        const descripcionCell = document.createElement('td');
+
+                        // Crear el botón con la apariencia deseada
+                        const descBtn = document.createElement('button');
+                        descBtn.className = "buttonLogin buttonPreview"; // Usa las clases definidas para el botón
+                        descBtn.style.background = "#F7EA53";
+                        descBtn.style.marginInline = "auto";
+
+                        // Crear el ícono con el nombre 'preview'
+                        const iconSpan = document.createElement('span');
+                        iconSpan.classList.add('material-symbols-outlined', 'bell');
+                        iconSpan.textContent = 'preview';
+
+                        // Crear el tooltip (puedes ajustar el texto según necesites)
+                        const tooltipDiv = document.createElement('div');
+                        tooltipDiv.className = "tooltip";
+                        tooltipDiv.textContent = "Ver descripción";
+
+                        // Agregar el ícono y el tooltip al botón
+                        descBtn.appendChild(iconSpan);
+                        descBtn.appendChild(tooltipDiv);
+
+                        // Asignar la acción al botón
+                        descBtn.onclick = () => {
+                            openSalidaDescripcionModal(salida.numero_salida, salida.fecha_salida, salida.descripcion, salida.funcionarios);
+                        };
+
+                        descripcionCell.appendChild(descBtn);
+                        row.appendChild(descripcionCell);
+
+
+                        // Columna Archivo adjunto (última columna)
+                        const archivoCell = document.createElement('td');
+                        if (salida.archivo_url) {
+                            // Creamos el enlace que abre el archivo en una nueva pestaña
+                            const link = document.createElement('a');
+                            link.href = salida.archivo_url;
+                            link.target = '_blank';
+                            link.setAttribute('aria-label', 'Ver Archivo');
+                            link.setAttribute('title', 'Ver Archivo');
+
+                            // Creamos el botón con las clases y estilo deseados
+                            const button = document.createElement('button');
+                            button.className = "buttonLogin buttonPreview";
+                            button.style.background = "#ffa420";
+                            button.style.marginInline = "auto";
+
+                            // Creamos el span para el ícono
+                            const spanIcon = document.createElement('span');
+                            spanIcon.classList.add('material-symbols-outlined', 'bell');
+                            spanIcon.textContent = "find_in_page";
+
+                            // Creamos el tooltip
+                            const tooltipDiv = document.createElement('div');
+                            tooltipDiv.className = "tooltip";
+                            tooltipDiv.textContent = "Ver archivo de salida";
+
+                            // Agregamos el ícono y el tooltip al botón
+                            button.appendChild(spanIcon);
+                            button.appendChild(tooltipDiv);
+
+                            // Agregamos el botón al enlace
+                            link.appendChild(button);
+
+                            // Finalmente, agregamos el enlace a la celda
+                            archivoCell.appendChild(link);
+                        } else {
+                            archivoCell.textContent = 'No adjunto';
+                        }
+                        row.appendChild(archivoCell);
+
+
+                        tablaSalidasBody.appendChild(row);
+                    });
+
+
+
+                    // Inicializar la paginación de la tabla de salidas (si la función ya la tienes)
+                    initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
+                } else {
+                    console.error('Error al obtener las salidas:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener las salidas:', error);
+            });
+
+        // Para usuarios con permisos (no visualizadores), configurar el formulario de creación de salidas
+        if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR'].includes(tipo_usuario)) {
+            const solicitudInput = document.getElementById('solicitud_id');
+            if (!solicitudInput) {
+                console.error('Elemento solicitud_id no encontrado.');
+                return;
+            }
+            solicitudInput.value = solicitudId;
+
+            // Resetear el formulario de salida
+            const salidaForm = document.getElementById('salidaForm');
+            if (salidaForm) {
+                salidaForm.reset();
+            }
+
+            const saveButton = document.getElementById('guardarSalida');
+            if (saveButton) {
+                saveButton.onclick = (event) => {
+                    event.preventDefault();
+
+                    // Obtener los campos existentes
+                    const numeroSalida = document.getElementById('numero_salida').value.trim();
+                    const fechaSalida = document.getElementById('fecha_salida').value.trim();
+                    const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
+                    const archivoAdjunto = archivoAdjuntoInput.files[0];
+
+                    // Obtener el nuevo campo de descripción de salida (opcional)
+                    const descripcionSalida = document.getElementById('descripcion_salida') ? document.getElementById('descripcion_salida').value.trim() : '';
+
+                    // Obtener los funcionarios seleccionados para la salida
+                    let funcionariosSalida = [];
+                    document.querySelectorAll('.salidaFuncionarioSelect').forEach(select => {
+                        if (select.value) {
+                            funcionariosSalida.push(select.value);
+                        }
+                    });
+
+                    // Validar que los campos obligatorios estén completos
+                    if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'Campos incompletos',
+                            text: 'Por favor, complete todos los campos requeridos antes de guardar.',
+                            confirmButtonColor: '#E73C45',
+                        });
+                        return;
+                    }
+
+                    // Confirmación con SweetAlert2
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        title: '¿Desea confirmar la salida?',
+                        text: "Se guardará la salida con los datos ingresados.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#4BBFE0',
+                        cancelButtonColor: '#E73C45',
+                        confirmButtonText: 'Guardar',
+                        cancelButtonText: 'Cancelar',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const formData = new FormData();
+                            formData.append('solicitud_id', solicitudId);
+                            formData.append('numero_salida', numeroSalida);
+                            formData.append('fecha_salida', fechaSalida);
+                            formData.append('archivo_adjunto_salida', archivoAdjunto);
+                            // Enviar los nuevos campos: descripción y funcionarios (en JSON)
+                            formData.append('descripcion_salida', descripcionSalida);
+                            funcionariosSalida.forEach(val => {
+                                formData.append('funcionarios_salidas', val);
+                            });
+                            fetch('/bnup/create_salida/', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCSRFToken(),
+                                },
+                                body: formData,
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Actualizar la tabla de salidas con el nuevo registro
+                                        const salida = data.salida;
+                                        const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
+                                        const row = document.createElement('tr');
+
+                                        const numeroSalidaCell = document.createElement('td');
+                                        numeroSalidaCell.textContent = salida.numero_salida;
+                                        row.appendChild(numeroSalidaCell);
+
+                                        const fechaSalidaCell = document.createElement('td');
+                                        fechaSalidaCell.textContent = salida.fecha_salida;
+                                        row.appendChild(fechaSalidaCell);
+                                        const archivoCell = document.createElement('td');
+                                        if (salida.archivo_url) {
+                                            archivoCell.innerHTML = `
+                                            <a href="${salida.archivo_url}" target="_blank" style="text-decoration: none;">
+                                            <span class="material-symbols-outlined" style="color: green;">preview</span>
+                                            </a>
+                                            `;
+                                        } else {
+                                            archivoCell.textContent = 'No adjunto';
+                                        }
+                                        row.appendChild(archivoCell);
+                                        // Añadir la nueva fila al principio de la tabla
+                                        tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
+                                        // Limpiar los campos del formulario
+                                        document.getElementById('numero_salida').value = '';
+                                        document.getElementById('fecha_salida').value = '';
+                                        archivoAdjuntoInput.value = '';
+                                        if (document.getElementById('descripcion_salida')) {
+                                            document.getElementById('descripcion_salida').value = '';
+                                        }
+                                        // Si usas fileinput plugin:
+                                        $(archivoAdjuntoInput).fileinput('clear');
+                                        Swal.fire({
+                                            heightAuto: false,
+                                            scrollbarPadding: false,
+                                            icon: 'success',
+                                            title: 'Salida creada',
+                                            text: 'La salida ha sido registrada correctamente.',
+                                            showConfirmButton: false,
+                                            timer: 2000,
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            heightAuto: false,
+                                            scrollbarPadding: false,
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: data.error || 'Ha ocurrido un error al crear la salida.',
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error al crear la salida:', error);
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'Ha ocurrido un error al crear la salida.',
+                                    });
+                                });
+                        }
+                    });
+                };
+            } else {
+                // Para usuarios 'VISUALIZADOR', ocultar el formulario
+                const salidaFields = document.getElementById('salidaFields');
+                if (salidaFields) {
+                    salidaFields.style.display = 'none';
+                }
+            }
+        }
+    }
+
+    function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
+        const modal = document.getElementById('descripcionSalidaModal');
+        if (!modal) {
+            console.error("Modal 'descripcionSalidaModal' no encontrado.");
+            return;
+        }
+        const modalContent = modal.querySelector('.modal-content');
+
+        document.getElementById('salida_numero').textContent = numeroSalida;
+        document.getElementById('salida_fecha').textContent = fechaSalida;
+        document.getElementById('salida_descripcion').textContent = descripcion || "Sin descripción";
+
+        // Mostrar la lista de funcionarios
+        const funcionariosContainer = document.getElementById('salida_funcionarios');
+        if (funcionariosContainer) {
+            funcionariosContainer.innerHTML = "";
+            if (funcionarios && funcionarios.length > 0) {
+                funcionarios.forEach(func => {
+                    const p = document.createElement('p');
+                    p.textContent = func.nombre;
+                    funcionariosContainer.appendChild(p);
+                });
+            } else {
+                funcionariosContainer.textContent = "No hay funcionarios asignados";
+            }
+        }
+
+        modal.style.display = 'block';
+        modalContent.classList.remove('animate__bounceOut');
+        modalContent.classList.add('animate__animated', 'animate__bounceIn');
+
+        const closeBtn = modal.querySelector('.close');
+        if (closeBtn) {
+            closeBtn.onclick = function () {
+                modalContent.classList.remove('animate__bounceIn');
+                modalContent.classList.add('animate__bounceOut');
+                modalContent.addEventListener('animationend', function handleAnim() {
+                    modal.style.display = 'none';
+                    modalContent.classList.remove('animate__animated', 'animate__bounceOut');
+                }, { once: true });
+            };
+        }
+    }
+
+    function closeSalidaDescripcionModal() {
+        const modal = document.getElementById('descripcionSalidaModal');
+        if (modal) {
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.remove('animate__bounceIn');
+            modalContent.classList.add('animate__bounceOut');
+            modalContent.addEventListener('animationend', function () {
+                modal.style.display = 'none';
+                modalContent.classList.remove('animate__animated', 'animate__bounceOut');
+            }, { once: true });
+        }
+    }
 
     /**
      * Actualiza la visibilidad de los campos en el formulario de edición BNUP según el tipo de recepción seleccionado.
@@ -2002,10 +2369,6 @@
                 console.error('Error al actualizar la fila:', error);
             });
     }
-
-
-
-
 
     /**
     * Agrega una nueva fila a la tabla de solicitudes con los datos proporcionados.
@@ -2188,9 +2551,6 @@
         tablaSolicitudesBody.insertBefore(row, tablaSolicitudesBody.firstChild);
     }
 
-
-
-
     /**
      * Inicializa las funcionalidades específicas cuando el DOM está completamente cargado.
      */
@@ -2208,5 +2568,8 @@
     window.openSalidaModal = openSalidaModal; // Exponer openSalidaModal
     window.openEditModal = openEditModal;     // Exponer openEditModal
     window.updateTableRow = updateTableRow;   // Exponer updateTableRow
+    // Exponemos las funciones necesarias para el módulo de salidas
+    window.initializeMultipleFuncionariosSalida = initializeMultipleFuncionariosSalida;
+    window.openSalidaModal = openSalidaModal;
 
 })();

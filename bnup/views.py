@@ -43,11 +43,12 @@ def bnup_form(request):
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
-        numero_memo = (
-            request.POST.get("num_memo")
-            if tipo_recepcion_id != "2" and tipo_solicitud_id != "10"
-            else None
-        )
+        num_memo_str = request.POST.get("num_memo", "").strip()
+        if tipo_recepcion_id in ["2", "8"] or tipo_solicitud_id in ["10", "13"]:
+            numero_memo = None
+        else:
+            numero_memo = int(num_memo_str) if num_memo_str != "" else None
+
         correo_solicitante = (
             request.POST.get(
                 "correo_solicitante") if tipo_recepcion_id == "2" else None
@@ -518,20 +519,14 @@ def statistics_view(request):
 def get_salidas(request, solicitud_id):
     if request.method == "GET":
         try:
-            solicitud = IngresoSOLICITUD.objects.get(
-                id=solicitud_id, is_active=True)
+            solicitud = IngresoSOLICITUD.objects.get(id=solicitud_id, is_active=True)
         except IngresoSOLICITUD.DoesNotExist:
-            return JsonResponse({
-                "success": False,
-                "error": "La solicitud no existe o ha sido eliminada."
-            })
+            return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
 
         try:
-            salidas = SalidaSOLICITUD.objects.filter(
-                ingreso_solicitud=solicitud)
+            salidas = SalidaSOLICITUD.objects.filter(ingreso_solicitud=solicitud, is_active=True)
             salidas_data = []
             for salida in salidas:
-                # Si por alguna razón el archivo no está disponible, se captura la excepción
                 try:
                     archivo_url = salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else ""
                 except Exception:
@@ -540,6 +535,8 @@ def get_salidas(request, solicitud_id):
                     "numero_salida": salida.numero_salida,
                     "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y") if salida.fecha_salida else "",
                     "archivo_url": archivo_url,
+                    "descripcion": salida.descripcion,
+                    "funcionarios": [{"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()],
                 })
 
             solicitud_data = {
@@ -548,11 +545,7 @@ def get_salidas(request, solicitud_id):
                 "fecha_solicitud": solicitud.fecha_solicitud.strftime("%Y-%m-%d") if solicitud.fecha_solicitud else ""
             }
 
-            return JsonResponse({
-                "success": True,
-                "salidas": salidas_data,
-                "solicitud": solicitud_data
-            })
+            return JsonResponse({"success": True, "salidas": salidas_data, "solicitud": solicitud_data})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
     else:
@@ -569,58 +562,74 @@ def create_salida(request):
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
     if tipo_usuario not in ["ADMIN", "PRIVILEGIADO", "ALIMENTADOR"]:
-        return JsonResponse(
-            {"success": False, "error": "No tiene permiso para crear salidas."}
-        )
+        return JsonResponse({"success": False, "error": "No tiene permiso para crear salidas."})
 
     if request.method == "POST":
         solicitud_id = request.POST.get("solicitud_id")
         numero_salida = request.POST.get("numero_salida")
         fecha_salida_str = request.POST.get("fecha_salida")
         archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
+        # Nuevo campo: descripción (opcional)
+        descripcion = request.POST.get("descripcion_salida", "").strip()
+
+        # Nuevo campo: funcionarios asignados a la salida (lista de IDs)
+        funcionarios_ids = request.POST.getlist("funcionarios_salidas")
 
         try:
             solicitud = IngresoSOLICITUD.objects.get(
-                id=solicitud_id, is_active=True)
+                id=solicitud_id, is_active=True
+            )
 
-            # Convertir la cadena de fecha a objeto datetime.date
-            fecha_salida = datetime.strptime(
-                fecha_salida_str, "%Y-%m-%d").date()
+            fecha_salida = datetime.strptime(fecha_salida_str, "%Y-%m-%d").date()
 
             salida = SalidaSOLICITUD(
                 ingreso_solicitud=solicitud,
                 numero_salida=numero_salida,
                 fecha_salida=fecha_salida,
                 archivo_adjunto_salida=archivo_adjunto_salida,
+                descripcion=descripcion,
             )
             salida.save()
+
+            # Asignar funcionarios (si se han enviado)
+            if funcionarios_ids:
+                funcionarios = Funcionario.objects.filter(id__in=funcionarios_ids)
+                salida.funcionarios.set(funcionarios)
+
 
             # Construir datos de la salida para devolver en la respuesta
             salida_data = {
                 "numero_salida": salida.numero_salida,
                 "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
-                "archivo_url": (
-                    salida.archivo_adjunto_salida.url
-                    if salida.archivo_adjunto_salida
-                    else ""
-                ),
+                "archivo_url": salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else "",
+                "descripcion": salida.descripcion,
+                "funcionarios": [{"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()],
             }
 
             return JsonResponse({"success": True, "salida": salida_data})
         except IngresoSOLICITUD.DoesNotExist:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "La solicitud no existe o ha sido eliminada.",
-                }
-            )
+            return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
         except ValueError as ve:
-            # Error en la conversión de la fecha
             return JsonResponse({"success": False, "error": f"Fecha inválida: {ve}"})
         except Exception as e:
-            return JsonResponse(
-                {"success": False, "error": f"Error al crear la salida: {e}"}
-            )
+            return JsonResponse({"success": False, "error": f"Error al crear la salida: {e}"})
+    else:
+        return JsonResponse({"success": False, "error": "Método no permitido."})
+
+@require_POST
+def delete_salidas(request):
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            return JsonResponse({"success": False, "error": "No autenticado."})
+        try:
+            data = json.loads(request.body)
+            ids = data.get("ids", [])
+            SalidaSOLICITUD.objects.filter(id__in=ids).update(is_active=False)
+            return JsonResponse({"success": True})
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "error": "Datos inválidos."})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
 

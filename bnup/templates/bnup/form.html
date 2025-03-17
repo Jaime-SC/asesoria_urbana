@@ -337,59 +337,89 @@
 
 
 {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' or tipo_usuario == 'VISUALIZADOR' %}
-  <!-- Mostrar botón para crear salida -->
   <!-- Modal para gestionar la salida -->
   <div id="salidaModal" class="modal">
-    <div id="salidaModalContent" style="max-width: max-content;" class="modal-content animate__animated">
-      <!-- Encabezado del modal con título y botón de cerrar -->
+    <div id="salidaModalContent" class="modal-content animate__animated" style="max-width: max-content;">
+      <!-- Encabezado del modal -->
       <div style="display: flex; align-items: center; justify-content: space-between;">
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+
           <h2>Registrar Salida</h2>
         {% else %}
           <h2>Salidas Registradas</h2>
         {% endif %}
-
-        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+        <span class="close">
+          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+        </span>
       </div>
+
       <div style="display: flex; justify-content: space-between; gap: 50px;">
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
-          <!-- Formulario para crear salidas -->
-          <form style="width: -webkit-fill-available;" id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
-            {% csrf_token %}
 
-            <!-- Sección de campos de salida (siempre visible) -->
+          <!-- Formulario para crear la salida -->
+          <form id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data" style="width: -webkit-fill-available;">
+            {% csrf_token %}
             <div id="salidaFields" style="margin-top: 10px; width: 500px;">
+              <!-- Fila de Nº Salida y Fecha -->
               <div style="display: flex; justify-content: space-between; gap: 10px;">
-                <!-- Campos del formulario -->
                 <div class="form-group" style="width: 48%;">
-                  <label for="numero_salida">N° de Salida</label>
+                  <label for="numero_salida">Nº de Salida</label>
                   <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
                 </div>
-
                 <div class="form-group" style="width: 48%;">
                   <label for="fecha_salida">Fecha de Salida</label>
                   <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
                 </div>
               </div>
+
+              <!-- File input usando Bootstrap File Input -->
               <div class="form-group">
                 <label for="archivo_adjunto_salida">Adjuntar archivo</label>
-                <input type="file" name="archivo_adjunto_salida" id="archivo_adjunto_salida" class="file" required />
+                <div class="file-loading">
+                  <input id="archivo_adjunto_salida" name="archivo_adjunto_salida" type="file">
+                </div>
               </div>
 
-              <!-- Campo oculto para el ID de la solicitud -->
+              
+
+              <!-- Nuevo campo: Selección de funcionarios para la salida -->
+              <div class="form-group">
+                <label>Funcionarios que realizaron la salida</label>
+                <div id="salidaFuncionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
+                  <!-- Primer grupo de selección -->
+                  <div class="funcionario-select-group" style="display: flex; align-items: center;">
+                    <select name="funcionarios_salidas" class="salidaFuncionarioSelect" style="max-width: 20rem;" required>
+                      <option value="" disabled>Seleccione</option>
+                      {% for funcionario in funcionarios %}
+                        <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="button" class="addSalidaFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Nuevo campo: Descripción de salida (opcional) -->
+              <div class="form-group">
+                <label for="descripcion_salida">Descripción de Salida (opcional)</label>
+                <textarea name="descripcion_salida" id="descripcion_salida" rows="3" placeholder="Ingrese observaciones, links, etc."></textarea>
+              </div>
+
+              <!-- Campo oculto para la solicitud asociada -->
               <input type="hidden" name="solicitud_id" id="solicitud_id" />
 
-              <!-- Botón de guardar -->
-              <button style="margin: 0px;" id="guardarSalida" type="submit" class="btn btn-primary">Guardar</button>
+              <!-- Botón para guardar la salida -->
+              <button id="guardarSalida" type="submit" class="btn btn-primary" style="margin: 0px;">Guardar</button>
             </div>
           </form>
         {% endif %}
 
-        <!-- Tabla para mostrar las salidas asociadas -->
+        <!-- Sección para visualizar las salidas registradas -->
         <div style="display: flex; flex-direction: column; justify-content: space-between;">
           <div style="margin: 0px; width: -webkit-fill-available;">
             <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-              <!-- Campo de búsqueda -->
               <div class="search-container" style="width: -webkit-fill-available;">
                 <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
               </div>
@@ -399,20 +429,51 @@
                 <tr>
                   <th style="border: 0px; border-radius: 10px 0px 0px;" data-type="number">Nº Salida</th>
                   <th data-type="date">Fecha</th>
-                  <th style="border: 0px; border-radius: 0px 10px 0px 0px;" data-type="text">Adjunto</th>
+                  <th data-type="text">Descripción</th>
+                  <th data-type="text">Adjunto</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Aquí se llenarán las salidas mediante JavaScript -->
+                <!-- Se llenará mediante JavaScript -->
               </tbody>
             </table>
           </div>
           <div id="paginationSalidas" class="pagination"></div>
         </div>
+
+        <!-- Modal para Descripción de Salida -->
+        <div id="descripcionSalidaModal" class="modal">
+          <div class="modal-content animate__animated">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <h2>Detalle de Salida</h2>
+              <span class="close" onclick="closeSalidaDescripcionModal()">
+                <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+              </span>
+            </div>
+            <div class="modal-info" style="font-family: 'Space Mono';">
+              <div class="modal-field">
+                <strong>Nº de Salida:</strong> <span id="salida_numero"></span>
+              </div>
+              <div class="modal-field">
+                <strong>Fecha de Salida:</strong> <span id="salida_fecha"></span>
+              </div>
+              <div class="modal-field">
+                <strong>Descripción:</strong>
+                <div id="salida_descripcion" style="text-align: justify;"></div>
+              </div>
+              <div class="modal-field">
+                <strong>Funcionarios:</strong>
+                <div id="salida_funcionarios" style="text-align: justify;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 {% endif %}
+
+
 
 <!-- Modal para editar una solicitud (Formulario de edición) -->
 <div id="editBNUPFormModal" class="modal">

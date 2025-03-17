@@ -46,11 +46,25 @@ class IngresoSOLICITUD(models.Model):  # Renombrado de SolicitudBNUP
         # return f"{self.nombre_solicitante} - {self.tipo_recepcion.tipo}"  # Línea eliminada
         return f"Solicitud {self.numero_ingreso} - {self.tipo_recepcion.tipo}"
 
-class SalidaSOLICITUD(models.Model):  # Renombrado de SalidaBNUP
-    ingreso_solicitud = models.ForeignKey('IngresoSOLICITUD', on_delete=models.CASCADE, related_name='salidas')  # Actualizado
+class SalidaSOLICITUD(models.Model):
+    ingreso_solicitud = models.ForeignKey(
+        'IngresoSOLICITUD',
+        on_delete=models.CASCADE,
+        related_name='salidas'
+    )
     numero_salida = models.IntegerField()
     fecha_salida = models.DateField()
-    archivo_adjunto_salida = models.FileField(upload_to='archivos_adjuntos_salida/', null=True, blank=True)
+    archivo_adjunto_salida = models.FileField(
+        upload_to='archivos_adjuntos_salida/',
+        null=True,
+        blank=True
+    )
+    # Nuevo campo: funcionarios que realizaron la salida (podrán ser varios)
+    funcionarios = models.ManyToManyField(Funcionario, related_name='salidas', blank=True)
+    # Nuevo campo: descripción opcional (observaciones, links, etc.)
+    descripcion = models.TextField(null=True, blank=True)
+    # Nuevo campo para borrado lógico
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Salida Nº {self.numero_salida} - Solicitud Nº {self.ingreso_solicitud.numero_ingreso}"
