@@ -226,7 +226,10 @@
      */
     function initializeBNUPFormModal() {
         const modal = document.getElementById('bnupFormModal');
-        // const formModal = document.getElementById('modal-content');
+        if (!modal) {
+            // Si el modal no existe, simplemente salimos de la función.
+            return;
+        }
         const content = modal.querySelector('.modal-content');
         const btn = document.getElementById('openBNUPFormModal');
         const closeModalButton = modal ? modal.querySelector('.close') : null;
