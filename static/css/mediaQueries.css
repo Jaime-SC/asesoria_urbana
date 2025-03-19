@@ -9,7 +9,7 @@
     }
 
     .containerStatistics {
-        width: 0rem;
+        width: -webkit-fill-available;
     }
 
     /* .cardTotalEstadisticas {
@@ -448,3 +448,5 @@
         font-size: 14.2px;
     }
 }
+
+/* PAGINA DE ESTADISTICAS */
