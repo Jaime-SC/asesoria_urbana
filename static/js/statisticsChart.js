@@ -88,8 +88,9 @@
             if (funcionarioChartInstance) {
                 funcionarioChartInstance.destroy();
             }
-            // Detectar si se debe ocultar los labels y cambiar la orientación (ejemplo para otro gráfico)
+            // Detecta si se debe aplicar el formato para pantallas entre 1272px y 1591px
             const hideLabels = window.matchMedia("(min-width: 1272px) and (max-width: 1591px)").matches;
+            // Si hideLabels es true, usamos barras verticales (indexAxis: 'x'); si no, horizontales ('y')
             const indexAxisValue = hideLabels ? 'x' : 'y';
 
             funcionarioChartInstance = new Chart(funcionarioCtx, {
@@ -109,21 +110,27 @@
                     scales: {
                         x: {
                             beginAtZero: true,
-                            // Ocultamos las etiquetas del eje x solo si es el eje de categorías
-                            ticks: { display: indexAxisValue === 'x' ? false : true }
+                            ticks: {
+                                // Si usamos barras verticales (categorías en eje X), ocultamos las etiquetas; en horizontal se muestran
+                                display: indexAxisValue === 'x' ? false : true
+                            }
                         },
                         y: {
                             beginAtZero: true,
-                            // Mostramos los números en el eje y (si es el numérico)
-                            ticks: { display: indexAxisValue === 'x' ? true : false }
+                            ticks: {
+                                // En ambos casos mostramos los números (valores)
+                                display: true,
+                                // Cuando el gráfico es horizontal (indexAxis 'y'), deshabilitamos el autoSkip para que se muestren TODAS las etiquetas
+                                autoSkip: indexAxisValue === 'y' ? false : undefined
+                            }
                         }
                     }
                 }
-
             });
         } else {
             console.error("Elemento con id 'funcionarioChart' no encontrado en el DOM.");
         }
+
 
 
         const tipoCtx = document.getElementById('tipoChart').getContext('2d');
