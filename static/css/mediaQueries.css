@@ -127,16 +127,26 @@
         width: 8rem !important;
     }
 
-    /* .cardTotalEstadisticas {
-        height: 11.5rem;
-    } */
+    .subDivStatics-v1>div {
+        height: 12rem;
+    }
+
+    .subDivStatics-v2 {
+        height: auto;
+        width: 50rem;
+    }
+
+    .cardTotalEstadisticas {
+        height: -webkit-fill-available;
+
+    }
 
     .contentEstadisticas h3 {
         font-size: 1rem;
     }
 
     .contentEstadisticas p {
-        font-size: 6rem;
+        font-size: 3rem;
     }
 
     .btn-stats span {

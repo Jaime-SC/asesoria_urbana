@@ -409,7 +409,7 @@ def statistics_view(request):
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
-    if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
+    if tipo_usuario not in ["ADMIN", "PRIVILEGIADO", "VISUALIZADOR"]:
         messages.error(request, "No tiene permiso para ver las estadísticas.")
         return redirect("bnup_form")
 

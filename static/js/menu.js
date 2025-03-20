@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
     'login': '/login/',
     'Estadísticas': '/bnup/statistics/',  // Página de estadísticas 1 (la actual)
     'Estadísticas 2': '/bnup/statistics2/' // Nueva ruta para estadísticas 2 (opcional)
-    
+
   };
 
   // Configura los event listeners para los elementos del menú

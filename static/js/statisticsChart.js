@@ -24,13 +24,41 @@
         if (deptoChartInstance) {
             deptoChartInstance.destroy();
         }
+
+        // Extraer la data original
+        const allDeptoLabels = Object.keys(solicitudesPorDepto);
+        const allDeptoData = Object.values(solicitudesPorDepto);
+
+        // Variable para las etiquetas y valores a mostrar
+        let deptoLabels = allDeptoLabels;
+        let deptoData = allDeptoData;
+
+        // Detectar si la pantalla está en el rango deseado
+        const hideLabels = window.matchMedia("(min-width: 1272px) and (max-width: 1591px)").matches;
+
+        // Si la pantalla está en el rango especificado, filtrar a los 10 con más solicitudes
+        if (window.matchMedia("(min-width: 1272px) and (max-width: 1591px)").matches) {
+            // Combina etiquetas y valores en un array de objetos
+            let combined = allDeptoLabels.map((label, index) => ({
+                label: label,
+                value: allDeptoData[index]
+            }));
+            // Ordena de mayor a menor según el valor
+            combined.sort((a, b) => b.value - a.value);
+            // Toma solo los primeros 10
+            combined = combined.slice(0, 10);
+            // Extrae las etiquetas y valores filtrados
+            deptoLabels = combined.map(item => item.label);
+            deptoData = combined.map(item => item.value);
+        }
+
         deptoChartInstance = new Chart(deptoCtx, {
             type: 'bar',
             data: {
-                labels: Object.keys(solicitudesPorDepto),
+                labels: deptoLabels,
                 datasets: [{
                     label: 'Solicitudes por Solicitante',
-                    data: Object.values(solicitudesPorDepto),
+                    data: deptoData,
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
@@ -53,41 +81,57 @@
             }
         });
 
-
-
         // Gráfico de barras para Solicitudes por Funcionario
-        const funcionarioCtx = document.getElementById('funcionarioChart').getContext('2d');
-        if (funcionarioChartInstance) {
-            funcionarioChartInstance.destroy();
-        }
-        funcionarioChartInstance = new Chart(funcionarioCtx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(solicitudesPorFuncionario),
-                datasets: [{
-                    label: 'Solicitudes por Funcionario',
-                    data: Object.values(solicitudesPorFuncionario),
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y', // Esto hará que las barras se muestren de forma horizontal
+        const funcionarioChartEl = document.getElementById('funcionarioChart');
+        if (funcionarioChartEl) {
+            const funcionarioCtx = funcionarioChartEl.getContext('2d');
+            if (funcionarioChartInstance) {
+                funcionarioChartInstance.destroy();
+            }
+            // Detectar si se debe ocultar los labels y cambiar la orientación (ejemplo para otro gráfico)
+            const hideLabels = window.matchMedia("(min-width: 1272px) and (max-width: 1591px)").matches;
+            const indexAxisValue = hideLabels ? 'x' : 'y';
 
-                scales: {
-                    x: {
-                        beginAtZero: true
+            funcionarioChartInstance = new Chart(funcionarioCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(solicitudesPorFuncionario),
+                    datasets: [{
+                        label: 'Solicitudes por Funcionario',
+                        data: Object.values(solicitudesPorFuncionario),
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: indexAxisValue, // 'x' para vertical, 'y' para horizontal
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            // Ocultamos las etiquetas del eje x solo si es el eje de categorías
+                            ticks: { display: indexAxisValue === 'x' ? false : true }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            // Mostramos los números en el eje y (si es el numérico)
+                            ticks: { display: indexAxisValue === 'x' ? true : false }
+                        }
                     }
                 }
-            }
-        });
 
-        // Gráfico de barras para Solicitudes por Tipo de Recepción
+            });
+        } else {
+            console.error("Elemento con id 'funcionarioChart' no encontrado en el DOM.");
+        }
+
+
         const tipoCtx = document.getElementById('tipoChart').getContext('2d');
+
         if (tipoChartInstance) {
             tipoChartInstance.destroy();
         }
+
         tipoChartInstance = new Chart(tipoCtx, {
             type: 'bar',
             data: {
@@ -102,6 +146,12 @@
             },
             options: {
                 scales: {
+                    x: {
+                        ticks: {
+                            // Oculta las etiquetas si hideLabels es true
+                            display: !hideLabels
+                        }
+                    },
                     y: {
                         beginAtZero: true
                     }
@@ -109,12 +159,14 @@
             }
         });
 
+
         // Gráfico de barras para Solicitudes por Tipo de Solicitud (Nuevo Gráfico en barras horizontales)
         const tipoSolicitudCtx = document.getElementById('tipoSolicitudChart').getContext('2d');
         const solicitudesPorTipoSolicitudData = solicitudesPorTipoSolicitud;
         if (tipoSolicitudChartInstance) {
             tipoSolicitudChartInstance.destroy();
         }
+
         tipoSolicitudChartInstance = new Chart(tipoSolicitudCtx, {
             type: 'bar',
             data: {
@@ -122,20 +174,26 @@
                 datasets: [{
                     label: 'Solicitudes por Tipo de Solicitud',
                     data: Object.values(solicitudesPorTipoSolicitudData),
-                    backgroundColor: 'rgba(255, 159, 64, 0.6)', // Puedes ajustar el color según tu preferencia
+                    backgroundColor: 'rgba(255, 159, 64, 0.6)',
                     borderColor: 'rgba(255, 159, 64, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
-                indexAxis: 'x', // Esto hará que las barras se muestren de forma horizontal
+                indexAxis: 'x', // Las barras se muestran horizontalmente y los labels están en el eje X
                 scales: {
+                    x: {
+                        ticks: {
+                            display: !hideLabels  // Oculta los ticks si hideLabels es true
+                        }
+                    },
                     y: {
                         beginAtZero: true
                     }
                 }
             }
         });
+
 
         // Array de nombres de meses (índice 0 = Enero, etc.)
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -311,18 +369,18 @@
         // Extraer la instancia de jsPDF (asegúrate de que jsPDF y autoTable estén cargados)
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-    
+
         // Agregar título del reporte
         doc.setFontSize(16);
         doc.text("Reporte de Estadísticas de Solicitudes", 14, 20);
-    
+
         // Agregar algunos datos generales (por ejemplo, totales)
         const totalEntradas = document.querySelector('.cardTotalEstadisticas .contentEstadisticas p')?.textContent || "N/D";
         const totalSalidas = document.querySelector('.cardTotalEstadisticas.inverse .contentEstadisticas p')?.textContent || "N/D";
         doc.setFontSize(12);
         doc.text(`Total de Entradas: ${totalEntradas}`, 14, 30);
         doc.text(`Total de Salidas: ${totalSalidas}`, 14, 38);
-    
+
         // Helper: Convierte un objeto en un array de arrays con encabezado.
         function objectToArray(dataObj, header, mapKeys = false) {
             const rows = [];
@@ -342,7 +400,7 @@
             }
             return rows;
         }
-    
+
         // Lista de secciones a incluir en el reporte
         var sheets = [
             { id: "solicitudesPorFuncionario", sheetName: "Por Funcionario", title: "Solicitudes por Funcionario", header: ["Funcionario", "Solicitudes"], mapKeys: false },
@@ -354,17 +412,17 @@
             { id: "entradasPorSemana", sheetName: "Entradas por Semana", title: "Entradas por Semana", header: ["Semana", "Entradas"], mapKeys: false },
             { id: "salidasPorSemana", sheetName: "Salidas por Semana", title: "Salidas por Semana", header: ["Semana", "Salidas"], mapKeys: false }
         ];
-    
+
         // Variable para llevar el control vertical (Y) en el PDF
         let currentY = 45;
-    
+
         sheets.forEach(function (sheetInfo) {
             var pElem = document.getElementById(sheetInfo.id);
             if (pElem) {
                 try {
                     var dataObj = JSON.parse(pElem.innerText);
                     var dataArray = objectToArray(dataObj, sheetInfo.header, sheetInfo.mapKeys);
-    
+
                     // Estimar la altura que ocupará la tabla (por ejemplo, 7 unidades por fila)
                     var estimatedHeight = (dataArray.length + 1) * 7;
                     // Si no cabe la tabla en la página actual, forzar salto de página
@@ -372,12 +430,12 @@
                         doc.addPage();
                         currentY = 20; // reinicia currentY a un margen superior
                     }
-    
+
                     // Agregar el título de la sección
                     doc.setFontSize(14);
                     doc.text(sheetInfo.title, 14, currentY);
                     currentY += 4;
-    
+
                     // Agregar la tabla usando autoTable
                     doc.autoTable({
                         head: [sheetInfo.header],
@@ -387,7 +445,7 @@
                         styles: { fontSize: 10 },
                         margin: { left: 14, right: 14 }
                     });
-    
+
                     // Actualizar currentY para la siguiente sección
                     currentY = doc.lastAutoTable.finalY + 10;
                 } catch (e) {
@@ -395,11 +453,11 @@
                 }
             }
         });
-    
+
         // Guardar el PDF
         doc.save("Reporte_Estadisticas.pdf");
     }
-    
+
 
 
     function attachExportListener() {
