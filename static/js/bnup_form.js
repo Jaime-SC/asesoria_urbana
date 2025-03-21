@@ -713,8 +713,8 @@
 
         $(document).ready(function () {
             $("#archivo_adjunto_salida").fileinput({
-                uploadUrl: "/bnup/upload_salida/",  // Cambia esta URL según tu backend
-                deleteUrl: '/bnup/delete_file/',  // Ajusta según corresponda
+                uploadUrl: "/bnup/upload_salida/",
+                deleteUrl: '/bnup/delete_file/',
                 showUpload: false,
                 showRemove: true,
                 showPreview: true,
@@ -730,7 +730,6 @@
                     showDrag: false,
                     showDelete: false,
                     zoomIcon: '<span class="material-symbols-outlined">zoom_in</span>',
-                    // Puedes mantener tu función para mostrar el zoom si es imagen o pdf
                     showZoom: function (config) {
                         return (config.type === 'pdf' || config.type === 'image');
                     }
@@ -749,7 +748,6 @@
                         '    <div class="kv-zoom-description"></div>\n' +
                         '  </div>\n' +
                         '</div>\n'
-
                 },
                 previewZoomButtonIcons: {
                     prev: '',
@@ -761,19 +759,27 @@
                     close: ''
                 }
             });
+
+            // SOLUCIÓN: Sincronizar el archivo arrastrado con el input real del formulario
+            $('#archivo_adjunto_salida').on('fileloaded', function (event, file) {
+                // Forzar que el archivo cargado se asigne al campo real del formulario
+                const fileInput = document.getElementById('archivo_adjunto_salida');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+            });
+
             $(document).on('click', '#kvFileinputModal .kv-zoom-header .close', function (e) {
                 e.preventDefault();
                 var $modal = $('#kvFileinputModal');
                 var $content = $modal.find('.modal-content');
-                // Remover la clase de entrada y agregar la de salida
                 $content.removeClass('animate__bounceIn').addClass('animate__bounceOut');
-                // Esperar a que termine la animación y luego remover el modal
                 $content.one('animationend', function () {
                     $modal.remove();
                 });
             });
-            $(document).on('click', '#kvFileinputModal', function(e) {
-                // Si el clic NO ocurrió dentro de un elemento con clase 'modal-content'
+
+            $(document).on('click', '#kvFileinputModal', function (e) {
                 if ($(e.target).closest('.modal-content').length === 0) {
                     var $modal = $('#kvFileinputModal');
                     var $content = $modal.find('.modal-content');
@@ -783,9 +789,8 @@
                     });
                 }
             });
-            
-            
         });
+
 
     }
 
