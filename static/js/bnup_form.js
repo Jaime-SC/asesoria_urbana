@@ -729,7 +729,7 @@
                     showZoom: false,
                     showDrag: false,
                     showDelete: false,
-                    zoomIcon: '<span class="material-symbols-outlined">zoom_in</span>',
+                    zoomIcon: '<span class="material-symbols-outlined" style="color: white;">zoom_in</span>',
                     showZoom: function (config) {
                         return (config.type === 'pdf' || config.type === 'image');
                     }
@@ -1734,8 +1734,8 @@
             select.required = true;
 
             const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.disabled = true;
+            defaultOption.value = '0';
+            // defaultOption.disabled = true;
             defaultOption.selected = true;
             defaultOption.textContent = 'Seleccione';
             select.appendChild(defaultOption);
@@ -2016,7 +2016,28 @@
             if (saveButton) {
                 saveButton.onclick = (event) => {
                     event.preventDefault();
+                    // 🚨 VALIDACIÓN DEL SELECT DE FUNCIONARIOS 🚨
+                    const selects = document.querySelectorAll('.salidaFuncionarioSelect');
+                    let funcionarioInvalido = false;
 
+                    selects.forEach(select => {
+                        if (select.value === '0') {
+                            funcionarioInvalido = true;
+                        }
+                    });
+
+                    if (funcionarioInvalido) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error en el formulario',
+                            text: 'Por favor, seleccione al menos un funcionario antes de enviar.',
+                            confirmButtonColor: '#E73C45',
+                            heightAuto: false,
+                            scrollbarPadding: false
+                        });
+
+                        return;  // Detiene el proceso si hay un funcionario inválido
+                    }
                     // Obtener los campos existentes
                     const numeroSalida = document.getElementById('numero_salida').value.trim();
                     const fechaSalida = document.getElementById('fecha_salida').value.trim();
@@ -2086,35 +2107,93 @@
                                         const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
                                         const row = document.createElement('tr');
 
+                                        // Columna Nº Salida
                                         const numeroSalidaCell = document.createElement('td');
                                         numeroSalidaCell.textContent = salida.numero_salida;
                                         row.appendChild(numeroSalidaCell);
 
+                                        // Columna Fecha
                                         const fechaSalidaCell = document.createElement('td');
                                         fechaSalidaCell.textContent = salida.fecha_salida;
                                         row.appendChild(fechaSalidaCell);
+
+                                        // Nueva Columna: Descripción
+                                        const descripcionCell = document.createElement('td');
+                                        const descBtn = document.createElement('button');
+                                        descBtn.className = "buttonLogin buttonPreview";
+                                        descBtn.style.background = "#F7EA53";
+                                        descBtn.style.marginInline = "auto";
+
+                                        const iconSpan = document.createElement('span');
+                                        iconSpan.classList.add('material-symbols-outlined', 'bell');
+                                        iconSpan.textContent = 'preview';
+
+                                        const tooltipDiv = document.createElement('div');
+                                        tooltipDiv.className = "tooltip";
+                                        tooltipDiv.textContent = "Ver descripción";
+
+                                        descBtn.appendChild(iconSpan);
+                                        descBtn.appendChild(tooltipDiv);
+
+                                        descBtn.onclick = () => {
+                                            openSalidaDescripcionModal(
+                                                salida.numero_salida,
+                                                salida.fecha_salida,
+                                                salida.descripcion,
+                                                salida.funcionarios
+                                            );
+                                        };
+
+                                        descripcionCell.appendChild(descBtn);
+                                        row.appendChild(descripcionCell);
+
+                                        // Columna Archivo Adjunto
                                         const archivoCell = document.createElement('td');
                                         if (salida.archivo_url) {
-                                            archivoCell.innerHTML = `
-                                            <a href="${salida.archivo_url}" target="_blank" style="text-decoration: none;">
-                                            <span class="material-symbols-outlined" style="color: green;">preview</span>
-                                            </a>
-                                            `;
+                                            const link = document.createElement('a');
+                                            link.href = salida.archivo_url;
+                                            link.target = '_blank';
+                                            link.setAttribute('aria-label', 'Ver Archivo');
+                                            link.setAttribute('title', 'Ver Archivo');
+
+                                            const button = document.createElement('button');
+                                            button.className = "buttonLogin buttonPreview";
+                                            button.style.background = "#ffa420";
+                                            button.style.marginInline = "auto";
+
+                                            const spanIcon = document.createElement('span');
+                                            spanIcon.classList.add('material-symbols-outlined', 'bell');
+                                            spanIcon.textContent = "find_in_page";
+
+                                            const tooltipDiv = document.createElement('div');
+                                            tooltipDiv.className = "tooltip";
+                                            tooltipDiv.textContent = "Ver archivo de salida";
+
+                                            button.appendChild(spanIcon);
+                                            button.appendChild(tooltipDiv);
+                                            link.appendChild(button);
+
+                                            archivoCell.appendChild(link);
                                         } else {
                                             archivoCell.textContent = 'No adjunto';
                                         }
                                         row.appendChild(archivoCell);
+
                                         // Añadir la nueva fila al principio de la tabla
                                         tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
+
                                         // Limpiar los campos del formulario
                                         document.getElementById('numero_salida').value = '';
                                         document.getElementById('fecha_salida').value = '';
                                         archivoAdjuntoInput.value = '';
+
                                         if (document.getElementById('descripcion_salida')) {
                                             document.getElementById('descripcion_salida').value = '';
                                         }
+
                                         // Si usas fileinput plugin:
                                         $(archivoAdjuntoInput).fileinput('clear');
+
                                         Swal.fire({
                                             heightAuto: false,
                                             scrollbarPadding: false,
@@ -2133,6 +2212,7 @@
                                             text: data.error || 'Ha ocurrido un error al crear la salida.',
                                         });
                                     }
+
                                 })
                                 .catch(error => {
                                     console.error('Error al crear la salida:', error);
