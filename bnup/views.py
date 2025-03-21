@@ -43,11 +43,23 @@ def bnup_form(request):
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
+        # Obtén el valor y quita espacios
         num_memo_str = request.POST.get("num_memo", "").strip()
-        if tipo_recepcion_id in ["2", "8"] or tipo_solicitud_id in ["10", "13"]:
+
+        # Si el tipo de recepción es 2 u 8, el número de memo se ignora (se deja como None)
+        if tipo_recepcion_id in ["2", "8"]:
             numero_memo = None
-        else:
+        # Si el tipo de solicitud es 10, el número de documento es opcional:
+        elif tipo_solicitud_id == "10":
+            # Si se ingresó un valor, lo convierte a entero; si no, se deja como None
             numero_memo = int(num_memo_str) if num_memo_str != "" else None
+        # Para los demás casos, el campo es obligatorio
+        else:
+            if num_memo_str == "":
+                return JsonResponse({"success": False, "error": "El campo número de documento es obligatorio."})
+            else:
+                numero_memo = int(num_memo_str)
+
 
         correo_solicitante = (
             request.POST.get(
@@ -220,8 +232,17 @@ def edit_bnup_record(request):
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
-        numero_memo = request.POST.get(
-            "num_memo") if tipo_recepcion_id != "2" and tipo_solicitud_id != "10" else None
+        num_memo_str = request.POST.get("num_memo", "").strip()
+        if tipo_recepcion_id in ["2", "8"]:
+            numero_memo = None
+        elif tipo_solicitud_id == "10":
+            numero_memo = int(num_memo_str) if num_memo_str != "" else None
+        else:
+            if num_memo_str == "":
+                return JsonResponse({"success": False, "error": "El campo número de documento es obligatorio."})
+            else:
+                numero_memo = int(num_memo_str)
+
         correo_solicitante = request.POST.get(
             "correo_solicitante") if tipo_recepcion_id == "2" else None
         depto_solicitante_id = request.POST.get("depto_solicitante")
