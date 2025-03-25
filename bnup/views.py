@@ -452,7 +452,7 @@ def statistics_view(request):
         "tipo_recepcion__tipo"
     ).annotate(total=Count("id"))
 
-    # Solicitudes por Tipo de Solicitud (Nueva Consulta)
+    # Solicitudes por Tipo de Solicitud
     solicitudes_por_tipo_solicitud = active_solicitudes.values(
         "tipo_solicitud__tipo"
     ).annotate(total=Count("id"))
@@ -484,6 +484,11 @@ def statistics_view(request):
         .annotate(semana=ExtractWeek("fecha_salida")).values("semana").annotate(total=Count("id"))
     salidas_por_semana = {str(item["semana"]): item["total"] for item in salidas_por_semana_qs}
 
+    # Para Salidas por Funcionario (NUEVO)
+    salidas_por_funcionario = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__is_active=True
+    ).values("funcionarios__nombre").annotate(total=Count("id"))
+    salidas_por_funcionario = {item["funcionarios__nombre"]: item["total"] for item in salidas_por_funcionario}
 
     total_solicitudes = active_solicitudes.count()
 
@@ -530,6 +535,7 @@ def statistics_view(request):
         "salidas_por_mes": json.dumps(salidas_por_mes, cls=DjangoJSONEncoder),
         "entradas_por_semana": json.dumps(entradas_por_semana, cls=DjangoJSONEncoder),
         "salidas_por_semana": json.dumps(salidas_por_semana, cls=DjangoJSONEncoder),
+        "salidas_por_funcionario": json.dumps(salidas_por_funcionario, cls=DjangoJSONEncoder),  # NUEVO
         "total_solicitudes": total_solicitudes,
         "total_salidas": total_salidas,
     }

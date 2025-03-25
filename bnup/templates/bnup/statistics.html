@@ -62,7 +62,7 @@
 
         <!-- Página 2: Nuevos gráficos -->
         <div class="stats-page" id="statsPage2" style="display: none;">
-          <div class="divStatistics">
+          <div class="divStatistics" style="flex-direction: column;">
             <div class="subDivStatics-v3">
               <!-- Entradas por Mes -->
               <div class="containerStatistics">
@@ -83,6 +83,25 @@
               <div class="containerStatistics">
                 <p id="salidasPorSemana" style="display: none;">{{ salidas_por_semana|safe }}</p>
                 <canvas id="salidasSemanaChart"></canvas>
+              </div>
+            </div>
+            <div class="subDivStatics-v4">
+              <!-- Salidas por Funcionario -->
+              <div class="containerStatistics">
+                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
+                <canvas id="salidasFuncionarioChart"></canvas>
+              </div><!-- Salidas por Funcionario -->
+              <div class="containerStatistics">
+                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
+                <canvas id="salidasFuncionarioChart"></canvas>
+              </div><!-- Salidas por Funcionario -->
+              <div class="containerStatistics">
+                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
+                <canvas id="salidasFuncionarioChart"></canvas>
+              </div><!-- Salidas por Funcionario -->
+              <div class="containerStatistics">
+                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
+                <canvas id="salidasFuncionarioChart"></canvas>
               </div>
             </div>
           </div>

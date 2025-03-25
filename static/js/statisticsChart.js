@@ -1,541 +1,131 @@
 (function () {
-    // Variables para mantener las instancias de los gráficos y evitar recreaciones innecesarias
-    let deptoChartInstance;
-    let funcionarioChartInstance;
-    let tipoChartInstance;
-    let tipoSolicitudChartInstance; // Nueva instancia para tipo de solicitud
-    // let anioChartInstance;
-    // let mesChartInstance; // Eliminado
+    // Almacena las instancias de los gráficos para evitar recreaciones innecesarias
+    let chartInstances = {};
 
-    /**
-     * Crea y muestra los gráficos estadísticos basados en los datos proporcionados.
-     */
-    function createCharts() {
-        // Obtener los datos estadísticos desde los elementos del DOM
-        const solicitudesPorDepto = JSON.parse(document.getElementById('solicitudesPorDepto').innerText);
-        const solicitudesPorFuncionario = JSON.parse(document.getElementById('solicitudesPorFuncionario').innerText);
-        const solicitudesPorTipoRecepcion = JSON.parse(document.getElementById('solicitudesPorTipo').innerText);
-        const solicitudesPorTipoSolicitud = JSON.parse(document.getElementById('solicitudesPorTipoSolicitud').innerText);
-        // const solicitudesPorAnio = JSON.parse(document.getElementById('solicitudesPorAnio').innerText);
-        // const solicitudesPorMes = JSON.parse(document.getElementById('solicitudesPorMes').innerText); // Eliminado
-
-        // Gráfico de barras horizontales para Solicitudes por Solicitante
-        const deptoCtx = document.getElementById('deptoChart').getContext('2d');
-        if (deptoChartInstance) {
-            deptoChartInstance.destroy();
+    // Función genérica para crear gráficos responsivos
+    function createResponsiveChart(ctx, data, labels, labelText, bgColor, borderColor, indexAxis = 'x') {
+        if (chartInstances[ctx.canvas.id]) {
+            chartInstances[ctx.canvas.id].destroy();
         }
 
-        // Extraer la data original
-        const allDeptoLabels = Object.keys(solicitudesPorDepto);
-        const allDeptoData = Object.values(solicitudesPorDepto);
-
-        // Variable para las etiquetas y valores a mostrar
-        let deptoLabels = allDeptoLabels;
-        let deptoData = allDeptoData;
-
-        // Detectar si la pantalla está en el rango deseado
-        const hideLabels = window.matchMedia("(min-width: 1272px) and (max-width: 1591px)").matches;
-
-        // Si la pantalla está en el rango especificado, filtrar a los 10 con más solicitudes
-        if (window.matchMedia("(min-width: 1272px) and (max-width: 1591px)").matches) {
-            // Combina etiquetas y valores en un array de objetos
-            let combined = allDeptoLabels.map((label, index) => ({
-                label: label,
-                value: allDeptoData[index]
-            }));
-            // Ordena de mayor a menor según el valor
-            combined.sort((a, b) => b.value - a.value);
-            // Toma solo los primeros 10
-            combined = combined.slice(0, 10);
-            // Extrae las etiquetas y valores filtrados
-            deptoLabels = combined.map(item => item.label);
-            deptoData = combined.map(item => item.value);
-        }
-
-        deptoChartInstance = new Chart(deptoCtx, {
+        const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: deptoLabels,
+                labels: labels,
                 datasets: [{
-                    label: 'Solicitudes por Solicitante',
-                    data: deptoData,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
+                    label: labelText,
+                    data: data,
+                    backgroundColor: bgColor,
+                    borderColor: borderColor,
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // Desactiva la relación de aspecto fija
-                indexAxis: 'y',
+                maintainAspectRatio: false,
+                indexAxis: indexAxis,
                 scales: {
-                    x: {
-                        beginAtZero: true
-                    },
-                    y: {
-                        ticks: {
-                            autoSkip: false
-                        }
-                    }
+                    x: { beginAtZero: true },
+                    y: { beginAtZero: true }
                 }
             }
         });
 
-        // Gráfico de barras para Solicitudes por Funcionario
-        const funcionarioChartEl = document.getElementById('funcionarioChart');
-        if (funcionarioChartEl) {
-            const funcionarioCtx = funcionarioChartEl.getContext('2d');
-            if (funcionarioChartInstance) {
-                funcionarioChartInstance.destroy();
-            }
-            // Detecta si se debe aplicar el formato para pantallas entre 1272px y 1591px
-            const hideLabels = window.matchMedia("(min-width: 1272px) and (max-width: 1591px)").matches;
-            // Si hideLabels es true, usamos barras verticales (indexAxis: 'x'); si no, horizontales ('y')
-            const indexAxisValue = hideLabels ? 'x' : 'y';
-
-            funcionarioChartInstance = new Chart(funcionarioCtx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(solicitudesPorFuncionario),
-                    datasets: [{
-                        label: 'Solicitudes por Funcionario',
-                        data: Object.values(solicitudesPorFuncionario),
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    indexAxis: indexAxisValue, // 'x' para vertical, 'y' para horizontal
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                // Si usamos barras verticales (categorías en eje X), ocultamos las etiquetas; en horizontal se muestran
-                                display: indexAxisValue === 'x' ? false : true
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                // En ambos casos mostramos los números (valores)
-                                display: true,
-                                // Cuando el gráfico es horizontal (indexAxis 'y'), deshabilitamos el autoSkip para que se muestren TODAS las etiquetas
-                                autoSkip: indexAxisValue === 'y' ? false : undefined
-                            }
-                        }
-                    }
-                }
-            });
-        } else {
-            console.error("Elemento con id 'funcionarioChart' no encontrado en el DOM.");
+        // Redimensionar el canvas dinámicamente
+        function resizeCanvas() {
+            const container = ctx.canvas.parentElement;
+            ctx.canvas.width = container.clientWidth;
+            ctx.canvas.height = container.clientHeight;
+            chart.resize();
         }
 
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-
-        const tipoCtx = document.getElementById('tipoChart').getContext('2d');
-
-        if (tipoChartInstance) {
-            tipoChartInstance.destroy();
-        }
-
-        tipoChartInstance = new Chart(tipoCtx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(solicitudesPorTipoRecepcion),
-                datasets: [{
-                    label: 'Solicitudes por Tipo de Recepción',
-                    data: Object.values(solicitudesPorTipoRecepcion),
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        ticks: {
-                            // Oculta las etiquetas si hideLabels es true
-                            display: !hideLabels
-                        }
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-
-        // Gráfico de barras para Solicitudes por Tipo de Solicitud (Nuevo Gráfico en barras horizontales)
-        const tipoSolicitudCtx = document.getElementById('tipoSolicitudChart').getContext('2d');
-        const solicitudesPorTipoSolicitudData = solicitudesPorTipoSolicitud;
-        if (tipoSolicitudChartInstance) {
-            tipoSolicitudChartInstance.destroy();
-        }
-
-        tipoSolicitudChartInstance = new Chart(tipoSolicitudCtx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(solicitudesPorTipoSolicitudData),
-                datasets: [{
-                    label: 'Solicitudes por Tipo de Solicitud',
-                    data: Object.values(solicitudesPorTipoSolicitudData),
-                    backgroundColor: 'rgba(255, 159, 64, 0.6)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'x', // Las barras se muestran horizontalmente y los labels están en el eje X
-                scales: {
-                    x: {
-                        ticks: {
-                            display: !hideLabels  // Oculta los ticks si hideLabels es true
-                        }
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-
-        // Array de nombres de meses (índice 0 = Enero, etc.)
-        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-        const entradasMesElem = document.getElementById('entradasPorMes');
-        if (entradasMesElem) {
-            const entradasPorMes = JSON.parse(entradasMesElem.innerText);
-            // Convertir las claves numéricas a nombres de meses
-            const mesesNumericos = Object.keys(entradasPorMes);
-            const meses = mesesNumericos.map(m => monthNames[parseInt(m) - 1] || m);
-            const dataMes = Object.values(entradasPorMes);
-            const ctxEntradasMes = document.getElementById('entradasMesChart').getContext('2d');
-            new Chart(ctxEntradasMes, {
-                type: 'bar',
-                data: {
-                    labels: meses,
-                    datasets: [{
-                        label: 'Entradas por Mes',
-                        data: dataMes,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        }
-
-        const salidasMesElem = document.getElementById('salidasPorMes');
-        if (salidasMesElem) {
-            const salidasPorMes = JSON.parse(salidasMesElem.innerText);
-            const mesesNumericos = Object.keys(salidasPorMes);
-            const meses = mesesNumericos.map(m => monthNames[parseInt(m) - 1] || m);
-            const dataMes = Object.values(salidasPorMes);
-            const ctxSalidasMes = document.getElementById('salidasMesChart').getContext('2d');
-            new Chart(ctxSalidasMes, {
-                type: 'bar',
-                data: {
-                    labels: meses,
-                    datasets: [{
-                        label: 'Salidas por Mes',
-                        data: dataMes,
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        }
-
-        const entradasSemanaElem = document.getElementById('entradasPorSemana');
-        if (entradasSemanaElem) {
-            const entradasPorSemana = JSON.parse(entradasSemanaElem.innerText);
-            const semanasNumericos = Object.keys(entradasPorSemana);
-            const semanas = semanasNumericos.map(w => "Semana " + w);
-            const dataSemana = Object.values(entradasPorSemana);
-            const ctxEntradasSemana = document.getElementById('entradasSemanaChart').getContext('2d');
-            new Chart(ctxEntradasSemana, {
-                type: 'bar',
-                data: {
-                    labels: semanas,
-                    datasets: [{
-                        label: 'Entradas por Semana',
-                        data: dataSemana,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        }
-
-        const salidasSemanaElem = document.getElementById('salidasPorSemana');
-        if (salidasSemanaElem) {
-            const salidasPorSemana = JSON.parse(salidasSemanaElem.innerText);
-            const semanasNumericos = Object.keys(salidasPorSemana);
-            const semanas = semanasNumericos.map(w => "Semana " + w);
-            const dataSemana = Object.values(salidasPorSemana);
-            const ctxSalidasSemana = document.getElementById('salidasSemanaChart').getContext('2d');
-            new Chart(ctxSalidasSemana, {
-                type: 'bar',
-                data: {
-                    labels: semanas,
-                    datasets: [{
-                        label: 'Salidas por Semana',
-                        data: dataSemana,
-                        backgroundColor: 'rgba(255, 206, 86, 0.6)',
-                        borderColor: 'rgba(255, 206, 86, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        }
-        attachExportListener();
-
-
+        chartInstances[ctx.canvas.id] = chart;
     }
 
-    function exportStatisticsToExcel() {
-        // Crear un nuevo libro de Excel
-        var wb = XLSX.utils.book_new();
-
-        // Helper: Convierte un objeto en un array de arrays con encabezado.
-        function objectToArray(dataObj, header, mapKeys) {
-            var data = [];
-            data.push(header);
-            for (var key in dataObj) {
-                if (dataObj.hasOwnProperty(key)) {
-                    var newKey = key;
-                    if (mapKeys) {
-                        var monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-                        var monthIndex = parseInt(key);
-                        if (!isNaN(monthIndex) && monthIndex >= 1 && monthIndex <= 12) {
-                            newKey = monthNames[monthIndex - 1];
-                        }
-                    }
-                    data.push([newKey, dataObj[key]]);
-                }
-            }
-            return data;
-        }
-
-        // Lista de hojas a crear
-        var sheets = [
-            { id: "solicitudesPorDepto", sheetName: "Por Solicitante", header: ["Solicitante", "Solicitudes"] },
-            { id: "solicitudesPorFuncionario", sheetName: "Por Funcioinario", header: ["Funcionario", "Solicitudes"] },
-            { id: "solicitudesPorTipo", sheetName: "Por Tipo Recepción", header: ["Tipo Recepción", "Solicitudes"] },
-            { id: "solicitudesPorTipoSolicitud", sheetName: "Por Tipo Solicitud", header: ["Tipo Solicitud", "Solicitudes"] },
-            { id: "entradasPorMes", sheetName: "Entradas por Mes", header: ["Mes", "Entradas"] },
-            { id: "salidasPorMes", sheetName: "Salidas por Mes", header: ["Mes", "Salidas"] },
-            { id: "entradasPorSemana", sheetName: "Entradas por Semana", header: ["Semana", "Entradas"] },
-            { id: "salidasPorSemana", sheetName: "Salidas por Semana", header: ["Semana", "Salidas"] }
+    // Función para inicializar los gráficos
+    function createCharts() {
+        const chartData = [
+            { id: 'deptoChart', dataId: 'solicitudesPorDepto', label: 'Solicitudes por Solicitante', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)', axis: 'y' },
+            { id: 'funcionarioChart', dataId: 'solicitudesPorFuncionario', label: 'Solicitudes por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y' },
+            { id: 'tipoChart', dataId: 'solicitudesPorTipo', label: 'Solicitudes por Tipo de Recepción', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' },
+            { id: 'tipoSolicitudChart', dataId: 'solicitudesPorTipoSolicitud', label: 'Solicitudes por Tipo de Solicitud', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)' },
+            { id: 'entradasMesChart', dataId: 'entradasPorMes', label: 'Entradas por Mes', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)' },
+            { id: 'salidasMesChart', dataId: 'salidasPorMes', label: 'Salidas por Mes', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)' },
+            { id: 'entradasSemanaChart', dataId: 'entradasPorSemana', label: 'Entradas por Semana', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' },
+            { id: 'salidasSemanaChart', dataId: 'salidasPorSemana', label: 'Salidas por Semana', color: 'rgba(255, 206, 86, 0.6)', border: 'rgba(255, 206, 86, 1)' },
+            { id: 'salidasFuncionarioChart', dataId: 'salidasPorFuncionario', label: 'Salidas por Funcionario', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)', axis: 'y' }
         ];
 
-        sheets.forEach(function (sheetInfo) {
-            var pElem = document.getElementById(sheetInfo.id);
-            if (pElem) {
-                try {
-                    var dataObj = JSON.parse(pElem.innerText);
-                    var mapKeys = (sheetInfo.id === "entradasPorMes" || sheetInfo.id === "salidasPorMes");
-                    var dataArray = objectToArray(dataObj, sheetInfo.header, mapKeys);
-                    var ws = XLSX.utils.aoa_to_sheet(dataArray);
-                    XLSX.utils.book_append_sheet(wb, ws, sheetInfo.sheetName);
-                } catch (e) {
-                    console.error("Error procesando hoja " + sheetInfo.sheetName, e);
-                }
+        chartData.forEach(chartInfo => {
+            const dataElem = document.getElementById(chartInfo.dataId);
+            if (dataElem) {
+                const data = JSON.parse(dataElem.innerText);
+                const ctx = document.getElementById(chartInfo.id).getContext('2d');
+                createResponsiveChart(ctx, Object.values(data), Object.keys(data), chartInfo.label, chartInfo.color, chartInfo.border, chartInfo.axis);
             }
         });
-
-        XLSX.writeFile(wb, "Estadisticas.xlsx");
     }
 
-    function exportStatisticsToPDF() {
-        // Extraer la instancia de jsPDF (asegúrate de que jsPDF y autoTable estén cargados)
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Agregar título del reporte
-        doc.setFontSize(16);
-        doc.text("Reporte de Estadísticas de Solicitudes", 14, 20);
-
-        // Agregar algunos datos generales (por ejemplo, totales)
-        const totalEntradas = document.querySelector('.cardTotalEstadisticas .contentEstadisticas p')?.textContent || "N/D";
-        const totalSalidas = document.querySelector('.cardTotalEstadisticas.inverse .contentEstadisticas p')?.textContent || "N/D";
-        doc.setFontSize(12);
-        doc.text(`Total de Entradas: ${totalEntradas}`, 14, 30);
-        doc.text(`Total de Salidas: ${totalSalidas}`, 14, 38);
-
-        // Helper: Convierte un objeto en un array de arrays con encabezado.
-        function objectToArray(dataObj, header, mapKeys = false) {
-            const rows = [];
-            rows.push(header);
-            for (let key in dataObj) {
-                if (dataObj.hasOwnProperty(key)) {
-                    let newKey = key;
-                    if (mapKeys) {
-                        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-                        const monthIndex = parseInt(key);
-                        if (!isNaN(monthIndex) && monthIndex >= 1 && monthIndex <= 12) {
-                            newKey = monthNames[monthIndex - 1];
-                        }
-                    }
-                    rows.push([newKey, dataObj[key]]);
-                }
-            }
-            return rows;
-        }
-
-        // Lista de secciones a incluir en el reporte
-        var sheets = [
-            { id: "solicitudesPorFuncionario", sheetName: "Por Funcionario", title: "Solicitudes por Funcionario", header: ["Funcionario", "Solicitudes"], mapKeys: false },
-            { id: "solicitudesPorTipo", sheetName: "Por Tipo Recepción", title: "Solicitudes por Tipo de Recepción", header: ["Tipo Recepción", "Solicitudes"], mapKeys: false },
-            { id: "solicitudesPorTipoSolicitud", sheetName: "Por Tipo Solicitud", title: "Solicitudes por Tipo de Solicitud", header: ["Tipo Solicitud", "Solicitudes"], mapKeys: false },
-            { id: "solicitudesPorDepto", sheetName: "Por Solicitante", title: "Solicitudes por Solicitante", header: ["Solicitante", "Solicitudes"], mapKeys: false },
-            { id: "entradasPorMes", sheetName: "Entradas por Mes", title: "Entradas por Mes", header: ["Mes", "Entradas"], mapKeys: true },
-            { id: "salidasPorMes", sheetName: "Salidas por Mes", title: "Salidas por Mes", header: ["Mes", "Salidas"], mapKeys: true },
-            { id: "entradasPorSemana", sheetName: "Entradas por Semana", title: "Entradas por Semana", header: ["Semana", "Entradas"], mapKeys: false },
-            { id: "salidasPorSemana", sheetName: "Salidas por Semana", title: "Salidas por Semana", header: ["Semana", "Salidas"], mapKeys: false }
-        ];
-
-        // Variable para llevar el control vertical (Y) en el PDF
-        let currentY = 45;
-
-        sheets.forEach(function (sheetInfo) {
-            var pElem = document.getElementById(sheetInfo.id);
-            if (pElem) {
-                try {
-                    var dataObj = JSON.parse(pElem.innerText);
-                    var dataArray = objectToArray(dataObj, sheetInfo.header, sheetInfo.mapKeys);
-
-                    // Estimar la altura que ocupará la tabla (por ejemplo, 7 unidades por fila)
-                    var estimatedHeight = (dataArray.length + 1) * 7;
-                    // Si no cabe la tabla en la página actual, forzar salto de página
-                    if (currentY + estimatedHeight > doc.internal.pageSize.getHeight() - 10) {
-                        doc.addPage();
-                        currentY = 20; // reinicia currentY a un margen superior
-                    }
-
-                    // Agregar el título de la sección
-                    doc.setFontSize(14);
-                    doc.text(sheetInfo.title, 14, currentY);
-                    currentY += 4;
-
-                    // Agregar la tabla usando autoTable
-                    doc.autoTable({
-                        head: [sheetInfo.header],
-                        body: dataArray.slice(1), // excluir el header ya incluido
-                        startY: currentY,
-                        theme: 'grid',
-                        styles: { fontSize: 10 },
-                        margin: { left: 14, right: 14 }
-                    });
-
-                    // Actualizar currentY para la siguiente sección
-                    currentY = doc.lastAutoTable.finalY + 10;
-                } catch (e) {
-                    console.error("Error procesando la sección " + sheetInfo.title, e);
-                }
-            }
-        });
-
-        // Guardar el PDF
-        doc.save("Reporte_Estadisticas.pdf");
-    }
-
-
-
-    function attachExportListener() {
-        var exportBtn = document.getElementById("exportExcel");
-        if (exportBtn) {
-            exportBtn.addEventListener("click", function () {
-                exportStatisticsToExcel();
-                exportStatisticsToPDF();
-            });
-        } else {
-            console.warn("No se encontró el botón exportExcel");
-        }
-    }
-
+    // Paginación de estadísticas
     function initializeStatisticsPagination() {
         const pages = document.querySelectorAll('#statisticsPages .stats-page');
         const paginationContainer = document.getElementById('paginationStatistics');
         if (!pages.length || !paginationContainer) return;
         paginationContainer.innerHTML = '';
 
-        // Botón "Anterior" con icono
+        // Botón "Anterior"
         const prevBtn = document.createElement('button');
         prevBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back_2</span>';
         prevBtn.className = "page-btn prev";
-        prevBtn.addEventListener('click', function () {
-            const pageButtons = Array.from(paginationContainer.querySelectorAll('.page-num'));
-            const activeIndex = pageButtons.findIndex(btn => btn.classList.contains('active'));
-            if (activeIndex > 0) {
-                pageButtons[activeIndex - 1].click();
-            }
-        });
+        prevBtn.addEventListener('click', () => changePage(-1));
         paginationContainer.appendChild(prevBtn);
 
-        // Crear botones de número de página (con clase 'page-num')
+        // Crear botones para cada página
         pages.forEach((page, index) => {
             const btn = document.createElement('button');
             btn.textContent = index + 1;
             btn.className = 'page-btn page-num';
             if (index === 0) btn.classList.add('active');
-            btn.addEventListener('click', function () {
-                pages.forEach(p => p.style.display = 'none');
-                page.style.display = 'block';
-                // Quitar clase activa de todos los botones de página
-                paginationContainer.querySelectorAll('.page-num').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
+            btn.addEventListener('click', () => showPage(index));
             paginationContainer.appendChild(btn);
         });
 
-        // Botón "Siguiente" con icono
+        // Botón "Siguiente"
         const nextBtn = document.createElement('button');
         nextBtn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span>';
         nextBtn.className = "page-btn next";
-        nextBtn.addEventListener('click', function () {
-            const pageButtons = Array.from(paginationContainer.querySelectorAll('.page-num'));
-            const activeIndex = pageButtons.findIndex(btn => btn.classList.contains('active'));
-            if (activeIndex < pageButtons.length - 1) {
-                pageButtons[activeIndex + 1].click();
-            }
-        });
+        nextBtn.addEventListener('click', () => changePage(1));
         paginationContainer.appendChild(nextBtn);
+
+        // Mostrar página inicial
+        showPage(0);
     }
 
+    function showPage(index) {
+        const pages = document.querySelectorAll('#statisticsPages .stats-page');
+        const pageButtons = document.querySelectorAll('.page-btn.page-num');
+        pages.forEach(p => p.style.display = 'none');
+        pages[index].style.display = 'block';
 
+        pageButtons.forEach(btn => btn.classList.remove('active'));
+        pageButtons[index].classList.add('active');
+    }
 
-    // Si la página se carga dinámicamente, asegúrate de llamar a createCharts() y initializeStatisticsPagination()
-    // cuando el contenido de estadísticas ya esté en el DOM.
+    function changePage(direction) {
+        const pages = document.querySelectorAll('#statisticsPages .stats-page');
+        const pageButtons = Array.from(document.querySelectorAll('.page-btn.page-num'));
+        const activeIndex = pageButtons.findIndex(btn => btn.classList.contains('active'));
 
+        const newIndex = activeIndex + direction;
+        if (newIndex >= 0 && newIndex < pages.length) {
+            showPage(newIndex);
+        }
+    }
+
+    // Inicialización de las estadísticas y paginación
     window.createCharts = createCharts;
     window.initializeStatisticsPagination = initializeStatisticsPagination;
-    window.exportStatisticsToExcel = exportStatisticsToExcel;
-    window.exportStatisticsToPDF = exportStatisticsToPDF;
-
 })();
