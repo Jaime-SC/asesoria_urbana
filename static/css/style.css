@@ -1098,11 +1098,40 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   gap: 1rem;
 }
 
-.subDivStatics-v2 {
+.subDivStatics-v1 {
   display: flex;
   flex-direction: column;
   width: 50%;
   gap: 1rem;
+}
+
+.subDivStatics-v1>div {
+  display: flex;
+  flex-direction: row;
+  height: 50%;
+  gap: 1rem;
+}
+
+.subDivStatics-v1>div>.containerStatistics {
+  width: 25%;
+}
+
+.subDivStatics-v1>div>.containerStatistics.v2 {
+  width: 75%;
+}
+
+.subDivStatics-v1>div>.containerStatistics.v3 {
+  width: 50%;
+}
+
+.subDivStatics-v1>div>.containerStatistics.v4 {
+  width: 50%;
+}
+
+.subDivStatics-v2 {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
 }
 
 .subDivStatics-v3 {
@@ -1112,6 +1141,10 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   gap: 1rem;
 }
 
+.subDivStatics-v3>.containerStatistics {
+  width: 100%;
+}
+
 .subDivStatics-v4 {
   display: flex;
   height: 50%;
@@ -1119,29 +1152,101 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   gap: 1rem;
 }
 
+.subDivStatics-v4>.containerStatistics {
+  width: 100%;
+}
+
+/* From Uiverse.io by Pradeepsaranbishnoi */
+.cardTotalEstadisticas {
+  width: 100%;
+  height: 50%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background-color: #3a425b;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 5px 0px,
+    rgba(0, 0, 0, 0.5) 0px 2px 15px 0px;
+}
+
+.contentEstadisticas {
+  position: absolute;
+  width: 95%;
+  height: 95%;
+  background: #16233E;
+  border-radius: 10px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row;
+  text-align: center;
+  color: ghostwhite;
+  overflow: hidden;
+  padding: 20px;
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.5) 0px 18px 36px -18px inset;
+  font-family: "Roboto Condensed", monospace;
+}
+
+.contentEstadisticas h3,
+.contentEstadisticas p {
+  color: ghostwhite;
+}
+
+.contentEstadisticas h3 {
+  font-size: 1.5rem;
+}
+
+.contentEstadisticas p {
+  font-size: 3rem;
+}
+
+.cardTotalEstadisticas::before {
+  content: "";
+  position: absolute;
+  width: 40%;
+  height: 150%;
+  background: #4BBFE0;
+  background: -webkit-linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
+  background: linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
+  transform-origin: center;
+  animation: glowing_401_v1 5s linear infinite;
+}
+
+.inverse::before {
+  animation: glowing_401_v2 5s linear infinite !important;
+}
+
+@keyframes glowing_401_v1 {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glowing_401_v2 {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
 .containerStatistics {
   background-color: #f5f5f5;
   padding: 0.5rem;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  flex: 1 1 calc(33.33% - 20px);
   height: 100%;
   /* Establece que cada div ocupe un tercio del contenedor, menos el espacio del gap */
   box-sizing: border-box;
   /* Asegura que el padding y border estén incluidos en el tamaño del div */
-}
-
-.subDivStatics-v1 {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.subDivStatics-v1>div {
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
 }
 
 .subDivStatics-v2>div {
@@ -1839,88 +1944,6 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   font-size: 48px;
   margin: 0;
   color: ghostwhite;
-}
-
-/* From Uiverse.io by Pradeepsaranbishnoi */
-.cardTotalEstadisticas {
-  width: 100%;
-  height: 50%;
-  position: relative;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background-color: #3a425b;
-  border-radius: 10px;
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 5px 0px,
-    rgba(0, 0, 0, 0.5) 0px 2px 15px 0px;
-}
-
-.contentEstadisticas {
-  position: absolute;
-  width: 95%;
-  height: 95%;
-  background: #16233E;
-  border-radius: 10px;
-  z-index: 5;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-direction: row;
-  text-align: center;
-  color: ghostwhite;
-  overflow: hidden;
-  padding: 20px;
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.5) 0px 18px 36px -18px inset;
-  font-family: "Roboto Condensed", monospace;
-}
-
-.contentEstadisticas h3,
-.contentEstadisticas p {
-  color: ghostwhite;
-}
-
-.contentEstadisticas h3 {
-  font-size: 1.5rem;
-}
-
-.contentEstadisticas p {
-  font-size: 5rem;
-}
-
-.cardTotalEstadisticas::before {
-  content: "";
-  position: absolute;
-  width: 40%;
-  height: 150%;
-  background: #4BBFE0;
-  background: -webkit-linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
-  background: linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
-  transform-origin: center;
-  animation: glowing_401_v1 5s linear infinite;
-}
-
-.inverse::before {
-  animation: glowing_401_v2 5s linear infinite !important;
-}
-
-@keyframes glowing_401_v1 {
-  0% {
-    transform: rotate(0);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes glowing_401_v2 {
-  0% {
-    transform: rotate(0);
-  }
-
-  100% {
-    transform: rotate(-360deg);
-  }
 }
 
 #addDeptoButton,
