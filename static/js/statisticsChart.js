@@ -2,10 +2,62 @@
     // Almacena las instancias de los gráficos para evitar recreaciones innecesarias
     let chartInstances = {};
 
+    // Función para verificar si la pantalla está en el tamaño específico
+    function isSpecificScreenSize() {
+        return window.innerWidth === 1366 && window.innerHeight === 607;
+    }
+
     // Función genérica para crear gráficos responsivos
-    function createResponsiveChart(ctx, data, labels, labelText, bgColor, borderColor, indexAxis = 'x') {
+    function createResponsiveChart(ctx, data, labels, labelText, bgColor, borderColor, axis = 'x', options = {}) {
         if (chartInstances[ctx.canvas.id]) {
             chartInstances[ctx.canvas.id].destroy();
+        }
+
+        // Opciones base para los gráficos
+        const baseOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: axis,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { display: true }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { display: true }
+                }
+            }
+        };
+
+        // Detectar si la pantalla es '1366 x 607' y aplicar cambios a los gráficos específicos
+        if (isSpecificScreenSize()) {
+            switch (ctx.canvas.id) {
+                case 'tipoSolicitudChart':
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;
+
+                case 'funcionarioChart':
+                    baseOptions.indexAxis = 'x';  // Barras en vertical
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;
+
+                case 'tipoChart':
+                    baseOptions.indexAxis = 'x';  // Barras en vertical
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;
+
+                case 'deptoChart':
+                    const combined = labels.map((label, index) => ({
+                        label: label,
+                        value: data[index]
+                    }));
+                    combined.sort((a, b) => b.value - a.value);
+                    const top10 = combined.slice(0, 10);
+                    labels = top10.map(item => item.label);
+                    data = top10.map(item => item.value);
+                    break;
+            }
         }
 
         const chart = new Chart(ctx, {
@@ -20,15 +72,7 @@
                     borderWidth: 1
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: indexAxis,
-                scales: {
-                    x: { beginAtZero: true },
-                    y: { beginAtZero: true }
-                }
-            }
+            options: { ...baseOptions, ...options }
         });
 
         // Redimensionar el canvas dinámicamente
@@ -50,7 +94,7 @@
         const chartData = [
             { id: 'deptoChart', dataId: 'solicitudesPorDepto', label: 'Solicitudes por Solicitante', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)', axis: 'y' },
             { id: 'funcionarioChart', dataId: 'solicitudesPorFuncionario', label: 'Solicitudes por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y' },
-            { id: 'tipoChart', dataId: 'solicitudesPorTipo', label: 'Solicitudes por Tipo de Recepción', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' },
+            { id: 'tipoChart', dataId: 'solicitudesPorTipo', label: 'Solicitudes por Tipo de Recepción', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'y' },
             { id: 'tipoSolicitudChart', dataId: 'solicitudesPorTipoSolicitud', label: 'Solicitudes por Tipo de Solicitud', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)' },
             { id: 'entradasMesChart', dataId: 'entradasPorMes', label: 'Entradas por Mes', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)' },
             { id: 'salidasMesChart', dataId: 'salidasPorMes', label: 'Salidas por Mes', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)' },

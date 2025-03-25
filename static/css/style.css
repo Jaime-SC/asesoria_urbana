@@ -1121,11 +1121,11 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .subDivStatics-v1>div>.containerStatistics.v3 {
-  width: 50%;
+  width: 100%;
 }
 
 .subDivStatics-v1>div>.containerStatistics.v4 {
-  width: 50%;
+  width: 100%;
 }
 
 .subDivStatics-v2 {
