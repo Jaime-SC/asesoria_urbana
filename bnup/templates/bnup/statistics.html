@@ -22,36 +22,26 @@
           <div class="divStatistics">
             <div class="subDivStatics-v1">
               <div>
-                <!-- Indicadores de totales -->
-                <div class="containerStatistics">
-                  <div class="cardTotalEstadisticas">
-                    <div class="contentEstadisticas">
-                      <h3>Total Entradas</h3>
-                      <p>{{ total_solicitudes }}</p>
-                    </div>
-                  </div>
-                  <div class="cardTotalEstadisticas inverse">
-                    <div class="contentEstadisticas">
-                      <h3>Total Salidas</h3>
-                      <p>{{ total_salidas }}</p>
-                    </div>
-                  </div>
-                </div>
                 <!-- Gráfico de solicitudes por tipo de solicitud -->
-                <div class="containerStatistics v2">
+                <div class="containerStatistics">
                   <p id="solicitudesPorTipoSolicitud" style="display: none;">{{ solicitudes_por_tipo_solicitud|safe }}</p>
                   <canvas id="tipoSolicitudChart"></canvas>
                 </div>
+                <!-- Gráfico de solicitudes por tipo de recepción -->
+                <div class="containerStatistics">
+                  <p id="solicitudesPorTipo" style="display: none;">{{ solicitudes_por_tipo_recepcion|safe }}</p>
+                  <canvas id="tipoChart"></canvas>
+                </div>
               </div>
               <div>
-                <div class="containerStatistics v3">
+                <div class="containerStatistics">
                   <p id="solicitudesPorFuncionario" style="display: none;">{{ solicitudes_por_funcionario|safe }}</p>
                   <canvas id="funcionarioChart"></canvas>
                 </div>
-                <!-- Gráfico de solicitudes por tipo de recepción -->
-                <div class="containerStatistics v4">
-                  <p id="solicitudesPorTipo" style="display: none;">{{ solicitudes_por_tipo_recepcion|safe }}</p>
-                  <canvas id="tipoChart"></canvas>
+                <!-- Salidas por Funcionario -->
+                <div class="containerStatistics">
+                  <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
+                  <canvas id="salidasFuncionarioChart"></canvas>
                 </div>
               </div>
             </div>
@@ -68,47 +58,50 @@
         <div class="stats-page" id="statsPage2" style="display: none;">
           <div class="divStatistics" style="flex-direction: column;">
             <div class="subDivStatics-v3">
+              <!-- Entradas por Funcionario - Semana Actual -->
+              <div class="containerStatistics">
+                <p id="entradasSemanaActual" style="display: none;">{{ entradas_semana_actual|safe }}</p>
+                <canvas id="entradasSemanaActualChart"></canvas>
+              </div>
+
+              <!-- Entradas por Funcionario - Mes Actual -->
+              <div class="containerStatistics">
+                <p id="entradasMesActual" style="display: none;">{{ entradas_mes_actual|safe }}</p>
+                <canvas id="entradasMesActualChart"></canvas>
+              </div>
+
+              <!-- Entradas por Semana -->
+              <div class="containerStatistics">
+                <p id="entradasPorSemana" style="display: none;">{{ entradas_por_semana|safe }}</p>
+                <canvas id="entradasSemanaChart"></canvas>
+              </div>
               <!-- Entradas por Mes -->
               <div class="containerStatistics">
                 <p id="entradasPorMes" style="display: none;">{{ entradas_por_mes|safe }}</p>
                 <canvas id="entradasMesChart"></canvas>
               </div>
-              <!-- Salidas por Mes -->
+            </div>
+            <div class="subDivStatics-v4">
+              <!-- Salidas por Funcionario, Semana Actual -->
               <div class="containerStatistics">
-                <p id="salidasPorMes" style="display: none;">{{ salidas_por_mes|safe }}</p>
-                <canvas id="salidasMesChart"></canvas>
+                <p id="salidasSemanaActual" style="display: none;">{{ salidas_semana_actual|safe }}</p>
+                <canvas id="salidasSemanaActualChart"></canvas>
               </div>
-              <!-- Entradas por Semana -->
+
+              <!-- Salidas por Funcionario, Mes Actual -->
               <div class="containerStatistics">
-                <p id="entradasPorSemana" style="display: none;">{{ entradas_por_semana|safe }}</p>
-                <canvas id="entradasSemanaChart"></canvas>
+                <p id="salidasMesActual" style="display: none;">{{ salidas_mes_actual|safe }}</p>
+                <canvas id="salidasMesActualChart"></canvas>
               </div>
               <!-- Salidas por Semana -->
               <div class="containerStatistics">
                 <p id="salidasPorSemana" style="display: none;">{{ salidas_por_semana|safe }}</p>
                 <canvas id="salidasSemanaChart"></canvas>
               </div>
-            </div>
-            <div class="subDivStatics-v4">
-              <!-- Salidas por Funcionario -->
+              <!-- Salidas Totales por Mes -->
               <div class="containerStatistics">
-                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
-                <canvas id="salidasFuncionarioChart"></canvas>
-              </div>
-              <!-- Salidas por Funcionario -->
-              <div class="containerStatistics">
-                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
-                <canvas id="salidasFuncionarioChart"></canvas>
-              </div>
-              <!-- Salidas por Funcionario -->
-              <div class="containerStatistics">
-                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
-                <canvas id="salidasFuncionarioChart"></canvas>
-              </div>
-              <!-- Salidas por Funcionario -->
-              <div class="containerStatistics">
-                <p id="salidasPorFuncionario" style="display: none;">{{ salidas_por_funcionario|safe }}</p>
-                <canvas id="salidasFuncionarioChart"></canvas>
+                <p id="salidasTotalesMes" style="display: none;">{{ salidas_totales_mes|safe }}</p>
+                <canvas id="salidasTotalesMesChart"></canvas>
               </div>
             </div>
           </div>

@@ -92,15 +92,20 @@
     // Función para inicializar los gráficos
     function createCharts() {
         const chartData = [
-            { id: 'deptoChart', dataId: 'solicitudesPorDepto', label: 'Solicitudes por Solicitante', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)', axis: 'y' },
-            { id: 'funcionarioChart', dataId: 'solicitudesPorFuncionario', label: 'Solicitudes por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y' },
-            { id: 'tipoChart', dataId: 'solicitudesPorTipo', label: 'Solicitudes por Tipo de Recepción', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'y' },
-            { id: 'tipoSolicitudChart', dataId: 'solicitudesPorTipoSolicitud', label: 'Solicitudes por Tipo de Solicitud', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)' },
-            { id: 'entradasMesChart', dataId: 'entradasPorMes', label: 'Entradas por Mes', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)' },
-            { id: 'salidasMesChart', dataId: 'salidasPorMes', label: 'Salidas por Mes', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)' },
-            { id: 'entradasSemanaChart', dataId: 'entradasPorSemana', label: 'Entradas por Semana', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' },
+            { id: 'deptoChart', dataId: 'solicitudesPorDepto', label: 'Ingresos por Solicitante', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)', axis: 'y' },
+            { id: 'funcionarioChart', dataId: 'solicitudesPorFuncionario', label: 'Ingresos por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y' },
+            { id: 'tipoChart', dataId: 'solicitudesPorTipo', label: 'Ingresos por Tipo de Recepción', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'y' },
+            { id: 'tipoSolicitudChart', dataId: 'solicitudesPorTipoSolicitud', label: 'Ingresos por Tipo de Solicitud', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)', axis: 'y' },
+            { id: 'entradasSemanaChart', dataId: 'entradasPorSemana', label: 'Ingresos por Semana', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' },
+            { id: 'entradasMesChart', dataId: 'entradasPorMes', label: 'Ingresos por Mes', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)' },
+            { id: 'salidasFuncionarioChart', dataId: 'salidasPorFuncionario', label: 'Salidas por Funcionario', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)', axis: 'y' },
+            { id: 'salidasSemanaActualChart', dataId: 'salidasSemanaActual', label: 'Salidas por Funcionario - Semana Actual', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'y' },
+            { id: 'salidasMesActualChart', dataId: 'salidasMesActual', label: 'Salidas por Funcionario - Mes Actual', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)', axis: 'y' },
             { id: 'salidasSemanaChart', dataId: 'salidasPorSemana', label: 'Salidas por Semana', color: 'rgba(255, 206, 86, 0.6)', border: 'rgba(255, 206, 86, 1)' },
-            { id: 'salidasFuncionarioChart', dataId: 'salidasPorFuncionario', label: 'Salidas por Funcionario', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)', axis: 'y' }
+            { id: 'salidasTotalesMesChart', dataId: 'salidasTotalesMes', label: 'Salidas Totales por Mes', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)' },
+            { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Entradas por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
+            { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Entradas por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
+
         ];
 
         chartData.forEach(chartInfo => {

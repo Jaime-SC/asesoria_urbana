@@ -1113,20 +1113,9 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .subDivStatics-v1>div>.containerStatistics {
-  width: 25%;
-}
-
-.subDivStatics-v1>div>.containerStatistics.v2 {
-  width: 75%;
-}
-
-.subDivStatics-v1>div>.containerStatistics.v3 {
   width: 100%;
 }
 
-.subDivStatics-v1>div>.containerStatistics.v4 {
-  width: 100%;
-}
 
 .subDivStatics-v2 {
   display: flex;

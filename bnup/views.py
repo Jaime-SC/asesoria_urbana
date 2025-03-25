@@ -457,13 +457,6 @@ def statistics_view(request):
         "tipo_solicitud__tipo"
     ).annotate(total=Count("id"))
 
-    # Solicitudes por Año
-    solicitudes_por_anio = (
-        active_solicitudes.annotate(anio=ExtractYear("fecha_ingreso_au"))
-        .values("anio")
-        .annotate(total=Count("id"))
-    )
-
     # Para Entradas por Mes
     solicitudes_por_mes = active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au")) \
         .values("mes").annotate(total=Count("id"))
@@ -497,6 +490,35 @@ def statistics_view(request):
         ingreso_solicitud__is_active=True
     ).count()
 
+    # Salidas por Funcionario, Semana Actual
+    salidas_semana_actual = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__is_active=True,
+        fecha_salida__week=ExtractWeek("fecha_salida")
+    ).values("funcionarios__nombre").annotate(total=Count("id"))
+
+    # Salidas por Funcionario, Mes Actual
+    salidas_mes_actual = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__is_active=True,
+        fecha_salida__month=ExtractMonth("fecha_salida")
+    ).values("funcionarios__nombre").annotate(total=Count("id"))
+
+    # Salidas Totales por Mes
+    salidas_totales_mes = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__is_active=True
+    ).annotate(mes=ExtractMonth("fecha_salida")).values("mes").annotate(total=Count("id"))
+    
+    # Entradas por Funcionario, Semana Actual
+    entradas_semana_actual = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        fecha_ingreso_au__week=ExtractWeek("fecha_ingreso_au")
+    ).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
+
+    # Entradas por Funcionario, Mes Actual
+    entradas_mes_actual = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        fecha_ingreso_au__month=ExtractMonth("fecha_ingreso_au")
+    ).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
+
     context = {
         "solicitudes_por_depto": json.dumps(
             {
@@ -526,11 +548,6 @@ def statistics_view(request):
             },
             cls=DjangoJSONEncoder,
         ),
-        "solicitudes_por_anio": json.dumps(
-            {str(int(item["anio"])): item["total"]
-             for item in solicitudes_por_anio},
-            cls=DjangoJSONEncoder,
-        ),
         "entradas_por_mes": json.dumps(entradas_por_mes, cls=DjangoJSONEncoder),
         "salidas_por_mes": json.dumps(salidas_por_mes, cls=DjangoJSONEncoder),
         "entradas_por_semana": json.dumps(entradas_por_semana, cls=DjangoJSONEncoder),
@@ -538,7 +555,29 @@ def statistics_view(request):
         "salidas_por_funcionario": json.dumps(salidas_por_funcionario, cls=DjangoJSONEncoder),  # NUEVO
         "total_solicitudes": total_solicitudes,
         "total_salidas": total_salidas,
+        "salidas_semana_actual": json.dumps(
+            {item["funcionarios__nombre"]: item["total"] for item in salidas_semana_actual},
+            cls=DjangoJSONEncoder,
+        ),
+        "salidas_mes_actual": json.dumps(
+            {item["funcionarios__nombre"]: item["total"] for item in salidas_mes_actual},
+            cls=DjangoJSONEncoder,
+        ),
+        "salidas_totales_mes": json.dumps(
+            {str(item["mes"]): item["total"] for item in salidas_totales_mes},
+            cls=DjangoJSONEncoder,
+        ),
+        "entradas_semana_actual": json.dumps(
+            {item["funcionarios_asignados__nombre"]: item["total"] for item in entradas_semana_actual},
+            cls=DjangoJSONEncoder,
+        ),
+        "entradas_mes_actual": json.dumps(
+            {item["funcionarios_asignados__nombre"]: item["total"] for item in entradas_mes_actual},
+            cls=DjangoJSONEncoder,
+        ),
+
     }
+
 
     return render(request, "bnup/statistics.html", context)
 
