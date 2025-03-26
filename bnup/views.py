@@ -7,15 +7,18 @@ from .models import (
     TipoRecepcion,
     TipoSolicitud,
 )
-from django.contrib.auth.decorators import login_required
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import OuterRef, Subquery, IntegerField, F
+from django.db.models.functions import TruncWeek, TruncMonth
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from principal.models import PerfilUsuario
 from django.contrib import messages
+from bnup.models import Funcionario  # asegúrate de tenerlo importado
 from django.db.models import Count
 from datetime import datetime
 
@@ -472,10 +475,16 @@ def statistics_view(request):
         .values("semana").annotate(total=Count("id"))
     entradas_por_semana = {str(item["semana"]): item["total"] for item in solicitudes_por_semana}
 
-    # Para Salidas por Semana
-    salidas_por_semana_qs = SalidaSOLICITUD.objects.filter(ingreso_solicitud__is_active=True) \
-        .annotate(semana=ExtractWeek("fecha_salida")).values("semana").annotate(total=Count("id"))
-    salidas_por_semana = {str(item["semana"]): item["total"] for item in salidas_por_semana_qs}
+    # Salidas por Semana (CORREGIDO)
+    salidas_por_semana_qs = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__is_active=True
+    ).prefetch_related('funcionarios')
+
+    salidas_por_semana = {}
+    for salida in salidas_por_semana_qs:
+        semana = salida.fecha_salida.isocalendar()[1]  # semana ISO
+        salidas_por_semana[str(semana)] = salidas_por_semana.get(str(semana), 0) + 1
+
 
     # Para Salidas por Funcionario (NUEVO)
     salidas_por_funcionario = SalidaSOLICITUD.objects.filter(
@@ -490,22 +499,45 @@ def statistics_view(request):
         ingreso_solicitud__is_active=True
     ).count()
 
-    # Salidas por Funcionario, Semana Actual
-    salidas_semana_actual = SalidaSOLICITUD.objects.filter(
-        ingreso_solicitud__is_active=True,
-        fecha_salida__week=ExtractWeek("fecha_salida")
-    ).values("funcionarios__nombre").annotate(total=Count("id"))
+    
 
-    # Salidas por Funcionario, Mes Actual
-    salidas_mes_actual = SalidaSOLICITUD.objects.filter(
+    # Salidas por Funcionario - Semana Actual
+    current_week = datetime.now().isocalendar().week
+    salidas_semana_actual_qs = SalidaSOLICITUD.objects.filter(
         ingreso_solicitud__is_active=True,
-        fecha_salida__month=ExtractMonth("fecha_salida")
-    ).values("funcionarios__nombre").annotate(total=Count("id"))
+        fecha_salida__week=current_week
+    ).prefetch_related('funcionarios')
 
-    # Salidas Totales por Mes
-    salidas_totales_mes = SalidaSOLICITUD.objects.filter(
+    salidas_semana_actual = {}
+    for salida in salidas_semana_actual_qs:
+        for funcionario in salida.funcionarios.all():
+            nombre = funcionario.nombre
+            salidas_semana_actual[nombre] = salidas_semana_actual.get(nombre, 0) + 1
+
+    # Salidas por Funcionario - Mes Actual
+    current_month = datetime.now().month
+    salidas_mes_actual_qs = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__is_active=True,
+        fecha_salida__month=current_month
+    ).prefetch_related('funcionarios')
+
+    salidas_mes_actual = {}
+    for salida in salidas_mes_actual_qs:
+        for funcionario in salida.funcionarios.all():
+            nombre = funcionario.nombre
+            salidas_mes_actual[nombre] = salidas_mes_actual.get(nombre, 0) + 1
+
+
+    # Salidas Totales por Mes (CORREGIDO)
+    salidas_totales_mes_qs = SalidaSOLICITUD.objects.filter(
         ingreso_solicitud__is_active=True
-    ).annotate(mes=ExtractMonth("fecha_salida")).values("mes").annotate(total=Count("id"))
+    )
+
+    salidas_totales_mes = {}
+    for salida in salidas_totales_mes_qs:
+        mes = salida.fecha_salida.month
+        salidas_totales_mes[str(mes)] = salidas_totales_mes.get(str(mes), 0) + 1
+
     
     # Entradas por Funcionario, Semana Actual
     entradas_semana_actual = IngresoSOLICITUD.objects.filter(
@@ -552,21 +584,15 @@ def statistics_view(request):
         "salidas_por_mes": json.dumps(salidas_por_mes, cls=DjangoJSONEncoder),
         "entradas_por_semana": json.dumps(entradas_por_semana, cls=DjangoJSONEncoder),
         "salidas_por_semana": json.dumps(salidas_por_semana, cls=DjangoJSONEncoder),
+        
+
         "salidas_por_funcionario": json.dumps(salidas_por_funcionario, cls=DjangoJSONEncoder),  # NUEVO
         "total_solicitudes": total_solicitudes,
         "total_salidas": total_salidas,
-        "salidas_semana_actual": json.dumps(
-            {item["funcionarios__nombre"]: item["total"] for item in salidas_semana_actual},
-            cls=DjangoJSONEncoder,
-        ),
-        "salidas_mes_actual": json.dumps(
-            {item["funcionarios__nombre"]: item["total"] for item in salidas_mes_actual},
-            cls=DjangoJSONEncoder,
-        ),
-        "salidas_totales_mes": json.dumps(
-            {str(item["mes"]): item["total"] for item in salidas_totales_mes},
-            cls=DjangoJSONEncoder,
-        ),
+        "salidas_semana_actual": json.dumps(salidas_semana_actual, cls=DjangoJSONEncoder),
+        "salidas_mes_actual": json.dumps(salidas_mes_actual, cls=DjangoJSONEncoder),
+
+        "salidas_totales_mes": json.dumps(salidas_totales_mes, cls=DjangoJSONEncoder),
         "entradas_semana_actual": json.dumps(
             {item["funcionarios_asignados__nombre"]: item["total"] for item in entradas_semana_actual},
             cls=DjangoJSONEncoder,
