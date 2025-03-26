@@ -7,6 +7,7 @@ from .models import (
     TipoRecepcion,
     TipoSolicitud,
 )
+from collections import defaultdict
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import OuterRef, Subquery, IntegerField, F
@@ -539,17 +540,33 @@ def statistics_view(request):
         salidas_totales_mes[str(mes)] = salidas_totales_mes.get(str(mes), 0) + 1
 
     
-    # Entradas por Funcionario, Semana Actual
-    entradas_semana_actual = IngresoSOLICITUD.objects.filter(
-        is_active=True,
-        fecha_ingreso_au__week=ExtractWeek("fecha_ingreso_au")
-    ).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
 
-    # Entradas por Funcionario, Mes Actual
-    entradas_mes_actual = IngresoSOLICITUD.objects.filter(
-        is_active=True,
-        fecha_ingreso_au__month=ExtractMonth("fecha_ingreso_au")
-    ).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
+    # Entradas por funcionario y fechas (CORREGIDO)
+    entradas_semana_actual = defaultdict(int)
+    entradas_mes_actual = defaultdict(int)
+    entradas_por_semana = defaultdict(int)
+    entradas_por_mes = defaultdict(int)
+
+    current_week = datetime.now().isocalendar()[1]
+    current_month = datetime.now().month
+
+    # Prefetch para evitar consultas duplicadas
+    ingresos_activos = IngresoSOLICITUD.objects.filter(is_active=True).prefetch_related('funcionarios_asignados')
+
+    for ingreso in ingresos_activos:
+        semana = ingreso.fecha_ingreso_au.isocalendar()[1]
+        mes = ingreso.fecha_ingreso_au.month
+
+        entradas_por_semana[str(semana)] += 1
+        entradas_por_mes[str(mes)] += 1
+
+        for funcionario in ingreso.funcionarios_asignados.all():
+            nombre = funcionario.nombre
+            if semana == current_week:
+                entradas_semana_actual[nombre] += 1
+            if mes == current_month:
+                entradas_mes_actual[nombre] += 1
+
 
     context = {
         "solicitudes_por_depto": json.dumps(
@@ -593,14 +610,11 @@ def statistics_view(request):
         "salidas_mes_actual": json.dumps(salidas_mes_actual, cls=DjangoJSONEncoder),
 
         "salidas_totales_mes": json.dumps(salidas_totales_mes, cls=DjangoJSONEncoder),
-        "entradas_semana_actual": json.dumps(
-            {item["funcionarios_asignados__nombre"]: item["total"] for item in entradas_semana_actual},
-            cls=DjangoJSONEncoder,
-        ),
-        "entradas_mes_actual": json.dumps(
-            {item["funcionarios_asignados__nombre"]: item["total"] for item in entradas_mes_actual},
-            cls=DjangoJSONEncoder,
-        ),
+        "entradas_semana_actual": json.dumps(dict(entradas_semana_actual), cls=DjangoJSONEncoder),
+        "entradas_mes_actual": json.dumps(dict(entradas_mes_actual), cls=DjangoJSONEncoder),
+        "entradas_por_semana": json.dumps(dict(entradas_por_semana), cls=DjangoJSONEncoder),
+        "entradas_por_mes": json.dumps(dict(entradas_por_mes), cls=DjangoJSONEncoder),
+
 
     }
 
