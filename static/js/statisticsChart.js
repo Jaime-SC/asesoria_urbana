@@ -34,19 +34,45 @@
         if (isSpecificScreenSize()) {
             switch (ctx.canvas.id) {
                 case 'tipoSolicitudChart':
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
                     break;
 
                 case 'funcionarioChart':
                     baseOptions.indexAxis = 'x';  // Barras en vertical
                     baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
                     break;
-
+                
+                case 'salidasFuncionarioChart':
+                    baseOptions.indexAxis = 'x';  // Barras en vertical
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;            
+                    
                 case 'tipoChart':
                     baseOptions.indexAxis = 'x';  // Barras en vertical
                     baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
                     break;
 
+                case 'entradasSemanaActualChart':
+                    baseOptions.indexAxis = 'x';  // Barras en vertical
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;
+
+                case 'entradasMesActualChart':
+                    baseOptions.indexAxis = 'x';  // Barras en vertical
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;
+    
+                case 'salidasSemanaActualChart':
+                    baseOptions.indexAxis = 'x';  // Barras en vertical
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;
+    
+                case 'salidasMesActualChart':
+                    baseOptions.indexAxis = 'x';  // Barras en vertical
+                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    break;
+        
                 case 'deptoChart':
                     const combined = labels.map((label, index) => ({
                         label: label,
@@ -103,8 +129,8 @@
             { id: 'salidasMesActualChart', dataId: 'salidasMesActual', label: 'Salidas por Funcionario - Mes Actual', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)', axis: 'y' },
             { id: 'salidasSemanaChart', dataId: 'salidasPorSemana', label: 'Salidas por Semana', color: 'rgba(255, 206, 86, 0.6)', border: 'rgba(255, 206, 86, 1)' },
             { id: 'salidasTotalesMesChart', dataId: 'salidasTotalesMes', label: 'Salidas Totales por Mes', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)' },
-            { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Entradas por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
-            { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Entradas por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
+            { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Ingresos por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
+            { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
 
         ];
 
