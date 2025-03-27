@@ -73,6 +73,28 @@
                 case 'salidasFuncionarioChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
+                    break;                 
+                case 'entradasSemanaActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
+                case 'salidasSemanaActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
+                case 'entradasMesActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
+                case 'salidasMesActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
+                case 'entradasSemanaChart':
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
+                case 'salidasSemanaChart':
+                    baseOptions.scales.x.ticks.display = false;
                     break;
                 case 'tipoChart':
                     baseOptions.indexAxis = 'x';
