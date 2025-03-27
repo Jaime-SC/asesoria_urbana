@@ -427,159 +427,116 @@ def delete_bnup_records(request):
 def statistics_view(request):
     """
     Genera estadísticas relacionadas con las solicitudes de BNUP.
+    Solo se consideran datos del año actual.
+    Además, se calculan datos por semana y mes para entradas y salidas, 
+    así como por funcionario, para poder filtrar en JavaScript los gráficos de semana.
     """
     if not request.user.is_authenticated:
         return redirect("login")
-
+    
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
-
     if tipo_usuario not in ["ADMIN", "PRIVILEGIADO", "VISUALIZADOR"]:
         messages.error(request, "No tiene permiso para ver las estadísticas.")
         return redirect("bnup_form")
-
+    
     current_year = datetime.now().year
     current_week = datetime.now().isocalendar()[1]
     current_month = datetime.now().month
 
-    # Filtrar solo las solicitudes activas del año actual
-    active_solicitudes = IngresoSOLICITUD.objects.filter(
-        is_active=True, fecha_ingreso_au__year=current_year
-    )
-
+    # Entradas activas del año actual
+    active_solicitudes = IngresoSOLICITUD.objects.filter(is_active=True, fecha_ingreso_au__year=current_year)
+    
     # Solicitudes por Solicitante
-    solicitudes_por_depto = active_solicitudes.values(
-        "depto_solicitante__nombre"
-    ).annotate(total=Count("id"))
-
+    solicitudes_por_depto = active_solicitudes.values("depto_solicitante__nombre").annotate(total=Count("id"))
+    
     # Solicitudes por Funcionario
-    solicitudes_por_funcionario = active_solicitudes.values(
-        "funcionarios_asignados__nombre"
-    ).annotate(total=Count("id"))
-
-    # Solicitudes por Tipo de Recepción
-    solicitudes_por_tipo_recepcion = active_solicitudes.values(
-        "tipo_recepcion__tipo"
-    ).annotate(total=Count("id"))
-
-    # Solicitudes por Tipo de Solicitud
-    solicitudes_por_tipo_solicitud = active_solicitudes.values(
-        "tipo_solicitud__tipo"
-    ).annotate(total=Count("id"))
-
-    # 🚀 Entradas por Semana (solo del año actual)
-    solicitudes_por_semana = active_solicitudes.annotate(
-        semana=ExtractWeek("fecha_ingreso_au")
-    ).values("semana").annotate(total=Count("id"))
-    entradas_por_semana = {
-        str(item["semana"]): item["total"] for item in solicitudes_por_semana
-    }
-
-    # 🚀 Entradas por Mes (solo del año actual)
-    solicitudes_por_mes = active_solicitudes.annotate(
-        mes=ExtractMonth("fecha_ingreso_au")
-    ).values("mes").annotate(total=Count("id"))
-    entradas_por_mes = {
-        str(item["mes"]): item["total"] for item in solicitudes_por_mes
-    }
-
-    # Filtrar solo las salidas del año actual
+    solicitudes_por_funcionario = active_solicitudes.values("funcionarios_asignados__nombre").annotate(total=Count("id"))
+    
+    # Por Tipo de Recepción
+    solicitudes_por_tipo_recepcion = active_solicitudes.values("tipo_recepcion__tipo").annotate(total=Count("id"))
+    
+    # Por Tipo de Solicitud
+    solicitudes_por_tipo_solicitud = active_solicitudes.values("tipo_solicitud__tipo").annotate(total=Count("id"))
+    
+    # Entradas por Mes y Semana (del año actual)
+    solicitudes_por_mes = active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au")).values("mes").annotate(total=Count("id"))
+    entradas_por_mes = {str(item["mes"]): item["total"] for item in solicitudes_por_mes}
+    solicitudes_por_semana = active_solicitudes.annotate(semana=ExtractWeek("fecha_ingreso_au")).values("semana").annotate(total=Count("id"))
+    entradas_por_semana = {str(item["semana"]): item["total"] for item in solicitudes_por_semana}
+    
+    # Salidas activas del año actual
     salidas_activas = SalidaSOLICITUD.objects.filter(
         ingreso_solicitud__is_active=True,
-        fecha_salida__year=current_year,
+        fecha_salida__year=current_year
     ).prefetch_related("funcionarios")
-
-    # 🚀 Salidas por Semana (solo del año actual)
+    
+    # Salidas por Semana (global)
     salidas_por_semana = defaultdict(int)
     for salida in salidas_activas:
         semana = salida.fecha_salida.isocalendar()[1]
         salidas_por_semana[str(semana)] += 1
-
-    # 🚀 Salidas Totales por Mes (solo del año actual)
+    
+    # Salidas Totales por Mes
     salidas_totales_mes = defaultdict(int)
     for salida in salidas_activas:
         mes = salida.fecha_salida.month
         salidas_totales_mes[str(mes)] += 1
-
-    # 🚀 Entradas por Funcionario - Semana Actual
-    entradas_semana_actual = defaultdict(int)
-    entradas_mes_actual = defaultdict(int)
-
-    for ingreso in active_solicitudes.prefetch_related("funcionarios_asignados"):
-        semana = ingreso.fecha_ingreso_au.isocalendar()[1]
-        mes = ingreso.fecha_ingreso_au.month
-
-        for funcionario in ingreso.funcionarios_asignados.all():
-            nombre = funcionario.nombre
-            if semana == current_week:
-                entradas_semana_actual[nombre] += 1
-            if mes == current_month:
-                entradas_mes_actual[nombre] += 1
-
-    # 🚀 Salidas por Funcionario - Semana Actual
-    salidas_semana_actual = defaultdict(int)
-    salidas_mes_actual = defaultdict(int)
-
-    for salida in salidas_activas:
-        semana = salida.fecha_salida.isocalendar()[1]
-        mes = salida.fecha_salida.month
-
-        for funcionario in salida.funcionarios.all():
-            nombre = funcionario.nombre
-            if semana == current_week:
-                salidas_semana_actual[nombre] += 1
-            if mes == current_month:
-                salidas_mes_actual[nombre] += 1
-
-    # 🚀 Salidas por Funcionario (Global)
+    
+    # Salidas por Funcionario (global)
     salidas_por_funcionario = defaultdict(int)
     for salida in salidas_activas:
         for funcionario in salida.funcionarios.all():
-            nombre = funcionario.nombre
-            salidas_por_funcionario[nombre] += 1
-
+            salidas_por_funcionario[funcionario.nombre] += 1
+    
     total_solicitudes = active_solicitudes.count()
     total_salidas = salidas_activas.count()
+    
+    # Salidas por Funcionario - Semana Actual
+    salidas_semana_actual = defaultdict(int)
+    for salida in salidas_activas:
+        if salida.fecha_salida.isocalendar()[1] == current_week:
+            for funcionario in salida.funcionarios.all():
+                salidas_semana_actual[funcionario.nombre] += 1
+    
+    # Salidas por Funcionario - Mes Actual
+    salidas_mes_actual = defaultdict(int)
+    for salida in salidas_activas:
+        if salida.fecha_salida.month == current_month:
+            for funcionario in salida.funcionarios.all():
+                salidas_mes_actual[funcionario.nombre] += 1
+    
+    # Entradas por Funcionario - Semana y Mes Actual
+    entradas_semana_actual = defaultdict(int)
+    entradas_mes_actual = defaultdict(int)
+    for ingreso in active_solicitudes.prefetch_related("funcionarios_asignados"):
+        semana = ingreso.fecha_ingreso_au.isocalendar()[1]
+        mes = ingreso.fecha_ingreso_au.month
+        for funcionario in ingreso.funcionarios_asignados.all():
+            if semana == current_week:
+                entradas_semana_actual[funcionario.nombre] += 1
+            if mes == current_month:
+                entradas_mes_actual[funcionario.nombre] += 1
 
-    # Contexto para pasar a la plantilla
     context = {
-        "solicitudes_por_depto": json.dumps(
-            {
-                item["depto_solicitante__nombre"]: item["total"]
-                for item in solicitudes_por_depto
-            }
-        ),
-        "solicitudes_por_funcionario": json.dumps(
-            {
-                item["funcionarios_asignados__nombre"]: item["total"]
-                for item in solicitudes_por_funcionario
-            }
-        ),
-        "solicitudes_por_tipo_recepcion": json.dumps(
-            {
-                item["tipo_recepcion__tipo"]: item["total"]
-                for item in solicitudes_por_tipo_recepcion
-            }
-        ),
-        "solicitudes_por_tipo_solicitud": json.dumps(
-            {
-                item["tipo_solicitud__tipo"]: item["total"]
-                for item in solicitudes_por_tipo_solicitud
-            }
-        ),
-        "entradas_por_semana": json.dumps(dict(entradas_por_semana)),
-        "entradas_por_mes": json.dumps(dict(entradas_por_mes)),
-        "salidas_por_semana": json.dumps(dict(salidas_por_semana)),
-        "salidas_totales_mes": json.dumps(dict(salidas_totales_mes)),
-        "entradas_semana_actual": json.dumps(dict(entradas_semana_actual)),
-        "entradas_mes_actual": json.dumps(dict(entradas_mes_actual)),
-        "salidas_semana_actual": json.dumps(dict(salidas_semana_actual)),
-        "salidas_mes_actual": json.dumps(dict(salidas_mes_actual)),
-        "salidas_por_funcionario": json.dumps(dict(salidas_por_funcionario)),
+        "solicitudes_por_depto": json.dumps({item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
+        "solicitudes_por_funcionario": json.dumps({item["funcionarios_asignados__nombre"]: item["total"] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),
+        "solicitudes_por_tipo_recepcion": json.dumps({item["tipo_recepcion__tipo"]: item["total"] for item in solicitudes_por_tipo_recepcion}, cls=DjangoJSONEncoder),
+        "solicitudes_por_tipo_solicitud": json.dumps({item["tipo_solicitud__tipo"]: item["total"] for item in solicitudes_por_tipo_solicitud}, cls=DjangoJSONEncoder),
+        "entradas_por_mes": json.dumps(entradas_por_mes, cls=DjangoJSONEncoder),
+        "entradas_por_semana": json.dumps(entradas_por_semana, cls=DjangoJSONEncoder),
+        "salidas_por_mes": json.dumps(dict(entradas_por_mes), cls=DjangoJSONEncoder),  # Ajusta si deseas otras etiquetas
+        "salidas_por_semana": json.dumps(dict(salidas_por_semana), cls=DjangoJSONEncoder),
+        "salidas_por_funcionario": json.dumps(dict(salidas_por_funcionario), cls=DjangoJSONEncoder),
         "total_solicitudes": total_solicitudes,
         "total_salidas": total_salidas,
+        "salidas_semana_actual": json.dumps(dict(salidas_semana_actual), cls=DjangoJSONEncoder),
+        "salidas_mes_actual": json.dumps(dict(salidas_mes_actual), cls=DjangoJSONEncoder),
+        "salidas_totales_mes": json.dumps(dict(salidas_totales_mes), cls=DjangoJSONEncoder),
+        "entradas_semana_actual": json.dumps(dict(entradas_semana_actual), cls=DjangoJSONEncoder),
+        "entradas_mes_actual": json.dumps(dict(entradas_mes_actual), cls=DjangoJSONEncoder),
     }
-
+    
     return render(request, "bnup/statistics.html", context)
 
 @login_required

@@ -2,6 +2,35 @@
     // Almacena las instancias de los gráficos para evitar recreaciones innecesarias
     let chartInstances = {};
 
+    // Agregar método para obtener la semana ISO a partir de una fecha
+    Date.prototype.getISOWeek = function() {
+        var date = new Date(this.getTime());
+        date.setHours(0, 0, 0, 0);
+        // Ajuste para que el jueves determine la semana ISO
+        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+        var week1 = new Date(date.getFullYear(), 0, 4);
+        return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    };
+
+    // Función para transformar un número de semana en etiqueta "Mes - Semana"
+    function getLabelForWeek(weekNumber, year) {
+        // Obtén el primer jueves del año para calcular la semana ISO
+        var simple = new Date(year, 0, 1);
+        var dayOfWeek = simple.getDay();
+        var diff = (dayOfWeek <= 4) ? (1 - dayOfWeek) : (8 - dayOfWeek);
+        simple.setDate(simple.getDate() + diff);
+        // Calcular el inicio de la semana dada
+        var weekStart = new Date(simple);
+        weekStart.setDate(simple.getDate() + (weekNumber - 1) * 7);
+        var monthName = weekStart.toLocaleString('default', { month: 'long' });
+        monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+        // Calcular la semana en el mes
+        var firstDayOfMonth = new Date(weekStart.getFullYear(), weekStart.getMonth(), 1);
+        var firstWeek = firstDayOfMonth.getISOWeek();
+        var weekInMonth = weekNumber - firstWeek + 1;
+        return monthName + " - " + weekInMonth;
+    }
+
     // Función para verificar si la pantalla está en el tamaño específico
     function isSpecificScreenSize() {
         return window.innerWidth === 1366 && window.innerHeight === 607;
@@ -30,49 +59,25 @@
             }
         };
 
-        // Detectar si la pantalla es '1366 x 607' y aplicar cambios a los gráficos específicos
+        // Detectar si la pantalla es '1366 x 607' y aplicar cambios a ciertos gráficos
         if (isSpecificScreenSize()) {
             switch (ctx.canvas.id) {
                 case 'tipoSolicitudChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
                     break;
-
                 case 'funcionarioChart':
-                    baseOptions.indexAxis = 'x';  // Barras en vertical
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
                     break;
-                
                 case 'salidasFuncionarioChart':
-                    baseOptions.indexAxis = 'x';  // Barras en vertical
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
-                    break;            
-                    
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
                 case 'tipoChart':
-                    baseOptions.indexAxis = 'x';  // Barras en vertical
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
                     break;
-
-                case 'entradasSemanaActualChart':
-                    baseOptions.indexAxis = 'x';  // Barras en vertical
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
-                    break;
-
-                case 'entradasMesActualChart':
-                    baseOptions.indexAxis = 'x';  // Barras en vertical
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
-                    break;
-    
-                case 'salidasSemanaActualChart':
-                    baseOptions.indexAxis = 'x';  // Barras en vertical
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
-                    break;
-    
-                case 'salidasMesActualChart':
-                    baseOptions.indexAxis = 'x';  // Barras en vertical
-                    baseOptions.scales.x.ticks.display = false; // Ocultar nombres de categorías
-                    break;
-        
                 case 'deptoChart':
                     const combined = labels.map((label, index) => ({
                         label: label,
@@ -84,6 +89,32 @@
                     data = top10.map(item => item.value);
                     break;
             }
+        }
+
+        // Para los gráficos de "Ingresos por Mes" y "Salidas Totales por Mes"
+        // se transforman los números de mes en nombres de meses con la primera letra en mayúscula
+        if (ctx.canvas.id === 'entradasMesChart' || ctx.canvas.id === 'salidasTotalesMesChart') {
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            labels = labels.map(label => {
+                let num = parseInt(label);
+                return monthNames[num - 1] || label;
+            });
+        }
+
+        // Para gráficos por semana (Ingresos y Salidas por Semana), mostrar solo las últimas 12 semanas y transformar etiquetas
+        if (ctx.canvas.id === 'entradasSemanaChart' || ctx.canvas.id === 'salidasSemanaChart') {
+            const currentWeek = new Date().getISOWeek();
+            let filteredLabels = [];
+            let filteredData = [];
+            for (let i = 0; i < labels.length; i++) {
+                let weekNum = parseInt(labels[i]);
+                if (weekNum >= currentWeek - 11 && weekNum <= currentWeek) {
+                    filteredLabels.push(getLabelForWeek(weekNum, new Date().getFullYear()));
+                    filteredData.push(data[i]);
+                }
+            }
+            labels = filteredLabels;
+            data = filteredData;
         }
 
         const chart = new Chart(ctx, {
@@ -108,7 +139,6 @@
             ctx.canvas.height = container.clientHeight;
             chart.resize();
         }
-
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
@@ -131,7 +161,6 @@
             { id: 'salidasTotalesMesChart', dataId: 'salidasTotalesMes', label: 'Salidas Totales por Mes', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)' },
             { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Ingresos por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
             { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
-
         ];
 
         chartData.forEach(chartInfo => {
@@ -175,7 +204,6 @@
         nextBtn.addEventListener('click', () => changePage(1));
         paginationContainer.appendChild(nextBtn);
 
-        // Mostrar página inicial
         showPage(0);
     }
 
@@ -193,7 +221,6 @@
         const pages = document.querySelectorAll('#statisticsPages .stats-page');
         const pageButtons = Array.from(document.querySelectorAll('.page-btn.page-num'));
         const activeIndex = pageButtons.findIndex(btn => btn.classList.contains('active'));
-
         const newIndex = activeIndex + direction;
         if (newIndex >= 0 && newIndex < pages.length) {
             showPage(newIndex);
