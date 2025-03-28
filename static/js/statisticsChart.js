@@ -37,34 +37,26 @@
     }
 
     // Función genérica para crear gráficos responsivos
-    function createResponsiveChart(ctx, data, labels, labelText, bgColor, borderColor, axis = 'x', options = {}) {
+    function createResponsiveChart(ctx, data, labels, labelText, bgColor, borderColor, axis = 'x', options = {}, chartType = 'bar') {
         if (chartInstances[ctx.canvas.id]) {
             chartInstances[ctx.canvas.id].destroy();
         }
 
-        // Opciones base para los gráficos, incluyendo la animación de rebote y un retraso por barra
         const baseOptions = {
             responsive: true,
             maintainAspectRatio: false,
             indexAxis: axis,
             scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: { display: true }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { display: true }
-                }
+                x: { beginAtZero: true, ticks: { display: true } },
+                y: { beginAtZero: true, ticks: { display: true } }
             },
             animation: {
-                easing: 'easeOutBounce',  // Función de easing para el rebote
-                duration: 1000,           // Duración total de la animación
-                // Función de retraso para cada dato (barra)
+                easing: 'easeOutBounce',
+                duration: 1000,
                 delay: (context) => {
                     if (context.type === 'data' && context.mode === 'default' && !context.dropped) {
                         context.dropped = true;
-                        return context.dataIndex * 100; // 100ms de retraso por barra
+                        return context.dataIndex * 75;
                     }
                     return 0;
                 }
@@ -151,8 +143,39 @@
             data = filteredData;
         }
 
+        // Personalización para el gráfico de "Promedio de días entre ingreso y salida"
+        if (ctx.canvas.id === 'promedioDiasChart') {
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            labels = labels.map(label => {
+                let monthNum = parseInt(label);
+                let monthName = monthNames[monthNum - 1] || label;
+                return monthName; // Solo el nombre del mes
+            });
+
+            // Asegurarse de que en las opciones del eje Y se indique que los valores son días, formateados a 1 decimal
+            options.scales = options.scales || {};
+            options.scales.y = options.scales.y || {};
+            options.scales.y.ticks = options.scales.y.ticks || {};
+            options.scales.y.ticks.callback = function (value, index, ticks) {
+                return value + " días";
+            };
+
+            // Configurar el tooltip para que muestre "Días Promedio:" seguido del valor formateado a 1 decimal
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw; // Valor de la barra
+                    return parseFloat(value).toFixed(1) + " Días Promedio";
+                }
+            };
+        }
+
+
+
+
         const chart = new Chart(ctx, {
-            type: 'bar',
+            type: chartType,
             data: {
                 labels: labels,
                 datasets: [{
@@ -160,7 +183,8 @@
                     data: data,
                     backgroundColor: bgColor,
                     borderColor: borderColor,
-                    borderWidth: 1
+                    borderWidth: 1,
+                    fill: false // Importante para gráficos de líneas
                 }]
             },
             options: { ...baseOptions, ...options }
@@ -173,6 +197,7 @@
             ctx.canvas.height = container.clientHeight;
             chart.resize();
         }
+
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
@@ -196,17 +221,30 @@
             { id: 'salidasTotalesMesChart', dataId: 'salidasTotalesMes', label: 'Salidas Totales por Mes', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)' },
             { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Ingresos por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
             { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
+            // Configuración para el nuevo gráfico en la página 3
+            { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio de días entre ingreso y salida', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' }
         ];
+
 
         // Crear cada gráfico usando la configuración almacenada
         window._chartDataConfigs.forEach(chartInfo => {
             const dataElem = document.getElementById(chartInfo.dataId);
-            if (dataElem) {
-                const data = JSON.parse(dataElem.innerText);
+            if (dataElem && dataElem.innerText.trim() !== '') {
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(dataElem.innerText);
+                } catch (e) {
+                    console.error("Error al parsear JSON desde " + chartInfo.dataId, e);
+                    parsedData = {};
+                }
                 const ctx = document.getElementById(chartInfo.id).getContext('2d');
-                createResponsiveChart(ctx, Object.values(data), Object.keys(data), chartInfo.label, chartInfo.color, chartInfo.border, chartInfo.axis);
+                createResponsiveChart(ctx, Object.values(parsedData), Object.keys(parsedData), chartInfo.label, chartInfo.color, chartInfo.border, chartInfo.axis, {}, chartInfo.chartType || 'bar');
+            } else {
+                console.warn("El elemento " + chartInfo.dataId + " no contiene JSON válido.");
             }
         });
+
+
     }
 
     // Paginación de estadísticas
@@ -258,18 +296,27 @@
         canvases.forEach(canvas => {
             const config = window._chartDataConfigs.find(cfg => cfg.id === canvas.id);
             if (config) {
-                // Si existe una instancia previa, destrúyela
                 if (chartInstances[canvas.id]) {
                     chartInstances[canvas.id].destroy();
                 }
                 const dataElem = document.getElementById(config.dataId);
-                if (dataElem) {
-                    const data = JSON.parse(dataElem.innerText);
+                if (dataElem && dataElem.innerText.trim() !== '') {
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(dataElem.innerText);
+                    } catch (e) {
+                        console.error("Error al parsear JSON desde " + config.dataId, e);
+                        parsedData = {};
+                    }
                     const ctx = canvas.getContext('2d');
-                    createResponsiveChart(ctx, Object.values(data), Object.keys(data), config.label, config.color, config.border, config.axis);
+                    createResponsiveChart(ctx, Object.values(parsedData), Object.keys(parsedData), config.label, config.color, config.border, config.axis, {}, config.chartType || 'bar');
+                } else {
+                    console.warn("El elemento " + config.dataId + " está vacío o no contiene JSON válido.");
                 }
             }
         });
+
+
     }
 
     function changePage(direction) {

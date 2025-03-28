@@ -518,6 +518,21 @@ def statistics_view(request):
             if mes == current_month:
                 entradas_mes_actual[funcionario.nombre] += 1
 
+    # Calcular el promedio de días entre ingreso y la primera salida (por mes)
+    promedio_dias_por_mes = {}
+    # Seleccionar ingresos que tengan salidas activas
+    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(is_active=True, salidas__isnull=False).distinct()
+    for ingreso in ingresos_with_salidas:
+        # Se toma la primera salida (ordenada por fecha)
+        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        if salida:
+            diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
+            mes = ingreso.fecha_ingreso_au.month  # Puedes usar el número de mes o transformarlo a nombre
+            promedio_dias_por_mes.setdefault(mes, []).append(diff)
+    # Calcular el promedio para cada mes
+    for mes, diffs in promedio_dias_por_mes.items():
+        promedio_dias_por_mes[mes] = sum(diffs) / len(diffs)
+
     context = {
         "solicitudes_por_depto": json.dumps({item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
         "solicitudes_por_funcionario": json.dumps({item["funcionarios_asignados__nombre"]: item["total"] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),
@@ -535,6 +550,7 @@ def statistics_view(request):
         "salidas_totales_mes": json.dumps(dict(salidas_totales_mes), cls=DjangoJSONEncoder),
         "entradas_semana_actual": json.dumps(dict(entradas_semana_actual), cls=DjangoJSONEncoder),
         "entradas_mes_actual": json.dumps(dict(entradas_mes_actual), cls=DjangoJSONEncoder),
+        "promedio_dias_por_mes": json.dumps(promedio_dias_por_mes, cls=DjangoJSONEncoder),
     }
     
     return render(request, "bnup/statistics.html", context)
