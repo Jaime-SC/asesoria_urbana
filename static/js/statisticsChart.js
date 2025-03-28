@@ -3,7 +3,7 @@
     let chartInstances = {};
 
     // Agregar método para obtener la semana ISO a partir de una fecha
-    Date.prototype.getISOWeek = function() {
+    Date.prototype.getISOWeek = function () {
         var date = new Date(this.getTime());
         date.setHours(0, 0, 0, 0);
         // Ajuste para que el jueves determine la semana ISO
@@ -42,7 +42,7 @@
             chartInstances[ctx.canvas.id].destroy();
         }
 
-        // Opciones base para los gráficos
+        // Opciones base para los gráficos, incluyendo la animación de rebote y un retraso por barra
         const baseOptions = {
             responsive: true,
             maintainAspectRatio: false,
@@ -55,6 +55,18 @@
                 y: {
                     beginAtZero: true,
                     ticks: { display: true }
+                }
+            },
+            animation: {
+                easing: 'easeOutBounce',  // Función de easing para el rebote
+                duration: 1000,           // Duración total de la animación
+                // Función de retraso para cada dato (barra)
+                delay: (context) => {
+                    if (context.type === 'data' && context.mode === 'default' && !context.dropped) {
+                        context.dropped = true;
+                        return context.dataIndex * 100; // 100ms de retraso por barra
+                    }
+                    return 0;
                 }
             }
         };
@@ -73,7 +85,7 @@
                 case 'salidasFuncionarioChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
-                    break;                 
+                    break;
                 case 'entradasSemanaActualChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
@@ -169,7 +181,8 @@
 
     // Función para inicializar los gráficos
     function createCharts() {
-        const chartData = [
+        // Almacena la configuración de los gráficos en una variable global
+        window._chartDataConfigs = [
             { id: 'deptoChart', dataId: 'solicitudesPorDepto', label: 'Ingresos por Solicitante', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)', axis: 'y' },
             { id: 'funcionarioChart', dataId: 'solicitudesPorFuncionario', label: 'Ingresos por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y' },
             { id: 'tipoChart', dataId: 'solicitudesPorTipo', label: 'Ingresos por Tipo de Recepción', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'y' },
@@ -185,7 +198,8 @@
             { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
         ];
 
-        chartData.forEach(chartInfo => {
+        // Crear cada gráfico usando la configuración almacenada
+        window._chartDataConfigs.forEach(chartInfo => {
             const dataElem = document.getElementById(chartInfo.dataId);
             if (dataElem) {
                 const data = JSON.parse(dataElem.innerText);
@@ -233,10 +247,29 @@
         const pages = document.querySelectorAll('#statisticsPages .stats-page');
         const pageButtons = document.querySelectorAll('.page-btn.page-num');
         pages.forEach(p => p.style.display = 'none');
-        pages[index].style.display = 'block';
+        const currentPage = pages[index];
+        currentPage.style.display = 'block';
 
         pageButtons.forEach(btn => btn.classList.remove('active'));
         pageButtons[index].classList.add('active');
+
+        // Recrear los gráficos en la página visible para forzar la animación con retraso
+        const canvases = currentPage.querySelectorAll('canvas');
+        canvases.forEach(canvas => {
+            const config = window._chartDataConfigs.find(cfg => cfg.id === canvas.id);
+            if (config) {
+                // Si existe una instancia previa, destrúyela
+                if (chartInstances[canvas.id]) {
+                    chartInstances[canvas.id].destroy();
+                }
+                const dataElem = document.getElementById(config.dataId);
+                if (dataElem) {
+                    const data = JSON.parse(dataElem.innerText);
+                    const ctx = canvas.getContext('2d');
+                    createResponsiveChart(ctx, Object.values(data), Object.keys(data), config.label, config.color, config.border, config.axis);
+                }
+            }
+        });
     }
 
     function changePage(direction) {
