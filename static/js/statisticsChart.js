@@ -208,6 +208,16 @@
         }
 
         if (ctx.canvas.id === 'pendientesTipoChart') {
+            options.plugins = options.plugins || {};
+            // Configurar la leyenda (como ya hicimos para moverla a la izquierda)
+            options.plugins.legend = options.plugins.legend || {};
+            options.plugins.legend.position = 'left';
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Solicitudes Pendientes por Tipo',
+                font: { size: 16 }
+            };
             delete baseOptions.scales;
           }
           
