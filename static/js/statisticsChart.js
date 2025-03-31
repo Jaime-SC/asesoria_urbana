@@ -171,6 +171,29 @@
             };
         }
 
+        // Personalización para el gráfico de "Tiempo promedio por funcionario"
+        if (ctx.canvas.id === 'promedioDiasFuncionarioChart') {
+            // Combina labels y datos en un array de objetos
+            let combined = labels.map((label, index) => ({
+            label: label,
+            value: data[index]
+            }));
+            // Ordena de menor a mayor (más rápido = menor promedio)
+            combined.sort((a, b) => b.value - a.value);
+            // Extrae nuevamente los arrays de labels y datos
+            labels = combined.map(item => item.label);
+            data = combined.map(item => parseFloat(item.value).toFixed(1)); // Con 1 decimal
+            // Opcionalmente, puedes configurar el tooltip para que muestre "Días:" seguido del valor
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+            label: function(context) {
+                let value = context.raw;
+                return value + " Días";
+            }
+            };
+        }
+
 
 
 
@@ -222,7 +245,8 @@
             { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Ingresos por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
             { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
             // Configuración para el nuevo gráfico en la página 3
-            { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio de días entre ingreso y salida', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' }
+            { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Total de Salidas', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
+            { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio de Salidas por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y', chartType: 'bar' },
         ];
 
 

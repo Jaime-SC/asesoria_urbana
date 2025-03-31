@@ -110,10 +110,17 @@
         <!-- Página 3: Promedio de días entre ingreso y salida -->
         <div class="stats-page" id="statsPage3" style="display: none;">
           <div class="divStatistics" style="flex-direction: column;">
-            <div class="containerStatistics">
-              <!-- Elemento oculto con los datos JSON -->
-              <p id="promedioDiasPorMes" style="display: none;">{{ promedio_dias_por_mes|safe }}</p>
-              <canvas id="promedioDiasChart"></canvas>
+            <div class="subDivStatics-v5">
+              <div class="containerStatistics">
+                <!-- Elemento oculto con los datos JSON -->
+                <p id="promedioDiasPorMes" style="display: none;">{{ promedio_dias_por_mes|safe }}</p>
+                <canvas id="promedioDiasChart"></canvas>
+              </div>
+              <div class="containerStatistics">
+                <!-- Elemento oculto con los datos JSON -->
+                <p id="promedioDiasPorFuncionario" style="display: none;">{{ promedio_dias_por_funcionario|safe }}</p>
+                <canvas id="promedioDiasFuncionarioChart"></canvas>
+              </div>
             </div>
           </div>
         </div>

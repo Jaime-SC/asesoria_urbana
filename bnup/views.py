@@ -533,6 +533,20 @@ def statistics_view(request):
     for mes, diffs in promedio_dias_por_mes.items():
         promedio_dias_por_mes[mes] = sum(diffs) / len(diffs)
 
+    # Calcular el promedio de días entre ingreso y la primera salida por funcionario
+    promedio_dias_por_funcionario = {}
+    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(is_active=True, salidas__isnull=False).distinct()
+    for ingreso in ingresos_with_salidas:
+        # Tomar la primera salida activa, ordenada por fecha
+        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        if salida:
+            diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
+            for funcionario in ingreso.funcionarios_asignados.all():
+                promedio_dias_por_funcionario.setdefault(funcionario.nombre, []).append(diff)
+    # Promediar los días para cada funcionario
+    for funcionario, diffs in promedio_dias_por_funcionario.items():
+        promedio_dias_por_funcionario[funcionario] = sum(diffs) / len(diffs)
+
     context = {
         "solicitudes_por_depto": json.dumps({item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
         "solicitudes_por_funcionario": json.dumps({item["funcionarios_asignados__nombre"]: item["total"] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),
@@ -551,6 +565,8 @@ def statistics_view(request):
         "entradas_semana_actual": json.dumps(dict(entradas_semana_actual), cls=DjangoJSONEncoder),
         "entradas_mes_actual": json.dumps(dict(entradas_mes_actual), cls=DjangoJSONEncoder),
         "promedio_dias_por_mes": json.dumps(promedio_dias_por_mes, cls=DjangoJSONEncoder),
+        "promedio_dias_por_mes": json.dumps(promedio_dias_por_mes, cls=DjangoJSONEncoder),
+        "promedio_dias_por_funcionario": json.dumps(promedio_dias_por_funcionario, cls=DjangoJSONEncoder),
     }
     
     return render(request, "bnup/statistics.html", context)
