@@ -445,7 +445,11 @@ def statistics_view(request):
     current_month = datetime.now().month
 
     # Entradas activas del año actual
-    active_solicitudes = IngresoSOLICITUD.objects.filter(is_active=True, fecha_ingreso_au__year=current_year)
+    active_solicitudes = IngresoSOLICITUD.objects.filter(
+        is_active=True, 
+        fecha_ingreso_au__year=current_year
+    ).exclude(tipo_solicitud__id=12)
+
     
     # Solicitudes por Solicitante
     solicitudes_por_depto = active_solicitudes.values("depto_solicitante__nombre").annotate(total=Count("id"))
@@ -547,8 +551,16 @@ def statistics_view(request):
     for funcionario, diffs in promedio_dias_por_funcionario.items():
         promedio_dias_por_funcionario[funcionario] = sum(diffs) / len(diffs)
 
-    pendientes_por_tipo = IngresoSOLICITUD.objects.filter(is_active=True, salidas__isnull=True).values("tipo_solicitud__tipo").annotate(total=Count("id"))
+    # Calcular solicitudes pendientes (sin salida) agrupadas por tipo de solicitud,
+    # excluyendo aquellas con tipo_solicitud con id 12 (CONOCIMIENTO Y DISTRIBUCION)
+    pendientes_por_tipo = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        salidas__isnull=True
+    ).exclude(
+        tipo_solicitud__id=12
+    ).values("tipo_solicitud__tipo").annotate(total=Count("id"))
     pendientes_por_tipo = { item["tipo_solicitud__tipo"]: item["total"] for item in pendientes_por_tipo }
+
 
 
     context = {

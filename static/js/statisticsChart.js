@@ -219,8 +219,8 @@
                 font: { size: 16 }
             };
             delete baseOptions.scales;
-          }
-          
+        }
+
 
 
 
@@ -275,7 +275,8 @@
             // Configuración para el nuevo gráfico en la página 3
             { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Total de Salidas', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
             { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio de Salidas por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y', chartType: 'bar' },
-            { id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'pie', axis: 'x',
+            {
+                id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'pie', axis: 'x',
                 // Puedes definir tantos colores como segmentos esperes (o dejar que se repitan)
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.6)',
