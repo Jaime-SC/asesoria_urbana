@@ -104,6 +104,19 @@
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
                     break;
+                case 'promedioDiasFuncionarioChart':
+                    baseOptions.indexAxis = 'y';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
+                case 'pendientesTipoChart':
+                    options.plugins = options.plugins || {};
+                    options.plugins.legend = options.plugins.legend || {};
+                    // Posicionar la leyenda a la izquierda
+                    options.plugins.legend.position = 'left';
+                    // Opcional: ajustar el tamaño de la caja de color de la leyenda
+                    options.plugins.legend.labels = { boxWidth: 20 };
+                    break;
+
                 case 'deptoChart':
                     const combined = labels.map((label, index) => ({
                         label: label,
@@ -175,8 +188,8 @@
         if (ctx.canvas.id === 'promedioDiasFuncionarioChart') {
             // Combina labels y datos en un array de objetos
             let combined = labels.map((label, index) => ({
-            label: label,
-            value: data[index]
+                label: label,
+                value: data[index]
             }));
             // Ordena de menor a mayor (más rápido = menor promedio)
             combined.sort((a, b) => b.value - a.value);
@@ -187,12 +200,17 @@
             options.plugins = options.plugins || {};
             options.plugins.tooltip = options.plugins.tooltip || {};
             options.plugins.tooltip.callbacks = {
-            label: function(context) {
-                let value = context.raw;
-                return value + " Días";
-            }
+                label: function (context) {
+                    let value = context.raw;
+                    return value + " Días";
+                }
             };
         }
+
+        if (ctx.canvas.id === 'pendientesTipoChart') {
+            delete baseOptions.scales;
+          }
+          
 
 
 
@@ -247,6 +265,25 @@
             // Configuración para el nuevo gráfico en la página 3
             { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Total de Salidas', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
             { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio de Salidas por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y', chartType: 'bar' },
+            { id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'pie', axis: 'x',
+                // Puedes definir tantos colores como segmentos esperes (o dejar que se repitan)
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ]
+            }
         ];
 
 

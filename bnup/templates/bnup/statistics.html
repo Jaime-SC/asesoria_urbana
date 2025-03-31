@@ -121,6 +121,11 @@
                 <p id="promedioDiasPorFuncionario" style="display: none;">{{ promedio_dias_por_funcionario|safe }}</p>
                 <canvas id="promedioDiasFuncionarioChart"></canvas>
               </div>
+              <div class="containerStatistics">
+                <!-- Elemento oculto con los datos JSON -->
+                <p id="pendientesPorTipo" style="display: none;">{{ pendientes_por_tipo|safe }}</p>
+                <canvas id="pendientesTipoChart"></canvas>
+              </div>
             </div>
           </div>
         </div>

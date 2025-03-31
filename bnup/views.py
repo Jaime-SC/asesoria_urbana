@@ -547,6 +547,10 @@ def statistics_view(request):
     for funcionario, diffs in promedio_dias_por_funcionario.items():
         promedio_dias_por_funcionario[funcionario] = sum(diffs) / len(diffs)
 
+    pendientes_por_tipo = IngresoSOLICITUD.objects.filter(is_active=True, salidas__isnull=True).values("tipo_solicitud__tipo").annotate(total=Count("id"))
+    pendientes_por_tipo = { item["tipo_solicitud__tipo"]: item["total"] for item in pendientes_por_tipo }
+
+
     context = {
         "solicitudes_por_depto": json.dumps({item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
         "solicitudes_por_funcionario": json.dumps({item["funcionarios_asignados__nombre"]: item["total"] for item in solicitudes_por_funcionario}, cls=DjangoJSONEncoder),
@@ -565,8 +569,8 @@ def statistics_view(request):
         "entradas_semana_actual": json.dumps(dict(entradas_semana_actual), cls=DjangoJSONEncoder),
         "entradas_mes_actual": json.dumps(dict(entradas_mes_actual), cls=DjangoJSONEncoder),
         "promedio_dias_por_mes": json.dumps(promedio_dias_por_mes, cls=DjangoJSONEncoder),
-        "promedio_dias_por_mes": json.dumps(promedio_dias_por_mes, cls=DjangoJSONEncoder),
         "promedio_dias_por_funcionario": json.dumps(promedio_dias_por_funcionario, cls=DjangoJSONEncoder),
+        "pendientes_por_tipo": json.dumps(pendientes_por_tipo, cls=DjangoJSONEncoder),
     }
     
     return render(request, "bnup/statistics.html", context)
