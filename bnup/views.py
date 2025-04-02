@@ -561,6 +561,18 @@ def statistics_view(request):
     ).values("tipo_solicitud__tipo").annotate(total=Count("id"))
     pendientes_por_tipo = { item["tipo_solicitud__tipo"]: item["total"] for item in pendientes_por_tipo }
 
+    pendientes_por_funcionario = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        salidas__isnull=True
+    ).exclude(tipo_solicitud__id=12).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
+    pendientes_por_funcionario = { item["funcionarios_asignados__nombre"]: item["total"] for item in pendientes_por_funcionario }
+
+    pendientes_por_solicitante = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        salidas__isnull=True
+    ).exclude(tipo_solicitud__id=12).values("depto_solicitante__nombre").annotate(total=Count("id"))
+    pendientes_por_solicitante = { item["depto_solicitante__nombre"]: item["total"] for item in pendientes_por_solicitante }
+
 
 
     context = {
@@ -583,6 +595,8 @@ def statistics_view(request):
         "promedio_dias_por_mes": json.dumps(promedio_dias_por_mes, cls=DjangoJSONEncoder),
         "promedio_dias_por_funcionario": json.dumps(promedio_dias_por_funcionario, cls=DjangoJSONEncoder),
         "pendientes_por_tipo": json.dumps(pendientes_por_tipo, cls=DjangoJSONEncoder),
+        "pendientes_por_funcionario": json.dumps(pendientes_por_funcionario, cls=DjangoJSONEncoder),
+        "pendientes_por_solicitante": json.dumps(pendientes_por_solicitante, cls=DjangoJSONEncoder),
     }
     
     return render(request, "bnup/statistics.html", context)

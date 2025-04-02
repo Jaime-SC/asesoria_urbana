@@ -121,10 +121,22 @@
                 <p id="promedioDiasPorFuncionario" style="display: none;">{{ promedio_dias_por_funcionario|safe }}</p>
                 <canvas id="promedioDiasFuncionarioChart"></canvas>
               </div>
+            </div>
+            <div class="subDivStatics-v6">
               <div class="containerStatistics">
                 <!-- Elemento oculto con los datos JSON -->
                 <p id="pendientesPorTipo" style="display: none;">{{ pendientes_por_tipo|safe }}</p>
                 <canvas id="pendientesTipoChart"></canvas>
+              </div>
+              <div class="containerStatistics">
+                <!-- Elemento oculto con los datos JSON -->
+                <p id="pendientesPorFuncionario" style="display: none;">{{ pendientes_por_funcionario|safe }}</p>
+                <canvas id="pendientesFuncionarioChart"></canvas>
+              </div>
+              <div class="containerStatistics">
+                <!-- Elemento oculto con los datos JSON -->
+                <p id="pendientesPorSolicitante" style="display: none;">{{ pendientes_por_solicitante|safe }}</p>
+                <canvas id="pendientesSolicitanteChart"></canvas>
               </div>
             </div>
           </div>

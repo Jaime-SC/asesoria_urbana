@@ -148,10 +148,19 @@
         gap: .5rem;
     }
 
+    .subDivStatics-v3>.containerStatistics {
+        width: 312px;
+    }
+
+    
     .subDivStatics-v4 {
         gap: .5rem;
     }
-
+    
+    .subDivStatics-v4>.containerStatistics {
+        width: 312px;
+    }
+    
     .contentEstadisticas h3 {
         font-size: 1rem;
     }
@@ -507,7 +516,7 @@
 
 
     }
-    
+
     .user-menu {
         right: 10rem;
         top: 6.25rem;

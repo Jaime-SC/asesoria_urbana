@@ -105,18 +105,24 @@
                     baseOptions.scales.x.ticks.display = false;
                     break;
                 case 'promedioDiasFuncionarioChart':
-                    baseOptions.indexAxis = 'y';
+                    baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
                     break;
                 case 'pendientesTipoChart':
-                    options.plugins = options.plugins || {};
-                    options.plugins.legend = options.plugins.legend || {};
-                    // Posicionar la leyenda a la izquierda
-                    options.plugins.legend.position = 'left';
-                    // Opcional: ajustar el tamaño de la caja de color de la leyenda
-                    options.plugins.legend.labels = { boxWidth: 20 };
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
                     break;
 
+                case 'pendientesFuncionarioChart':
+                    // Por ejemplo, si deseas ocultar los ticks en el eje x para pantallas pequeñas:
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
+                case 'pendientesSolicitanteChart':
+                    // Por ejemplo, si deseas ocultar los ticks en el eje x para pantallas pequeñas:
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
                 case 'deptoChart':
                     const combined = labels.map((label, index) => ({
                         label: label,
@@ -208,20 +214,44 @@
         }
 
         if (ctx.canvas.id === 'pendientesTipoChart') {
-            options.plugins = options.plugins || {};
-            // Configurar la leyenda (como ya hicimos para moverla a la izquierda)
-            options.plugins.legend = options.plugins.legend || {};
-            options.plugins.legend.position = 'left';
-            // Agregar un título al gráfico
-            options.plugins.title = {
-                display: true,
-                text: 'Solicitudes Pendientes por Tipo',
-                font: { size: 16 }
-            };
-            delete baseOptions.scales;
+            // Combina labels y datos en un array de objetos
+            let combined = labels.map((label, index) => ({
+                label: label,
+                value: data[index]
+            }));
+            // Ordena de mayor a menor (ranking descendente)
+            combined.sort((a, b) => b.value - a.value);
+            // Actualiza los arrays de labels y data con el nuevo orden
+            labels = combined.map(item => item.label);
+            data = combined.map(item => item.value);
+        }
+        
+
+        if (ctx.canvas.id === 'pendientesFuncionarioChart') {
+            // Combina labels y datos en un array de objetos
+            let combined = labels.map((label, index) => ({
+                label: label,
+                value: data[index]
+            }));
+            // Ordena de mayor a menor (ranking descendente)
+            combined.sort((a, b) => b.value - a.value);
+            // Actualiza los arrays de labels y data con el nuevo orden
+            labels = combined.map(item => item.label);
+            data = combined.map(item => item.value);
         }
 
-
+        if (ctx.canvas.id === 'pendientesSolicitanteChart') {
+            // Combina labels y datos en un array de objetos
+            let combined = labels.map((label, index) => ({
+                label: label,
+                value: data[index]
+            }));
+            // Ordena de mayor a menor (ranking descendente)
+            combined.sort((a, b) => b.value - a.value);
+            // Actualiza los arrays de labels y data con el nuevo orden
+            labels = combined.map(item => item.label);
+            data = combined.map(item => item.value);
+        }
 
 
 
@@ -273,10 +303,14 @@
             { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Ingresos por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
             { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
             // Configuración para el nuevo gráfico en la página 3
-            { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Total de Salidas', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
-            { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio de Salidas por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y', chartType: 'bar' },
+            { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Mensual de Días de Respuesta por Mes', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
+            { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio Total de Días de Respuesta por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y', chartType: 'bar' },
             {
-                id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'pie', axis: 'x',
+                id: 'pendientesTipoChart',
+                dataId: 'pendientesPorTipo',
+                label: 'Solicitudes Pendientes por Tipo',
+                chartType: 'bar', // Cambiado a 'bar'
+                axis: 'y',
                 // Puedes definir tantos colores como segmentos esperes (o dejar que se repitan)
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.6)',
@@ -294,7 +328,10 @@
                     'rgba(153, 102, 255, 1)',
                     'rgba(255, 159, 64, 1)'
                 ]
-            }
+            },
+
+            { id: 'pendientesFuncionarioChart', dataId: 'pendientesPorFuncionario', label: 'Solicitudes Pendientes por Funcionario', chartType: 'bar', axis: 'y', backgroundColor: 'rgba(153, 102, 255, 0.6)', borderColor: 'rgba(153, 102, 255, 1)' },
+            { id: 'pendientesSolicitanteChart', dataId: 'pendientesPorSolicitante', label: 'Solicitudes Pendientes por Solicitante', chartType: 'bar', axis: 'y', backgroundColor: 'rgba(54, 162, 235, 0.6)', borderColor: 'rgba(54, 162, 235, 1)' }
         ];
 
 
