@@ -185,7 +185,7 @@
             options.plugins.tooltip.callbacks = {
                 label: function (context) {
                     let value = context.raw; // Valor de la barra
-                    return parseFloat(value).toFixed(1) + " Días Promedio";
+                    return parseFloat(value).toFixed(1) + " Días";
                 }
             };
         }
@@ -213,6 +213,28 @@
             };
         }
 
+        if (ctx.canvas.id === 'promedioDiasSolicitanteChart') {
+            // Combina labels y datos en un array de objetos
+            let combined = labels.map((label, index) => ({
+                label: label,
+                value: data[index]
+            }));
+            // Ordena de mayor a menor (ranking descendente)
+            combined.sort((a, b) => b.value - a.value);
+            // Actualiza los arrays de labels y data
+            labels = combined.map(item => item.label);
+            data = combined.map(item => parseFloat(item.value).toFixed(1)); // Con 1 decimal
+            // Opcionalmente, puedes configurar el tooltip para que muestre "Días:" seguido del valor
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw;
+                    return value + " Días";
+                }
+            };
+        }
+
         if (ctx.canvas.id === 'pendientesTipoChart') {
             // Combina labels y datos en un array de objetos
             let combined = labels.map((label, index) => ({
@@ -224,8 +246,17 @@
             // Actualiza los arrays de labels y data con el nuevo orden
             labels = combined.map(item => item.label);
             data = combined.map(item => item.value);
+            // Opcionalmente, puedes configurar el tooltip para que muestre "Días:" seguido del valor
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
         }
-        
+
 
         if (ctx.canvas.id === 'pendientesFuncionarioChart') {
             // Combina labels y datos en un array de objetos
@@ -238,6 +269,15 @@
             // Actualiza los arrays de labels y data con el nuevo orden
             labels = combined.map(item => item.label);
             data = combined.map(item => item.value);
+            // Opcionalmente, puedes configurar el tooltip para que muestre "Días:" seguido del valor
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
         }
 
         if (ctx.canvas.id === 'pendientesSolicitanteChart') {
@@ -251,9 +291,16 @@
             // Actualiza los arrays de labels y data con el nuevo orden
             labels = combined.map(item => item.label);
             data = combined.map(item => item.value);
+            // Opcionalmente, puedes configurar el tooltip para que muestre "Días:" seguido del valor
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
         }
-
-
 
         const chart = new Chart(ctx, {
             type: chartType,
@@ -303,35 +350,12 @@
             { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Ingresos por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
             { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
             // Configuración para el nuevo gráfico en la página 3
-            { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Mensual de Días de Respuesta por Mes', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
-            { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio Total de Días de Respuesta por Funcionario', color: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)', axis: 'y', chartType: 'bar' },
-            {
-                id: 'pendientesTipoChart',
-                dataId: 'pendientesPorTipo',
-                label: 'Solicitudes Pendientes por Tipo',
-                chartType: 'bar', // Cambiado a 'bar'
-                axis: 'y',
-                // Puedes definir tantos colores como segmentos esperes (o dejar que se repitan)
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 206, 86, 0.6)',
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)',
-                    'rgba(255, 159, 64, 0.6)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ]
-            },
-
-            { id: 'pendientesFuncionarioChart', dataId: 'pendientesPorFuncionario', label: 'Solicitudes Pendientes por Funcionario', chartType: 'bar', axis: 'y', backgroundColor: 'rgba(153, 102, 255, 0.6)', borderColor: 'rgba(153, 102, 255, 1)' },
-            { id: 'pendientesSolicitanteChart', dataId: 'pendientesPorSolicitante', label: 'Solicitudes Pendientes por Solicitante', chartType: 'bar', axis: 'y', backgroundColor: 'rgba(54, 162, 235, 0.6)', borderColor: 'rgba(54, 162, 235, 1)' }
+            { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Mensual de Días de Respuesta', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
+            { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio Total de Días de Respuesta por Funcionario', color: 'rgba(255, 192, 140, 0.6)', border: 'rgba(255, 171, 102, 1)', axis: 'y', chartType: 'bar' },
+            { id: 'promedioDiasSolicitanteChart', dataId: 'promedioDiasPorSolicitante', label: 'Promedio de Días de Respuesta por Solicitante', chartType: 'bar', axis: 'y', color: 'rgba(203, 139, 160, 0.6)', border: 'rgba(140, 0, 75, 1)' },
+            { id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'bar', axis: 'y', color: 'rgba(151, 204, 184, 0.6)', border: 'rgba(0, 153, 117, 1)'},
+            { id: 'pendientesFuncionarioChart', dataId: 'pendientesPorFuncionario', label: 'Solicitudes Pendientes por Funcionario', chartType: 'bar', axis: 'y', color: 'rgba(255, 168, 136, 0.6)', border: 'rgba(244, 70, 17, 1)' },
+            { id: 'pendientesSolicitanteChart', dataId: 'pendientesPorSolicitante', label: 'Solicitudes Pendientes por Solicitante', chartType: 'bar', axis: 'y', color: 'rgba(170, 140, 175, 0.6)', border: 'rgba(87, 35, 100, 1)' },
         ];
 
 

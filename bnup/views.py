@@ -524,18 +524,25 @@ def statistics_view(request):
 
     # Calcular el promedio de días entre ingreso y la primera salida (por mes)
     promedio_dias_por_mes = {}
-    # Seleccionar ingresos que tengan salidas activas
-    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(is_active=True, salidas__isnull=False).distinct()
+    # Seleccionar ingresos que tengan salidas activas del año actual
+    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        salidas__isnull=False,
+        fecha_ingreso_au__year=current_year
+    ).distinct()
+
     for ingreso in ingresos_with_salidas:
         # Se toma la primera salida (ordenada por fecha)
         salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
         if salida:
             diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
-            mes = ingreso.fecha_ingreso_au.month  # Puedes usar el número de mes o transformarlo a nombre
+            mes = ingreso.fecha_ingreso_au.month  # Este valor (1,2,...,12) se usará como clave
             promedio_dias_por_mes.setdefault(mes, []).append(diff)
+
     # Calcular el promedio para cada mes
     for mes, diffs in promedio_dias_por_mes.items():
         promedio_dias_por_mes[mes] = sum(diffs) / len(diffs)
+
 
     # Calcular el promedio de días entre ingreso y la primera salida por funcionario
     promedio_dias_por_funcionario = {}
@@ -573,6 +580,23 @@ def statistics_view(request):
     ).exclude(tipo_solicitud__id=12).values("depto_solicitante__nombre").annotate(total=Count("id"))
     pendientes_por_solicitante = { item["depto_solicitante__nombre"]: item["total"] for item in pendientes_por_solicitante }
 
+    # Calcular el promedio de días entre ingreso y la primera salida por solicitante
+    promedio_dias_por_solicitante = {}
+    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        salidas__isnull=False,
+        fecha_ingreso_au__year=current_year
+    ).distinct()
+
+    for ingreso in ingresos_with_salidas:
+        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        if salida:
+            diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
+            solicitante = ingreso.depto_solicitante.nombre  # Se asume que este es el solicitante
+            promedio_dias_por_solicitante.setdefault(solicitante, []).append(diff)
+
+    for solicitante, diffs in promedio_dias_por_solicitante.items():
+        promedio_dias_por_solicitante[solicitante] = sum(diffs) / len(diffs)
 
 
     context = {
@@ -597,6 +621,7 @@ def statistics_view(request):
         "pendientes_por_tipo": json.dumps(pendientes_por_tipo, cls=DjangoJSONEncoder),
         "pendientes_por_funcionario": json.dumps(pendientes_por_funcionario, cls=DjangoJSONEncoder),
         "pendientes_por_solicitante": json.dumps(pendientes_por_solicitante, cls=DjangoJSONEncoder),
+        "promedio_dias_por_solicitante": json.dumps(promedio_dias_por_solicitante, cls=DjangoJSONEncoder),
     }
     
     return render(request, "bnup/statistics.html", context)
