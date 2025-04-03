@@ -221,10 +221,20 @@
             }));
             // Ordena de mayor a menor (ranking descendente)
             combined.sort((a, b) => b.value - a.value);
-            // Actualiza los arrays de labels y data
+            // Extrae solo los 15 registros principales
+            const topN = 15;
+            combined = combined.slice(0, topN);
+            // Actualiza los arrays de labels y data con el top 15 y formatea los valores a 1 decimal
             labels = combined.map(item => item.label);
-            data = combined.map(item => parseFloat(item.value).toFixed(1)); // Con 1 decimal
-            // Opcionalmente, puedes configurar el tooltip para que muestre "Días:" seguido del valor
+            data = combined.map(item => parseFloat(item.value).toFixed(1));
+            
+            // Forzar que se muestren todas las etiquetas en el eje Y
+            options.scales = options.scales || {};
+            options.scales.y = options.scales.y || {};
+            options.scales.y.ticks = options.scales.y.ticks || {};
+            options.scales.y.ticks.autoSkip = false;
+        
+            // Configurar el tooltip para que muestre "Días:" seguido del valor
             options.plugins = options.plugins || {};
             options.plugins.tooltip = options.plugins.tooltip || {};
             options.plugins.tooltip.callbacks = {
@@ -234,6 +244,7 @@
                 }
             };
         }
+        
 
         if (ctx.canvas.id === 'pendientesTipoChart') {
             // Combina labels y datos en un array de objetos

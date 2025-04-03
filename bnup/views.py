@@ -598,6 +598,9 @@ def statistics_view(request):
     for solicitante, diffs in promedio_dias_por_solicitante.items():
         promedio_dias_por_solicitante[solicitante] = sum(diffs) / len(diffs)
 
+    solicitudes_por_solicitante = active_solicitudes.values("depto_solicitante__nombre").annotate(total=Count("id"))
+    solicitudes_por_solicitante = { item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_solicitante }
+
 
     context = {
         "solicitudes_por_depto": json.dumps({item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
@@ -622,6 +625,8 @@ def statistics_view(request):
         "pendientes_por_funcionario": json.dumps(pendientes_por_funcionario, cls=DjangoJSONEncoder),
         "pendientes_por_solicitante": json.dumps(pendientes_por_solicitante, cls=DjangoJSONEncoder),
         "promedio_dias_por_solicitante": json.dumps(promedio_dias_por_solicitante, cls=DjangoJSONEncoder),
+        "promedio_dias_por_solicitante": json.dumps(promedio_dias_por_solicitante, cls=DjangoJSONEncoder),
+        "solicitudesPorSolicitante": json.dumps(solicitudes_por_solicitante, cls=DjangoJSONEncoder),
     }
     
     return render(request, "bnup/statistics.html", context)
