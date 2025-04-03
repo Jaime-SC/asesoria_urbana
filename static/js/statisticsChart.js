@@ -214,37 +214,46 @@
         }
 
         if (ctx.canvas.id === 'promedioDiasSolicitanteChart') {
-            // Combina labels y datos en un array de objetos
+            // Obtener los datos de promedio de días por solicitante (ya calculados en la vista)
+            // Y también los conteos de solicitudes por solicitante.
+            // Ambos deben estar disponibles en el DOM como JSON.
+            let solicitudesData = JSON.parse(document.getElementById('solicitudesPorSolicitante').innerText);
+            // "labels" y "data" ya vienen de "promedioDiasPorSolicitante"
+            // labels: array de solicitantes; data: array de promedio de días de respuesta (correspondiente a cada solicitante)
+
+            // Combina la información en un arreglo de objetos
             let combined = labels.map((label, index) => ({
                 label: label,
-                value: data[index]
+                promedio: parseFloat(data[index]),
+                count: solicitudesData[label] || 0
             }));
-            // Ordena de mayor a menor (ranking descendente)
-            combined.sort((a, b) => b.value - a.value);
-            // Extrae solo los 15 registros principales
+            // Ordena de mayor a menor según la cantidad de solicitudes (count)
+            combined.sort((a, b) => b.count - a.count);
+            // Toma solo los top 15
             const topN = 15;
             combined = combined.slice(0, topN);
-            // Actualiza los arrays de labels y data con el top 15 y formatea los valores a 1 decimal
+            // Actualiza los arrays de labels y data usando el promedio (formateado a 1 decimal)
             labels = combined.map(item => item.label);
-            data = combined.map(item => parseFloat(item.value).toFixed(1));
-            
+            data = combined.map(item => item.promedio.toFixed(1));
+
             // Forzar que se muestren todas las etiquetas en el eje Y
             options.scales = options.scales || {};
             options.scales.y = options.scales.y || {};
             options.scales.y.ticks = options.scales.y.ticks || {};
             options.scales.y.ticks.autoSkip = false;
-        
-            // Configurar el tooltip para que muestre "Días:" seguido del valor
+
+            // Configurar el tooltip para que muestre "Días Promedio:" seguido del valor formateado a 1 decimal
             options.plugins = options.plugins || {};
             options.plugins.tooltip = options.plugins.tooltip || {};
             options.plugins.tooltip.callbacks = {
                 label: function (context) {
                     let value = context.raw;
-                    return value + " Días";
+                    return parseFloat(value).toFixed(1) + " Días Promedio";
                 }
             };
         }
-        
+
+
 
         if (ctx.canvas.id === 'pendientesTipoChart') {
             // Combina labels y datos en un array de objetos
@@ -364,7 +373,7 @@
             { id: 'promedioDiasChart', dataId: 'promedioDiasPorMes', label: 'Promedio Mensual de Días de Respuesta', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'x', chartType: 'line' },
             { id: 'promedioDiasFuncionarioChart', dataId: 'promedioDiasPorFuncionario', label: 'Promedio Total de Días de Respuesta por Funcionario', color: 'rgba(255, 192, 140, 0.6)', border: 'rgba(255, 171, 102, 1)', axis: 'y', chartType: 'bar' },
             { id: 'promedioDiasSolicitanteChart', dataId: 'promedioDiasPorSolicitante', label: 'Promedio de Días de Respuesta por Solicitante', chartType: 'bar', axis: 'y', color: 'rgba(203, 139, 160, 0.6)', border: 'rgba(140, 0, 75, 1)' },
-            { id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'bar', axis: 'y', color: 'rgba(151, 204, 184, 0.6)', border: 'rgba(0, 153, 117, 1)'},
+            { id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'bar', axis: 'y', color: 'rgba(151, 204, 184, 0.6)', border: 'rgba(0, 153, 117, 1)' },
             { id: 'pendientesFuncionarioChart', dataId: 'pendientesPorFuncionario', label: 'Solicitudes Pendientes por Funcionario', chartType: 'bar', axis: 'y', color: 'rgba(255, 168, 136, 0.6)', border: 'rgba(244, 70, 17, 1)' },
             { id: 'pendientesSolicitanteChart', dataId: 'pendientesPorSolicitante', label: 'Solicitudes Pendientes por Solicitante', chartType: 'bar', axis: 'y', color: 'rgba(170, 140, 175, 0.6)', border: 'rgba(87, 35, 100, 1)' },
         ];
