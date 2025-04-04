@@ -36,10 +36,6 @@
         return window.innerWidth === 1366 && window.innerHeight === 607;
     }
 
-    function isSpecificScreenSize_v2() {
-        return window.innerWidth === 1912 && window.innerHeight === 922;
-    }
-
     // Función genérica para crear gráficos responsivos
     function createResponsiveChart(ctx, data, labels, labelText, bgColor, borderColor, axis = 'x', options = {}, chartType = 'bar') {
         if (chartInstances[ctx.canvas.id]) {
@@ -144,21 +140,6 @@
             }
         }
 
-        if (isSpecificScreenSize_v2()) {
-            switch (ctx.canvas.id) {
-                case 'promedioDiasSolicitanteChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-
-                    baseOptions.scales = baseOptions.scales || {};
-                    baseOptions.scales.y = baseOptions.scales.y || {};
-                    baseOptions.scales.y.ticks = baseOptions.scales.y.ticks || {};
-                    baseOptions.scales.y.ticks.autoSkip = false;
-                    break;
-
-            }
-        }
-
         if (ctx.canvas.id === 'deptoChart') {
             // Forzar que se muestren todas las etiquetas en el eje Y
             options.scales = options.scales || {};
@@ -245,35 +226,28 @@
         }
 
         if (ctx.canvas.id === 'promedioDiasSolicitanteChart') {
-            // Obtener los datos de promedio de días por solicitante (ya calculados en la vista)
-            // Y también los conteos de solicitudes por solicitante.
-            // Ambos deben estar disponibles en el DOM como JSON.
+            // Primero, procesar y ordenar los datos según las solicitudes
             let solicitudesData = JSON.parse(document.getElementById('solicitudesPorSolicitante').innerText);
-            // "labels" y "data" ya vienen de "promedioDiasPorSolicitante"
-            // labels: array de solicitantes; data: array de promedio de días de respuesta (correspondiente a cada solicitante)
-
-            // Combina la información en un arreglo de objetos
             let combined = labels.map((label, index) => ({
                 label: label,
                 promedio: parseFloat(data[index]),
                 count: solicitudesData[label] || 0
             }));
-            // Ordena de mayor a menor según la cantidad de solicitudes (count)
             combined.sort((a, b) => b.count - a.count);
-            // Toma solo los top 15
-            const topN = 15;
+            const topN = 10;
             combined = combined.slice(0, topN);
-            // Actualiza los arrays de labels y data usando el promedio (formateado a 1 decimal)
             labels = combined.map(item => item.label);
             data = combined.map(item => item.promedio.toFixed(1));
-
-            // Forzar que se muestren todas las etiquetas en el eje Y
-            // options.scales = options.scales || {};
-            // options.scales.y = options.scales.y || {};
-            // options.scales.y.ticks = options.scales.y.ticks || {};
-            // options.scales.y.ticks.autoSkip = false;
-
-            // Configurar el tooltip para que muestre "Días Promedio:" seguido del valor formateado a 1 decimal
+        
+            // Si NO se detecta el tamaño de pantalla específico, forzamos que se muestren TODAS las etiquetas en el eje Y
+            if (!isSpecificScreenSize()) {
+                options.scales = options.scales || {};
+                options.scales.y = options.scales.y || {};
+                options.scales.y.ticks = options.scales.y.ticks || {};
+                options.scales.y.ticks.autoSkip = false;
+            }
+            
+            // Configurar el tooltip
             options.plugins = options.plugins || {};
             options.plugins.tooltip = options.plugins.tooltip || {};
             options.plugins.tooltip.callbacks = {
@@ -283,6 +257,7 @@
                 }
             };
         }
+        
 
 
 
