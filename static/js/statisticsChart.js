@@ -36,6 +36,10 @@
         return window.innerWidth === 1366 && window.innerHeight === 607;
     }
 
+    function isSpecificScreenSize_v2() {
+        return window.innerWidth === 1912 && window.innerHeight === 922;
+    }
+
     // Función genérica para crear gráficos responsivos
     function createResponsiveChart(ctx, data, labels, labelText, bgColor, borderColor, axis = 'x', options = {}, chartType = 'bar') {
         if (chartInstances[ctx.canvas.id]) {
@@ -123,6 +127,10 @@
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
                     break;
+                case 'promedioDiasSolicitanteChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    break;
                 case 'deptoChart':
                     const combined = labels.map((label, index) => ({
                         label: label,
@@ -134,6 +142,29 @@
                     data = top10.map(item => item.value);
                     break;
             }
+        }
+
+        if (isSpecificScreenSize_v2()) {
+            switch (ctx.canvas.id) {
+                case 'promedioDiasSolicitanteChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+
+                    baseOptions.scales = baseOptions.scales || {};
+                    baseOptions.scales.y = baseOptions.scales.y || {};
+                    baseOptions.scales.y.ticks = baseOptions.scales.y.ticks || {};
+                    baseOptions.scales.y.ticks.autoSkip = false;
+                    break;
+
+            }
+        }
+
+        if (ctx.canvas.id === 'deptoChart') {
+            // Forzar que se muestren todas las etiquetas en el eje Y
+            options.scales = options.scales || {};
+            options.scales.y = options.scales.y || {};
+            options.scales.y.ticks = options.scales.y.ticks || {};
+            options.scales.y.ticks.autoSkip = false;
         }
 
         // Para los gráficos de "Ingresos por Mes" y "Salidas Totales por Mes"
@@ -237,10 +268,10 @@
             data = combined.map(item => item.promedio.toFixed(1));
 
             // Forzar que se muestren todas las etiquetas en el eje Y
-            options.scales = options.scales || {};
-            options.scales.y = options.scales.y || {};
-            options.scales.y.ticks = options.scales.y.ticks || {};
-            options.scales.y.ticks.autoSkip = false;
+            // options.scales = options.scales || {};
+            // options.scales.y = options.scales.y || {};
+            // options.scales.y.ticks = options.scales.y.ticks || {};
+            // options.scales.y.ticks.autoSkip = false;
 
             // Configurar el tooltip para que muestre "Días Promedio:" seguido del valor formateado a 1 decimal
             options.plugins = options.plugins || {};
