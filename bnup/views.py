@@ -588,6 +588,23 @@ def statistics_view(request):
         fecha_ingreso_au__year=current_year
     ).distinct()
 
+    # Calcular el promedio de días entre ingreso y la primera salida por tipo de solicitud
+    promedio_dias_por_tipo = {}
+    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(
+        is_active=True,
+        salidas__isnull=False,
+        fecha_ingreso_au__year=current_year
+    ).distinct()
+    for ingreso in ingresos_with_salidas:
+        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        if salida:
+            diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
+            tipo = ingreso.tipo_solicitud.tipo  # Asegúrate de que 'tipo' es el campo que quieres mostrar
+            promedio_dias_por_tipo.setdefault(tipo, []).append(diff)
+    # Promediar los días para cada tipo
+    for tipo, diffs in promedio_dias_por_tipo.items():
+        promedio_dias_por_tipo[tipo] = sum(diffs) / len(diffs)
+
     for ingreso in ingresos_with_salidas:
         salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
         if salida:
@@ -627,6 +644,7 @@ def statistics_view(request):
         "promedio_dias_por_solicitante": json.dumps(promedio_dias_por_solicitante, cls=DjangoJSONEncoder),
         "promedio_dias_por_solicitante": json.dumps(promedio_dias_por_solicitante, cls=DjangoJSONEncoder),
         "solicitudesPorSolicitante": json.dumps(solicitudes_por_solicitante, cls=DjangoJSONEncoder),
+        "promedio_dias_por_tipo": json.dumps(promedio_dias_por_tipo, cls=DjangoJSONEncoder),
     }
     
     return render(request, "bnup/statistics.html", context)

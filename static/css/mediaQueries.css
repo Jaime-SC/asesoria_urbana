@@ -160,6 +160,14 @@
     .subDivStatics-v4>.containerStatistics {
         width: 312px;
     }
+
+    .subDivStatics-v5 {
+        gap: .5rem;
+    }
+
+    .subDivStatics-v5>.containerStatistics {
+        width: 312px;
+    }
     
     .contentEstadisticas h3 {
         font-size: 1rem;

@@ -69,63 +69,23 @@
                 case 'tipoSolicitudChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
                     break;
                 case 'funcionarioChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
                     break;
                 case 'salidasFuncionarioChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'entradasSemanaActualChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'salidasSemanaActualChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'entradasMesActualChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'salidasMesActualChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'entradasSemanaChart':
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'salidasSemanaChart':
-                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
                     break;
                 case 'tipoChart':
                     baseOptions.indexAxis = 'x';
                     baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'promedioDiasFuncionarioChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'pendientesTipoChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
 
-                case 'pendientesFuncionarioChart':
-                    // Por ejemplo, si deseas ocultar los ticks en el eje x para pantallas pequeñas:
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'pendientesSolicitanteChart':
-                    // Por ejemplo, si deseas ocultar los ticks en el eje x para pantallas pequeñas:
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
-                    break;
-                case 'promedioDiasSolicitanteChart':
-                    baseOptions.indexAxis = 'x';
-                    baseOptions.scales.x.ticks.display = false;
                     break;
                 case 'deptoChart':
                     const combined = labels.map((label, index) => ({
@@ -136,9 +96,181 @@
                     const top10 = combined.slice(0, 10);
                     labels = top10.map(item => item.label);
                     data = top10.map(item => item.value);
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
+                    break;
+                case 'entradasSemanaActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+                    break;
+                case 'salidasSemanaActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+                    break;
+                case 'entradasMesActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+                    break;
+                case 'salidasMesActualChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+                    break;
+                case 'entradasSemanaChart':
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+                    break;
+                case 'salidasSemanaChart':
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
+                    break;
+                case 'promedioDiasFuncionarioChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
+                    break;
+                case 'pendientesTipoChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
+                    break;
+
+                case 'pendientesFuncionarioChart':
+                    // Por ejemplo, si deseas ocultar los ticks en el eje x para pantallas pequeñas:
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
+                    break;
+                case 'pendientesSolicitanteChart':
+                    // Por ejemplo, si deseas ocultar los ticks en el eje x para pantallas pequeñas:
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
+                    break;
+                case 'promedioDiasSolicitanteChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
+                    break;
+                case 'promedioDiasTipoChart':
+                    baseOptions.indexAxis = 'x';
+                    baseOptions.scales.x.ticks.display = false;
+                    baseOptions.scales.x.ticks.font = { size: 9 };
+
                     break;
             }
         }
+
+
+        if (ctx.canvas.id === 'tipoSolicitudChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Ingresos por Tipo de Solicitud',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
+
+        if (ctx.canvas.id === 'tipoChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Ingresos por Tipo de Recepción',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
+
+        if (ctx.canvas.id === 'salidasFuncionarioChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Salida" : value + " Salidas";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Salidas por Funcionario',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
+
+        if (ctx.canvas.id === 'funcionarioChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Ingresos por Funcionario',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
+
 
         if (ctx.canvas.id === 'deptoChart') {
             // Forzar que se muestren todas las etiquetas en el eje Y
@@ -146,20 +278,83 @@
             options.scales.y = options.scales.y || {};
             options.scales.y.ticks = options.scales.y.ticks || {};
             options.scales.y.ticks.autoSkip = false;
+
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Ingresos por Solicitante',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
         }
 
-        // Para los gráficos de "Ingresos por Mes" y "Salidas Totales por Mes"
-        // se transforman los números de mes en nombres de meses con la primera letra en mayúscula
-        if (ctx.canvas.id === 'entradasMesChart' || ctx.canvas.id === 'salidasTotalesMesChart') {
-            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            labels = labels.map(label => {
-                let num = parseInt(label);
-                return monthNames[num - 1] || label;
-            });
+        if (ctx.canvas.id === 'entradasSemanaActualChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Ingresos por Funcionario - Semana Actual',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
         }
 
-        // Para gráficos por semana (Ingresos y Salidas por Semana), mostrar solo las últimas 12 semanas y transformar etiquetas
-        if (ctx.canvas.id === 'entradasSemanaChart' || ctx.canvas.id === 'salidasSemanaChart') {
+        if (ctx.canvas.id === 'entradasMesActualChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Ingresos por Funcionario - Mes Actual',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
+
+        // Para el gráfico de "Entradas por Semana"
+        if (ctx.canvas.id === 'entradasSemanaChart') {
             const currentWeek = new Date().getISOWeek();
             let filteredLabels = [];
             let filteredData = [];
@@ -172,8 +367,152 @@
             }
             labels = filteredLabels;
             data = filteredData;
+
+            // Configurar el tooltip
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                }
+            };
+
+            // Agregar título y ocultar leyenda
+            options.plugins.title = {
+                display: true,
+                text: 'Ingresos por Semana - Últimos 3 Meses',
+                font: { size: 14 }
+            };
+            options.plugins.legend = { display: false };
         }
 
+        // Para el gráfico de "Salidas por Semana"
+        if (ctx.canvas.id === 'salidasSemanaChart') {
+            const currentWeek = new Date().getISOWeek();
+            let filteredLabels = [];
+            let filteredData = [];
+            for (let i = 0; i < labels.length; i++) {
+                let weekNum = parseInt(labels[i]);
+                if (weekNum >= currentWeek - 11 && weekNum <= currentWeek) {
+                    filteredLabels.push(getLabelForWeek(weekNum, new Date().getFullYear()));
+                    filteredData.push(data[i]);
+                }
+            }
+            labels = filteredLabels;
+            data = filteredData;
+
+            // Configurar el tooltip
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Salida" : value + " Salidas";
+                }
+            };
+
+            // Agregar título y ocultar leyenda
+            options.plugins.title = {
+                display: true,
+                text: 'Salidas por Semana - Últimos 3 Meses',
+                font: { size: 14 }
+            };
+            options.plugins.legend = { display: false };
+        }
+
+        if (ctx.canvas.id === 'entradasMesChart' || ctx.canvas.id === 'salidasTotalesMesChart') {
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            labels = labels.map(label => {
+                let num = parseInt(label);
+                return monthNames[num - 1] || label;
+            });
+
+            options.plugins = options.plugins || {};
+            options.plugins.title = {
+                display: true,
+                font: { size: 14 }
+            };
+
+            if (ctx.canvas.id === 'entradasMesChart') {
+                options.plugins.title.text = 'Ingresos Totales por Mes';
+                // Configurar el tooltip
+                options.plugins = options.plugins || {};
+                options.plugins.tooltip = options.plugins.tooltip || {};
+                options.plugins.tooltip.callbacks = {
+                    label: function (context) {
+                        let value = context.raw;
+                        return value === 1 ? value + " Solicitud" : value + " Solicitudes";
+                    }
+                };
+                options.plugins.legend = { display: false };
+
+            } else if (ctx.canvas.id === 'salidasTotalesMesChart') {
+                options.plugins.title.text = 'Salidas Totales por Mes';
+                // Configurar el tooltip
+                options.plugins = options.plugins || {};
+                options.plugins.tooltip = options.plugins.tooltip || {};
+                options.plugins.tooltip.callbacks = {
+                    label: function (context) {
+                        let value = context.raw;
+                        return value === 1 ? value + " Salida" : value + " Salidas";
+                    }
+                };
+                options.plugins.legend = { display: false };
+
+            }
+        }
+
+
+        if (ctx.canvas.id === 'salidasSemanaActualChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Salida" : value + " Salidas";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Salidas por Funcionario - Semana Actual',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
+
+        if (ctx.canvas.id === 'salidasMesActualChart') {
+            // Configurar el tooltip para que muestre solo el valor con la unidad correspondiente
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
+                label: function (context) {
+                    let value = context.raw;
+                    return value === 1 ? value + " Salida" : value + " Salidas";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Salidas por Funcionario - Mes Actual',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
         // Personalización para el gráfico de "Promedio de días entre ingreso y salida"
         if (ctx.canvas.id === 'promedioDiasChart') {
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -200,6 +539,18 @@
                     return parseFloat(value).toFixed(1) + " Días";
                 }
             };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Promedio Mensual de Días de Respuesta',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
         }
 
         // Personalización para el gráfico de "Tiempo promedio por funcionario"
@@ -223,6 +574,18 @@
                     return value + " Días";
                 }
             };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Promedio Total de Días de Respuesta por Funcionario',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
         }
 
         if (ctx.canvas.id === 'promedioDiasSolicitanteChart') {
@@ -238,7 +601,7 @@
             combined = combined.slice(0, topN);
             labels = combined.map(item => item.label);
             data = combined.map(item => item.promedio.toFixed(1));
-        
+
             // Si NO se detecta el tamaño de pantalla específico, forzamos que se muestren TODAS las etiquetas en el eje Y
             if (!isSpecificScreenSize()) {
                 options.scales = options.scales || {};
@@ -246,7 +609,7 @@
                 options.scales.y.ticks = options.scales.y.ticks || {};
                 options.scales.y.ticks.autoSkip = false;
             }
-            
+
             // Configurar el tooltip
             options.plugins = options.plugins || {};
             options.plugins.tooltip = options.plugins.tooltip || {};
@@ -256,8 +619,20 @@
                     return parseFloat(value).toFixed(1) + " Días Promedio";
                 }
             };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Promedio de Días de Respuesta por Solicitante',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
         }
-        
+
 
 
 
@@ -280,6 +655,18 @@
                     let value = context.raw;
                     return value === 1 ? value + " Solicitud" : value + " Solicitudes";
                 }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Solicitudes Pendientes por Tipo',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
             };
         }
 
@@ -304,6 +691,18 @@
                     return value === 1 ? value + " Solicitud" : value + " Solicitudes";
                 }
             };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Solicitudes Pendientes por Funcionario',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
         }
 
         if (ctx.canvas.id === 'pendientesSolicitanteChart') {
@@ -326,7 +725,55 @@
                     return value === 1 ? value + " Solicitud" : value + " Solicitudes";
                 }
             };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Solicitudes Pendientes por Solicitante',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
         }
+
+        if (ctx.canvas.id === 'promedioDiasTipoChart') {
+            // Combina labels y datos en un array de objetos
+            let combined = labels.map((label, index) => ({
+                label: label,
+                value: data[index]
+            }));
+            // Ordena de mayor a menor (ranking descendente)
+            combined.sort((a, b) => b.value - a.value);
+            // Actualiza los arrays de labels y data
+            labels = combined.map(item => item.label);
+            data = combined.map(item => parseFloat(item.value).toFixed(1));
+
+            // Configurar el tooltip para mostrar "Días Promedio:" seguido del valor a 1 decimal
+            options.plugins = options.plugins || {};
+            options.plugins.tooltip = options.plugins.tooltip || {};
+            options.plugins.tooltip.callbacks = {
+                label: function (context) {
+                    let value = context.raw;
+                    return parseFloat(value).toFixed(1) + " Días Promedio";
+                }
+            };
+
+            // Agregar un título al gráfico
+            options.plugins.title = {
+                display: true,
+                text: 'Promedio de Días de Respuesta por Tipo de Solicitud',
+                font: { size: 14 }
+            };
+
+            // Si deseas, puedes ocultar la leyenda (si no quieres que se muestre el dataset label en la leyenda)
+            options.plugins.legend = {
+                display: false
+            };
+        }
+
 
         const chart = new Chart(ctx, {
             type: chartType,
@@ -382,6 +829,7 @@
             { id: 'pendientesTipoChart', dataId: 'pendientesPorTipo', label: 'Solicitudes Pendientes por Tipo', chartType: 'bar', axis: 'y', color: 'rgba(151, 204, 184, 0.6)', border: 'rgba(0, 153, 117, 1)' },
             { id: 'pendientesFuncionarioChart', dataId: 'pendientesPorFuncionario', label: 'Solicitudes Pendientes por Funcionario', chartType: 'bar', axis: 'y', color: 'rgba(255, 168, 136, 0.6)', border: 'rgba(244, 70, 17, 1)' },
             { id: 'pendientesSolicitanteChart', dataId: 'pendientesPorSolicitante', label: 'Solicitudes Pendientes por Solicitante', chartType: 'bar', axis: 'y', color: 'rgba(170, 140, 175, 0.6)', border: 'rgba(87, 35, 100, 1)' },
+            { id: 'promedioDiasTipoChart', dataId: 'promedioDiasPorTipo', label: 'Promedio de Días de Respuesta por Tipo de Solicitud', chartType: 'bar', axis: 'y', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' },
         ];
 
 

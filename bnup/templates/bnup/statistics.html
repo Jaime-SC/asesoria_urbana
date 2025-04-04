@@ -126,15 +126,15 @@
                 <p id="promedioDiasPorSolicitante" style="display: none;">{{ promedio_dias_por_solicitante|safe }}</p>
                 <p id="solicitudesPorSolicitante" style="display: none;">{{ solicitudesPorSolicitante|safe }}</p>
                 <canvas id="promedioDiasSolicitanteChart"></canvas>
-
               </div>
-            </div>
-            <div class="subDivStatics-v6">
               <div class="containerStatistics">
                 <!-- Elemento oculto con los datos JSON -->
-                <p id="pendientesPorTipo" style="display: none;">{{ pendientes_por_tipo|safe }}</p>
-                <canvas id="pendientesTipoChart"></canvas>
+                <p id="promedioDiasPorTipo" style="display: none;">{{ promedio_dias_por_tipo|safe }}</p>
+                <canvas id="promedioDiasTipoChart"></canvas>
               </div>
+              
+            </div>
+            <div class="subDivStatics-v6">
               <div class="containerStatistics">
                 <!-- Elemento oculto con los datos JSON -->
                 <p id="pendientesPorFuncionario" style="display: none;">{{ pendientes_por_funcionario|safe }}</p>
@@ -144,6 +144,11 @@
                 <!-- Elemento oculto con los datos JSON -->
                 <p id="pendientesPorSolicitante" style="display: none;">{{ pendientes_por_solicitante|safe }}</p>
                 <canvas id="pendientesSolicitanteChart"></canvas>
+              </div>
+              <div class="containerStatistics">
+                <!-- Elemento oculto con los datos JSON -->
+                <p id="pendientesPorTipo" style="display: none;">{{ pendientes_por_tipo|safe }}</p>
+                <canvas id="pendientesTipoChart"></canvas>
               </div>
             </div>
           </div>
