@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function () {
  * @param {string} url - La URL desde la cual obtener el contenido.
  * @param {Function} [callback] - Función de devolución de llamada opcional para ejecutar después de cargar el contenido.
  */
+  /**
+ * Carga contenido vía AJAX e inicializa scripts específicos de la página.
+ * @param {string} url - La URL desde la cual obtener el contenido.
+ * @param {Function} [callback] - Función de devolución de llamada opcional para ejecutar después de cargar el contenido.
+ */
   function loadContent(url, callback) {
     fetch(url)
       .then(response => response.text())
@@ -83,19 +88,24 @@ document.addEventListener('DOMContentLoaded', function () {
               });
             }
 
-            // Ejecuta la función de devolución de llamada si se proporciona
             if (typeof callback === 'function') callback();
           };
           document.head.appendChild(script);
         } else if (url.includes('/bnup/statistics/')) {
-          // Maneja la carga de scripts de estadísticas
+          // Cambia el color de fondo de la tarjeta de estadísticas
           changeCardDetailsBgColor('#C9E8F4');
+          // Carga el script de estadísticas
           loadStatisticsScript();
+          // Carga dinámicamente report.js para exportar el reporte
+          const reportScript = document.createElement('script');
+          reportScript.src = '/static/js/report.js';
+          reportScript.onload = function () {
+            // Opcional: se puede inicializar alguna función específica del reporte
+            console.log("report.js cargado correctamente.");
+          };
+          document.head.appendChild(reportScript);
           // Llama a la inicialización de paginación después de insertar el contenido
           setTimeout(initializeStatisticsPagination, 300);
-          if (typeof callback === 'function') callback();
-
-          // Ejecuta la función de devolución de llamada si se proporciona
           if (typeof callback === 'function') callback();
         } else if (url === '/patente_alcohol/') {
           const script = document.createElement('script');
@@ -108,11 +118,8 @@ document.addEventListener('DOMContentLoaded', function () {
             initializeGenerateCombinedPDFButton();
           };
           document.head.appendChild(script);
-        }
-        else {
+        } else {
           resetCardDetailsBgColor();
-
-          // Ejecuta la función de devolución de llamada si se proporciona
           if (typeof callback === 'function') callback();
         }
 
@@ -126,10 +133,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
           });
         }
-
       })
       .catch(error => console.error(`Error al cargar ${url}:`, error));
   }
+
 
 
   /**

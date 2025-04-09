@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Reporte de Estadísticas</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      
+      h1 {
+        text-align: center;
+      }
+      
+      h2,
+      p,
+      table {
+        margin-bottom: 20px;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      th,
+      td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: left;
+      }
+      
+      th {
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Reporte de Estadísticas</h1>
+    <div id="reportContent">
+      <!-- Sección de "Total de Solicitudes y Salidas" -->
+      <h2>Total de Solicitudes y Salidas</h2>
+      <p>
+        Durante el presente año, se han registrado un total de
+        <strong>{{ total_solicitudes }}</strong> solicitudes activas, excluyendo aquellas catalogadas bajo el tipo especial (CONOCIMIENTO Y DISTRIBUCION). Estas solicitudes representan la actividad general gestionada por nuestra unidad durante el periodo actual.
+      </p>
+      {% if total_solicitudes == 0 %}
+        <p>Es importante mencionar que, hasta el momento, no se han registrado solicitudes activas, por lo que no existen salidas asociadas.</p>
+      {% else %}
+        <p>
+          En respuesta a estas solicitudes, se han generado <strong>{{ total_salidas }}</strong> documentos de salida.{% if total_salidas > 0 %}
+            Esto indica una tasa de respuesta de <strong>{{ tasa_respuesta|floatformat:2 }}%</strong>, lo cual significa que, en promedio, cada solicitud generó <strong>{{ promedio_salidas|floatformat:1 }}</strong> salidas aproximadamente. Además, el porcentaje de solicitudes que tuvieron al menos una salida es del <strong>{{ porcentaje_solicitudes_con_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_salida }}</strong> solicitudes), y el porcentaje de solicitudes que generaron más de una salida es del <strong>{{ porcentaje_solicitudes_con_mas_de_una_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_mas_de_una }}</strong> solicitudes).
+          {% else %}
+            Actualmente, no se ha emitido ninguna salida asociada a las solicitudes registradas.
+          {% endif %}
+        </p>
+      {% endif %}
+
+      <p>Se recomienda revisar las secciones posteriores para obtener un análisis detallado sobre distribución, tiempos de respuesta, solicitudes pendientes y desempeño individual por funcionarios.</p>
+
+      <!-- Nueva sección: Solicitudes agrupadas por departamento -->
+      <h2>Solicitudes Agrupadas por Departamento Solicitante</h2>
+      <p>Las solicitudes recibidas durante el año han sido agrupadas según el departamento solicitante, proporcionando un análisis claro sobre las áreas o entidades que generan la mayor demanda administrativa. Esta categorización permite una planificación más precisa en cuanto a recursos y atención a las distintas unidades.</p>
+      {% if solicitudes_por_depto %}
+        <table>
+          <thead>
+            <tr>
+              <th>Departamento</th>
+              <th>Número de Solicitudes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in solicitudes_por_depto %}
+              <tr>
+                <td>
+                  <strong>{{ item.depto_solicitante__nombre }}</strong>
+                </td>
+                <td>{{ item.total }}</td>
+              </tr>
+            {% endfor %}
+            {% if rest_departamentos > 0 %}
+              <tr>
+                <td colspan="2">Y {{ rest_departamentos }} departamentos adicionales.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+        <p>
+          Por ejemplo, los tres departamentos con mayor solicitudes son:{% for item in solicitudes_por_depto|slice:':3' %}
+            {% widthratio item.total total_solicitudes 100 as dept_percentage %}
+            <br />El departamento <strong>{{ item.depto_solicitante__nombre }}</strong> representa aproximadamente el
+            <strong>{{ dept_percentage }}</strong>% del total.
+          {% endfor %}
+          <br /><br />
+          En conjunto, estos tres departamentos representan un <strong>{{ top3_percentage|floatformat:2 }}%</strong> del total, lo que equivale a
+          <strong>{{ total_top3 }}</strong> solicitudes.
+          <br />
+          Además, los departamentos adicionales representan aproximadamente un <strong>{{ rest_percentage|floatformat:2 }}%</strong> del total, correspondiendo a
+          <strong>{{ rest_total }}</strong> solicitudes.
+        </p>
+        <p>Este desglose facilita la identificación rápida de las áreas con mayor volumen de solicitudes, así como la detección temprana de incrementos inesperados o situaciones que requieran atención específica.</p>
+      {% else %}
+        <p>Actualmente no existen solicitudes registradas provenientes de ningún departamento específico.</p>
+      {% endif %}
+
+      <h2>Entradas por Tiempo</h2>
+      <p>La distribución temporal de las solicitudes ingresadas durante el año actual ofrece una perspectiva útil para analizar tendencias y patrones de demanda a lo largo del periodo evaluado.</p>
+      {% if top3_meses_detailed %}
+        <h3>Solicitudes por Mes</h3>
+        <p>
+          El análisis revela que los meses con mayor cantidad de solicitudes registradas son:{% for item in top3_meses_detailed %}
+            <br />Mes de <strong>{{ item.mes_nombre }}</strong> con <strong>{{ item.cantidad }}</strong> solicitudes que equivale al <strong>{{ item.porcentaje|floatformat:2 }}%</strong> del total.
+          {% endfor %}
+        </p>
+        <p>
+          En conjunto, estos tres meses representan un <strong>{{ top3_porcentaje_meses|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_meses }}</strong> solicitudes.
+        </p>
+      {% else %}
+        <p>Actualmente no se han registrado solicitudes en ningún mes específico.</p>
+      {% endif %}
+
+      {% if top3_weeks_descriptive %}
+        <h3>Solicitudes por Semana</h3>
+        <p>
+          Las semanas con más actividad registrada fueron:{% for week in top3_weeks_descriptive %}
+            <br />{{ week.descripcion|safe }}: <strong>{{ week.cantidad }}</strong> solicitudes.
+          {% endfor %}
+        </p>
+        <p>
+          En conjunto, estas tres semanas representan un <strong>{{ top3_porcentaje_semanas|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_semanas }}</strong> solicitudes.
+        </p>
+      {% else %}
+        <p>No existen solicitudes registradas por semanas específicas hasta la fecha.</p>
+      {% endif %}
+      <p>Este análisis temporal es clave para identificar periodos pico y mejorar la planificación de recursos y tiempos de respuesta. Se recomienda realizar un seguimiento continuo para optimizar los procesos internos y anticipar efectivamente las fluctuaciones en la demanda.</p>
+
+      <!-- Resto del reporte, por ejemplo, el resumen de estadísticas -->
+      <h2>Resumen de Estadísticas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Solicitudes</td>
+            <td>{{ total_solicitudes }}</td>
+          </tr>
+          <!-- Agrega más filas según tus necesidades -->
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

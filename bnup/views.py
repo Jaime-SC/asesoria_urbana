@@ -21,7 +21,7 @@ from principal.models import PerfilUsuario
 from django.contrib import messages
 from bnup.models import Funcionario  # asegúrate de tenerlo importado
 from django.db.models import Count
-from datetime import datetime
+from datetime import datetime, date
 
 
 def bnup_form(request):
@@ -648,6 +648,141 @@ def statistics_view(request):
     }
     
     return render(request, "bnup/statistics.html", context)
+
+def get_week_range(year, week):
+    """
+    Dado un año y un número de semana ISO, devuelve el lunes y viernes de esa semana,
+    y el nombre del mes en español basado en el lunes.
+    """
+    monday = date.fromisocalendar(year, week, 1)
+    friday = date.fromisocalendar(year, week, 5)
+    month_name = monday.strftime('%B')
+    meses_es = {
+        'January': 'Enero', 'February': 'Febrero', 'March': 'Marzo', 'April': 'Abril',
+        'May': 'Mayo', 'June': 'Junio', 'July': 'Julio', 'August': 'Agosto',
+        'September': 'Septiembre', 'October': 'Octubre', 'November': 'Noviembre', 'December': 'Diciembre'
+    }
+    month_es = meses_es.get(month_name, month_name)
+    return monday, friday, month_es
+
+@login_required
+def report_view(request):
+    current_year = datetime.now().year
+    active_solicitudes = IngresoSOLICITUD.objects.filter(
+        is_active=True, fecha_ingreso_au__year=current_year
+    ).exclude(tipo_solicitud__id=12)
+    total_solicitudes = active_solicitudes.count()
+
+    total_salidas = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__in=active_solicitudes,
+        is_active=True,
+        fecha_salida__year=current_year
+    ).count()
+
+    tasa_respuesta = (total_salidas / total_solicitudes * 100) if total_solicitudes else 0
+
+    solicitudes_con_salida = active_solicitudes.filter(salidas__isnull=False).distinct().count()
+    porcentaje_solicitudes_con_salida = (solicitudes_con_salida / total_solicitudes * 100) if total_solicitudes else 0
+
+    solicitudes_con_mas_de_una = active_solicitudes.annotate(num_salidas=Count('salidas')).filter(num_salidas__gt=1).count()
+    porcentaje_solicitudes_con_mas_de_una = (solicitudes_con_mas_de_una / total_solicitudes * 100) if total_solicitudes else 0
+
+    promedio_salidas = (total_salidas / total_solicitudes) if total_solicitudes else 0
+
+    # Entradas por Mes: calcular y ordenar
+    entradas_por_mes_qs = active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au")).values("mes").annotate(total=Count("id"))
+    entradas_por_mes = {item["mes"]: item["total"] for item in entradas_por_mes_qs}
+    sorted_meses = sorted(entradas_por_mes.items(), key=lambda x: x[1], reverse=True)
+    # Aquí preparamos el top 3 con nombres y porcentajes
+    meses_es = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
+        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
+        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+    if sorted_meses:
+        top3_meses_sorted = sorted_meses[:3]
+        top3_total_meses = sum(cantidad for mes, cantidad in top3_meses_sorted)
+        top3_porcentaje_meses = (top3_total_meses / total_solicitudes * 100) if total_solicitudes else 0
+        # Preparamos una lista detallada para los 3 meses
+        top3_meses_detailed = []
+        for mes, cantidad in top3_meses_sorted:
+            mes_nombre = meses_es.get(mes, mes)
+            porcentaje = (cantidad / total_solicitudes * 100) if total_solicitudes else 0
+            top3_meses_detailed.append({
+                'mes': mes,
+                'cantidad': cantidad,
+                'mes_nombre': mes_nombre,
+                'porcentaje': porcentaje,
+            })
+    else:
+        top3_meses_sorted = []
+        top3_total_meses = 0
+        top3_porcentaje_meses = 0
+        top3_meses_detailed = []
+
+    # Entradas por Semana (lo que ya tienes)
+    entradas_por_semana_qs = active_solicitudes.annotate(semana=ExtractWeek("fecha_ingreso_au")).values("semana").annotate(total=Count("id"))
+    entradas_por_semana = {item["semana"]: item["total"] for item in entradas_por_semana_qs}
+    sorted_semanas = sorted(entradas_por_semana.items(), key=lambda x: x[1], reverse=True)
+    if sorted_semanas:
+        top3_semanas = sorted_semanas[:3]
+        top3_total_semanas = sum(cantidad for semana, cantidad in top3_semanas)
+        top3_porcentaje_semanas = (top3_total_semanas / total_solicitudes * 100) if total_solicitudes else 0
+        top3_weeks_descriptive = []
+        for semana, cantidad in top3_semanas:
+            monday, friday, month_es = get_week_range(current_year, semana)
+            desc = f"Semana {semana} de {month_es} desde el <strong>Lunes {monday.strftime('%d/%m')}</strong> hasta el <strong>Viernes {friday.strftime('%d/%m')}</strong>"
+
+            top3_weeks_descriptive.append({
+                'semana': semana,
+                'cantidad': cantidad,
+                'descripcion': desc,
+            })
+    else:
+        top3_total_semanas = 0
+        top3_porcentaje_semanas = 0
+        top3_weeks_descriptive = []
+
+    # Solicitudes agrupadas por departamento
+    solicitudes_por_depto_qs = active_solicitudes.values('depto_solicitante__nombre').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_depto_list = list(solicitudes_por_depto_qs)
+    top_10_departamentos = solicitudes_por_depto_list[:10]
+    departamentos_adicionales = len(solicitudes_por_depto_list) - len(top_10_departamentos)
+
+    # Para los 3 departamentos con mayor solicitudes:
+    top_3_deptos = list(active_solicitudes.values('depto_solicitante__nombre').annotate(total=Count('id')).order_by('-total'))[:3]
+    total_top3_deptos = sum(item['total'] for item in top_3_deptos)
+    top3_percentage_deptos = (total_top3_deptos / total_solicitudes * 100) if total_solicitudes else 0
+    rest_total_deptos = total_solicitudes - total_top3_deptos
+    rest_percentage_deptos = (rest_total_deptos / total_solicitudes * 100) if total_solicitudes else 0
+
+    context = {
+        "total_solicitudes": total_solicitudes,
+        "total_salidas": total_salidas,
+        "tasa_respuesta": tasa_respuesta,
+        "porcentaje_solicitudes_con_salida": porcentaje_solicitudes_con_salida,
+        "porcentaje_solicitudes_con_mas_de_una_salida": porcentaje_solicitudes_con_mas_de_una,
+        "promedio_salidas": promedio_salidas,
+        # Variables para las entradas por mes y semana, etc.
+        "entradas_por_mes": entradas_por_mes,
+        "entradas_por_semana": entradas_por_semana,
+        "top3_meses_detailed": top3_meses_detailed,
+        "top3_total_meses": top3_total_meses,
+        "top3_porcentaje_meses": top3_porcentaje_meses,
+        "top3_weeks_descriptive": top3_weeks_descriptive,
+        "top3_porcentaje_semanas": top3_porcentaje_semanas,
+        "top3_total_semanas": top3_total_semanas,
+        "solicitudes_por_depto": top_10_departamentos,
+        "rest_departamentos": departamentos_adicionales,
+        "top3_percentage": top3_percentage_deptos,
+        "total_top3": total_top3_deptos,
+        "rest_percentage": rest_percentage_deptos,
+        "rest_total": rest_total_deptos,
+        # Nuestras nuevas variables:
+        "solicitudes_con_salida": solicitudes_con_salida,
+        "solicitudes_con_mas_de_una": solicitudes_con_mas_de_una,
+    }
+    return render(request, "bnup/report.html", context)
 
 @login_required
 def get_salidas(request, solicitud_id):
