@@ -809,6 +809,63 @@ def report_view(request):
     ]
     pendientes_por_funcionario_list = sorted(pendientes_por_funcionario_list, key=lambda x: x["total"], reverse=True)
 
+    # Solicitudes pendientes: aquellas sin salidas asociadas
+    pendientes_qs = active_solicitudes.filter(salidas__isnull=True)
+
+    # Agrupar las solicitudes pendientes por departamento solicitante
+    pendientes_por_depto = {}
+    for sol in pendientes_qs:
+        # Usamos el nombre del departamento solicitante
+        depto = sol.depto_solicitante.nombre
+        if depto not in pendientes_por_depto:
+            pendientes_por_depto[depto] = {"total": 0, "ingresos": []}
+        pendientes_por_depto[depto]["total"] += 1
+        pendientes_por_depto[depto]["ingresos"].append(sol.numero_ingreso)
+
+    # Convertir el diccionario en una lista de diccionarios ordenada (por ejemplo, de mayor a menor pendientes)
+    pendientes_por_depto_list = [
+        {"nombre": nombre, "total": data["total"], "ingresos": data["ingresos"]}
+        for nombre, data in pendientes_por_depto.items()
+    ]
+    pendientes_por_depto_list = sorted(pendientes_por_depto_list, key=lambda x: x["total"], reverse=True)
+
+    # Solicitudes pendientes por Tipo de Solicitud: aquellas sin salidas asociadas
+    pendientes_tipo_qs = active_solicitudes.filter(salidas__isnull=True)
+
+    # Agrupamos por el tipo de solicitud (usando la relación tipo_solicitud__tipo)
+    pendientes_por_tipo_solicitud = {}
+    for sol in pendientes_tipo_qs:
+        tipo = sol.tipo_solicitud.tipo
+        if tipo not in pendientes_por_tipo_solicitud:
+            pendientes_por_tipo_solicitud[tipo] = {"total": 0, "ingresos": []}
+        pendientes_por_tipo_solicitud[tipo]["total"] += 1
+        pendientes_por_tipo_solicitud[tipo]["ingresos"].append(sol.numero_ingreso)
+
+    # Convertimos el diccionario en una lista para poder iterar y, opcionalmente, ordenar de mayor a menor
+    pendientes_por_tipo_solicitud_list = [
+        {"tipo": tipo, "total": data["total"], "ingresos": data["ingresos"]}
+        for tipo, data in pendientes_por_tipo_solicitud.items()
+    ]
+    pendientes_por_tipo_solicitud_list = sorted(pendientes_por_tipo_solicitud_list, key=lambda x: x["total"], reverse=True)
+
+    # Solicitudes sin respuesta: aquellas sin salidas asociadas, ordenadas de manera ascendente (más antiguas primero)
+    solicitudes_sin_respuesta_qs = active_solicitudes.filter(salidas__isnull=True).order_by("fecha_ingreso_au")[:5]
+
+    # Preparamos una lista de las 5 solicitudes más antiguas sin respuesta
+    solicitudes_mas_antiguas = []
+    for sol in solicitudes_sin_respuesta_qs:
+        tipo_solicitud = sol.tipo_solicitud.tipo
+        solicitante = sol.depto_solicitante.nombre
+        # Si hay más de un funcionario, los unimos en una cadena separados por comas
+        funcionarios = ", ".join([f.nombre for f in sol.funcionarios_asignados.all()])
+        solicitudes_mas_antiguas.append({
+            "tipo_solicitud": tipo_solicitud,
+            "solicitante": solicitante,
+            "funcionarios": funcionarios,
+            "numero_ingreso": sol.numero_ingreso,  # opcional, puedes mostrarlo si lo necesitas
+            "fecha_ingreso": sol.fecha_ingreso_au,  # opcional, si quieres mostrar la fecha
+        })
+
 
     context = {
         "total_solicitudes": total_solicitudes,
@@ -843,6 +900,9 @@ def report_view(request):
         "threshold_carga_significativa": threshold_carga_significativa,
         # Nueva variable para solicitudes pendientes de salida por funcionario:
         "pendientes_por_funcionario": pendientes_por_funcionario_list,
+        "pendientes_por_depto": pendientes_por_depto_list,
+        "pendientes_por_tipo_solicitud": pendientes_por_tipo_solicitud_list,
+        "solicitudes_mas_antiguas": solicitudes_mas_antiguas,
     }
 
     return render(request, "bnup/report.html", context)

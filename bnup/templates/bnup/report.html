@@ -58,36 +58,121 @@
             {% endif %}
           </p>
         {% endif %}
-
-        <!-- Nueva sección: Solicitudes pendientes de salida -->
-        <h3>Solicitudes Pendientes de Salida</h3>
-        {% if pendientes_por_funcionario %}
-          <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por funcionario:</p>
-          <table>
-            <thead>
-              <tr>
-                <th>Funcionario</th>
-                {% comment %} <th>Cantidad de Solicitudes Pendientes</th> {% endcomment %}
-                <th>Números de Ingreso</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for entry in pendientes_por_funcionario %}
-                <tr>
-                  <td>
-                    <strong>{{ entry.nombre }}</strong>
-                  </td>
-                  {% comment %} <td>{{ entry.total }}</td> {% endcomment %}
-                  <td>{{ entry.ingresos|join:', ' }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        {% else %}
-          <p>No hay solicitudes pendientes de salida.</p>
-        {% endif %}
       </div>
+      <!-- Solicitudes pendientes de salida -->
+      <div class="solicitudesPendientesDeSalida">
+        <h2>Solicitudes Pendientes de Salida</h2>
+        <div class="salidasPendientesFuncionario">
+          <h3>Por Funcionario</h3>
+          {% if pendientes_por_funcionario %}
+            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por funcionario:</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Funcionario</th>
+                  {% comment %} <th>Cantidad de Solicitudes Pendientes</th> {% endcomment %}
+                  <th>Números de Ingreso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entry in pendientes_por_funcionario %}
+                  <tr>
+                    <td>
+                      <strong>{{ entry.nombre }}</strong>
+                    </td>
+                    {% comment %} <td>{{ entry.total }}</td> {% endcomment %}
+                    <td>{{ entry.ingresos|join:', ' }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>No hay solicitudes pendientes de salida.</p>
+          {% endif %}
+        </div>
+        <!-- Nueva sección: Solicitudes Pendientes de Salida por Solicitante (Departamento) -->
+        <div class="solicitudesPendientesDeSalida">
+          <h3>Por Solicitante</h3>
+          {% if pendientes_por_depto %}
+            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por solicitante:</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Solicitante</th>
+                  {% comment %} <th>Cantidad de Solicitudes Pendientes</th> {% endcomment %}
+                  <th>Números de Ingreso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entry in pendientes_por_depto %}
+                  <tr>
+                    <td>
+                      <strong>{{ entry.nombre }}</strong>
+                    </td>
+                    {% comment %} <td>{{ entry.total }}</td> {% endcomment %}
+                    <td>{{ entry.ingresos|join:', ' }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>No hay solicitudes pendientes de salida por solicitante.</p>
+          {% endif %}
+        </div>
 
+        <!-- Solicitudes pendientes de salida por Tipo de Solicitud -->
+        <div class="solicitudesPendientesPorTipo">
+          <h3>Por Tipo de Solicitud</h3>
+          {% if pendientes_por_tipo_solicitud %}
+            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por el tipo de solicitud:</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo de Solicitud</th>
+                  {% comment %} <th>Cantidad de Solicitudes Pendientes</th> {% endcomment %}
+                  <th>Números de Ingreso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entry in pendientes_por_tipo_solicitud %}
+                  <tr>
+                    <td>
+                      <strong>{{ entry.tipo }}</strong>
+                    </td>
+                    {% comment %} <td>{{ entry.total }}</td> {% endcomment %}
+                    <td>{{ entry.ingresos|join:', ' }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>No hay solicitudes pendientes de salida por tipo de solicitud.</p>
+          {% endif %}
+        </div>
+
+        <div class="solicitudesPendientesMasAntiguas">
+          <!-- Sección de Solicitudes Sin Respuesta Más Antiguas -->
+          <h3>5 Solicitudes Sin Respuesta Más Antiguas</h3>
+          {% if solicitudes_mas_antiguas %}
+            <p>
+              A continuación se detallan las 5 solicitudes sin respuesta (sin salida) más antiguas:<br>{% for sol in solicitudes_mas_antiguas %}
+                <br />- La solicitud de tipo <strong>{{ sol.tipo_solicitud }}</strong> del solicitante <strong>{{ sol.solicitante }}</strong>
+                {% if sol.funcionarios %}
+                  asignada a <strong>{{ sol.funcionarios }}</strong>
+                {% endif %}
+                {% if sol.numero_ingreso %}
+                  (Número de Ingreso: <strong>{{ sol.numero_ingreso }}</strong>
+                  {% if sol.fecha_ingreso %}
+                    , Fecha de Ingreso: <strong>{{ sol.fecha_ingreso }}</strong>
+                  {% endif %})<br>
+                {% endif %}
+              {% endfor %}
+            </p>
+          {% else %}
+            <p>No hay solicitudes sin respuesta.</p>
+          {% endif %}
+        </div>
+      </div>
       <p>Se recomienda revisar las secciones posteriores para obtener un análisis detallado sobre distribución, tiempos de respuesta, solicitudes pendientes y desempeño individual por funcionarios.</p>
       <div class="departamentoSolicitante">
         <!-- Nueva sección: Solicitudes agrupadas por departamento -->
