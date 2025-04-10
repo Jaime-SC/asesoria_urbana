@@ -749,12 +749,66 @@ def report_view(request):
     top_10_departamentos = solicitudes_por_depto_list[:10]
     departamentos_adicionales = len(solicitudes_por_depto_list) - len(top_10_departamentos)
 
+    # Solicitudes agrupadas por Funcionario Asignado
+    solicitudes_por_funcionario_qs = active_solicitudes.values('funcionarios_asignados__nombre').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_funcionario = list(solicitudes_por_funcionario_qs)
+
+    # Solicitudes agrupadas por Tipo de Recepción
+    solicitudes_por_tipo_recepcion_qs = active_solicitudes.values('tipo_recepcion__tipo').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_tipo_recepcion = list(solicitudes_por_tipo_recepcion_qs)
+
+    # Solicitudes agrupadas por Tipo de Solicitud
+    solicitudes_por_tipo_solicitud_qs = active_solicitudes.values('tipo_solicitud__tipo').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_tipo_solicitud = list(solicitudes_por_tipo_solicitud_qs)
+
+    # Asumimos que IngresoSOLICITUD tiene una relación many-to-many llamada "funcionarios_asignados"
+    # Para cada funcionario, calculamos cuántas solicitudes están asignadas.
+    top_funcionarios_qs = active_solicitudes.values('funcionarios_asignados__nombre') \
+                            .annotate(total=Count('id')) \
+                            .order_by('-total')
+
+    # Convertimos a lista y calculamos el porcentaje de cada uno
+    top_funcionarios = []
+    for item in top_funcionarios_qs:
+        nombre = item['funcionarios_asignados__nombre']
+        total_funcionario = item['total']
+        porcentaje = (total_funcionario / total_solicitudes * 100) if total_solicitudes else 0
+        top_funcionarios.append((nombre, porcentaje, total_funcionario))
+
+    # Opcional: Limitar a los 3 o tantos que desees mostrar
+    top_funcionarios = top_funcionarios[:3]
+
+    # Definir los umbrales (puedes usar valores fijos o variables configurables)
+    threshold_carga_alta = 40  # Ejemplo: 40%
+    threshold_carga_significativa = 20  # Ejemplo: 20%
+
     # Para los 3 departamentos con mayor solicitudes:
     top_3_deptos = list(active_solicitudes.values('depto_solicitante__nombre').annotate(total=Count('id')).order_by('-total'))[:3]
     total_top3_deptos = sum(item['total'] for item in top_3_deptos)
     top3_percentage_deptos = (total_top3_deptos / total_solicitudes * 100) if total_solicitudes else 0
     rest_total_deptos = total_solicitudes - total_top3_deptos
     rest_percentage_deptos = (rest_total_deptos / total_solicitudes * 100) if total_solicitudes else 0
+
+    # Solicitudes pendientes: aquellas sin salidas asociadas
+    pendientes_qs = active_solicitudes.filter(salidas__isnull=True)
+
+    # Agrupamos por cada funcionario asignado
+    pendientes_por_funcionario = {}
+    for sol in pendientes_qs:
+        for funcionario in sol.funcionarios_asignados.all():
+            nombre = funcionario.nombre
+            if nombre not in pendientes_por_funcionario:
+                pendientes_por_funcionario[nombre] = {"total": 0, "ingresos": []}
+            pendientes_por_funcionario[nombre]["total"] += 1
+            pendientes_por_funcionario[nombre]["ingresos"].append(sol.numero_ingreso)
+
+    # Convertimos el diccionario en una lista (opcional: ordenada de mayor a menor número de solicitudes pendientes)
+    pendientes_por_funcionario_list = [
+        {"nombre": nombre, "total": data["total"], "ingresos": data["ingresos"]}
+        for nombre, data in pendientes_por_funcionario.items()
+    ]
+    pendientes_por_funcionario_list = sorted(pendientes_por_funcionario_list, key=lambda x: x["total"], reverse=True)
+
 
     context = {
         "total_solicitudes": total_solicitudes,
@@ -778,10 +832,19 @@ def report_view(request):
         "total_top3": total_top3_deptos,
         "rest_percentage": rest_percentage_deptos,
         "rest_total": rest_total_deptos,
-        # Nuestras nuevas variables:
+        # Nuevas variables para las categorías adicionales:
         "solicitudes_con_salida": solicitudes_con_salida,
         "solicitudes_con_mas_de_una": solicitudes_con_mas_de_una,
+        "solicitudes_por_funcionario": solicitudes_por_funcionario,
+        "solicitudes_por_tipo_recepcion": solicitudes_por_tipo_recepcion,
+        "solicitudes_por_tipo_solicitud": solicitudes_por_tipo_solicitud,
+        "top_funcionarios": top_funcionarios,
+        "threshold_carga_alta": threshold_carga_alta,
+        "threshold_carga_significativa": threshold_carga_significativa,
+        # Nueva variable para solicitudes pendientes de salida por funcionario:
+        "pendientes_por_funcionario": pendientes_por_funcionario_list,
     }
+
     return render(request, "bnup/report.html", context)
 
 @login_required

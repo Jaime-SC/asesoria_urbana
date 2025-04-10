@@ -40,102 +40,238 @@
   <body>
     <h1>Reporte de Estadísticas</h1>
     <div id="reportContent">
-      <!-- Sección de "Total de Solicitudes y Salidas" -->
-      <h2>Total de Solicitudes y Salidas</h2>
-      <p>
-        Durante el presente año, se han registrado un total de
-        <strong>{{ total_solicitudes }}</strong> solicitudes activas, excluyendo aquellas catalogadas bajo el tipo especial (CONOCIMIENTO Y DISTRIBUCION). Estas solicitudes representan la actividad general gestionada por nuestra unidad durante el periodo actual.
-      </p>
-      {% if total_solicitudes == 0 %}
-        <p>Es importante mencionar que, hasta el momento, no se han registrado solicitudes activas, por lo que no existen salidas asociadas.</p>
-      {% else %}
+      <div class="totalSolicitudesSalidas">
+        <!-- Sección existente de Total de Solicitudes y Salidas -->
+        <h2>Total de Solicitudes y Salidas</h2>
         <p>
-          En respuesta a estas solicitudes, se han generado <strong>{{ total_salidas }}</strong> documentos de salida.{% if total_salidas > 0 %}
-            Esto indica una tasa de respuesta de <strong>{{ tasa_respuesta|floatformat:2 }}%</strong>, lo cual significa que, en promedio, cada solicitud generó <strong>{{ promedio_salidas|floatformat:1 }}</strong> salidas aproximadamente. Además, el porcentaje de solicitudes que tuvieron al menos una salida es del <strong>{{ porcentaje_solicitudes_con_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_salida }}</strong> solicitudes), y el porcentaje de solicitudes que generaron más de una salida es del <strong>{{ porcentaje_solicitudes_con_mas_de_una_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_mas_de_una }}</strong> solicitudes).
-          {% else %}
-            Actualmente, no se ha emitido ninguna salida asociada a las solicitudes registradas.
-          {% endif %}
+          Durante el presente año, se han registrado un total de
+          <strong>{{ total_solicitudes }}</strong> solicitudes activas, excluyendo aquellas catalogadas bajo el tipo especial (CONOCIMIENTO Y DISTRIBUCION). Estas solicitudes representan la actividad general gestionada por nuestra unidad durante el periodo actual.
         </p>
-      {% endif %}
+        {% if total_solicitudes == 0 %}
+          <p>Es importante mencionar que, hasta el momento, no se han registrado solicitudes activas, por lo que no existen salidas asociadas.</p>
+        {% else %}
+          <p>
+            En respuesta a estas solicitudes, se han generado <strong>{{ total_salidas }}</strong> documentos de salida.{% if total_salidas > 0 %}
+              Esto indica una tasa de respuesta de <strong>{{ tasa_respuesta|floatformat:2 }}%</strong>, lo cual significa que, en promedio, cada solicitud generó <strong>{{ promedio_salidas|floatformat:1 }}</strong> salidas aproximadamente. Además, el porcentaje de solicitudes que tuvieron al menos una salida es del <strong>{{ porcentaje_solicitudes_con_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_salida }}</strong> solicitudes), y el porcentaje de solicitudes que generaron más de una salida es del <strong>{{ porcentaje_solicitudes_con_mas_de_una_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_mas_de_una }}</strong> solicitudes).
+            {% else %}
+              Actualmente, no se ha emitido ninguna salida asociada a las solicitudes registradas.
+            {% endif %}
+          </p>
+        {% endif %}
+
+        <!-- Nueva sección: Solicitudes pendientes de salida -->
+        <h3>Solicitudes Pendientes de Salida</h3>
+        {% if pendientes_por_funcionario %}
+          <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por funcionario:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Funcionario</th>
+                {% comment %} <th>Cantidad de Solicitudes Pendientes</th> {% endcomment %}
+                <th>Números de Ingreso</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for entry in pendientes_por_funcionario %}
+                <tr>
+                  <td>
+                    <strong>{{ entry.nombre }}</strong>
+                  </td>
+                  {% comment %} <td>{{ entry.total }}</td> {% endcomment %}
+                  <td>{{ entry.ingresos|join:', ' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No hay solicitudes pendientes de salida.</p>
+        {% endif %}
+      </div>
 
       <p>Se recomienda revisar las secciones posteriores para obtener un análisis detallado sobre distribución, tiempos de respuesta, solicitudes pendientes y desempeño individual por funcionarios.</p>
-
-      <!-- Nueva sección: Solicitudes agrupadas por departamento -->
-      <h2>Solicitudes Agrupadas por Departamento Solicitante</h2>
-      <p>Las solicitudes recibidas durante el año han sido agrupadas según el departamento solicitante, proporcionando un análisis claro sobre las áreas o entidades que generan la mayor demanda administrativa. Esta categorización permite una planificación más precisa en cuanto a recursos y atención a las distintas unidades.</p>
-      {% if solicitudes_por_depto %}
-        <table>
-          <thead>
-            <tr>
-              <th>Departamento</th>
-              <th>Número de Solicitudes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in solicitudes_por_depto %}
+      <div class="departamentoSolicitante">
+        <!-- Nueva sección: Solicitudes agrupadas por departamento -->
+        <h2>Solicitudes Agrupadas por Categorías</h2>
+        <!-- Por Solicitante -->
+        <h3>Por Solicitante</h3>
+        {% if solicitudes_por_depto %}
+          <table>
+            <thead>
               <tr>
-                <td>
-                  <strong>{{ item.depto_solicitante__nombre }}</strong>
-                </td>
-                <td>{{ item.total }}</td>
+                <th>Solicitante</th>
+                <th>Número de Solicitudes</th>
               </tr>
+            </thead>
+            <tbody>
+              {% for item in solicitudes_por_depto %}
+                <tr>
+                  <td>
+                    <strong>{{ item.depto_solicitante__nombre }}</strong>
+                  </td>
+                  <td>{{ item.total }}</td>
+                </tr>
+              {% endfor %}
+              {% if rest_departamentos > 0 %}
+                <tr>
+                  <td colspan="2">Y {{ rest_departamentos }} solicitantes adicionales.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+          <p>
+            Por ejemplo, los tres solicitantes con mayor cantidad de solicitudes son:{% for item in solicitudes_por_depto|slice:':3' %}
+              {% widthratio item.total total_solicitudes 100 as dept_percentage %}
+              <br />El solicitante <strong>{{ item.depto_solicitante__nombre }}</strong> representa aproximadamente el
+              <strong>{{ dept_percentage }}</strong>% del total.
             {% endfor %}
-            {% if rest_departamentos > 0 %}
+            <br /><br />
+            En conjunto, estos tres solicitantes representan un <strong>{{ top3_percentage|floatformat:2 }}%</strong> del total, lo que equivale a
+            <strong>{{ total_top3 }}</strong> solicitudes.
+            <br />
+            Además, los solicitantes adicionales representan aproximadamente un <strong>{{ rest_percentage|floatformat:2 }}%</strong> del total, correspondiendo a
+            <strong>{{ rest_total }}</strong> solicitudes.
+          </p>
+          <p>Este desglose facilita la identificación rápida de las áreas con mayor volumen de solicitudes, así como la detección temprana de incrementos inesperados o situaciones que requieran atención específica.</p>
+        {% else %}
+          <p>Actualmente no existen solicitudes registradas provenientes de ningún departamento específico.</p>
+        {% endif %}
+      </div>
+      <div class="funcionarioAsignado">
+        <!-- Por Funcionario Asignado -->
+        <h3>Por Funcionario Asignado</h3>
+        {% if solicitudes_por_funcionario %}
+          <p>En este apartado, las solicitudes se agrupan según el funcionario responsable, mostrando así la carga de trabajo individual:</p>
+          <table>
+            <thead>
               <tr>
-                <td colspan="2">Y {{ rest_departamentos }} departamentos adicionales.</td>
+                <th>Funcionario</th>
+                <th>Número de Solicitudes</th>
               </tr>
-            {% endif %}
-          </tbody>
-        </table>
-        <p>
-          Por ejemplo, los tres departamentos con mayor solicitudes son:{% for item in solicitudes_por_depto|slice:':3' %}
-            {% widthratio item.total total_solicitudes 100 as dept_percentage %}
-            <br />El departamento <strong>{{ item.depto_solicitante__nombre }}</strong> representa aproximadamente el
-            <strong>{{ dept_percentage }}</strong>% del total.
-          {% endfor %}
-          <br /><br />
-          En conjunto, estos tres departamentos representan un <strong>{{ top3_percentage|floatformat:2 }}%</strong> del total, lo que equivale a
-          <strong>{{ total_top3 }}</strong> solicitudes.
-          <br />
-          Además, los departamentos adicionales representan aproximadamente un <strong>{{ rest_percentage|floatformat:2 }}%</strong> del total, correspondiendo a
-          <strong>{{ rest_total }}</strong> solicitudes.
-        </p>
-        <p>Este desglose facilita la identificación rápida de las áreas con mayor volumen de solicitudes, así como la detección temprana de incrementos inesperados o situaciones que requieran atención específica.</p>
-      {% else %}
-        <p>Actualmente no existen solicitudes registradas provenientes de ningún departamento específico.</p>
-      {% endif %}
+            </thead>
+            <tbody>
+              {% for item in solicitudes_por_funcionario %}
+                <tr>
+                  <td>
+                    <strong>{{ item.funcionarios_asignados__nombre }}</strong>
+                  </td>
+                  <td>{{ item.total }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
 
-      <h2>Entradas por Tiempo</h2>
-      <p>La distribución temporal de las solicitudes ingresadas durante el año actual ofrece una perspectiva útil para analizar tendencias y patrones de demanda a lo largo del periodo evaluado.</p>
-      {% if top3_meses_detailed %}
-        <h3>Solicitudes por Mes</h3>
-        <p>
-          El análisis revela que los meses con mayor cantidad de solicitudes registradas son:{% for item in top3_meses_detailed %}
-            <br />Mes de <strong>{{ item.mes_nombre }}</strong> con <strong>{{ item.cantidad }}</strong> solicitudes que equivale al <strong>{{ item.porcentaje|floatformat:2 }}%</strong> del total.
-          {% endfor %}
-        </p>
-        <p>
-          En conjunto, estos tres meses representan un <strong>{{ top3_porcentaje_meses|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_meses }}</strong> solicitudes.
-        </p>
-      {% else %}
-        <p>Actualmente no se han registrado solicitudes en ningún mes específico.</p>
-      {% endif %}
+          {% if solicitudes_por_funcionario|length >= 2 %}
+            <p>
+              Se observa que <strong>{{ solicitudes_por_funcionario.0.funcionarios_asignados__nombre }}</strong> y
+              <strong>{{ solicitudes_por_funcionario.1.funcionarios_asignados__nombre }}</strong> concentran la mayor carga de trabajo, representando aproximadamente el <strong>{{ top_funcionarios.0.1|add:top_funcionarios.1.1|floatformat:1 }}%</strong> del total de solicitudes.
+            </p>
+          {% else %}
+            <p>
+              El funcionario con mayor carga de trabajo es <strong>{{ solicitudes_por_funcionario.0.funcionarios_asignados__nombre }}</strong>.
+            </p>
+          {% endif %}
 
-      {% if top3_weeks_descriptive %}
-        <h3>Solicitudes por Semana</h3>
-        <p>
-          Las semanas con más actividad registrada fueron:{% for week in top3_weeks_descriptive %}
-            <br />{{ week.descripcion|safe }}: <strong>{{ week.cantidad }}</strong> solicitudes.
-          {% endfor %}
-        </p>
-        <p>
-          En conjunto, estas tres semanas representan un <strong>{{ top3_porcentaje_semanas|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_semanas }}</strong> solicitudes.
-        </p>
-      {% else %}
-        <p>No existen solicitudes registradas por semanas específicas hasta la fecha.</p>
-      {% endif %}
-      <p>Este análisis temporal es clave para identificar periodos pico y mejorar la planificación de recursos y tiempos de respuesta. Se recomienda realizar un seguimiento continuo para optimizar los procesos internos y anticipar efectivamente las fluctuaciones en la demanda.</p>
+          <p>Una lectura más detallada revela las siguientes asignaciones:</p>
+          {% if top_funcionarios and total_solicitudes > 0 %}
+            {% for funcionario in top_funcionarios %}
+              <p>
+                El funcionario <strong>{{ funcionario.0 }}</strong> tiene asignado el <strong>{{ funcionario.1|floatformat:1 }}%</strong> de las solicitudes, lo que corresponde a
+                <strong>{{ funcionario.2 }}</strong> solicitudes.
+              </p>
+            {% endfor %}
+          {% else %}
+            <p>No se encontraron datos o el total de solicitudes es cero.</p>
+          {% endif %}
+        {% else %}
+          <p>No existen solicitudes agrupadas por funcionario asignado.</p>
+        {% endif %}
+      </div>
+      <div class="tipoRecepcion">
+        <!-- Por Tipo de Recepción -->
+        <h3>Por Tipo de Recepción</h3>
+        {% if solicitudes_por_tipo_recepcion %}
+          <p>La forma en que las solicitudes ingresan al sistema (por ejemplo, a través de memorándums, correos, etc.) es crucial para entender los canales de comunicación más utilizados:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo de Recepción</th>
+                <th>Número de Solicitudes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in solicitudes_por_tipo_recepcion %}
+                <tr>
+                  <td>
+                    <strong>{{ item.tipo_recepcion__tipo }}</strong>
+                  </td>
+                  <td>{{ item.total }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No se han registrado solicitudes por tipo de recepción.</p>
+        {% endif %}
+      </div>
+      <div class="tipoSolicitud">
+        <!-- Por Tipo de Solicitud -->
+        <h3>Por Tipo de Solicitud</h3>
+        {% if solicitudes_por_tipo_solicitud %}
+          <p>Finalmente, agrupar las solicitudes según su naturaleza o temática brinda información valiosa sobre qué clases de documentación (oficios, ordinarios, solicitudes varias, etc.) son más frecuentes:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo de Solicitud</th>
+                <th>Número de Solicitudes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in solicitudes_por_tipo_solicitud %}
+                <tr>
+                  <td>
+                    <strong>{{ item.tipo_solicitud__tipo }}</strong>
+                  </td>
+                  <td>{{ item.total }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No se han registrado solicitudes por tipo de solicitud.</p>
+        {% endif %}
+      </div>
+      <div class="entradasPorTiempo">
+        <h2>Entradas por Tiempo</h2>
+        <p>La distribución temporal de las solicitudes ingresadas durante el año actual ofrece una perspectiva útil para analizar tendencias y patrones de demanda a lo largo del periodo evaluado.</p>
+        {% if top3_meses_detailed %}
+          <h3>Solicitudes por Mes</h3>
+          <p>
+            El análisis revela que los meses con mayor cantidad de solicitudes registradas son:{% for item in top3_meses_detailed %}
+              <br />Mes de <strong>{{ item.mes_nombre }}</strong> con <strong>{{ item.cantidad }}</strong> solicitudes que equivale al <strong>{{ item.porcentaje|floatformat:2 }}%</strong> del total.
+            {% endfor %}
+          </p>
+          <p>
+            En conjunto, estos tres meses representan un <strong>{{ top3_porcentaje_meses|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_meses }}</strong> solicitudes.
+          </p>
+        {% else %}
+          <p>Actualmente no se han registrado solicitudes en ningún mes específico.</p>
+        {% endif %}
 
+        {% if top3_weeks_descriptive %}
+          <h3>Solicitudes por Semana</h3>
+          <p>
+            Las semanas con más actividad registrada fueron:{% for week in top3_weeks_descriptive %}
+              <br />{{ week.descripcion|safe }}: <strong>{{ week.cantidad }}</strong> solicitudes.
+            {% endfor %}
+          </p>
+          <p>
+            En conjunto, estas tres semanas representan un <strong>{{ top3_porcentaje_semanas|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_semanas }}</strong> solicitudes.
+          </p>
+        {% else %}
+          <p>No existen solicitudes registradas por semanas específicas hasta la fecha.</p>
+        {% endif %}
+        <p>Este análisis temporal es clave para identificar periodos pico y mejorar la planificación de recursos y tiempos de respuesta. Se recomienda realizar un seguimiento continuo para optimizar los procesos internos y anticipar efectivamente las fluctuaciones en la demanda.</p>
+      </div>
       <!-- Resto del reporte, por ejemplo, el resumen de estadísticas -->
       <h2>Resumen de Estadísticas</h2>
       <table>
