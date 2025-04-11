@@ -1313,7 +1313,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   align-items: center;
   justify-content: space-around;
   gap: 10px;
-  background: #f7ea53;
+  /* background: #f7ea53; */
   border-radius: 10px;
   color: #16233E;
   font-weight: 600;
@@ -1342,9 +1342,9 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   fill: rgb(255, 255, 255);
 }
 
-.buttonLogin:hover {
+/* .buttonLogin:hover {
   background: #fef191;
-}
+} */
 
 .buttonLogin:active {
   transform: scale(0.97);

@@ -9,16 +9,16 @@
 }
 
 .buttonPreview {
-    background: #F7EA53;
+    background: #4bbfe0;
 }
 
 .buttonSubirSalida {
-    background: #4bbfe0;
+    background: #F7EA53;
     color: ghostwhite;
 }
 
 .buttonSubirSalida:hover {
-    background: #94d4ea;
+    background: #ded274;
 }
 
 .buttonSubirSalida span {

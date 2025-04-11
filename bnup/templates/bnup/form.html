@@ -146,9 +146,29 @@
           <div class="tittleTable">
             <div class="searchContainer">
               <span class="material-symbols-outlined">search</span>
-              <input style="width: 500px; margin-top: 0px; border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
+              <input style="width: 400px; margin-top: 0px; border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
             </div>
-            <div id="paginationSolicitudes" class="pagination"></div>
+            <div style="display: flex; flex-direction: row;">
+              <div class="salidas-legend" style="display: flex;flex-direction: row;padding: 5px;border: black dashed 1px;border-radius: 5px;max-width: 100%;align-items: center; margin-right: 10px;">
+                <h4 style="margin-right: 10px;">Columna Salidas:</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; gap: 20px; align-items: center;">
+                  <li style="display: flex; align-items: center;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #17d244; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
+                    <span>Respondida</span>
+                  </li>
+                  <li style="display: flex; align-items: center;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #F7EA53; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
+                    <span>En espera</span>
+                  </li>
+                  <li style="display: flex; align-items: center;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #ffa420; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
+                    <span>CONOCIMIENTO Y DISTRIBUCION</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div id="paginationSolicitudes" class="pagination"></div>
+            </div>
           </div>
           <table id="tablaSolicitudes" class="hidden-table" border="1" cellpadding="5" cellspacing="0" style="margin-top: 10px;">
             <thead>
@@ -226,7 +246,10 @@
                   <td style="display: flex; justify-content: center; border-inline: 0;">
                     {% if solicitud.archivo_adjunto_ingreso %}
                       <div class="icon-container">
-                        <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;"><button class="buttonLogin buttonPreview"><span class="material-symbols-outlined bell">find_in_page</span></button></a>
+                        <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;">
+                          <button class="buttonLogin buttonPreview">
+                            <span class="material-symbols-outlined bell">find_in_page</span>
+                          </button></a>
                         <div class="tooltip">Ver archivo de ingreso</div>
                       </div>
                     {% else %}
@@ -240,17 +263,42 @@
                     <div class="icon-container">
                       <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
                         {% if solicitud.salidas.all %}
-                          <button class="buttonLogin buttonPreview" style="background: #ffa420;">
-                            <span class="material-symbols-outlined bell">find_in_page</span>
-                            <div class="tooltip">Ver archivo de salida</div>
-                          </button>
+                          {% if solicitud.tipo_solicitud.id == 12 %}
+                            <button class="buttonLogin buttonPreview" style="background: #ffa420;">
+                              <span class="material-symbols-outlined bell">group</span>
+                              <p>|</p>
+                              <span class="material-symbols-outlined bell">find_in_page</span>
+                              <div class="tooltip">Ver archivo de salida</div>
+                            </button>
+                          {% else %}
+                            <button class="buttonLogin buttonPreview" style="background: #17d244;">
+                              <span class="material-symbols-outlined bell">check</span>
+                              <p>|</p>
+                              <span class="material-symbols-outlined bell">find_in_page</span>
+                              <div class="tooltip">Ver archivo de salida</div>
+                            </button>
+                          {% endif %}
                         {% else %}
-                          <button class="buttonLogin buttonSubirSalida"><span class="material-symbols-outlined bell">upload_file</span></button>
-                          <div class="tooltip">Subir Salidas</div>
+                          {% if solicitud.tipo_solicitud.id == 12 %}
+                            <button class="buttonLogin buttonSubirSalida" style="background: #ffa420;">
+                              <span class="material-symbols-outlined bell">group</span>
+                              <p>|</p>
+                              <span class="material-symbols-outlined bell">upload_file</span>
+                            </button>
+                            <div class="tooltip">Subir Salidas</div>
+                          {% else %}
+                            <button class="buttonLogin buttonSubirSalida">
+                              <span class="material-symbols-outlined bell">schedule</span>
+                              <p>|</p>
+                              <span class="material-symbols-outlined bell">upload_file</span>
+                            </button>
+                            <div class="tooltip">Subir Salidas</div>
+                          {% endif %}
                         {% endif %}
                       </a>
                     </div>
                   </td>
+                  
                 </tr>
               {% empty %}
                 <tr>
