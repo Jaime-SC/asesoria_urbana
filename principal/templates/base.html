@@ -75,17 +75,21 @@
                 
                 bg-admin
 
-              {% elif perfil_usuario.tipo_usuario.nombre == 'PRIVILEGIADO' %}
+              {% elif perfil_usuario.tipo_usuario.nombre == 'SECRETARIA' %}
                 
                 bg-privilegiado
 
-              {% elif perfil_usuario.tipo_usuario.nombre == 'ALIMENTADOR' %}
+              {% elif perfil_usuario.tipo_usuario.nombre == 'FUNCIONARIO' %}
                 
                 bg-alimentador
 
               {% elif perfil_usuario.tipo_usuario.nombre == 'VISUALIZADOR' %}
                 
                 bg-visualizador
+
+              {% elif perfil_usuario.tipo_usuario.nombre == 'JEFE' %}
+                
+                bg-jefe
 
               {% else %}
                 
@@ -117,17 +121,21 @@
           
           bg-admin
 
-        {% elif perfil_usuario.tipo_usuario.nombre == 'PRIVILEGIADO' %}
+        {% elif perfil_usuario.tipo_usuario.nombre == 'SECRETARIA' %}
           
           bg-privilegiado
 
-        {% elif perfil_usuario.tipo_usuario.nombre == 'ALIMENTADOR' %}
+        {% elif perfil_usuario.tipo_usuario.nombre == 'FUNCIONARIO' %}
           
           bg-alimentador
 
         {% elif perfil_usuario.tipo_usuario.nombre == 'VISUALIZADOR' %}
           
           bg-visualizador
+
+        {% elif perfil_usuario.tipo_usuario.nombre == 'JEFE' %}
+          
+          bg-jefe
 
         {% else %}
           

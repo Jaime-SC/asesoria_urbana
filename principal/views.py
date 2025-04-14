@@ -42,7 +42,7 @@ def login(request):
             perfil_usuario = PerfilUsuario.objects.filter(user=user).first()
 
             # Verificar si el tipo de usuario es permitido
-            if perfil_usuario and perfil_usuario.tipo_usuario.nombre in ['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR', 'VISUALIZADOR']:
+            if perfil_usuario and perfil_usuario.tipo_usuario.nombre in ['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'VISUALIZADOR', 'JEFE']:
                 auth_login(request, user)
                 request.session['show_sweetalert'] = 'login_success'
                 return redirect('home')

@@ -809,7 +809,7 @@
             deleteButton.style.display = 'none';
         }
 
-        if (editButton && !['ADMIN', 'PRIVILEGIADO'].includes(tipo_usuario)) {
+        if (editButton && !['ADMIN', 'SECRETARIA'].includes(tipo_usuario)) {
             editButton.style.display = 'none';
         }
 
@@ -1841,29 +1841,29 @@
      * Además, se modifica la lógica de envío del formulario para incluir estos nuevos datos.
      */
     function openSalidaModal(solicitudId) {
-        if (!['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR', 'VISUALIZADOR'].includes(tipo_usuario)) {
+        if (!['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'VISUALIZADOR'].includes(tipo_usuario)) {
             return;
         }
-
+    
         const salidaModal = document.getElementById('salidaModal');
         const salidaModalContent = document.getElementById('salidaModalContent');
         const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
         const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-
+    
         if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
             console.error('Elementos del modal de salida no encontrados.');
             return;
         }
-
-        // Reiniciamos cualquier animación previa y mostramos el modal con animación de entrada
+    
+        // Reiniciamos animaciones previas y mostramos el modal
         salidaModalContent.classList.remove('animate__bounceOut');
         salidaModalContent.classList.add('animate__animated', 'animate__bounceIn');
         salidaModal.style.display = 'block';
-
-        // Inicializamos el contenedor para funcionarios de salida (si existe)
+    
+        // Inicializamos el contenedor de funcionarios
         initializeMultipleFuncionariosSalida();
-
-        // Función para cerrar el modal con animación
+    
+        // Cerrar el modal con animación
         function closeModal() {
             salidaModalContent.classList.remove('animate__bounceIn');
             salidaModalContent.classList.add('animate__bounceOut');
@@ -1872,16 +1872,15 @@
                 salidaModalContent.classList.remove('animate__animated', 'animate__bounceOut');
             }, 800);
         }
-
         salidaCloseButton.onclick = closeModal;
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             if (event.target === salidaModal) {
                 closeModal();
             }
         };
-
+    
         tablaSalidasBody.innerHTML = '';
-
+    
         // Cargar las salidas existentes mediante AJAX
         fetch(`/bnup/get_salidas/${solicitudId}/`)
             .then(response => {
@@ -1892,102 +1891,70 @@
             })
             .then(data => {
                 if (data.success) {
-                    // Dentro del bloque que recorre data.salidas en openSalidaModal():
-                    // Dentro del callback del fetch en openSalidaModal:
                     data.salidas.forEach(salida => {
                         const row = document.createElement('tr');
-
+    
                         // Columna Nº Salida
                         const numeroSalidaCell = document.createElement('td');
                         numeroSalidaCell.textContent = salida.numero_salida;
                         row.appendChild(numeroSalidaCell);
-
+    
                         // Columna Fecha
                         const fechaSalidaCell = document.createElement('td');
                         fechaSalidaCell.textContent = salida.fecha_salida;
                         row.appendChild(fechaSalidaCell);
-
-
-
-                        // Nueva Columna: Descripción
+    
+                        // Columna de Descripción
                         const descripcionCell = document.createElement('td');
-
-                        // Crear el botón con la apariencia deseada
                         const descBtn = document.createElement('button');
-                        descBtn.className = "buttonLogin buttonPreview"; // Usa las clases definidas para el botón
-                        descBtn.style.background = "#F7EA53";
+                        descBtn.className = "buttonLogin buttonPreview";
+                        descBtn.style.background = "#1e90ff";
                         descBtn.style.marginInline = "auto";
-
-                        // Crear el ícono con el nombre 'preview'
                         const iconSpan = document.createElement('span');
                         iconSpan.classList.add('material-symbols-outlined', 'bell');
                         iconSpan.textContent = 'preview';
-
-                        // Crear el tooltip (puedes ajustar el texto según necesites)
                         const tooltipDiv = document.createElement('div');
                         tooltipDiv.className = "tooltip";
                         tooltipDiv.textContent = "Ver descripción";
-
-                        // Agregar el ícono y el tooltip al botón
                         descBtn.appendChild(iconSpan);
                         descBtn.appendChild(tooltipDiv);
-
-                        // Asignar la acción al botón
                         descBtn.onclick = () => {
                             openSalidaDescripcionModal(salida.numero_salida, salida.fecha_salida, salida.descripcion, salida.funcionarios);
                         };
-
                         descripcionCell.appendChild(descBtn);
                         row.appendChild(descripcionCell);
-
-
-                        // Columna Archivo adjunto (última columna)
+    
+                        // Columna Archivo adjunto
                         const archivoCell = document.createElement('td');
                         if (salida.archivo_url) {
-                            // Creamos el enlace que abre el archivo en una nueva pestaña
                             const link = document.createElement('a');
                             link.href = salida.archivo_url;
                             link.target = '_blank';
                             link.setAttribute('aria-label', 'Ver Archivo');
                             link.setAttribute('title', 'Ver Archivo');
-
-                            // Creamos el botón con las clases y estilo deseados
                             const button = document.createElement('button');
                             button.className = "buttonLogin buttonPreview";
-                            button.style.background = "#ffa420";
+                            button.style.background = "#f7ea53";
                             button.style.marginInline = "auto";
-
-                            // Creamos el span para el ícono
                             const spanIcon = document.createElement('span');
                             spanIcon.classList.add('material-symbols-outlined', 'bell');
                             spanIcon.textContent = "find_in_page";
-
-                            // Creamos el tooltip
-                            const tooltipDiv = document.createElement('div');
-                            tooltipDiv.className = "tooltip";
-                            tooltipDiv.textContent = "Ver archivo de salida";
-
-                            // Agregamos el ícono y el tooltip al botón
+                            const tooltipDivArchivo = document.createElement('div');
+                            tooltipDivArchivo.className = "tooltip";
+                            tooltipDivArchivo.textContent = "Ver archivo de salida";
                             button.appendChild(spanIcon);
-                            button.appendChild(tooltipDiv);
-
-                            // Agregamos el botón al enlace
+                            button.appendChild(tooltipDivArchivo);
                             link.appendChild(button);
-
-                            // Finalmente, agregamos el enlace a la celda
                             archivoCell.appendChild(link);
                         } else {
                             archivoCell.textContent = 'No adjunto';
                         }
                         row.appendChild(archivoCell);
-
-
+    
                         tablaSalidasBody.appendChild(row);
                     });
-
-
-
-                    // Inicializar la paginación de la tabla de salidas (si la función ya la tienes)
+    
+                    // Inicializar la paginación de la tabla de salidas
                     initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
                 } else {
                     console.error('Error al obtener las salidas:', data.error);
@@ -1996,36 +1963,94 @@
             .catch(error => {
                 console.error('Error al obtener las salidas:', error);
             });
-
-        // Para usuarios con permisos (no visualizadores), configurar el formulario de creación de salidas
-        if (['ADMIN', 'PRIVILEGIADO', 'ALIMENTADOR'].includes(tipo_usuario)) {
+    
+        // Para usuarios con permisos (no visualizadores)
+        if (['ADMIN', 'SECRETARIA', 'FUNCIONARIO'].includes(tipo_usuario)) {
             const solicitudInput = document.getElementById('solicitud_id');
             if (!solicitudInput) {
                 console.error('Elemento solicitud_id no encontrado.');
                 return;
             }
             solicitudInput.value = solicitudId;
-
+    
             // Resetear el formulario de salida
             const salidaForm = document.getElementById('salidaForm');
             if (salidaForm) {
                 salidaForm.reset();
             }
-
+    
+            // *** Inicializar o reinicializar el fileinput para el adjunto ***
+            // Verificamos que el elemento exista y que se haya inicializado previamente
+            if (document.getElementById('archivo_adjunto_salida')) {
+                if ($('#archivo_adjunto_salida').data('fileinput') === undefined) {
+                    console.log('Inicializando fileinput para archivo_adjunto_salida');
+                    $("#archivo_adjunto_salida").fileinput({
+                        uploadUrl: "/bnup/upload_salida/",
+                        deleteUrl: '/bnup/delete_file/',
+                        showUpload: false,
+                        showRemove: true,
+                        showPreview: true,
+                        showCaption: false,
+                        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+                        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                        mainClass: 'input-group-sm',
+                        dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+                        fileActionSettings: {
+                            showRemove: false,
+                            showUpload: false,
+                            showZoom: false,
+                            showDrag: false,
+                            showDelete: false,
+                            zoomIcon: '<span class="material-symbols-outlined" style="color: white;">zoom_in</span>',
+                            showZoom: function (config) {
+                                return (config.type === 'pdf' || config.type === 'image');
+                            }
+                        },
+                        layoutTemplates: {
+                            close: '',
+                            indicator: '',
+                            actionCancel: '',
+                            modal: '<div class="modal-dialog modal-lg{rtl}" role="document">\n' +
+                                   '  <div class="modal-content animate__animated animate__bounceIn">\n' +
+                                   '    <div class="modal-header kv-zoom-header">\n' +
+                                   '      <h6 class="modal-title kv-zoom-title" id="kvFileinputModalLabel">' +
+                                   '        <span class="kv-zoom-caption"></span> <span class="kv-zoom-size"></span>\n' +
+                                   '      </h6>\n' +
+                                   '      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>' +
+                                   '    </div>\n' +
+                                   '    <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
+                                   '    <div class="kv-zoom-description"></div>\n' +
+                                   '  </div>\n' +
+                                   '</div>\n'
+                        },
+                        previewZoomButtonIcons: {
+                            prev: '',
+                            next: '',
+                            rotate: '',
+                            toggleheader: '',
+                            fullscreen: '',
+                            borderless: '',
+                            close: ''
+                        }
+                    });
+                } else {
+                    // Si ya estaba inicializado, se limpia el input para nuevas cargas
+                    $("#archivo_adjunto_salida").fileinput('clear');
+                }
+            }
+    
+            // Configurar el botón para guardar la salida
             const saveButton = document.getElementById('guardarSalida');
             if (saveButton) {
                 saveButton.onclick = (event) => {
                     event.preventDefault();
-                    // 🚨 VALIDACIÓN DEL SELECT DE FUNCIONARIOS 🚨
                     const selects = document.querySelectorAll('.salidaFuncionarioSelect');
                     let funcionarioInvalido = false;
-
                     selects.forEach(select => {
                         if (select.value === '0') {
                             funcionarioInvalido = true;
                         }
                     });
-
                     if (funcionarioInvalido) {
                         Swal.fire({
                             icon: 'error',
@@ -2035,27 +2060,19 @@
                             heightAuto: false,
                             scrollbarPadding: false
                         });
-
-                        return;  // Detiene el proceso si hay un funcionario inválido
+                        return;
                     }
-                    // Obtener los campos existentes
                     const numeroSalida = document.getElementById('numero_salida').value.trim();
                     const fechaSalida = document.getElementById('fecha_salida').value.trim();
                     const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
                     const archivoAdjunto = archivoAdjuntoInput.files[0];
-
-                    // Obtener el nuevo campo de descripción de salida (opcional)
                     const descripcionSalida = document.getElementById('descripcion_salida') ? document.getElementById('descripcion_salida').value.trim() : '';
-
-                    // Obtener los funcionarios seleccionados para la salida
                     let funcionariosSalida = [];
                     document.querySelectorAll('.salidaFuncionarioSelect').forEach(select => {
                         if (select.value) {
                             funcionariosSalida.push(select.value);
                         }
                     });
-
-                    // Validar que los campos obligatorios estén completos
                     if (!numeroSalida || !fechaSalida || !archivoAdjunto) {
                         Swal.fire({
                             heightAuto: false,
@@ -2063,12 +2080,10 @@
                             icon: 'error',
                             title: 'Campos incompletos',
                             text: 'Por favor, complete todos los campos requeridos antes de guardar.',
-                            confirmButtonColor: '#E73C45',
+                            confirmButtonColor: '#E73C45'
                         });
                         return;
                     }
-
-                    // Confirmación con SweetAlert2
                     Swal.fire({
                         heightAuto: false,
                         scrollbarPadding: false,
@@ -2079,7 +2094,7 @@
                         confirmButtonColor: '#4BBFE0',
                         cancelButtonColor: '#E73C45',
                         confirmButtonText: 'Guardar',
-                        cancelButtonText: 'Cancelar',
+                        cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             const formData = new FormData();
@@ -2087,7 +2102,6 @@
                             formData.append('numero_salida', numeroSalida);
                             formData.append('fecha_salida', fechaSalida);
                             formData.append('archivo_adjunto_salida', archivoAdjunto);
-                            // Enviar los nuevos campos: descripción y funcionarios (en JSON)
                             formData.append('descripcion_salida', descripcionSalida);
                             funcionariosSalida.forEach(val => {
                                 formData.append('funcionarios_salidas', val);
@@ -2099,136 +2113,111 @@
                                 },
                                 body: formData,
                             })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        // Actualizar la tabla de salidas con el nuevo registro
-                                        const salida = data.salida;
-                                        const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-                                        const row = document.createElement('tr');
-
-                                        // Columna Nº Salida
-                                        const numeroSalidaCell = document.createElement('td');
-                                        numeroSalidaCell.textContent = salida.numero_salida;
-                                        row.appendChild(numeroSalidaCell);
-
-                                        // Columna Fecha
-                                        const fechaSalidaCell = document.createElement('td');
-                                        fechaSalidaCell.textContent = salida.fecha_salida;
-                                        row.appendChild(fechaSalidaCell);
-
-                                        // Nueva Columna: Descripción
-                                        const descripcionCell = document.createElement('td');
-                                        const descBtn = document.createElement('button');
-                                        descBtn.className = "buttonLogin buttonPreview";
-                                        descBtn.style.background = "#F7EA53";
-                                        descBtn.style.marginInline = "auto";
-
-                                        const iconSpan = document.createElement('span');
-                                        iconSpan.classList.add('material-symbols-outlined', 'bell');
-                                        iconSpan.textContent = 'preview';
-
-                                        const tooltipDiv = document.createElement('div');
-                                        tooltipDiv.className = "tooltip";
-                                        tooltipDiv.textContent = "Ver descripción";
-
-                                        descBtn.appendChild(iconSpan);
-                                        descBtn.appendChild(tooltipDiv);
-
-                                        descBtn.onclick = () => {
-                                            openSalidaDescripcionModal(
-                                                salida.numero_salida,
-                                                salida.fecha_salida,
-                                                salida.descripcion,
-                                                salida.funcionarios
-                                            );
-                                        };
-
-                                        descripcionCell.appendChild(descBtn);
-                                        row.appendChild(descripcionCell);
-
-                                        // Columna Archivo Adjunto
-                                        const archivoCell = document.createElement('td');
-                                        if (salida.archivo_url) {
-                                            const link = document.createElement('a');
-                                            link.href = salida.archivo_url;
-                                            link.target = '_blank';
-                                            link.setAttribute('aria-label', 'Ver Archivo');
-                                            link.setAttribute('title', 'Ver Archivo');
-
-                                            const button = document.createElement('button');
-                                            button.className = "buttonLogin buttonPreview";
-                                            button.style.background = "#ffa420";
-                                            button.style.marginInline = "auto";
-
-                                            const spanIcon = document.createElement('span');
-                                            spanIcon.classList.add('material-symbols-outlined', 'bell');
-                                            spanIcon.textContent = "find_in_page";
-
-                                            const tooltipDiv = document.createElement('div');
-                                            tooltipDiv.className = "tooltip";
-                                            tooltipDiv.textContent = "Ver archivo de salida";
-
-                                            button.appendChild(spanIcon);
-                                            button.appendChild(tooltipDiv);
-                                            link.appendChild(button);
-
-                                            archivoCell.appendChild(link);
-                                        } else {
-                                            archivoCell.textContent = 'No adjunto';
-                                        }
-                                        row.appendChild(archivoCell);
-
-                                        // Añadir la nueva fila al principio de la tabla
-                                        tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
-
-                                        // Limpiar los campos del formulario
-                                        document.getElementById('numero_salida').value = '';
-                                        document.getElementById('fecha_salida').value = '';
-                                        archivoAdjuntoInput.value = '';
-
-                                        if (document.getElementById('descripcion_salida')) {
-                                            document.getElementById('descripcion_salida').value = '';
-                                        }
-
-                                        // Si usas fileinput plugin:
-                                        $(archivoAdjuntoInput).fileinput('clear');
-
-                                        Swal.fire({
-                                            heightAuto: false,
-                                            scrollbarPadding: false,
-                                            icon: 'success',
-                                            title: 'Salida creada',
-                                            text: 'La salida ha sido registrada correctamente.',
-                                            showConfirmButton: false,
-                                            timer: 2000,
-                                        });
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // Actualizar la tabla con la nueva salida
+                                    const salida = data.salida;
+                                    const row = document.createElement('tr');
+    
+                                    const numeroSalidaCell = document.createElement('td');
+                                    numeroSalidaCell.textContent = salida.numero_salida;
+                                    row.appendChild(numeroSalidaCell);
+    
+                                    const fechaSalidaCell = document.createElement('td');
+                                    fechaSalidaCell.textContent = salida.fecha_salida;
+                                    row.appendChild(fechaSalidaCell);
+    
+                                    const descripcionCell = document.createElement('td');
+                                    const descBtn = document.createElement('button');
+                                    descBtn.className = "buttonLogin buttonPreview";
+                                    descBtn.style.background = "#F7EA53";
+                                    descBtn.style.marginInline = "auto";
+                                    const iconSpan = document.createElement('span');
+                                    iconSpan.classList.add('material-symbols-outlined', 'bell');
+                                    iconSpan.textContent = 'preview';
+                                    const tooltipDiv = document.createElement('div');
+                                    tooltipDiv.className = "tooltip";
+                                    tooltipDiv.textContent = "Ver descripción";
+                                    descBtn.appendChild(iconSpan);
+                                    descBtn.appendChild(tooltipDiv);
+                                    descBtn.onclick = () => {
+                                        openSalidaDescripcionModal(salida.numero_salida, salida.fecha_salida, salida.descripcion, salida.funcionarios);
+                                    };
+                                    descripcionCell.appendChild(descBtn);
+                                    row.appendChild(descripcionCell);
+    
+                                    const archivoCell = document.createElement('td');
+                                    if (salida.archivo_url) {
+                                        const link = document.createElement('a');
+                                        link.href = salida.archivo_url;
+                                        link.target = '_blank';
+                                        link.setAttribute('aria-label', 'Ver Archivo');
+                                        link.setAttribute('title', 'Ver Archivo');
+                                        const button = document.createElement('button');
+                                        button.className = "buttonLogin buttonPreview";
+                                        button.style.background = "#ffa420";
+                                        button.style.marginInline = "auto";
+                                        const spanIcon = document.createElement('span');
+                                        spanIcon.classList.add('material-symbols-outlined', 'bell');
+                                        spanIcon.textContent = "find_in_page";
+                                        const tooltipDivArchivo = document.createElement('div');
+                                        tooltipDivArchivo.className = "tooltip";
+                                        tooltipDivArchivo.textContent = "Ver archivo de salida";
+                                        button.appendChild(spanIcon);
+                                        button.appendChild(tooltipDivArchivo);
+                                        link.appendChild(button);
+                                        archivoCell.appendChild(link);
                                     } else {
-                                        Swal.fire({
-                                            heightAuto: false,
-                                            scrollbarPadding: false,
-                                            icon: 'error',
-                                            title: 'Error',
-                                            text: data.error || 'Ha ocurrido un error al crear la salida.',
-                                        });
+                                        archivoCell.textContent = 'No adjunto';
                                     }
-
-                                })
-                                .catch(error => {
-                                    console.error('Error al crear la salida:', error);
+                                    row.appendChild(archivoCell);
+    
+                                    tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
+    
+                                    // Limpiar los campos del formulario
+                                    document.getElementById('numero_salida').value = '';
+                                    document.getElementById('fecha_salida').value = '';
+                                    archivoAdjuntoInput.value = '';
+                                    if (document.getElementById('descripcion_salida')) {
+                                        document.getElementById('descripcion_salida').value = '';
+                                    }
+                                    $(archivoAdjuntoInput).fileinput('clear');
+    
+                                    Swal.fire({
+                                        heightAuto: false,
+                                        scrollbarPadding: false,
+                                        icon: 'success',
+                                        title: 'Salida creada',
+                                        text: 'La salida ha sido registrada correctamente.',
+                                        showConfirmButton: false,
+                                        timer: 2000
+                                    });
+                                } else {
                                     Swal.fire({
                                         heightAuto: false,
                                         scrollbarPadding: false,
                                         icon: 'error',
                                         title: 'Error',
-                                        text: 'Ha ocurrido un error al crear la salida.',
+                                        text: data.error || 'Ha ocurrido un error al crear la salida.'
                                     });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error al crear la salida:', error);
+                                Swal.fire({
+                                    heightAuto: false,
+                                    scrollbarPadding: false,
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Ha ocurrido un error al crear la salida.'
                                 });
+                            });
                         }
                     });
                 };
             } else {
-                // Para usuarios 'VISUALIZADOR', ocultar el formulario
+                // Para usuarios 'VISUALIZADOR', ocultar el formulario de salidas
                 const salidaFields = document.getElementById('salidaFields');
                 if (salidaFields) {
                     salidaFields.style.display = 'none';
@@ -2236,6 +2225,7 @@
             }
         }
     }
+    
 
     function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
         const modal = document.getElementById('descripcionSalidaModal');
@@ -2338,7 +2328,7 @@
         const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
         let cellIndex = 0;
 
-        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
+        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
             cellIndex = 1; // Ajustar índice si hay checkbox
         }
 
@@ -2480,8 +2470,8 @@
             ? document.getElementById('bnupData').getAttribute('data-tipo-usuario')
             : null;
 
-        // Si el usuario es ADMIN o PRIVILEGIADO, añadir la celda del checkbox
-        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'PRIVILEGIADO') {
+        // Si el usuario es ADMIN o SECRETARIA, añadir la celda del checkbox
+        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
             const checkboxCell = document.createElement('td');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';

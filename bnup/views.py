@@ -40,7 +40,7 @@ def bnup_form(request):
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
     if request.method == "POST":
-        if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
+        if tipo_usuario not in ["ADMIN", "SECRETARIA"]:
             return JsonResponse(
                 {"success": False, "error": "No tiene permiso para crear solicitudes."}
             )
@@ -227,7 +227,7 @@ def edit_bnup_record(request):
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
-    if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
+    if tipo_usuario not in ["ADMIN", "SECRETARIA"]:
         return JsonResponse({"success": False, "error": "No tiene permiso para editar registros."})
 
     if request.method == "POST":
@@ -436,7 +436,7 @@ def statistics_view(request):
     
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
-    if tipo_usuario not in ["ADMIN", "PRIVILEGIADO", "VISUALIZADOR"]:
+    if tipo_usuario not in ["ADMIN", "SECRETARIA", "JEFE"]:
         messages.error(request, "No tiene permiso para ver las estadísticas.")
         return redirect("bnup_form")
     
@@ -953,7 +953,7 @@ def create_salida(request):
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
-    if tipo_usuario not in ["ADMIN", "PRIVILEGIADO", "ALIMENTADOR"]:
+    if tipo_usuario not in ["ADMIN", "SECRETARIA", "FUNCIONARIO"]:
         return JsonResponse({"success": False, "error": "No tiene permiso para crear salidas."})
 
     if request.method == "POST":
@@ -1036,7 +1036,7 @@ def add_departamento(request):
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
-    if tipo_usuario not in ["ADMIN", "PRIVILEGIADO"]:
+    if tipo_usuario not in ["ADMIN", "SECRETARIA"]:
         return JsonResponse(
             {"success": False, "error": "No tiene permiso para agregar departamentos."}
         )

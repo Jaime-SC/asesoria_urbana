@@ -143,7 +143,9 @@ h1 {
 .bg-alimentador span,
 .bg-alimentador p,
 .bg-visualizador span,
-.bg-visualizador p {
+.bg-visualizador p,
+.bg-jefe span,
+.bg-jefe p {
   color: ghostwhite;
 }
 
@@ -165,6 +167,11 @@ h1 {
 
 .bg-visualizador {
   background-color: #3f7978;
+  /* Myrtle Green */
+}
+
+.bg-jefe {
+  background-color: #003153;
   /* Myrtle Green */
 }
 
@@ -1313,7 +1320,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   align-items: center;
   justify-content: space-around;
   gap: 10px;
-  /* background: #f7ea53; */
+  background: #f7ea53;
   border-radius: 10px;
   color: #16233E;
   font-weight: 600;

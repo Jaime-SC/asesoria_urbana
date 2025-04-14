@@ -7,24 +7,24 @@
       <div class="div-container">
         <!-- Botones para abrir modales -->
         <div>
-          {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+          {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
             <button style="background-color: #4BBFE0; justify-content: flex-start; width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span>Ingresar</button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' %}
             <button style="background-color: #E73C45; justify-content: flex-start; width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
           {% endif %}
-          {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+          {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
             <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
           {% endif %}
         </div>
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'VISUALIZADOR' %}
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'JEFE' %}
         {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
           <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
         {% endif %}
       </div>
 
       <!-- Ventana modal para el formulario BNUP -->
-      {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+      {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
         <div id="bnupFormModal" class="modal">
           <div id="modal-content" class="modal-content animate__animated animate__bounceIn">
             <!-- Formulario para ingresar nuevas solicitudes -->
@@ -149,7 +149,7 @@
               <input style="width: 400px; margin-top: 0px; border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
             </div>
             <div style="display: flex; flex-direction: row;">
-              <div class="salidas-legend" style="display: flex;flex-direction: row;padding: 5px;border: black dashed 1px;border-radius: 5px;max-width: 100%;align-items: center; margin-right: 10px;">
+              <div class="salidas-legend" style="display: flex;flex-direction: row;padding: 5px;border-radius: 5px;max-width: 100%;align-items: center;margin-right: 10px;background: #f5f5f5;box-shadow: inset 0 0 5px 0.5px #16233E;">
                 <h4 style="margin-right: 10px;">Columna Salidas:</h4>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; gap: 20px; align-items: center;">
                   <li style="display: flex; align-items: center;">
@@ -157,12 +157,12 @@
                     <span>Respondida</span>
                   </li>
                   <li style="display: flex; align-items: center;">
-                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #F7EA53; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
-                    <span>En espera</span>
+                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #ed1c24; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
+                    <span>En Proceso</span>
                   </li>
                   <li style="display: flex; align-items: center;">
                     <span style="display: inline-block; width: 20px; height: 20px; background-color: #ffa420; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
-                    <span>CONOCIMIENTO Y DISTRIBUCION</span>
+                    <span>Conocimiento y Distribución</span>
                   </li>
                 </ul>
               </div>
@@ -173,7 +173,7 @@
           <table id="tablaSolicitudes" class="hidden-table" border="1" cellpadding="5" cellspacing="0" style="margin-top: 10px;">
             <thead>
               <tr>
-                {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+                {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
                   <th class="non-clickable">
                     <input type="checkbox" id="selectAll" />
                   </th>
@@ -193,7 +193,7 @@
             <tbody>
               {% for solicitud in solicitudes %}
               <tr class="animate__animated" data-id="{{ solicitud.id }}" data-salidas="{% for salida in solicitud.salidas.all %}{{ salida.numero_salida }} {{ salida.fecha_salida|date:'d/m/Y' }} {% endfor %}" data-email="{{ solicitud.correo_solicitante|default:'' }}">
-                  {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+                  {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
                     <td>
                       <input type="checkbox" class="rowCheckbox" data-id="{{ solicitud.id }}" />
                     </td>
@@ -302,7 +302,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' %}
+                  <td colspan="{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
                       10
                     {% else %}
                       9
@@ -384,13 +384,13 @@
 </div>
 
 
-{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' or tipo_usuario == 'VISUALIZADOR' %}
+{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' or tipo_usuario == 'VISUALIZADOR' %}
   <!-- Modal para gestionar la salida -->
   <div id="salidaModal" class="modal">
     <div id="salidaModalContent" class="modal-content animate__animated" style="max-width: max-content;">
       <!-- Encabezado del modal -->
       <div style="display: flex; align-items: center; justify-content: space-between;">
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
 
           <h2>Registrar Salida</h2>
         {% else %}
@@ -402,7 +402,7 @@
       </div>
 
       <div style="display: flex; justify-content: space-between; gap: 50px;">
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'PRIVILEGIADO' or tipo_usuario == 'ALIMENTADOR' %}
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
 
           <!-- Formulario para crear la salida -->
           <form id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data" style="width: -webkit-fill-available;">
