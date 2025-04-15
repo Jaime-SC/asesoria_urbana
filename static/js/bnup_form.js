@@ -1841,29 +1841,30 @@
      * Además, se modifica la lógica de envío del formulario para incluir estos nuevos datos.
      */
     function openSalidaModal(solicitudId) {
-        if (!['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'VISUALIZADOR'].includes(tipo_usuario)) {
+        // Actualizamos la condición para incluir a 'JEFE'
+        if (!['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'VISUALIZADOR', 'JEFE'].includes(tipo_usuario)) {
             return;
         }
-    
+
         const salidaModal = document.getElementById('salidaModal');
         const salidaModalContent = document.getElementById('salidaModalContent');
         const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
         const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
-    
+
         if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
             console.error('Elementos del modal de salida no encontrados.');
             return;
         }
-    
+
         // Reiniciamos animaciones previas y mostramos el modal
         salidaModalContent.classList.remove('animate__bounceOut');
         salidaModalContent.classList.add('animate__animated', 'animate__bounceIn');
         salidaModal.style.display = 'block';
-    
+
         // Inicializamos el contenedor de funcionarios
         initializeMultipleFuncionariosSalida();
-    
-        // Cerrar el modal con animación
+
+        // Función para cerrar el modal con animación
         function closeModal() {
             salidaModalContent.classList.remove('animate__bounceIn');
             salidaModalContent.classList.add('animate__bounceOut');
@@ -1873,14 +1874,14 @@
             }, 800);
         }
         salidaCloseButton.onclick = closeModal;
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (event.target === salidaModal) {
                 closeModal();
             }
         };
-    
+
         tablaSalidasBody.innerHTML = '';
-    
+
         // Cargar las salidas existentes mediante AJAX
         fetch(`/bnup/get_salidas/${solicitudId}/`)
             .then(response => {
@@ -1893,22 +1894,22 @@
                 if (data.success) {
                     data.salidas.forEach(salida => {
                         const row = document.createElement('tr');
-    
+
                         // Columna Nº Salida
                         const numeroSalidaCell = document.createElement('td');
                         numeroSalidaCell.textContent = salida.numero_salida;
                         row.appendChild(numeroSalidaCell);
-    
+
                         // Columna Fecha
                         const fechaSalidaCell = document.createElement('td');
                         fechaSalidaCell.textContent = salida.fecha_salida;
                         row.appendChild(fechaSalidaCell);
-    
+
                         // Columna de Descripción
                         const descripcionCell = document.createElement('td');
                         const descBtn = document.createElement('button');
                         descBtn.className = "buttonLogin buttonPreview";
-                        descBtn.style.background = "#1e90ff";
+                        descBtn.style.background = "#1e90ff"; // Ajustado para diferenciar
                         descBtn.style.marginInline = "auto";
                         const iconSpan = document.createElement('span');
                         iconSpan.classList.add('material-symbols-outlined', 'bell');
@@ -1923,7 +1924,7 @@
                         };
                         descripcionCell.appendChild(descBtn);
                         row.appendChild(descripcionCell);
-    
+
                         // Columna Archivo adjunto
                         const archivoCell = document.createElement('td');
                         if (salida.archivo_url) {
@@ -1950,10 +1951,10 @@
                             archivoCell.textContent = 'No adjunto';
                         }
                         row.appendChild(archivoCell);
-    
+
                         tablaSalidasBody.appendChild(row);
                     });
-    
+
                     // Inicializar la paginación de la tabla de salidas
                     initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
                 } else {
@@ -1963,24 +1964,23 @@
             .catch(error => {
                 console.error('Error al obtener las salidas:', error);
             });
-    
+
         // Para usuarios con permisos (no visualizadores)
-        if (['ADMIN', 'SECRETARIA', 'FUNCIONARIO'].includes(tipo_usuario)) {
+        if (['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'JEFE'].includes(tipo_usuario)) {
             const solicitudInput = document.getElementById('solicitud_id');
             if (!solicitudInput) {
                 console.error('Elemento solicitud_id no encontrado.');
                 return;
             }
             solicitudInput.value = solicitudId;
-    
+
             // Resetear el formulario de salida
             const salidaForm = document.getElementById('salidaForm');
             if (salidaForm) {
                 salidaForm.reset();
             }
-    
-            // *** Inicializar o reinicializar el fileinput para el adjunto ***
-            // Verificamos que el elemento exista y que se haya inicializado previamente
+
+            // Inicializar o reinicializar el fileinput para el adjunto
             if (document.getElementById('archivo_adjunto_salida')) {
                 if ($('#archivo_adjunto_salida').data('fileinput') === undefined) {
                     console.log('Inicializando fileinput para archivo_adjunto_salida');
@@ -2011,17 +2011,17 @@
                             indicator: '',
                             actionCancel: '',
                             modal: '<div class="modal-dialog modal-lg{rtl}" role="document">\n' +
-                                   '  <div class="modal-content animate__animated animate__bounceIn">\n' +
-                                   '    <div class="modal-header kv-zoom-header">\n' +
-                                   '      <h6 class="modal-title kv-zoom-title" id="kvFileinputModalLabel">' +
-                                   '        <span class="kv-zoom-caption"></span> <span class="kv-zoom-size"></span>\n' +
-                                   '      </h6>\n' +
-                                   '      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>' +
-                                   '    </div>\n' +
-                                   '    <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
-                                   '    <div class="kv-zoom-description"></div>\n' +
-                                   '  </div>\n' +
-                                   '</div>\n'
+                                '  <div class="modal-content animate__animated animate__bounceIn">\n' +
+                                '    <div class="modal-header kv-zoom-header">\n' +
+                                '      <h6 class="modal-title kv-zoom-title" id="kvFileinputModalLabel">\n' +
+                                '        <span class="kv-zoom-caption"></span> <span class="kv-zoom-size"></span>\n' +
+                                '      </h6>\n' +
+                                '      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>' +
+                                '    </div>\n' +
+                                '    <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
+                                '    <div class="kv-zoom-description"></div>\n' +
+                                '  </div>\n' +
+                                '</div>\n'
                         },
                         previewZoomButtonIcons: {
                             prev: '',
@@ -2034,11 +2034,10 @@
                         }
                     });
                 } else {
-                    // Si ya estaba inicializado, se limpia el input para nuevas cargas
                     $("#archivo_adjunto_salida").fileinput('clear');
                 }
             }
-    
+
             // Configurar el botón para guardar la salida
             const saveButton = document.getElementById('guardarSalida');
             if (saveButton) {
@@ -2113,106 +2112,106 @@
                                 },
                                 body: formData,
                             })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    // Actualizar la tabla con la nueva salida
-                                    const salida = data.salida;
-                                    const row = document.createElement('tr');
-    
-                                    const numeroSalidaCell = document.createElement('td');
-                                    numeroSalidaCell.textContent = salida.numero_salida;
-                                    row.appendChild(numeroSalidaCell);
-    
-                                    const fechaSalidaCell = document.createElement('td');
-                                    fechaSalidaCell.textContent = salida.fecha_salida;
-                                    row.appendChild(fechaSalidaCell);
-    
-                                    const descripcionCell = document.createElement('td');
-                                    const descBtn = document.createElement('button');
-                                    descBtn.className = "buttonLogin buttonPreview";
-                                    descBtn.style.background = "#F7EA53";
-                                    descBtn.style.marginInline = "auto";
-                                    const iconSpan = document.createElement('span');
-                                    iconSpan.classList.add('material-symbols-outlined', 'bell');
-                                    iconSpan.textContent = 'preview';
-                                    const tooltipDiv = document.createElement('div');
-                                    tooltipDiv.className = "tooltip";
-                                    tooltipDiv.textContent = "Ver descripción";
-                                    descBtn.appendChild(iconSpan);
-                                    descBtn.appendChild(tooltipDiv);
-                                    descBtn.onclick = () => {
-                                        openSalidaDescripcionModal(salida.numero_salida, salida.fecha_salida, salida.descripcion, salida.funcionarios);
-                                    };
-                                    descripcionCell.appendChild(descBtn);
-                                    row.appendChild(descripcionCell);
-    
-                                    const archivoCell = document.createElement('td');
-                                    if (salida.archivo_url) {
-                                        const link = document.createElement('a');
-                                        link.href = salida.archivo_url;
-                                        link.target = '_blank';
-                                        link.setAttribute('aria-label', 'Ver Archivo');
-                                        link.setAttribute('title', 'Ver Archivo');
-                                        const button = document.createElement('button');
-                                        button.className = "buttonLogin buttonPreview";
-                                        button.style.background = "#ffa420";
-                                        button.style.marginInline = "auto";
-                                        const spanIcon = document.createElement('span');
-                                        spanIcon.classList.add('material-symbols-outlined', 'bell');
-                                        spanIcon.textContent = "find_in_page";
-                                        const tooltipDivArchivo = document.createElement('div');
-                                        tooltipDivArchivo.className = "tooltip";
-                                        tooltipDivArchivo.textContent = "Ver archivo de salida";
-                                        button.appendChild(spanIcon);
-                                        button.appendChild(tooltipDivArchivo);
-                                        link.appendChild(button);
-                                        archivoCell.appendChild(link);
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Actualizar la tabla con la nueva salida
+                                        const salida = data.salida;
+                                        const row = document.createElement('tr');
+
+                                        const numeroSalidaCell = document.createElement('td');
+                                        numeroSalidaCell.textContent = salida.numero_salida;
+                                        row.appendChild(numeroSalidaCell);
+
+                                        const fechaSalidaCell = document.createElement('td');
+                                        fechaSalidaCell.textContent = salida.fecha_salida;
+                                        row.appendChild(fechaSalidaCell);
+
+                                        const descripcionCell = document.createElement('td');
+                                        const descBtn = document.createElement('button');
+                                        descBtn.className = "buttonLogin buttonPreview";
+                                        descBtn.style.background = "#1e90ff";
+                                        descBtn.style.marginInline = "auto";
+                                        const iconSpan = document.createElement('span');
+                                        iconSpan.classList.add('material-symbols-outlined', 'bell');
+                                        iconSpan.textContent = 'preview';
+                                        const tooltipDiv = document.createElement('div');
+                                        tooltipDiv.className = "tooltip";
+                                        tooltipDiv.textContent = "Ver descripción";
+                                        descBtn.appendChild(iconSpan);
+                                        descBtn.appendChild(tooltipDiv);
+                                        descBtn.onclick = () => {
+                                            openSalidaDescripcionModal(salida.numero_salida, salida.fecha_salida, salida.descripcion, salida.funcionarios);
+                                        };
+                                        descripcionCell.appendChild(descBtn);
+                                        row.appendChild(descripcionCell);
+
+                                        const archivoCell = document.createElement('td');
+                                        if (salida.archivo_url) {
+                                            const link = document.createElement('a');
+                                            link.href = salida.archivo_url;
+                                            link.target = '_blank';
+                                            link.setAttribute('aria-label', 'Ver Archivo');
+                                            link.setAttribute('title', 'Ver Archivo');
+                                            const button = document.createElement('button');
+                                            button.className = "buttonLogin buttonPreview";
+                                            button.style.background = "#f7ea53";
+                                            button.style.marginInline = "auto";
+                                            const spanIcon = document.createElement('span');
+                                            spanIcon.classList.add('material-symbols-outlined', 'bell');
+                                            spanIcon.textContent = "find_in_page";
+                                            const tooltipDivArchivo = document.createElement('div');
+                                            tooltipDivArchivo.className = "tooltip";
+                                            tooltipDivArchivo.textContent = "Ver archivo de salida";
+                                            button.appendChild(spanIcon);
+                                            button.appendChild(tooltipDivArchivo);
+                                            link.appendChild(button);
+                                            archivoCell.appendChild(link);
+                                        } else {
+                                            archivoCell.textContent = 'No adjunto';
+                                        }
+                                        row.appendChild(archivoCell);
+
+                                        tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
+
+                                        // Limpiar los campos del formulario
+                                        document.getElementById('numero_salida').value = '';
+                                        document.getElementById('fecha_salida').value = '';
+                                        archivoAdjuntoInput.value = '';
+                                        if (document.getElementById('descripcion_salida')) {
+                                            document.getElementById('descripcion_salida').value = '';
+                                        }
+                                        $(archivoAdjuntoInput).fileinput('clear');
+
+                                        Swal.fire({
+                                            heightAuto: false,
+                                            scrollbarPadding: false,
+                                            icon: 'success',
+                                            title: 'Salida creada',
+                                            text: 'La salida ha sido registrada correctamente.',
+                                            showConfirmButton: false,
+                                            timer: 2000
+                                        });
                                     } else {
-                                        archivoCell.textContent = 'No adjunto';
+                                        Swal.fire({
+                                            heightAuto: false,
+                                            scrollbarPadding: false,
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: data.error || 'Ha ocurrido un error al crear la salida.'
+                                        });
                                     }
-                                    row.appendChild(archivoCell);
-    
-                                    tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
-    
-                                    // Limpiar los campos del formulario
-                                    document.getElementById('numero_salida').value = '';
-                                    document.getElementById('fecha_salida').value = '';
-                                    archivoAdjuntoInput.value = '';
-                                    if (document.getElementById('descripcion_salida')) {
-                                        document.getElementById('descripcion_salida').value = '';
-                                    }
-                                    $(archivoAdjuntoInput).fileinput('clear');
-    
-                                    Swal.fire({
-                                        heightAuto: false,
-                                        scrollbarPadding: false,
-                                        icon: 'success',
-                                        title: 'Salida creada',
-                                        text: 'La salida ha sido registrada correctamente.',
-                                        showConfirmButton: false,
-                                        timer: 2000
-                                    });
-                                } else {
+                                })
+                                .catch(error => {
+                                    console.error('Error al crear la salida:', error);
                                     Swal.fire({
                                         heightAuto: false,
                                         scrollbarPadding: false,
                                         icon: 'error',
                                         title: 'Error',
-                                        text: data.error || 'Ha ocurrido un error al crear la salida.'
+                                        text: 'Ha ocurrido un error al crear la salida.'
                                     });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error al crear la salida:', error);
-                                Swal.fire({
-                                    heightAuto: false,
-                                    scrollbarPadding: false,
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Ha ocurrido un error al crear la salida.'
                                 });
-                            });
                         }
                     });
                 };
@@ -2225,7 +2224,7 @@
             }
         }
     }
-    
+
 
     function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
         const modal = document.getElementById('descripcionSalidaModal');
@@ -2418,28 +2417,63 @@
                         // Actualizar Salidas
                         const salidasCell = cells[cellIndex++];
                         if (sol.salidas && sol.salidas.length > 0) {
-                            salidasCell.innerHTML = `
-                                <div class="icon-container">
-                                    <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
-                                        <button class="buttonLogin buttonPreview" style="background: #ffa420;">
-                                            <span class="material-symbols-outlined bell">find_in_page</span>
-                                            <div class="tooltip">Ver archivo de salida</div>
-                                        </button>
-                                    </a>
-                                </div>
-                            `;
+                            if (sol.tipo_solicitud == 12) {
+                                salidasCell.innerHTML = `
+                                    <div class="icon-container">
+                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                            <button class="buttonLogin buttonPreview" style="background: #ffa420;">
+                                                <span class="material-symbols-outlined bell">group</span>
+                                                <p>|</p>
+                                                <span class="material-symbols-outlined bell">find_in_page</span>
+                                                <div class="tooltip">Ver archivo de salida</div>
+                                            </button>
+                                        </a>
+                                    </div>
+                                `;
+                            } else {
+                                salidasCell.innerHTML = `
+                                    <div class="icon-container">
+                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                            <button class="buttonLogin buttonPreview" style="background: #17d244;">
+                                                <span class="material-symbols-outlined bell">check</span>
+                                                <p>|</p>
+                                                <span class="material-symbols-outlined bell">find_in_page</span>
+                                                <div class="tooltip">Ver archivo de salida</div>
+                                            </button>
+                                        </a>
+                                    </div>
+                                `;
+                            }
                         } else {
-                            salidasCell.innerHTML = `
-                                <div class="icon-container">
-                                    <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
-                                        <button class="buttonLogin buttonSubirSalida">
-                                            <span class="material-symbols-outlined bell">upload_file</span>
-                                            <div class="tooltip">Subir Salidas</div>
-                                        </button>
-                                    </a>
-                                </div>
-                            `;
+                            if (sol.tipo_solicitud == 12) {
+                                salidasCell.innerHTML = `
+                                    <div class="icon-container">
+                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                            <button class="buttonLogin buttonSubirSalida" style="background: #ffa420;">
+                                                <span class="material-symbols-outlined bell">group</span>
+                                                <p>|</p>
+                                                <span class="material-symbols-outlined bell">upload_file</span>
+                                            </button>
+                                        </a>
+                                        <div class="tooltip">Subir Salidas</div>
+                                    </div>
+                                `;
+                            } else {
+                                salidasCell.innerHTML = `
+                                    <div class="icon-container">
+                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                            <button class="buttonLogin buttonSubirSalida">
+                                                <span class="material-symbols-outlined bell">schedule</span>
+                                                <p>|</p>
+                                                <span class="material-symbols-outlined bell">upload_file</span>
+                                            </button>
+                                        </a>
+                                        <div class="tooltip">Subir Salidas</div>
+                                    </div>
+                                `;
+                            }
                         }
+
                     }
                 }
             })
@@ -2601,28 +2635,63 @@
         // Salidas
         const salidasCell = document.createElement('td');
         if (solicitud.salidas && solicitud.salidas.length > 0) {
-            salidasCell.innerHTML = `
-                <div class="icon-container">
-                    <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                        <button class="buttonLogin buttonPreview" style="background: #ffa420;">
-                            <span class="material-symbols-outlined bell">find_in_page</span>
-                            <div class="tooltip">Ver archivo de salida</div>
-                        </button>
-                    </a>
-                </div>
-            `;
+            if (solicitud.tipo_solicitud == 12) {
+                salidasCell.innerHTML = `
+                    <div class="icon-container">
+                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
+                            <button class="buttonLogin buttonPreview" style="background: #ffa420;">
+                                <span class="material-symbols-outlined bell">group</span>
+                                <p>|</p>
+                                <span class="material-symbols-outlined bell">find_in_page</span>
+                                <div class="tooltip">Ver archivo de salida</div>
+                            </button>
+                        </a>
+                    </div>
+                `;
+            } else {
+                salidasCell.innerHTML = `
+                    <div class="icon-container">
+                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
+                            <button class="buttonLogin buttonPreview" style="background: #17d244;">
+                                <span class="material-symbols-outlined bell">check</span>
+                                <p>|</p>
+                                <span class="material-symbols-outlined bell">find_in_page</span>
+                                <div class="tooltip">Ver archivo de salida</div>
+                            </button>
+                        </a>
+                    </div>
+                `;
+            }
         } else {
-            salidasCell.innerHTML = `
-                <div class="icon-container">
-                    <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                        <button class="buttonLogin buttonSubirSalida">
-                            <span class="material-symbols-outlined bell">upload_file</span>
-                            <div class="tooltip">Subir Salidas</div>
-                        </button>
-                    </a>
-                </div>
-            `;
+            if (solicitud.tipo_solicitud == 12) {
+                salidasCell.innerHTML = `
+                    <div class="icon-container">
+                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
+                            <button class="buttonLogin buttonSubirSalida" style="background: #ffa420;">
+                                <span class="material-symbols-outlined bell">group</span>
+                                <p>|</p>
+                                <span class="material-symbols-outlined bell">upload_file</span>
+                            </button>
+                        </a>
+                        <div class="tooltip">Subir Salidas</div>
+                    </div>
+                `;
+            } else {
+                salidasCell.innerHTML = `
+                    <div class="icon-container">
+                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
+                            <button class="buttonLogin buttonSubirSalida">
+                                <span class="material-symbols-outlined bell">schedule</span>
+                                <p>|</p>
+                                <span class="material-symbols-outlined bell">upload_file</span>
+                            </button>
+                        </a>
+                        <div class="tooltip">Subir Salidas</div>
+                    </div>
+                `;
+            }
         }
+
         row.appendChild(salidasCell);
 
         // Insertar la nueva fila al inicio de la tabla
