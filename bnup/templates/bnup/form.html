@@ -180,6 +180,7 @@
                 {% endif %}
                 <th class="shadow nIngre" data-type="number">Nº Ingreso</th>
                 <th class="shadow" data-type="date">Fecha Ingreso</th>
+                <th class="shadow" data-type="date">Fecha Solicitud</th>
                 <th class="shadow" data-type="string">Solicitante</th>
                 <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Tipo Recepción</th>
@@ -200,6 +201,7 @@
                   {% endif %}
                   <td>{{ solicitud.numero_ingreso }}</td>
                   <td class="fechaTable">{{ solicitud.fecha_ingreso_au|date:'d/m/Y' }}</td>
+                  <td class="fechaTable">{{ solicitud.fecha_solicitud|date:'d/m/Y' }}</td>
                   <td>{{ solicitud.depto_solicitante.nombre }}</td>
                   <td>
                     {% if solicitud.numero_memo %}
