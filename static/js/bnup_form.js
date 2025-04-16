@@ -2319,38 +2319,41 @@
     }
 
     /**
-    * Actualiza una fila específica de la tabla con los datos más recientes de la solicitud.
-    * @param {string} solicitudId - ID de la solicitud a actualizar.
-    */
+     * Actualiza una fila específica de la tabla con los datos más recientes de la solicitud.
+     * @param {string} solicitudId - ID de la solicitud a actualizar.
+     */
     function updateTableRow(solicitudId) {
         const bnupData = document.getElementById('bnupData');
         const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
         let cellIndex = 0;
 
+        // Ajustar índice si hay checkbox en ADMIN o SECRETARIA
         if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
-            cellIndex = 1; // Ajustar índice si hay checkbox
+            cellIndex = 1;
         }
 
         fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Asignamos data.data a una variable local para mayor claridad
                     const sol = data.data;
                     const row = document.querySelector(`tr[data-id="${solicitudId}"]`);
                     if (row) {
                         const cells = row.getElementsByTagName('td');
 
-                        // Actualizar Nº Ingreso
+                        // Nº Ingreso
                         cells[cellIndex++].textContent = sol.numero_ingreso;
 
-                        // Actualizar Fecha Ingreso
+                        // Fecha Ingreso
                         cells[cellIndex++].textContent = formatDate(sol.fecha_ingreso_au);
 
-                        // Actualizar Solicitante (Departamento)
+                        // NUEVA COLUMNA: Fecha Solicitud  
+                        cells[cellIndex++].textContent = sol.fecha_solicitud ? formatDate(sol.fecha_solicitud) : '';
+
+                        // Solicitante (Departamento)
                         cells[cellIndex++].textContent = sol.depto_solicitante_text;
 
-                        // Actualizar N° Doc
+                        // N° Doc
                         if (sol.numero_memo) {
                             cells[cellIndex++].textContent = sol.numero_memo;
                         } else {
@@ -2362,18 +2365,18 @@
                             `;
                         }
 
-                        // Actualizar Tipo Recepción
+                        // Tipo Recepción
                         cells[cellIndex++].textContent = sol.tipo_recepcion_text;
 
-                        // Actualizar Tipo Solicitud
+                        // Tipo Solicitud
                         cells[cellIndex++].textContent = sol.tipo_solicitud_text;
 
-                        // Actualizar Funcionarios Asignados (separados por saltos de línea)
-                        const funcionarios = sol.funcionarios_asignados; // Array de funcionarios
+                        // Funcionarios Asignados
+                        const funcionarios = sol.funcionarios_asignados;
                         const funcionariosList = funcionarios.map(func => func.nombre).join('\n');
                         cells[cellIndex++].textContent = funcionariosList;
 
-                        // Actualizar Descripción: al llamar al modal se envía la nueva fecha (fecha_solicitud)
+                        // Descripción (con llamada al modal, incluyendo la fecha de solicitud)
                         cells[cellIndex++].innerHTML = `
                             <div class="descripcion-preview" onclick="openBNUPDescripcionModal(
                                 '${escapeHtml(sol.descripcion)}',
@@ -2386,13 +2389,13 @@
                                 '${escapeHtml(sol.tipo_solicitud_text)}',
                                 '${sol.numero_memo || ""}',
                                 '${sol.fecha_solicitud || ""}',
-                                'tablaSolicitudes')">
+                                'tablaSolicitues')">
                                 ${truncateText(sol.descripcion, 20)}
                                 ${sol.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
                             </div>
                         `;
 
-                        // Actualizar Entradas
+                        // Entradas
                         const entradaCell = cells[cellIndex++];
                         if (sol.archivo_adjunto_ingreso_url) {
                             entradaCell.innerHTML = `
@@ -2414,7 +2417,7 @@
                             `;
                         }
 
-                        // Actualizar Salidas
+                        // Salidas
                         const salidasCell = cells[cellIndex++];
                         if (sol.salidas && sol.salidas.length > 0) {
                             if (sol.tipo_solicitud == 12) {
@@ -2473,7 +2476,6 @@
                                 `;
                             }
                         }
-
                     }
                 }
             })
@@ -2482,10 +2484,11 @@
             });
     }
 
+
     /**
-    * Agrega una nueva fila a la tabla de solicitudes con los datos proporcionados.
-    * @param {Object} solicitud - Objeto que contiene los datos de la solicitud.
-    */
+     * Agrega una nueva fila a la tabla de solicitudes con los datos proporcionados.
+     * @param {Object} solicitud - Objeto que contiene los datos de la solicitud.
+     */
     function addTableRow(solicitud) {
         const tablaSolicitudesBody = document.querySelector('#tablaSolicitudes tbody');
         if (!tablaSolicitudesBody) {
@@ -2498,11 +2501,8 @@
         row.setAttribute('data-id', solicitud.id);
 
         let cellIndex = 0;
-
-        // Obtener el tipo de usuario
-        const tipo_usuario = document.getElementById('bnupData')
-            ? document.getElementById('bnupData').getAttribute('data-tipo-usuario')
-            : null;
+        const bnupData = document.getElementById('bnupData');
+        const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
 
         // Si el usuario es ADMIN o SECRETARIA, añadir la celda del checkbox
         if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
@@ -2524,7 +2524,6 @@
                 if (selectAllCheckbox) {
                     selectAllCheckbox.checked = allChecked;
                 }
-
                 updateActionButtonsState();
             });
 
@@ -2541,6 +2540,12 @@
         fechaCell.classList.add('fechaTable');
         fechaCell.textContent = formatDate(solicitud.fecha_ingreso_au);
         row.appendChild(fechaCell);
+
+        // NUEVA COLUMNA: Fecha Solicitud
+        const fechaSolicitudCell = document.createElement('td');
+        fechaSolicitudCell.classList.add('fechaTable');
+        fechaSolicitudCell.textContent = solicitud.fecha_solicitud ? formatDate(solicitud.fecha_solicitud) : '';
+        row.appendChild(fechaSolicitudCell);
 
         // Solicitante (Departamento)
         const deptoCell = document.createElement('td');
@@ -2571,14 +2576,14 @@
         tipoSolicitudCell.textContent = solicitud.tipo_solicitud_text;
         row.appendChild(tipoSolicitudCell);
 
-        // Funcionarios Asignados (separados por saltos de línea)
+        // Funcionarios Asignados
         const funcionariosCell = document.createElement('td');
-        const funcionarios = solicitud.funcionarios_asignados; // Array de funcionarios asignados
+        const funcionarios = solicitud.funcionarios_asignados;
         const funcionariosList = funcionarios.map(func => func.nombre).join('\n');
         funcionariosCell.textContent = funcionariosList;
         row.appendChild(funcionariosCell);
 
-        // Descripción (con llamada al modal incluyendo la fecha de solicitud)
+        // Descripción (incluyendo fecha de solicitud en la llamada al modal)
         const descripcionCell = document.createElement('td');
         const descripcionDiv = document.createElement('div');
         descripcionDiv.classList.add('descripcion-preview');
@@ -2593,11 +2598,10 @@
                 escapeHtml(solicitud.tipo_recepcion_text),
                 escapeHtml(solicitud.tipo_solicitud_text),
                 solicitud.numero_memo || "",
-                solicitud.fecha_solicitud, // Nuevo parámetro: la nueva fecha de solicitud
+                solicitud.fecha_solicitud, // Nuevo parámetro: fecha_solicitud
                 'tablaSolicitudes'
             );
         };
-
         descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
         if (solicitud.descripcion.length > 1) {
             descripcionDiv.innerHTML += `
@@ -2691,12 +2695,12 @@
                 `;
             }
         }
-
         row.appendChild(salidasCell);
 
         // Insertar la nueva fila al inicio de la tabla
         tablaSolicitudesBody.insertBefore(row, tablaSolicitudesBody.firstChild);
     }
+
 
     /**
      * Inicializa las funcionalidades específicas cuando el DOM está completamente cargado.
@@ -2715,7 +2719,6 @@
     window.openSalidaModal = openSalidaModal; // Exponer openSalidaModal
     window.openEditModal = openEditModal;     // Exponer openEditModal
     window.updateTableRow = updateTableRow;   // Exponer updateTableRow
-    // Exponemos las funciones necesarias para el módulo de salidas
     window.initializeMultipleFuncionariosSalida = initializeMultipleFuncionariosSalida;
     window.openSalidaModal = openSalidaModal;
 
