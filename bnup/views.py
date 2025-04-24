@@ -17,6 +17,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from dateutil.relativedelta import relativedelta
 from principal.models import PerfilUsuario
 from django.contrib import messages
 from bnup.models import Funcionario  # asegúrate de tenerlo importado
@@ -866,6 +867,131 @@ def report_view(request):
             "fecha_ingreso": sol.fecha_ingreso_au,  # opcional, si quieres mostrar la fecha
         })
 
+            # —————— SALIDAS AGRUPADAS POR CATEGORÍAS ——————
+    # Obtenemos las salidas de este año asociadas a las solicitudes activas
+    salidas_qs = SalidaSOLICITUD.objects.filter(
+        ingreso_solicitud__in=active_solicitudes,
+        is_active=True,
+        fecha_salida__year=current_year
+    )
+
+    # 1) Salidas por Tipo de Solicitud
+    salidas_por_tipo_solicitud_qs = salidas_qs.values(
+        'ingreso_solicitud__tipo_solicitud__tipo'
+    ).annotate(total=Count('id')).order_by('-total')
+    salidas_por_tipo_solicitud = list(salidas_por_tipo_solicitud_qs)
+
+    # 2) Salidas por Tipo de Recepción
+    salidas_por_tipo_recepcion_qs = salidas_qs.values(
+        'ingreso_solicitud__tipo_recepcion__tipo'
+    ).annotate(total=Count('id')).order_by('-total')
+    salidas_por_tipo_recepcion = list(salidas_por_tipo_recepcion_qs)
+
+    # 3) Salidas por Solicitante (Departamento)
+        # Por Solicitante
+    salidas_por_solicitante_qs = salidas_qs.values(
+        'ingreso_solicitud__depto_solicitante__nombre'
+    ).annotate(total=Count('id')).order_by('-total')
+    salidas_por_solicitante = list(salidas_por_solicitante_qs)
+
+    # Top‑10 y resto
+    full = salidas_por_solicitante
+    top10_solicitantes = full[:10]
+    resto_solicitantes = full[10:]
+    total_resto = sum(item['total'] for item in resto_solicitantes)
+    resto_pct = (total_resto / total_salidas * 100) if total_salidas else 0
+
+    
+
+
+    # 4) Salidas por Funcionario Asignado (recorremos m2m)
+    salidas_por_funcionario = {}
+    for salida in salidas_qs:
+        for func in salida.ingreso_solicitud.funcionarios_asignados.all():
+            nombre = func.nombre
+            salidas_por_funcionario.setdefault(nombre, 0)
+            salidas_por_funcionario[nombre] += 1
+    salidas_por_funcionario = [
+        {'nombre': n, 'total': t}
+        for n, t in salidas_por_funcionario.items()
+    ]
+    salidas_por_funcionario.sort(key=lambda x: x['total'], reverse=True)
+
+    # al principio de report_view, justo donde tienes el dict entradas_por_mes:
+    entradas_por_mes_qs = active_solicitudes\
+        .annotate(mes=ExtractMonth("fecha_ingreso_au"))\
+        .values("mes")\
+        .annotate(total=Count("id"))
+
+    # construimos el dict original y además preparamos la lista ordenada:
+    entradas_por_mes = {item["mes"]: item["total"] for item in entradas_por_mes_qs}
+    # mapa número→nombre de mes
+    meses_es = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
+        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
+        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+    # lista ordenada cronológicamente
+    entradas_por_mes_table = [
+        {
+        "mes_num": mes,
+        "mes_nombre": meses_es.get(mes, str(mes)),
+        "cantidad": cantidad
+        }
+        for mes, cantidad in sorted(entradas_por_mes.items())
+    ]
+
+    # ========================================================================
+    # 8) Solicitudes por funcionario del mes actual
+    # ========================================================================
+    current_month = datetime.now().month
+    # Nombre del mes
+    meses_es = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
+        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
+        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+    current_month_nombre = meses_es.get(current_month, str(current_month))
+
+    # Filtramos solo las solicitudes de este mes
+    qs_mes_actual = active_solicitudes.filter(fecha_ingreso_au__month=current_month)
+    total_solicitudes_mes_actual = qs_mes_actual.count()
+
+    # Agrupamos por funcionario asignado y contamos
+    solicitudes_mes_actual_por_funcionario_qs = qs_mes_actual\
+        .values('funcionarios_asignados__nombre')\
+        .annotate(total=Count('id'))\
+        .order_by('-total')
+    solicitudes_mes_actual_por_funcionario = list(solicitudes_mes_actual_por_funcionario_qs)
+    # ========================================================================
+
+    # ========================================================================
+    # Entradas por semana en los últimos 3 meses
+    # ========================================================================
+    # Fecha de corte: hace 3 meses desde hoy
+    fecha_corte = date.today() - relativedelta(months=3)
+
+    qs_ultimos_3m = active_solicitudes.filter(fecha_ingreso_au__gte=fecha_corte)
+
+    semanas_ult3m_qs = (
+        qs_ultimos_3m
+        .annotate(year=ExtractYear("fecha_ingreso_au"), week=ExtractWeek("fecha_ingreso_au"))
+        .values("year", "week")
+        .annotate(total=Count("id"))
+        .order_by("year", "week")
+    )
+
+    semanas_ult3m = []
+    for item in semanas_ult3m_qs:
+        y, w, total = item["year"], item["week"], item["total"]
+        monday, friday, month_es = get_week_range(y, w)
+        desc = f"{month_es} — Lunes {monday.strftime('%d')} hasta Viernes {friday.strftime('%d')}"
+        semanas_ult3m.append({
+            "descripcion": desc,
+            "total": total
+        })
+    # ========================================================================
+
 
     context = {
         "total_solicitudes": total_solicitudes,
@@ -903,6 +1029,19 @@ def report_view(request):
         "pendientes_por_depto": pendientes_por_depto_list,
         "pendientes_por_tipo_solicitud": pendientes_por_tipo_solicitud_list,
         "solicitudes_mas_antiguas": solicitudes_mas_antiguas,
+        "salidas_por_tipo_solicitud": salidas_por_tipo_solicitud,
+        "salidas_por_tipo_recepcion": salidas_por_tipo_recepcion,
+        "salidas_por_solicitante": salidas_por_solicitante,
+        "salidas_por_funcionario": salidas_por_funcionario,
+        "salidas_por_solicitante_top10": top10_solicitantes,
+        "resto_solicitantes_count": len(resto_solicitantes),
+        "resto_solicitantes_total": total_resto,
+        "resto_solicitantes_pct": resto_pct,
+        "entradas_por_mes_table": entradas_por_mes_table,
+        "current_month_nombre": current_month_nombre,
+        "total_solicitudes_mes_actual": total_solicitudes_mes_actual,
+        "solicitudes_mes_actual_por_funcionario": solicitudes_mes_actual_por_funcionario,
+        "semanas_ultimos_3m": semanas_ult3m,
     }
 
     return render(request, "bnup/report.html", context)
