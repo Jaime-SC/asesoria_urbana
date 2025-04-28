@@ -1,4 +1,5 @@
 import json
+import calendar
 from .models import (
     SalidaSOLICITUD,
     IngresoSOLICITUD,
@@ -945,24 +946,25 @@ def report_view(request):
     # 8) Solicitudes por funcionario del mes actual
     # ========================================================================
     current_month = datetime.now().month
-    # Nombre del mes
-    meses_es = {
-        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
-        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
-        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
-    }
-    current_month_nombre = meses_es.get(current_month, str(current_month))
-
-    # Filtramos solo las solicitudes de este mes
+    current_month_nombre = meses_es[current_month]
     qs_mes_actual = active_solicitudes.filter(fecha_ingreso_au__month=current_month)
     total_solicitudes_mes_actual = qs_mes_actual.count()
+    solicitudes_mes_actual_por_funcionario = list(
+        qs_mes_actual.values('funcionarios_asignados__nombre')
+                    .annotate(total=Count('id'))
+                    .order_by('-total')
+    )
 
-    # Agrupamos por funcionario asignado y contamos
-    solicitudes_mes_actual_por_funcionario_qs = qs_mes_actual\
-        .values('funcionarios_asignados__nombre')\
-        .annotate(total=Count('id'))\
-        .order_by('-total')
-    solicitudes_mes_actual_por_funcionario = list(solicitudes_mes_actual_por_funcionario_qs)
+    # —————— RANGO DEL MES ACTUAL ——————
+    first_day = date(current_year, current_month, 1)
+    last_day_num = calendar.monthrange(current_year, current_month)[1]
+    last_day  = date(current_year, current_month, last_day_num)
+    dias_es = {
+        'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles',
+        'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado',
+        'Sunday': 'Domingo'
+    }
+    mes_actual_rango = f"Del {dias_es[first_day.strftime('%A')]} {first_day.strftime('%d/%m')} al {dias_es[last_day.strftime('%A')]} {last_day.strftime('%d/%m')}"
     # ========================================================================
 
     # ========================================================================
@@ -991,6 +993,28 @@ def report_view(request):
             "total": total
         })
     # ========================================================================
+
+    # —————— INGRESOS SEMANA ACTUAL POR FUNCIONARIO ——————
+    # Hoy y semana ISO actual
+    today = date.today()
+    iso_year, iso_week, _ = today.isocalendar()
+    # Rango de lunes a viernes de la semana actual
+    monday, friday, month_es = get_week_range(iso_year, iso_week)
+    semana_actual_desc = f"Semana {iso_week} de {month_es} (Lunes {monday.strftime('%d/%m')} - Viernes {friday.strftime('%d/%m')})"
+
+    # Filtrar sólo las solicitudes de esta semana ISO
+    qs_semana_actual = active_solicitudes.filter(
+        fecha_ingreso_au__year=iso_year,
+        fecha_ingreso_au__week=iso_week
+    )
+    # Agrupar por funcionario asignado
+    sem_act_qs = qs_semana_actual.values('funcionarios_asignados__nombre')\
+                     .annotate(total=Count('id'))\
+                     .order_by('-total')
+    solicitudes_semana_actual_por_funcionario = [
+        {'nombre': item['funcionarios_asignados__nombre'], 'total': item['total']}
+        for item in sem_act_qs
+    ]
 
 
     context = {
@@ -1041,7 +1065,10 @@ def report_view(request):
         "current_month_nombre": current_month_nombre,
         "total_solicitudes_mes_actual": total_solicitudes_mes_actual,
         "solicitudes_mes_actual_por_funcionario": solicitudes_mes_actual_por_funcionario,
+        "mes_actual_rango": mes_actual_rango,
         "semanas_ultimos_3m": semanas_ult3m,
+        "semana_actual_desc": semana_actual_desc,
+        "solicitudes_semana_actual_por_funcionario": solicitudes_semana_actual_por_funcionario,
     }
 
     return render(request, "bnup/report.html", context)

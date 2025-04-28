@@ -595,7 +595,7 @@
       
 
       <div class="entradasPorTiempo">
-        <h2>Entradas por Tiempo</h2>
+        <h2>Solicitudes Agrupadas por Temporalidad</h2>
         <p>La distribución temporal de las solicitudes ingresadas durante el año actual ofrece una perspectiva útil para analizar tendencias y patrones de demanda a lo largo del periodo evaluado.</p>
         {% if top3_meses_detailed %}
           <h3>Solicitudes por Mes</h3>
@@ -631,13 +631,13 @@
           {# -------------------------- #}
           <div class="solicitudesMesActual">
             <h4>Solicitudes por Funcionario – {{ current_month_nombre }} (Mes Actual)</h4>
-          
+            <p><em>{{ mes_actual_rango }}</em></p>
             {% if solicitudes_mes_actual_por_funcionario %}
               <p>
-                Durante {{ current_month_nombre }}, se registraron <strong>{{ total_solicitudes_mes_actual }}</strong> solicitudes.
+                Durante {{ current_month_nombre }}, se registraron
+                <strong>{{ total_solicitudes_mes_actual }}</strong> solicitudes.
                 A continuación, el detalle por funcionario:
               </p>
-          
               <table>
                 <thead>
                   <tr>
@@ -650,19 +650,16 @@
                     {% widthratio item.total total_solicitudes_mes_actual 100 as pct %}
                     <tr>
                       <td><strong>{{ item.funcionarios_asignados__nombre }}</strong></td>
-                      <td>
-                        {{ item.total }}
-                        (<strong>{{ pct|floatformat:0 }}%</strong>)
-                      </td>
+                      <td>{{ item.total }} (<strong>{{ pct|floatformat:0 }}%</strong>)</td>
                     </tr>
                   {% endfor %}
                 </tbody>
               </table>
-          
             {% else %}
               <p>No se han registrado solicitudes durante {{ current_month_nombre }}.</p>
             {% endif %}
           </div>
+          
         {% else %}
           <p>Actualmente no se han registrado solicitudes en ningún mes específico.</p>
         {% endif %}
@@ -670,6 +667,18 @@
 
         {% if top3_weeks_descriptive %}
           <h3>Solicitudes por Semana</h3>
+          <p>
+            Las semanas con más actividad registrada fueron:{% for week in top3_weeks_descriptive %}
+              <br />{{ week.descripcion|safe }}: <strong>{{ week.cantidad }}</strong> solicitudes.
+            {% endfor %}
+          </p>
+          <p>
+            En conjunto, estas tres semanas representan un <strong>{{ top3_porcentaje_semanas|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_semanas }}</strong> solicitudes.
+          </p>
+        {% else %}
+          <p>No existen solicitudes registradas por semanas específicas hasta la fecha.</p>
+        {% endif %}
+        <p>Este análisis temporal es clave para identificar periodos pico y mejorar la planificación de recursos y tiempos de respuesta. Se recomienda realizar un seguimiento continuo para optimizar los procesos internos y anticipar efectivamente las fluctuaciones en la demanda.</p>
           <div class="entradasUltimosTresMeses">
             <h4>Entradas por Semana (Últimos 3 Meses)</h4>
             {% if semanas_ultimos_3m %}
@@ -694,19 +703,34 @@
               <p>No se han registrado solicitudes en las últimas 12 semanas.</p>
             {% endif %}
           </div>
-          <p>
-            Las semanas con más actividad registrada fueron:{% for week in top3_weeks_descriptive %}
-              <br />{{ week.descripcion|safe }}: <strong>{{ week.cantidad }}</strong> solicitudes.
-            {% endfor %}
-          </p>
-          <p>
-            En conjunto, estas tres semanas representan un <strong>{{ top3_porcentaje_semanas|floatformat:2 }}%</strong> del total, lo que equivale a <strong>{{ top3_total_semanas }}</strong> solicitudes.
-          </p>
-        {% else %}
-          <p>No existen solicitudes registradas por semanas específicas hasta la fecha.</p>
-        {% endif %}
-        <p>Este análisis temporal es clave para identificar periodos pico y mejorar la planificación de recursos y tiempos de respuesta. Se recomienda realizar un seguimiento continuo para optimizar los procesos internos y anticipar efectivamente las fluctuaciones en la demanda.</p>
+        
       </div>
+      <div class="ingresosSemanaActual">
+        <h4>Solicitudes por Funcionario – Semana Actual</h4>
+        <p><em>{{ semana_actual_desc }}</em></p>
+      
+        {% if solicitudes_semana_actual_por_funcionario %}
+          <table>
+            <thead>
+              <tr>
+                <th>Funcionario</th>
+                <th>Ingresos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in solicitudes_semana_actual_por_funcionario %}
+                <tr>
+                  <td><strong>{{ f.nombre }}</strong></td>
+                  <td>{{ f.total }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No se registraron ingresos en la semana actual.</p>
+        {% endif %}
+      </div>
+      
       <!-- Resto del reporte, por ejemplo, el resumen de estadísticas -->
       <h2>Resumen de Estadísticas</h2>
       <table>
