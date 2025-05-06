@@ -1870,7 +1870,10 @@
         salidaModal.style.display = 'block';
 
         // Inicializamos el contenedor de funcionarios
-        initializeMultipleFuncionariosSalida();
+        // haz
+        if (document.getElementById('salidaFuncionariosContainer')) {
+            initializeMultipleFuncionariosSalida();
+        }
 
         // Función para cerrar el modal con animación
         function closeModal() {
@@ -1889,15 +1892,19 @@
         };
 
         // Si es ADMIN, muestro el checkbox “marcar todas” y el botón de eliminar
-        if (tipo_usuario === 'ADMIN') {
-            document.getElementById('selectAllSalidas').closest('th')
-                .style.display = '';
-            btnEliminarSalidas.style.display = '';
-        } else {
-            document.getElementById('selectAllSalidas').closest('th')
-                .style.display = 'none';
-            btnEliminarSalidas.style.display = 'none';
+        // Mostrar u ocultar “marcar todas” y “Eliminar” con null-checks
+        const selectAllEl = document.getElementById('selectAllSalidas');
+        if (selectAllEl) {
+            const th = selectAllEl.closest('th');
+            if (th) {
+                th.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
+            }
         }
+
+        if (btnEliminarSalidas) {
+            btnEliminarSalidas.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
+        }
+
 
         tablaSalidasBody.innerHTML = '';
 
