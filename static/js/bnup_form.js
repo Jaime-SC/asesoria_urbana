@@ -7,6 +7,10 @@
     let rowCheckboxes;
     let deleteButton;
     let editButton;
+    let salidaSelectAll;      // checkbox “marcar todas” dentro del modal de salidas
+    let salidaRowCheckboxes;   // checkbox por fila de salida
+    let btnEliminarSalidas;    // botón “Eliminar seleccionadas” en el modal
+
 
     /**
      * Inicializa la página BNUP, configurando variables y funciones necesarias.
@@ -31,6 +35,10 @@
         // Inicializar selección de filas y estilos de tabla
         initializeRowSelection();
         borde_thead();
+        // → Inicializo bots y checkboxes del modal de salidas
+        salidaSelectAll = document.getElementById('selectAllSalidas');
+        btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
+
     }
     /**
      * Función específica para abrir el modal de descripción en BNUP.
@@ -1880,6 +1888,17 @@
             }
         };
 
+        // Si es ADMIN, muestro el checkbox “marcar todas” y el botón de eliminar
+        if (tipo_usuario === 'ADMIN') {
+            document.getElementById('selectAllSalidas').closest('th')
+                .style.display = '';
+            btnEliminarSalidas.style.display = '';
+        } else {
+            document.getElementById('selectAllSalidas').closest('th')
+                .style.display = 'none';
+            btnEliminarSalidas.style.display = 'none';
+        }
+
         tablaSalidasBody.innerHTML = '';
 
         // Cargar las salidas existentes mediante AJAX
@@ -1894,6 +1913,19 @@
                 if (data.success) {
                     data.salidas.forEach(salida => {
                         const row = document.createElement('tr');
+
+                        // — nuevo td checkbox sólo ADMIN —
+                        if (tipo_usuario === 'ADMIN') {
+                            const chkTd = document.createElement('td');
+                            chkTd.style.textAlign = 'center';
+                            const chk = document.createElement('input');
+                            chk.type = 'checkbox';
+                            chk.className = 'chkEliminarSalida';
+                            chk.value = salida.id;         // necesitas incluir `id` en tu JSON
+                            chkTd.appendChild(chk);
+                            row.appendChild(chkTd);
+                        }
+
 
                         // Columna Nº Salida
                         const numeroSalidaCell = document.createElement('td');
@@ -1957,6 +1989,60 @@
 
                     // Inicializar la paginación de la tabla de salidas
                     initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
+
+                    // — capturo todos los checkboxes recién creados —
+                    salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
+
+                    // evento “marcar todo”
+                    salidaSelectAll?.addEventListener('change', e => {
+                        salidaRowCheckboxes.forEach(c => c.checked = e.target.checked);
+                        btnEliminarSalidas.disabled = !e.target.checked;
+                    });
+
+                    // habilito/deshabilito “Eliminar” según haya checks
+                    document.querySelector('#tablaSalidas tbody')
+                        .addEventListener('change', e => {
+                            if (!e.target.matches('.chkEliminarSalida')) return;
+                            const anyChecked = [...salidaRowCheckboxes].some(c => c.checked);
+                            btnEliminarSalidas.disabled = !anyChecked;
+                        });
+
+                    // 4) Tu bloque de BORRAR SALIDAS:
+                    btnEliminarSalidas?.addEventListener('click', () => {
+                        const ids = [...document.querySelectorAll('.chkEliminarSalida')]
+                            .filter(c => c.checked)
+                            .map(c => c.value);
+                        if (!ids.length) return;
+                        Swal.fire({
+                            icon: 'warning',
+                            title: `Eliminar ${ids.length} salidas?`,
+                            showCancelButton: true,
+                        }).then(res => {
+                            if (!res.isConfirmed) return;
+                            fetch('/bnup/delete_salidas/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCSRFToken(),
+                                },
+                                body: JSON.stringify({ ids }),
+                            })
+                                .then(r => r.json())
+                                .then(json => {
+                                    if (json.success) {
+                                        // Remuevo filas seleccionadas
+                                        ids.forEach(id => {
+                                            const chk = document.querySelector(`.chkEliminarSalida[value="${id}"]`);
+                                            chk?.closest('tr')?.remove();
+                                        });
+                                        Swal.fire('Eliminadas', 'Las salidas han sido eliminadas', 'success');
+                                    } else {
+                                        Swal.fire('Error', json.error, 'error');
+                                    }
+                                });
+                        });
+                    });
+
                 } else {
                     console.error('Error al obtener las salidas:', data.error);
                 }

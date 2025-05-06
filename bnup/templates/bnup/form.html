@@ -473,14 +473,22 @@
               <div class="search-container" style="width: -webkit-fill-available;">
                 <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
               </div>
+              {% if tipo_usuario == 'ADMIN' %}
+                <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;margin-left: .5rem;" id="btnEliminarSalidas" class="btn-stats btnDelBNUP" disabled>
+                  <span class="material-symbols-outlined">delete</span> Eliminar
+                </button>
+              {% endif %}
             </div>
             <table style="width: 350px;" id="tablaSalidas" class="table table-bordered">
               <thead>
                 <tr>
-                  <th style="border: 0px; border-radius: 10px 0px 0px;" data-type="number">Nº Salida</th>
-                  <th data-type="date">Fecha</th>
-                  <th data-type="text">Descripción</th>
-                  <th data-type="text">Adjunto</th>
+                  {% if tipo_usuario == 'ADMIN' %}
+                    <th style="width:1em;"><input type="checkbox" id="selectAllSalidas" /></th>
+                  {% endif %}
+                  <th>Nº Salida</th>
+                  <th>Fecha</th>
+                  <th>Descripción</th>
+                  <th>Adjunto</th>
                 </tr>
               </thead>
               <tbody>

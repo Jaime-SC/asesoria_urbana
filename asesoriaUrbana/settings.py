@@ -167,7 +167,7 @@ SASS_OUTPUT_DIR = 'css'
 # settings.py
 
 # Tamaño máximo de la solicitud (en bytes)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000
 
 # Tamaño máximo de archivo individual (en bytes)
-FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600
+FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000

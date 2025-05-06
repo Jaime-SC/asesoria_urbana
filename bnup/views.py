@@ -1090,6 +1090,7 @@ def get_salidas(request, solicitud_id):
                 except Exception:
                     archivo_url = ""
                 salidas_data.append({
+                    "id": salida.id,   # ← aquí
                     "numero_salida": salida.numero_salida,
                     "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y") if salida.fecha_salida else "",
                     "archivo_url": archivo_url,
@@ -1176,20 +1177,19 @@ def create_salida(request):
 
 @require_POST
 def delete_salidas(request):
-    if request.method == "POST":
-        if not request.user.is_authenticated:
-            return JsonResponse({"success": False, "error": "No autenticado."})
-        try:
-            data = json.loads(request.body)
-            ids = data.get("ids", [])
-            SalidaSOLICITUD.objects.filter(id__in=ids).update(is_active=False)
-            return JsonResponse({"success": True})
-        except json.JSONDecodeError:
-            return JsonResponse({"success": False, "error": "Datos inválidos."})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-    else:
-        return JsonResponse({"success": False, "error": "Método no permitido."})
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "No autenticado."})
+    try:
+        data = json.loads(request.body)
+        ids = data.get("ids", [])
+        # inactivamos y limpiamos M2M
+        for salida in SalidaSOLICITUD.objects.filter(id__in=ids):
+            salida.is_active = False
+            salida.funcionarios.clear()
+            salida.save()
+        return JsonResponse({"success": True})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
 
 @require_POST
 def add_departamento(request):
