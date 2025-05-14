@@ -149,6 +149,13 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     const table = document.getElementById(tableId);
     if (!table) return;
 
+    // → NUEVO: calcular índice dinámico de la columna Funcionario
+    const ths = table.querySelectorAll('thead th');
+    // buscamos el <th> que contiene nuestro <select id="funcionarioFilter">
+    const funcTh = table.querySelector('thead th select#funcionarioFilter').closest('th');
+    const funcColIdx = Array.prototype.indexOf.call(ths, funcTh);
+
+
     // Reiniciar el estado de la tabla si ya existe
     if (tableStates[tableId]) {
         delete tableStates[tableId];
@@ -170,18 +177,14 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     if (filter) {
         filter.addEventListener('change', () => {
             const state = tableStates[tableId];
-            // aplicar filtro sobre el conjunto original de filas:
             const selected = filter.value.toLowerCase();
-            // redefinir filteredRows combinando búsqueda y filtro
             state.filteredRows = state.rows.filter(row => {
-                // extracción del texto de la celda Funcionario (índice fijo: 8, ajustar si cambias orden)
-                const text = row.cells[8].innerText.toLowerCase();
+                // aquí ya usamos funcColIdx, no un 8 fijo
+                const text = row.cells[funcColIdx].innerText.toLowerCase();
                 const matchesFilter = !selected || text.includes(selected);
-                const matchesSearch = !state.searchTerm
-                    || row.innerText.toLowerCase().includes(state.searchTerm);
+                const matchesSearch = !state.searchTerm || row.innerText.toLowerCase().includes(state.searchTerm);
                 return matchesFilter && matchesSearch;
             });
-            // volver a mostrar desde la página 1
             state.currentPage = 1;
             setupPagination(state);
             displayRows(state, state.currentPage);
