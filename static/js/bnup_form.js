@@ -2020,35 +2020,68 @@
                             .filter(c => c.checked)
                             .map(c => c.value);
                         if (!ids.length) return;
-                        Swal.fire({
-                            icon: 'warning',
-                            title: `Eliminar ${ids.length} salidas?`,
-                            showCancelButton: true,
-                        }).then(res => {
-                            if (!res.isConfirmed) return;
-                            fetch('/bnup/delete_salidas/', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': getCSRFToken(),
-                                },
-                                body: JSON.stringify({ ids }),
-                            })
-                                .then(r => r.json())
-                                .then(json => {
-                                    if (json.success) {
-                                        // Remuevo filas seleccionadas
-                                        ids.forEach(id => {
-                                            const chk = document.querySelector(`.chkEliminarSalida[value="${id}"]`);
-                                            chk?.closest('tr')?.remove();
-                                        });
-                                        Swal.fire('Eliminadas', 'Las salidas han sido eliminadas', 'success');
-                                    } else {
-                                        Swal.fire('Error', json.error, 'error');
-                                    }
-                                });
-                        });
+                        Swal.fire({ icon: 'warning', title: `Eliminar ${ids.length} salidas?`, showCancelButton: true })
+                            .then(res => {
+                                if (!res.isConfirmed) return;
+                                fetch('/bnup/delete_salidas/', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+                                    body: JSON.stringify({ ids }),
+                                })
+                                    .then(r => r.json())
+                                    .then(json => {
+                                        if (json.success) {
+                                            // 1) Quitar filas del modal
+                                            ids.forEach(id => {
+                                                document.querySelector(`.chkEliminarSalida[value="${id}"]`)?.closest('tr')?.remove();
+                                            });
+
+                                            // 2) CONTAR cuántas quedan para esta solicitud
+                                            const remaining = document.querySelectorAll('.chkEliminarSalida').length;
+                                            // 3) ACTUALIZAR la celda de "Salidas" en la fila principal
+                                            const solicitudId = document.getElementById('solicitud_id').value;
+                                            const row = document.querySelector(`tr[data-id="${solicitudId}"]`);
+                                            if (row) {
+                                                const salidasCell = row.querySelector('td:last-child');
+                                                if (remaining === 0) {
+                                                    // Sin salidas → rojo (pendientes)
+                                                    salidasCell.innerHTML = `
+                                      <div class="icon-container">
+                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                          <button class="buttonLogin buttonSubirSalida" style="background: #E73C45;">
+                                            <span class="material-symbols-outlined bell">schedule</span>
+                                            <p>|</p>
+                                            <span class="material-symbols-outlined bell">upload_file</span>
+                                          </button>
+                                        </a>
+                                        <div class="tooltip">Subir Salidas</div>
+                                      </div>
+                                    `;
+                                                } else {
+                                                    // Si quedan ≥1, mantenemos verde
+                                                    salidasCell.innerHTML = `
+                                      <div class="icon-container">
+                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                          <button class="buttonLogin buttonPreview" style="background: #17d244;">
+                                            <span class="material-symbols-outlined bell">check</span>
+                                            <p>|</p>
+                                            <span class="material-symbols-outlined bell">find_in_page</span>
+                                            <div class="tooltip">Ver archivo de salida</div>
+                                          </button>
+                                        </a>
+                                      </div>
+                                    `;
+                                                }
+                                            }
+
+                                            Swal.fire('Eliminadas', 'Las salidas han sido eliminadas', 'success');
+                                        } else {
+                                            Swal.fire('Error', json.error, 'error');
+                                        }
+                                    });
+                            });
                     });
+
 
                 } else {
                     console.error('Error al obtener las salidas:', data.error);
@@ -2275,6 +2308,14 @@
                                             document.getElementById('descripcion_salida').value = '';
                                         }
                                         $(archivoAdjuntoInput).fileinput('clear');
+
+                                        // 1) Actualizar la fila de la tabla principal:
+                                        updateTableRow(solicitudId);
+
+                                        // 2) Opcionalmente, recontar el número de salidas en el modal
+                                        //    y habilitar/deshabilitar “Eliminar” si es necesario:
+                                        salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
+                                        btnEliminarSalidas.disabled = salidaRowCheckboxes.length === 0;
 
                                         Swal.fire({
                                             heightAuto: false,

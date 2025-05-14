@@ -165,6 +165,29 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     paginateTable(tableId, paginationId, rowsPerPage);
     attachSortHandlers(tableId);
 
+    // -- NUEVO: filtro por funcionario --
+    const filter = document.getElementById('funcionarioFilter');
+    if (filter) {
+        filter.addEventListener('change', () => {
+            const state = tableStates[tableId];
+            // aplicar filtro sobre el conjunto original de filas:
+            const selected = filter.value.toLowerCase();
+            // redefinir filteredRows combinando búsqueda y filtro
+            state.filteredRows = state.rows.filter(row => {
+                // extracción del texto de la celda Funcionario (índice fijo: 8, ajustar si cambias orden)
+                const text = row.cells[8].innerText.toLowerCase();
+                const matchesFilter = !selected || text.includes(selected);
+                const matchesSearch = !state.searchTerm
+                    || row.innerText.toLowerCase().includes(state.searchTerm);
+                return matchesFilter && matchesSearch;
+            });
+            // volver a mostrar desde la página 1
+            state.currentPage = 1;
+            setupPagination(state);
+            displayRows(state, state.currentPage);
+        });
+    }
+
     // Ordenar por defecto la columna 'Nº Ingreso' de mayor a menor
     const headers = table.querySelectorAll('thead th');
     let sortColumnIndex = -1;
@@ -190,11 +213,12 @@ function attachSortHandlers(tableId) {
     const table = document.getElementById(tableId);
     if (!table) return;
 
-    const headers = table.querySelectorAll('thead th');
+    const headers = table.querySelectorAll('thead th:not(.non-clickable)');
     headers.forEach((header, index) => {
-        let ascending = true; // Comenzar con orden ascendente
+        let ascending = true;
         header.addEventListener('click', function () {
             const type = header.getAttribute('data-type');
+
 
             // Eliminar indicadores de ordenamiento anteriores
             headers.forEach(h => h.classList.remove('ascending', 'descending'));
@@ -431,11 +455,11 @@ function searchTable(state) {
             const cells = Array.from(row.getElementsByTagName('td'));
             let rowText = cells.map(cell => {
                 const previewElem = cell.querySelector('.descripcion-preview');
-                return previewElem 
+                return previewElem
                     ? (previewElem.getAttribute('data-fulltext') || previewElem.innerText)
                     : cell.innerText;
             }).join(' ').toLowerCase();
-            
+
             // Agregar el correo (data-email) y las salidas (data-salidas)
             const email = row.getAttribute('data-email') || '';
             const salidas = row.getAttribute('data-salidas') || '';

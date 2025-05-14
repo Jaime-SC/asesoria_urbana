@@ -728,6 +728,18 @@ button {
   font-size: 1.2em;
 }
 
+/* El TH no reacciona a clics, PERO los selects dentro sí */
+th.non-clickable {
+  /* elimina solo el cursor pointer, pero no bloquees pointer-events al 100% */
+  cursor: default;
+}
+
+/* Asegúrate de que todo en th.non-clickable siga recibiendo eventos */
+th.non-clickable * {
+  pointer-events: auto;
+}
+
+
 /* Indicador para el estado no ordenado */
 .tableInfor_container th::after {
   content: '⇅';
