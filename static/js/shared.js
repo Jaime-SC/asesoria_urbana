@@ -216,23 +216,34 @@ function attachSortHandlers(tableId) {
     const table = document.getElementById(tableId);
     if (!table) return;
 
-    const headers = table.querySelectorAll('thead th:not(.non-clickable)');
-    headers.forEach((header, index) => {
+    // 1) Todas las th en orden:
+    const allTh = Array.from(table.querySelectorAll('thead th'));
+
+    // 2) Solo las clicables
+    const clickableTh = table.querySelectorAll('thead th:not(.non-clickable)');
+
+    clickableTh.forEach(header => {
         let ascending = true;
-        header.addEventListener('click', function () {
+
+        // Calculamos su índice real:
+        const realIdx = allTh.indexOf(header);
+
+        header.addEventListener('click', () => {
             const type = header.getAttribute('data-type');
 
+            // Limpiar indicadores
+            clickableTh.forEach(h => h.classList.remove('ascending', 'descending'));
 
-            // Eliminar indicadores de ordenamiento anteriores
-            headers.forEach(h => h.classList.remove('ascending', 'descending'));
+            // Ordenar por la columna correcta
+            sortTable(table, realIdx, type, ascending);
 
-            // Ordenar la tabla y alternar la dirección
-            sortTable(table, index, type, ascending);
+            // Marcar flecha
             header.classList.add(ascending ? 'ascending' : 'descending');
-            ascending = !ascending; // Alternar dirección para el próximo clic
+            ascending = !ascending;
         });
     });
 }
+
 
 /**
  * Ordena la tabla basada en una columna específica.
