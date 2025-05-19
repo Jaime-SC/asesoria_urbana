@@ -1858,6 +1858,9 @@
         const salidaModalContent = document.getElementById('salidaModalContent');
         const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
         const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
+        const salidaSelectAll = document.getElementById('selectAllSalidas');
+        const btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
+
 
         if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
             console.error('Elementos del modal de salida no encontrados.');
@@ -1904,6 +1907,7 @@
         if (btnEliminarSalidas) {
             btnEliminarSalidas.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
         }
+
 
 
         tablaSalidasBody.innerHTML = '';
@@ -2000,19 +2004,22 @@
                     // — capturo todos los checkboxes recién creados —
                     salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
 
-                    // evento “marcar todo”
-                    salidaSelectAll?.addEventListener('change', e => {
-                        salidaRowCheckboxes.forEach(c => c.checked = e.target.checked);
-                        btnEliminarSalidas.disabled = !e.target.checked;
-                    });
-
-                    // habilito/deshabilito “Eliminar” según haya checks
-                    document.querySelector('#tablaSalidas tbody')
-                        .addEventListener('change', e => {
-                            if (!e.target.matches('.chkEliminarSalida')) return;
-                            const anyChecked = [...salidaRowCheckboxes].some(c => c.checked);
-                            btnEliminarSalidas.disabled = !anyChecked;
+                    if (salidaSelectAll) {
+                        salidaSelectAll.addEventListener('change', e => {
+                            salidaRowCheckboxes.forEach(c => c.checked = e.target.checked);
+                            if (btnEliminarSalidas) {
+                                btnEliminarSalidas.disabled = !e.target.checked;
+                            }
                         });
+                    }
+
+                    document.querySelector('#tablaSalidas tbody').addEventListener('change', e => {
+                        if (!e.target.matches('.chkEliminarSalida')) return;
+                        const anyChecked = [...salidaRowCheckboxes].some(c => c.checked);
+                        if (btnEliminarSalidas) {
+                            btnEliminarSalidas.disabled = !anyChecked;
+                        }
+                    });
 
                     // 4) Tu bloque de BORRAR SALIDAS:
                     btnEliminarSalidas?.addEventListener('click', () => {
@@ -2314,8 +2321,14 @@
 
                                         // 2) Opcionalmente, recontar el número de salidas en el modal
                                         //    y habilitar/deshabilitar “Eliminar” si es necesario:
-                                        salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
-                                        btnEliminarSalidas.disabled = salidaRowCheckboxes.length === 0;
+                                        if (salidaSelectAll) {
+                                            salidaSelectAll.addEventListener('change', e => {
+                                                salidaRowCheckboxes.forEach(c => c.checked = e.target.checked);
+                                                if (btnEliminarSalidas) {
+                                                    btnEliminarSalidas.disabled = !e.target.checked;
+                                                }
+                                            });
+                                        }
 
                                         Swal.fire({
                                             heightAuto: false,
