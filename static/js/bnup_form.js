@@ -1486,6 +1486,8 @@
      * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de edición.
      */
     function initializeMultipleFuncionariosEdit() {
+        const container = document.getElementById('salidaFuncionariosContainerEdit');
+        if (!container) return;
         const funcionariosContainer = document.getElementById('editFuncionariosContainer');
 
         // Verificar si el contenedor existe antes de proceder
