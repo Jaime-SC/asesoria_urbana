@@ -185,8 +185,8 @@
                 <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Tipo Recepción</th>
                 <th class="shadow" data-type="string">Tipo Solicitud</th>
-                {% comment %} <th class="shadow" data-type="string">Funcionario</th> {% endcomment %}
-                <th class="shadow non-clickable" data-type="string" style="display: flex;flex-direction: row;align-items: center;justify-content: space-between;">
+                <th class="shadow" data-type="string">Funcionario</th>
+                {% comment %} <th class="shadow non-clickable" data-type="string" style="display: flex;flex-direction: row;align-items: center;justify-content: space-between;">
                   Funcionario<br/>
                   <select id="funcionarioFilter" style="width: min-content;">
                     <option value="">— Todos —</option>
@@ -194,7 +194,7 @@
                       <option value="{{ funcionario.nombre }}">{{ funcionario.nombre }}</option>
                     {% endfor %}
                   </select>
-                </th>              
+                </th>               {% endcomment %}
                 <th class="shadow" data-type="string">Descripción</th>
                 <th class="shadow" data-type="string">Entradas</th>
                 <th class="shadow" data-type="string">Salidas</th>

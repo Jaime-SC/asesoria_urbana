@@ -148,30 +148,7 @@ const tableStates = {};
 function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     const table = document.getElementById(tableId);
     if (!table) return;
-
-    // → NUEVO: calcular índice dinámico de la columna Funcionario
-    const ths = table.querySelectorAll('thead th');
-    const selectFilter = table.querySelector('thead select#funcionarioFilter');
-    let funcColIdx = -1;
-    if (selectFilter) {
-        const funcTh = selectFilter.closest('th');
-        funcColIdx = Array.prototype.indexOf.call(ths, funcTh);
-        // añadir listener "change" al select como ya tenías...
-        selectFilter.addEventListener('change', () => {
-            const state = tableStates[tableId];
-            const selected = selectFilter.value.toLowerCase();
-            state.filteredRows = state.rows.filter(row => {
-                const text = row.cells[funcColIdx].innerText.toLowerCase();
-                return (!selected || text.includes(selected))
-                    && (!state.searchTerm || row.innerText.toLowerCase().includes(state.searchTerm));
-            });
-            state.currentPage = 1;
-            setupPagination(state);
-            displayRows(state, state.currentPage);
-        });
-    }
-
-
+    
     // Reiniciar el estado de la tabla si ya existe
     if (tableStates[tableId]) {
         delete tableStates[tableId];
