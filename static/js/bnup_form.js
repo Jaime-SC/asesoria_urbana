@@ -2057,7 +2057,7 @@
                                                     salidasCell.innerHTML = `
                                       <div class="icon-container">
                                         <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
-                                          <button class="buttonLogin buttonSubirSalida" style="background: #E73C45;">
+                                          <button class="buttonLogin buttonSubirSalida" style="background: #ed1c24;">
                                             <span class="material-symbols-outlined bell">schedule</span>
                                             <p>|</p>
                                             <span class="material-symbols-outlined bell">upload_file</span>

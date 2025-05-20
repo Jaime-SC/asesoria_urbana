@@ -273,7 +273,7 @@
                   <td>
                     <div class="icon-container">
                       <a href="javascript:void(0);" onclick="openSalidaModal({{ solicitud.id }})">
-                        {% if solicitud.salidas.all %}
+                        {% if solicitud.salidas_activas %}
                           {% if solicitud.tipo_solicitud.id == 12 %}
                             <button class="buttonLogin buttonPreview" style="background: #ffa420;">
                               <span class="material-symbols-outlined bell">group</span>

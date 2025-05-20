@@ -20,6 +20,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from dateutil.relativedelta import relativedelta
 from principal.models import PerfilUsuario
+from django.db.models import Prefetch
 from django.contrib import messages
 from bnup.models import Funcionario  # asegúrate de tenerlo importado
 from django.db.models import Count
@@ -201,7 +202,15 @@ def bnup_form(request):
             )
 
     else:
-        solicitudes = IngresoSOLICITUD.objects.filter(is_active=True).select_related("tipo_recepcion", "tipo_solicitud")
+        solicitudes = IngresoSOLICITUD.objects.filter(is_active=True) \
+            .select_related("tipo_recepcion", "tipo_solicitud") \
+            .prefetch_related(
+                Prefetch(
+                    'salidas',
+                    queryset=SalidaSOLICITUD.objects.filter(is_active=True),
+                    to_attr='salidas_activas'
+                )
+            )
         departamentos = Departamento.objects.all().order_by('nombre')
         funcionarios = Funcionario.objects.all().order_by('nombre')
         tipos_recepcion = TipoRecepcion.objects.all().order_by('tipo')
