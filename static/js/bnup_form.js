@@ -2029,7 +2029,21 @@
                             .filter(c => c.checked)
                             .map(c => c.value);
                         if (!ids.length) return;
-                        Swal.fire({ icon: 'warning', title: `Eliminar ${ids.length} salidas?`, showCancelButton: true })
+                        Swal.fire({
+                            icon: 'warning',
+                            title: `Eliminar ${ids.length} salidas?`,
+                            showCancelButton: true,
+                            heightAuto: false,       // evita que SweetAlert ajuste la altura del body
+                            scrollbarPadding: false, // ya lo tienes, pero nos aseguramos
+                            didOpen: () => {
+                                // bloqueo scroll en background
+                                document.body.style.overflow = 'hidden';
+                            },
+                            willClose: () => {
+                                // restauro scroll
+                                document.body.style.overflow = '';
+                            }
+                        })
                             .then(res => {
                                 if (!res.isConfirmed) return;
                                 fetch('/bnup/delete_salidas/', {
@@ -2083,9 +2097,33 @@
                                                 }
                                             }
 
-                                            Swal.fire('Eliminadas', 'Las salidas han sido eliminadas', 'success');
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Eliminadas',
+                                                text: 'Las salidas han sido eliminadas',
+                                                heightAuto: false,
+                                                scrollbarPadding: false,
+                                                didOpen: () => {
+                                                    document.body.style.overflow = 'hidden';
+                                                },
+                                                willClose: () => {
+                                                    document.body.style.overflow = '';
+                                                }
+                                            });
                                         } else {
-                                            Swal.fire('Error', json.error, 'error');
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: json.error,
+                                                heightAuto: false,
+                                                scrollbarPadding: false,
+                                                didOpen: () => {
+                                                    document.body.style.overflow = 'hidden';
+                                                },
+                                                willClose: () => {
+                                                    document.body.style.overflow = '';
+                                                }
+                                            });
                                         }
                                     });
                             });
@@ -2254,6 +2292,18 @@
                                         const salida = data.salida;
                                         const row = document.createElement('tr');
 
+                                        // 1) Checkbox sólo ADMIN
+                                        if (tipo_usuario === 'ADMIN') {
+                                            const chkTd = document.createElement('td');
+                                            chkTd.style.textAlign = 'center';
+                                            const chk = document.createElement('input');
+                                            chk.type = 'checkbox';
+                                            chk.className = 'chkEliminarSalida';
+                                            chk.value = salida.id;
+                                            chkTd.appendChild(chk);
+                                            row.appendChild(chkTd);
+                                        }
+
                                         const numeroSalidaCell = document.createElement('td');
                                         numeroSalidaCell.textContent = salida.numero_salida;
                                         row.appendChild(numeroSalidaCell);
@@ -2308,6 +2358,9 @@
                                         row.appendChild(archivoCell);
 
                                         tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
+
+                                        // no olvides volver a capturar los checkboxes y re-enlazar tus listeners
+                                        salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
 
                                         // Limpiar los campos del formulario
                                         document.getElementById('numero_salida').value = '';
