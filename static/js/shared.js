@@ -148,58 +148,147 @@ const tableStates = {};
 function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     const table = document.getElementById(tableId);
     if (!table) return;
-    
-    // Reiniciar el estado de la tabla si ya existe
-    if (tableStates[tableId]) {
-        delete tableStates[tableId];
+
+    // ────────────────────────────────────────────────────────────────
+    // 0) Calcular índices de cada columna según texto del <th>
+    const headers = Array.from(table.querySelectorAll('thead th'));
+    const colIdx = {
+        ingreso: headers.findIndex(h => h.textContent.trim().startsWith('Fecha Ingreso')),
+        solicitud: headers.findIndex(h => h.textContent.trim().startsWith('Fecha Solicitud')),
+        solicitante: headers.findIndex(h => h.textContent.trim().startsWith('Solicitante')),
+        tipoRec: headers.findIndex(h => h.textContent.trim().startsWith('Tipo Recepción')),
+        tipoSol: headers.findIndex(h => h.textContent.trim().startsWith('Tipo Solicitud')),
+        funcionario: headers.findIndex(h => h.textContent.trim().startsWith('Funcionario')),
+    };
+
+    // ────────────────────────────────────────────────────────────────
+    // 1) Botón de filtros y panel
+    const btnFilters = document.getElementById('btnToggleFilters');
+    const panel = document.getElementById('filterPanel');
+    btnFilters?.addEventListener('click', () => {
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // 2) Referencias a todos los controles de filtro
+    const filtroIDesde = document.getElementById('filtroIngresoDesde');
+    const filtroIHasta = document.getElementById('filtroIngresoHasta');
+    const filtroSDesde = document.getElementById('filtroSolicitudDesde');
+    const filtroSHasta = document.getElementById('filtroSolicitudHasta');
+    const filtroSol = document.getElementById('filtroSolicitante');
+    const filtroTR = document.getElementById('filtroTipoRecepcion');
+    const filtroTS = document.getElementById('filtroTipoSolicitud');
+    const filtroF = document.getElementById('filtroFuncionario');
+    const btnReset = document.getElementById('btnResetFilters');
+
+    // ────────────────────────────────────────────────────────────────
+    // 3) Función que aplica todos los filtros
+    function applyFilters() {
+        const state = tableStates[tableId];
+        const tbody = table.tBodies[0];
+
+        // 3.1) Eliminar mensaje anterior
+        tbody.querySelectorAll('.no-results').forEach(r => r.remove());
+
+        // 3.2) Filtrar
+        state.filteredRows = state.rows.filter(row => {
+            const cells = row.cells;
+            // parseo fechas "dd/mm/yyyy"
+            const parseDate = str => {
+                const [d, m, y] = str.split('/');
+                return new Date(y, m - 1, d);
+            };
+            const fIng = parseDate(cells[colIdx.ingreso].innerText);
+            const fSol = parseDate(cells[colIdx.solicitud].innerText);
+
+            if (filtroIDesde.value && fIng < new Date(filtroIDesde.value)) return false;
+            if (filtroIHasta.value && fIng > new Date(filtroIHasta.value)) return false;
+            if (filtroSDesde.value && fSol < new Date(filtroSDesde.value)) return false;
+            if (filtroSHasta.value && fSol > new Date(filtroSHasta.value)) return false;
+
+            if (filtroSol.value && cells[colIdx.solicitante].innerText.trim() !== filtroSol.value) return false;
+            if (filtroTR.value && cells[colIdx.tipoRec].innerText.trim() !== filtroTR.selectedOptions[0].text) return false;
+            if (filtroTS.value && cells[colIdx.tipoSol].innerText.trim() !== filtroTS.selectedOptions[0].text) return false;
+            if (filtroF.value && !cells[colIdx.funcionario].innerText.toLowerCase().includes(filtroF.value.toLowerCase())) return false;
+
+            if (state.searchTerm && !row.innerText.toLowerCase().includes(state.searchTerm)) return false;
+            return true;
+        });
+
+        // 3.3) Mostrar página 1 y actualizar
+        state.currentPage = 1;
+        displayRows(state, 1);
+
+        // 3.4) Si no hay resultados, insertar fila de aviso
+        if (state.filteredRows.length === 0) {
+            const noRow = document.createElement('tr');
+            noRow.classList.add('no-results');
+            const td = document.createElement('td');
+            td.colSpan = headers.length;
+            td.textContent = '🚫 No se encontraron resultados. Prueba cambiando los filtros.';
+            td.style.textAlign = 'center';
+            td.style.fontStyle = 'italic';
+            noRow.appendChild(td);
+            tbody.appendChild(noRow);
+        }
+
+        // 3.5) Actualizar paginación
+        setupPagination(state);
     }
 
-    // Establecer atributos de datos en la tabla para referencia
+    // ────────────────────────────────────────────────────────────────
+    // 4) Conectar eventos “change” de cada filtro
+    [filtroIDesde, filtroIHasta,
+        filtroSDesde, filtroSHasta,
+        filtroSol, filtroTR,
+        filtroTS, filtroF].forEach(el => el?.addEventListener('change', applyFilters));
+
+    // 4.1) Evento “Reiniciar filtros”
+    btnReset?.addEventListener('click', () => {
+        [filtroIDesde, filtroIHasta,
+            filtroSDesde, filtroSHasta,
+            filtroSol, filtroTR,
+            filtroTS, filtroF].forEach(el => {
+                if (!el) return;
+                el.value = '';
+            });
+        // reset global search
+        if (searchInputId) {
+            const si = document.getElementById(searchInputId);
+            if (si) si.value = '';
+            tableStates[tableId].searchTerm = '';
+        }
+        applyFilters();
+    });
+
+    // ────────────────────────────────────────────────────────────────
+    // 5) Prepara estado y atributos
+    if (tableStates[tableId]) delete tableStates[tableId];
+    tableStates[tableId] = {
+        rows: Array.from(table.querySelectorAll('tbody tr')),
+        filteredRows: [],
+        currentPage: 1,
+        rowsPerPage,
+        paginationId,
+        searchTerm: '',
+        colIdx
+    };
     table.setAttribute('data-pagination-id', paginationId);
-    table.setAttribute('data-rows-per-page', rowsPerPage);
-    if (searchInputId) {
-        table.setAttribute('data-search-input-id', searchInputId);
-    }
+    if (searchInputId) table.setAttribute('data-search-input-id', searchInputId);
 
-    // Inicializar paginación y ordenamiento
+    // ────────────────────────────────────────────────────────────────
+    // 6) Inicializar paginación y ordenamiento
     paginateTable(tableId, paginationId, rowsPerPage);
     attachSortHandlers(tableId);
 
-    // -- NUEVO: filtro por funcionario --
-    const filter = document.getElementById('funcionarioFilter');
-    if (filter) {
-        filter.addEventListener('change', () => {
-            const state = tableStates[tableId];
-            const selected = filter.value.toLowerCase();
-            state.filteredRows = state.rows.filter(row => {
-                // aquí ya usamos funcColIdx, no un 8 fijo
-                const text = row.cells[funcColIdx].innerText.toLowerCase();
-                const matchesFilter = !selected || text.includes(selected);
-                const matchesSearch = !state.searchTerm || row.innerText.toLowerCase().includes(state.searchTerm);
-                return matchesFilter && matchesSearch;
-            });
-            state.currentPage = 1;
-            setupPagination(state);
-            displayRows(state, state.currentPage);
-        });
-    }
-
-    // Ordenar por defecto la columna 'Nº Ingreso' de mayor a menor
-    const headers = table.querySelectorAll('thead th');
-    let sortColumnIndex = -1;
-
-    headers.forEach((header, index) => {
-        if (header.textContent.trim() === 'Nº Ingreso') {
-            sortColumnIndex = index;
-        }
-    });
-
-    if (sortColumnIndex !== -1) {
-        sortTable(table, sortColumnIndex, 'number', false); // false para descendente
-        // Actualizar el indicador de ordenamiento en el encabezado
-        headers[sortColumnIndex].classList.add('descending');
+    // ────────────────────────────────────────────────────────────────
+    // 7) (Opcional) ordena inicialmente por Nº Ingreso desc.
+    const idxNIngreso = headers.findIndex(h => h.textContent.trim().startsWith('Nº Ingreso'));
+    if (idxNIngreso > -1) {
+        sortTable(table, idxNIngreso, 'number', false);
+        headers[idxNIngreso].classList.add('descending');
     }
 }
+
 
 /**
  * Adjunta controladores de eventos de clic a los encabezados de la tabla para la funcionalidad de ordenamiento.
