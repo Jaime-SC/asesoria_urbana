@@ -265,7 +265,7 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     if (tableStates[tableId]) delete tableStates[tableId];
     tableStates[tableId] = {
         rows: Array.from(table.querySelectorAll('tbody tr')),
-        filteredRows: [],
+        filteredRows: Array.from(table.querySelectorAll('tbody tr')), // <–– aquí
         currentPage: 1,
         rowsPerPage,
         paginationId,
@@ -341,26 +341,25 @@ function sortTable(table, column, type, ascending) {
 
     const tbody = table.tBodies[0];
 
-    // Ordenar todas las filas basado en la columna y tipo especificados
-    state.rows.sort((rowA, rowB) => {
+    // 1) Ordenamos el array filtrado en lugar de state.rows
+    state.filteredRows.sort((rowA, rowB) => {
         const cellA = rowA.cells[column].getAttribute('data-order') || rowA.cells[column].innerText.trim();
         const cellB = rowB.cells[column].getAttribute('data-order') || rowB.cells[column].innerText.trim();
-
         let a, b;
+
         switch (type) {
             case 'number':
                 a = parseFloat(cellA) || 0;
                 b = parseFloat(cellB) || 0;
                 break;
             case 'date':
-                // Convertir fechas al formato 'yyyymmdd' para comparación adecuada
+                // 'dd/mm/yyyy' → 'yyyymmdd'
                 a = cellA.split('/').reverse().join('');
                 b = cellB.split('/').reverse().join('');
                 break;
             default:
                 a = cellA.toLowerCase();
                 b = cellB.toLowerCase();
-                break;
         }
 
         if (a < b) return ascending ? -1 : 1;
@@ -368,25 +367,16 @@ function sortTable(table, column, type, ascending) {
         return 0;
     });
 
-    // Actualizar filteredRows según el término de búsqueda actual
-    if (state.searchTerm && state.searchTerm !== '') {
-        state.filteredRows = state.rows.filter(row => {
-            const cells = Array.from(row.getElementsByTagName('td'));
-            return cells.some(cell => cell.innerText.toLowerCase().includes(state.searchTerm));
-        });
-    } else {
-        state.filteredRows = [...state.rows];
-    }
+    // 2) Reconstruimos el tbody solo con las filas filtradas y ya ordenadas
+    tbody.innerHTML = '';
+    state.filteredRows.forEach(row => tbody.appendChild(row));
 
-    // Reconstruir el cuerpo de la tabla con las filas ordenadas
-    while (tbody.firstChild) {
-        tbody.removeChild(tbody.firstChild);
-    }
-    state.rows.forEach(row => tbody.appendChild(row));
-
-    // Actualizar paginación después del ordenamiento
-    updatePaginationAfterSort(table);
+    // 3) Después de ordenar, reiniciamos a la página 1
+    state.currentPage = 1;
+    setupPagination(state);
+    displayRows(state, 1);
 }
+
 
 /**
  * Actualiza la paginación y muestra la primera página después del ordenamiento.
