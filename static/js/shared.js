@@ -230,7 +230,7 @@ function setupFilters(tableId, searchInputId) {
             applyFilters();
         });
     }
-    
+
     // Conectar cada filtro
     [filtroIDesde, filtroIHasta, filtroSDesde, filtroSHasta,
         filtroSol, filtroTR, filtroTS, filtroF]
@@ -245,8 +245,21 @@ function setupFilters(tableId, searchInputId) {
             searchInput.value = '';
             state.searchTerm = '';
         }
+        // 1) Volvemos a aplicar filtros (deja todas las filas)
         applyFilters();
-    });    
+
+        // 2) Reordenamos por “Nº Ingreso” desc
+        const headers = Array.from(table.querySelectorAll('thead th'));
+        const idxNIngreso = headers.findIndex(h => h.textContent.trim().startsWith('Nº Ingreso'));
+        if (idxNIngreso > -1) {
+            // Limpiar indicadores
+            headers.forEach(h => h.classList.remove('ascending', 'descending'));
+            // Llamar a sortTable pasándole ascending=false (descendente)
+            sortTable(table, idxNIngreso, 'number', /*ascending=*/false);
+            // Marcar el header como descendente
+            headers[idxNIngreso].classList.add('descending');
+        }
+    });
 
     // ——— Nuevo patrón para abrir/cerrar el panel ———
     btnFilters?.addEventListener('click', e => {
