@@ -144,80 +144,79 @@
         <div>
           <!-- Campo de búsqueda para todas las solicitudes -->
           <div class="tittleTable">
-            <div class="searchContainer">
-              <span class="material-symbols-outlined">search</span>
-              <input style="width: 400px; margin-top: 0px; border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
-            </div>
-            <div class="search-filters-container" style="position: relative; display: inline-block;">
-              <button id="btnToggleFilters" class="btn">
-                <span class="material-symbols-outlined">manage_search</span>
+            <div style="display: flex;gap: 1rem;align-items: stretch;">
+
+              <div class="searchContainer">
+                <span class="material-symbols-outlined">search</span>
+                <input style="width: 400px; margin-top: 0px; border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
+              </div>
+              <button id="btnToggleFilters" class="buttonLogin">
+                <span class="material-symbols-outlined bell">manage_search</span> 
+                <p>Filtros</p>
               </button>
-              <div id="filterPanel" style="
-                  display: none;
-                  position: absolute;
-                  top: 100%; right: 0;
-                  background: white;
-                  border: 1px solid #ccc;
-                  padding: 1rem;
-                  box-shadow: 0 2px 8px rgba(0,0,0,.2);
-                  z-index: 1000;
-              ">
-                <div style="text-align: right; margin-top: 1rem;">
-                  <button id="btnResetFilters" class="btn">
-                    <span class="material-symbols-outlined">reset_settings</span>
-                  </button>
-                </div>
-                <div>
-                  <label>Ingreso desde:<input type="date" id="filtroIngresoDesde"></label>
-                  <label>hasta:<input type="date" id="filtroIngresoHasta"></label>
-                </div>
-                <div>
-                  <label>Solicitud desde:<input type="date" id="filtroSolicitudDesde"></label>
-                  <label>hasta:<input type="date" id="filtroSolicitudHasta"></label>
-                </div>
-                <div>
-                  <label>Solicitante:
-                    <select id="filtroSolicitante">
-                      <option value="">— Todos —</option>
-                      {% for depto in departamentos %}
-                        <option value="{{ depto.nombre }}">{{ depto.nombre }}</option>
-                      {% endfor %}
-                    </select>
-                  </label>
-                </div>
-                
-                <div>
-                  <label>Tipo recepción:
-                    <select id="filtroTipoRecepcion">
-                      <option value="">— Todos —</option>
-                      {% for t in tipos_recepcion %}
-                        <option value="{{t.id}}">{{t.tipo}}</option>
-                      {% endfor %}
-                    </select>
-                  </label>
-                </div>
-                <div>
-                  <label>Tipo solicitud:
-                    <select id="filtroTipoSolicitud">
-                      <option value="">— Todos —</option>
-                      {% for t in tipos_solicitud %}
-                        <option value="{{t.id}}">{{t.tipo}}</option>
-                      {% endfor %}
-                    </select>
-                  </label>
-                </div>
-                <div>
-                  <label>Funcionario:
-                    <select id="filtroFuncionario">
-                      <option value="">— Todos —</option>
-                      {% for f in funcionarios %}
-                        <option value="{{f.nombre}}">{{f.nombre}}</option>
-                      {% endfor %}
-                    </select>
-                  </label>
-                </div>
+            </div>
+              
+            <div class="search-filters-container" style="position: relative; display: inline-block;">
+              <div id="filterPanel">
+              <div>
+                <label>Ingreso desde:<input type="date" id="filtroIngresoDesde"></label>
+                <label>hasta:<input type="date" id="filtroIngresoHasta"></label>
+              </div>
+              <div>
+                <label>Solicitud desde:<input type="date" id="filtroSolicitudDesde"></label>
+                <label>hasta:<input type="date" id="filtroSolicitudHasta"></label>
+              </div>
+              <div>
+                <label>Funcionario:
+                  <select id="filtroFuncionario">
+                    <option value="">— Todos —</option>
+                    {% for f in funcionarios %}
+                    <option value="{{f.nombre}}">{{f.nombre}}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+              </div>
+              <div>
+                <label>Solicitante:
+                  <select id="filtroSolicitante">
+                    <option value="">— Todos —</option>
+                    {% for depto in departamentos %}
+                    <option value="{{ depto.nombre }}">{{ depto.nombre }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+              </div>
+              
+              <div>
+                <label>Tipo recepción:
+                  <select id="filtroTipoRecepcion">
+                    <option value="">— Todos —</option>
+                    {% for t in tipos_recepcion %}
+                    <option value="{{t.id}}">{{t.tipo}}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+              </div>
+              <div>
+                <label>Tipo solicitud:
+                  <select id="filtroTipoSolicitud">
+                    <option value="">— Todos —</option>
+                    {% for t in tipos_solicitud %}
+                    <option value="{{t.id}}">{{t.tipo}}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+              </div>
+              
+              
+              <div>
+                <button id="btnResetFilters" class="buttonLogin" style="width: max-content;margin-top: .25rem;background: #ffa5ff;">
+                  <span class="material-symbols-outlined bell">reset_settings</span>
+                  <p>Borrar Filtros</p>
+                </button>
               </div>
             </div>
+          </div>
             
             <div style="display: flex; flex-direction: row;">
               <div class="salidas-legend" style="display: flex;flex-direction: row;padding: 5px;border-radius: 5px;max-width: 100%;align-items: center;margin-right: 10px;background: #f5f5f5;box-shadow: inset 0 0 5px 0.5px #16233E;">

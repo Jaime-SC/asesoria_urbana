@@ -81,8 +81,12 @@
         font-size: x-large;
     }
 
+    #title h1 {
+        font-size: large;
+    }
+
     .contentMenu {
-        font-size: 13px;
+        font-size: 11px;
     }
 
     .menu a {
@@ -123,6 +127,28 @@
         font-size: 13px;
     }
 
+    .search-filters-container #filterPanel {
+        padding: .5rem;
+        top: 13px;
+        right: -130px;
+    }
+
+    #btnToggleFilters,
+    #btnResetFilters {
+        width: 100%;
+        height: 25px;
+    }
+
+    #btnToggleFilters span,
+    #btnResetFilters span {
+        font-size: 20px;
+    }
+
+    #btnToggleFilters p,
+    #btnResetFilters p {
+        font-size: 13px;
+    }
+
     .btn-back {
         width: 8rem !important;
     }
@@ -152,11 +178,11 @@
         width: 312px;
     }
 
-    
+
     .subDivStatics-v4 {
         gap: .5rem;
     }
-    
+
     .subDivStatics-v4>.containerStatistics {
         width: 312px;
     }
@@ -168,7 +194,7 @@
     .subDivStatics-v5>.containerStatistics {
         width: 312px;
     }
-    
+
     .contentEstadisticas h3 {
         font-size: 1rem;
     }
@@ -610,6 +636,28 @@
         padding: 4px;
         font-size: 12px;
         height: min-content;
+    }
+
+    .search-filters-container #filterPanel {
+        padding: .5rem;
+        top: 13px;
+        right: -47px;
+    }
+
+    #btnToggleFilters,
+    #btnResetFilters {
+        width: 100%;
+        height: 25px;
+    }
+
+    #btnToggleFilters span,
+    #btnResetFilters span {
+        font-size: 20px;
+    }
+
+    #btnToggleFilters p,
+    #btnResetFilters p {
+        font-size: 13px;
     }
 
     .modal-content .btn-container .btn {

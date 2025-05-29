@@ -138,19 +138,20 @@ function getRowsPerPage() {
  */
 const tableStates = {};
 
+// shared.js
+
+// ——————————————————————————————
+// 1) NUEVAS FUNCIONES MODULARES:
+// ——————————————————————————————
 /**
- * Inicializa la tabla con funcionalidad de ordenamiento y paginación.
- * @param {string} tableId - El ID del elemento de la tabla.
- * @param {string} paginationId - El ID del contenedor de paginación.
- * @param {number} rowsPerPage - Número de filas a mostrar por página.
- * @param {string} [searchInputId] - El ID del elemento de entrada de búsqueda (opcional).
+ * Inicializa todos los controles de filtrado para la tabla.
+ * @param {string} tableId            - ID de la tabla.
+ * @param {string} [searchInputId]    - ID del input de búsqueda global.
  */
-function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
+function setupFilters(tableId, searchInputId) {
     const table = document.getElementById(tableId);
     if (!table) return;
 
-    // ────────────────────────────────────────────────────────────────
-    // 0) Calcular índices de cada columna según texto del <th>
     const headers = Array.from(table.querySelectorAll('thead th'));
     const colIdx = {
         ingreso: headers.findIndex(h => h.textContent.trim().startsWith('Fecha Ingreso')),
@@ -161,15 +162,13 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
         funcionario: headers.findIndex(h => h.textContent.trim().startsWith('Funcionario')),
     };
 
-    // ────────────────────────────────────────────────────────────────
-    // 1) Botón de filtros y panel
+    const state = tableStates[tableId];
+    const tbody = table.tBodies[0];
+
+    // Referencias UI
+    const searchInput = searchInputId && document.getElementById(searchInputId);
     const btnFilters = document.getElementById('btnToggleFilters');
     const panel = document.getElementById('filterPanel');
-    btnFilters?.addEventListener('click', () => {
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-    });
-
-    // 2) Referencias a todos los controles de filtro
     const filtroIDesde = document.getElementById('filtroIngresoDesde');
     const filtroIHasta = document.getElementById('filtroIngresoHasta');
     const filtroSDesde = document.getElementById('filtroSolicitudDesde');
@@ -180,19 +179,13 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     const filtroF = document.getElementById('filtroFuncionario');
     const btnReset = document.getElementById('btnResetFilters');
 
-    // ────────────────────────────────────────────────────────────────
-    // 3) Función que aplica todos los filtros
+    // Función central de filtrado
     function applyFilters() {
-        const state = tableStates[tableId];
-        const tbody = table.tBodies[0];
-
-        // 3.1) Eliminar mensaje anterior
+        // Limpia mensaje
         tbody.querySelectorAll('.no-results').forEach(r => r.remove());
 
-        // 3.2) Filtrar
         state.filteredRows = state.rows.filter(row => {
             const cells = row.cells;
-            // parseo fechas "dd/mm/yyyy"
             const parseDate = str => {
                 const [d, m, y] = str.split('/');
                 return new Date(y, m - 1, d);
@@ -204,90 +197,142 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
             if (filtroIHasta.value && fIng > new Date(filtroIHasta.value)) return false;
             if (filtroSDesde.value && fSol < new Date(filtroSDesde.value)) return false;
             if (filtroSHasta.value && fSol > new Date(filtroSHasta.value)) return false;
-
             if (filtroSol.value && cells[colIdx.solicitante].innerText.trim() !== filtroSol.value) return false;
             if (filtroTR.value && cells[colIdx.tipoRec].innerText.trim() !== filtroTR.selectedOptions[0].text) return false;
             if (filtroTS.value && cells[colIdx.tipoSol].innerText.trim() !== filtroTS.selectedOptions[0].text) return false;
             if (filtroF.value && !cells[colIdx.funcionario].innerText.toLowerCase().includes(filtroF.value.toLowerCase())) return false;
-
             if (state.searchTerm && !row.innerText.toLowerCase().includes(state.searchTerm)) return false;
             return true;
         });
 
-        // 3.3) Mostrar página 1 y actualizar
         state.currentPage = 1;
         displayRows(state, 1);
 
-        // 3.4) Si no hay resultados, insertar fila de aviso
         if (state.filteredRows.length === 0) {
             const noRow = document.createElement('tr');
             noRow.classList.add('no-results');
             const td = document.createElement('td');
             td.colSpan = headers.length;
-            td.textContent = '🚫 No se encontraron resultados. Prueba cambiando los filtros.';
+            td.textContent = '🚫 No se encontraron resultados. Ajusta los filtros.';
             td.style.textAlign = 'center';
             td.style.fontStyle = 'italic';
             noRow.appendChild(td);
             tbody.appendChild(noRow);
         }
 
-        // 3.5) Actualizar paginación
         setupPagination(state);
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 4) Conectar eventos “change” de cada filtro
-    [filtroIDesde, filtroIHasta,
-        filtroSDesde, filtroSHasta,
-        filtroSol, filtroTR,
-        filtroTS, filtroF].forEach(el => el?.addEventListener('change', applyFilters));
+    // Conectar búsqueda global
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            state.searchTerm = searchInput.value.trim().toLowerCase();
+            applyFilters();
+        });
+    }
+    
+    // Conectar cada filtro
+    [filtroIDesde, filtroIHasta, filtroSDesde, filtroSHasta,
+        filtroSol, filtroTR, filtroTS, filtroF]
+        .forEach(el => el?.addEventListener('change', applyFilters));
 
-    // 4.1) Evento “Reiniciar filtros”
+    // Reset filtros
     btnReset?.addEventListener('click', () => {
-        [filtroIDesde, filtroIHasta,
-            filtroSDesde, filtroSHasta,
-            filtroSol, filtroTR,
-            filtroTS, filtroF].forEach(el => {
-                if (!el) return;
-                el.value = '';
-            });
-        // reset global search
-        if (searchInputId) {
-            const si = document.getElementById(searchInputId);
-            if (si) si.value = '';
-            tableStates[tableId].searchTerm = '';
+        [filtroIDesde, filtroIHasta, filtroSDesde, filtroSHasta,
+            filtroSol, filtroTR, filtroTS, filtroF]
+            .forEach(el => { if (el) el.value = ''; });
+        if (searchInput) {
+            searchInput.value = '';
+            state.searchTerm = '';
         }
         applyFilters();
+    });    
+
+    // ——— Nuevo patrón para abrir/cerrar el panel ———
+    btnFilters?.addEventListener('click', e => {
+        e.stopPropagation();               // evita que este click cierre el panel
+        panel.style.display = 'block';    // mostramos el panel
+
+        // Listener temporal para cerrar al clicar fuera
+        const closePanel = ev => {
+            if (!panel.contains(ev.target) && !btnFilters.contains(ev.target)) {
+                panel.style.display = 'none';
+                document.removeEventListener('click', closePanel);
+            }
+        };
+
+        // Registrarlo en la próxima vuelta de evento
+        setTimeout(() => document.addEventListener('click', closePanel), 0);
     });
 
-    // ────────────────────────────────────────────────────────────────
-    // 5) Prepara estado y atributos
-    if (tableStates[tableId]) delete tableStates[tableId];
+}
+
+
+/**
+ * Inicializa la lógica de ordenamiento por columna en la tabla.
+ * @param {string} tableId - ID de la tabla.
+ */
+function setupSorting(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    const allTh = Array.from(table.querySelectorAll('thead th'));
+    const clickableTh = table.querySelectorAll('thead th:not(.non-clickable)');
+    const state = tableStates[tableId];
+
+    clickableTh.forEach(header => {
+        let ascending = true;
+        const realIdx = allTh.indexOf(header);
+        const type = header.getAttribute('data-type');
+
+        header.addEventListener('click', () => {
+            clickableTh.forEach(h => h.classList.remove('ascending', 'descending'));
+            sortTable(table, realIdx, type, ascending);
+            header.classList.add(ascending ? 'ascending' : 'descending');
+            ascending = !ascending;
+        });
+    });
+}
+
+
+// ——————————————————————————————
+// 2) initializeTable REFACTORIZADA
+// ——————————————————————————————
+function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    // Estado inicial
     tableStates[tableId] = {
         rows: Array.from(table.querySelectorAll('tbody tr')),
-        filteredRows: Array.from(table.querySelectorAll('tbody tr')), // <–– aquí
+        filteredRows: Array.from(table.querySelectorAll('tbody tr')),
         currentPage: 1,
         rowsPerPage,
         paginationId,
         searchTerm: '',
-        colIdx
     };
+
     table.setAttribute('data-pagination-id', paginationId);
     if (searchInputId) table.setAttribute('data-search-input-id', searchInputId);
 
-    // ────────────────────────────────────────────────────────────────
-    // 6) Inicializar paginación y ordenamiento
+    // 1) Paginación
     paginateTable(tableId, paginationId, rowsPerPage);
-    attachSortHandlers(tableId);
 
-    // ────────────────────────────────────────────────────────────────
-    // 7) (Opcional) ordena inicialmente por Nº Ingreso desc.
+    // 2) Sorting
+    setupSorting(tableId);
+
+    // 3) Filtros (incluye búsqueda global)
+    setupFilters(tableId, searchInputId);
+
+    // 4) Ordenamiento inicial por “Nº Ingreso” desc (opcional)
+    const headers = Array.from(table.querySelectorAll('thead th'));
     const idxNIngreso = headers.findIndex(h => h.textContent.trim().startsWith('Nº Ingreso'));
     if (idxNIngreso > -1) {
         sortTable(table, idxNIngreso, 'number', false);
         headers[idxNIngreso].classList.add('descending');
     }
 }
+
 
 
 /**
@@ -420,10 +465,7 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
 
     const state = tableStates[tableId];
 
-    // Inicializar la funcionalidad de búsqueda si corresponde
-    if (state.searchInputId) {
-        searchTable(state);
-    }
+
 
     // Mostrar filas iniciales y configurar controles de paginación
     displayRows(state, state.currentPage);

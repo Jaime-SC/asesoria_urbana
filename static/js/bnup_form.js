@@ -1844,74 +1844,87 @@
     }
 
 
-    /**
-     * Actualiza la función que abre el modal de salidas para incluir los nuevos campos:
-     * - Múltiples funcionarios (a través de la función initializeMultipleFuncionariosSalida)
-     * - Campo de descripción de salida
-     * Además, se modifica la lógica de envío del formulario para incluir estos nuevos datos.
-     */
     function openSalidaModal(solicitudId) {
-        // Actualizamos la condición para incluir a 'JEFE'
-        if (!['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'VISUALIZADOR', 'JEFE'].includes(tipo_usuario)) {
+        // Sólo ciertos roles pueden abrir el modal
+        if (!['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'VISUALIZADOR', 'JEFE']
+            .includes(tipo_usuario)) {
             return;
         }
 
         const salidaModal = document.getElementById('salidaModal');
-        const salidaModalContent = document.getElementById('salidaModalContent');
-        const salidaCloseButton = salidaModal ? salidaModal.querySelector('.close') : null;
+        const salidaContent = document.getElementById('salidaModalContent');
+        const closeBtn = salidaModal?.querySelector('.close');
         const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
         const salidaSelectAll = document.getElementById('selectAllSalidas');
         const btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
 
-
-        if (!salidaModal || !salidaCloseButton || !tablaSalidasBody) {
+        // Validar elementos esenciales
+        if (!salidaModal || !salidaContent || !closeBtn || !tablaSalidasBody) {
             console.error('Elementos del modal de salida no encontrados.');
             return;
         }
 
-        // Reiniciamos animaciones previas y mostramos el modal
-        salidaModalContent.classList.remove('animate__bounceOut');
-        salidaModalContent.classList.add('animate__animated', 'animate__bounceIn');
+        // --- Función para cerrar el modal con animación ---
+        function cerrarModal() {
+            salidaContent.classList.remove('animate__bounceIn');
+            salidaContent.classList.add('animate__bounceOut');
+            salidaContent.addEventListener('animationend', () => {
+                salidaModal.style.display = 'none';
+                salidaContent.classList.remove('animate__bounceOut', 'animate__animated');
+                salidaContent.classList.add('animate__bounceIn');
+                window._salidaModalAbierto = false;
+            }, { once: true });
+            salidaModal.removeEventListener('click', onOutsideClick);
+        }
+
+        // --- Handler de “clic fuera del contenido” ---
+        function onOutsideClick(e) {
+            if (e.target === salidaModal) {
+                cerrarModal();
+            }
+        }
+
+        // — Mostrar el modal —
+        window._salidaModalAbierto = true;
+        salidaContent.classList.remove('animate__bounceOut');
+        salidaContent.classList.add('animate__animated', 'animate__bounceIn');
         salidaModal.style.display = 'block';
 
-        // Inicializamos el contenedor de funcionarios
-        // haz
+        // 1) Que el propio fondo del modal no propague clics hacia document
+        salidaModal.addEventListener('click', e => e.stopPropagation());
+
+        // 2) Que el contenido tampoco (ya lo tenías)
+        salidaContent.addEventListener('click', e => e.stopPropagation());
+
+        // 3) Y por si acaso, que el panel de filtros tampoco propague
+        const panel = document.getElementById('filterPanel');
+        panel?.addEventListener('click', e => e.stopPropagation());
+
+        // Cerrar con “X”
+        closeBtn.onclick = cerrarModal;
+
+        // Cerrar haciendo clic fuera del contenido
+        salidaModal.addEventListener('click', onOutsideClick);
+
+        // evita que el botón de filtros pierda su evento
+        const btnToggleFilters = document.getElementById('btnToggleFilters');
+        btnToggleFilters?.addEventListener('click', e => e.stopPropagation());
+
+        // --- Inicializar contenedor de funcionarios si existe ---
         if (document.getElementById('salidaFuncionariosContainer')) {
             initializeMultipleFuncionariosSalida();
         }
 
-        // Función para cerrar el modal con animación
-        function closeModal() {
-            salidaModalContent.classList.remove('animate__bounceIn');
-            salidaModalContent.classList.add('animate__bounceOut');
-            setTimeout(() => {
-                salidaModal.style.display = 'none';
-                salidaModalContent.classList.remove('animate__animated', 'animate__bounceOut');
-            }, 800);
+        // --- Mostrar u ocultar controles de ADMIN ---
+        const thSelectAll = salidaSelectAll?.closest('th');
+        if (thSelectAll) {
+            thSelectAll.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
         }
-        salidaCloseButton.onclick = closeModal;
-        window.onclick = function (event) {
-            if (event.target === salidaModal) {
-                closeModal();
-            }
-        };
-
-        // Si es ADMIN, muestro el checkbox “marcar todas” y el botón de eliminar
-        // Mostrar u ocultar “marcar todas” y “Eliminar” con null-checks
-        const selectAllEl = document.getElementById('selectAllSalidas');
-        if (selectAllEl) {
-            const th = selectAllEl.closest('th');
-            if (th) {
-                th.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
-            }
-        }
-
         if (btnEliminarSalidas) {
             btnEliminarSalidas.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
         }
 
-
-
+        // Limpiar contenido previo
         tablaSalidasBody.innerHTML = '';
 
         // Cargar las salidas existentes mediante AJAX
