@@ -201,7 +201,26 @@ function setupFilters(tableId, searchInputId) {
             if (filtroTR.value && cells[colIdx.tipoRec].innerText.trim() !== filtroTR.selectedOptions[0].text) return false;
             if (filtroTS.value && cells[colIdx.tipoSol].innerText.trim() !== filtroTS.selectedOptions[0].text) return false;
             if (filtroF.value && !cells[colIdx.funcionario].innerText.toLowerCase().includes(filtroF.value.toLowerCase())) return false;
-            if (state.searchTerm && !row.innerText.toLowerCase().includes(state.searchTerm)) return false;
+            if (state.searchTerm) {
+                const term = state.searchTerm;
+                let hayMatch = row.innerText.toLowerCase().includes(term);
+
+                // --- antigua búsqueda en data-salidas y data-fulltext ---
+                const salidas = (row.getAttribute('data-salidas') || '').toLowerCase();
+                hayMatch = hayMatch || salidas.includes(term);
+
+                const preview = row.querySelector('.descripcion-preview');
+                if (preview) {
+                    const desc = (preview.getAttribute('data-fulltext') || '').toLowerCase();
+                    hayMatch = hayMatch || desc.includes(term);
+                }
+
+                // --- nueva búsqueda en descripciones de salidas ---
+                const salidasDesc = (row.getAttribute('data-salidas-descripciones') || '').toLowerCase();
+                hayMatch = hayMatch || salidasDesc.includes(term);
+
+                if (!hayMatch) return false;
+            }
             return true;
         });
 
@@ -228,8 +247,23 @@ function setupFilters(tableId, searchInputId) {
         searchInput.addEventListener('input', () => {
             state.searchTerm = searchInput.value.trim().toLowerCase();
             applyFilters();
+
+            // Si la búsqueda quedó vacía, restauramos el orden inicial por Nº Ingreso (descendente)
+            if (!state.searchTerm) {
+                const headers = Array.from(table.querySelectorAll('thead th'));
+                const idxNIngreso = headers.findIndex(h => h.textContent.trim().startsWith('Nº Ingreso'));
+                if (idxNIngreso > -1) {
+                    // Limpiamos flechas de orden
+                    headers.forEach(h => h.classList.remove('ascending', 'descending'));
+                    // Ordenamos la columna Nº Ingreso en forma descendente
+                    sortTable(table, idxNIngreso, 'number', /*ascending=*/false);
+                    // Marcamos el encabezado como descendente
+                    headers[idxNIngreso].classList.add('descending');
+                }
+            }
         });
     }
+
 
     // Conectar cada filtro
     [filtroIDesde, filtroIHasta, filtroSDesde, filtroSHasta,
@@ -600,7 +634,9 @@ function searchTable(state) {
                     ? (previewElem.getAttribute('data-fulltext') || previewElem.innerText)
                     : cell.innerText;
             }).join(' ').toLowerCase();
-
+            // después, también concatenamos las descripciones:
+            const salidasDesc = (row.getAttribute('data-salidas-descripciones') || '').toLowerCase();
+            rowText += " " + salidasDesc;
             // Agregar el correo (data-email) y las salidas (data-salidas)
             const email = row.getAttribute('data-email') || '';
             const salidas = row.getAttribute('data-salidas') || '';

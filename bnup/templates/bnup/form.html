@@ -263,7 +263,7 @@
             </thead>
             <tbody>
               {% for solicitud in solicitudes %}
-              <tr class="animate__animated" data-id="{{ solicitud.id }}" data-salidas="{% for salida in solicitud.salidas.all %}{{ salida.numero_salida }} {{ salida.fecha_salida|date:'d/m/Y' }} {% endfor %}" data-email="{{ solicitud.correo_solicitante|default:'' }}">
+              <tr class="animate__animated" data-id="{{ solicitud.id }}" data-salidas="{% for salida in solicitud.salidas.all %}{{ salida.numero_salida }} {{ salida.fecha_salida|date:'d/m/Y' }} {% endfor %}" data-salidas-descripciones="{% for salida in solicitud.salidas.all %}{{ salida.descripcion|escapejs }} {% endfor %}" data-email="{{ solicitud.correo_solicitante|default:'' }}">
                   {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
                     <td>
                       <input type="checkbox" class="rowCheckbox" data-id="{{ solicitud.id }}" />
