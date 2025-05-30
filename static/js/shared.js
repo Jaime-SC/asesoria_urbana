@@ -179,6 +179,11 @@ function setupFilters(tableId, searchInputId) {
     const filtroF = document.getElementById('filtroFuncionario');
     const btnReset = document.getElementById('btnResetFilters');
 
+    // 1) Poner por defecto el rango al año en curso
+    const now = new Date();
+    const year = now.getFullYear();
+    if (filtroIDesde) filtroIDesde.value = `${year}-01-01`;
+    if (filtroIHasta) filtroIHasta.value = `${year}-12-31`;
     // Función central de filtrado
     function applyFilters() {
         // Limpia mensaje
@@ -224,9 +229,33 @@ function setupFilters(tableId, searchInputId) {
             return true;
         });
 
+        // ——— 3) ORDENAR siempre POR Nº INGRESO DESCENDENTE ———
+        const headers = Array.from(table.querySelectorAll('thead th'));
+        const idxNIngreso = headers.findIndex(h =>
+            h.textContent.trim().startsWith('Nº Ingreso')
+        );
+        if (idxNIngreso > -1) {
+            state.filteredRows.sort((a, b) => {
+                const va = parseFloat(
+                    a.cells[idxNIngreso].getAttribute('data-order') ||
+                    a.cells[idxNIngreso].innerText
+                ) || 0;
+                const vb = parseFloat(
+                    b.cells[idxNIngreso].getAttribute('data-order') ||
+                    b.cells[idxNIngreso].innerText
+                ) || 0;
+                return vb - va;  // descendente
+            });
+            // refrescar indicador de flecha
+            headers.forEach(h => h.classList.remove('ascending', 'descending'));
+            headers[idxNIngreso].classList.add('descending');
+        }
+
         state.currentPage = 1;
         displayRows(state, 1);
+        setupPagination(state);
 
+        // ——— 5) Mensaje “sin resultados” si no hay filas ———
         if (state.filteredRows.length === 0) {
             const noRow = document.createElement('tr');
             noRow.classList.add('no-results');
@@ -239,8 +268,9 @@ function setupFilters(tableId, searchInputId) {
             tbody.appendChild(noRow);
         }
 
-        setupPagination(state);
     }
+
+    applyFilters();
 
     // Conectar búsqueda global
     if (searchInput) {
@@ -250,16 +280,25 @@ function setupFilters(tableId, searchInputId) {
 
             // Si la búsqueda quedó vacía, restauramos el orden inicial por Nº Ingreso (descendente)
             if (!state.searchTerm) {
+                // 1) Reordenar siempre por Nº Ingreso desc:
                 const headers = Array.from(table.querySelectorAll('thead th'));
                 const idxNIngreso = headers.findIndex(h => h.textContent.trim().startsWith('Nº Ingreso'));
                 if (idxNIngreso > -1) {
-                    // Limpiamos flechas de orden
+                    state.filteredRows.sort((rowA, rowB) => {
+                        // obtener valor numérico de data-order o innerText
+                        const a = parseFloat(rowA.cells[idxNIngreso].getAttribute('data-order') || rowA.cells[idxNIngreso].innerText) || 0;
+                        const b = parseFloat(rowB.cells[idxNIngreso].getAttribute('data-order') || rowB.cells[idxNIngreso].innerText) || 0;
+                        return b - a; // descendente
+                    });
+                    // actualizar indicador de flecha
                     headers.forEach(h => h.classList.remove('ascending', 'descending'));
-                    // Ordenamos la columna Nº Ingreso en forma descendente
-                    sortTable(table, idxNIngreso, 'number', /*ascending=*/false);
-                    // Marcamos el encabezado como descendente
                     headers[idxNIngreso].classList.add('descending');
                 }
+
+                // 2) Mostrar y paginar
+                state.currentPage = 1;
+                displayRows(state, 1);
+                setupPagination(state);
             }
         });
     }
@@ -270,30 +309,43 @@ function setupFilters(tableId, searchInputId) {
         filtroSol, filtroTR, filtroTS, filtroF]
         .forEach(el => el?.addEventListener('change', applyFilters));
 
-    // Reset filtros
     btnReset?.addEventListener('click', () => {
-        [filtroIDesde, filtroIHasta, filtroSDesde, filtroSHasta,
-            filtroSol, filtroTR, filtroTS, filtroF]
-            .forEach(el => { if (el) el.value = ''; });
+        const now = new Date();
+        const year = now.getFullYear();
+
+        // 1) Resetear sólo los filtros que NO sean Fecha de Ingreso
+        [ /*filtroIDesde, filtroIHasta,*/
+            filtroSDesde, filtroSHasta,
+            filtroSol, filtroTR, filtroTS, filtroF
+        ].forEach(el => {
+            if (el) el.value = '';
+        });
+
+        // 2) Restaurar explícitamente Fecha de Ingreso al año en curso
+        if (filtroIDesde) filtroIDesde.value = `${year}-01-01`;
+        if (filtroIHasta) filtroIHasta.value = `${year}-12-31`;
+
+        // 3) Limpiar búsqueda global
         if (searchInput) {
             searchInput.value = '';
             state.searchTerm = '';
         }
-        // 1) Volvemos a aplicar filtros (deja todas las filas)
+
+        // 4) Aplicar filtros (que internamente ya ordena y repagina)
         applyFilters();
 
-        // 2) Reordenamos por “Nº Ingreso” desc
+        // 5) Reordenar la columna “Nº Ingreso” descendente
         const headers = Array.from(table.querySelectorAll('thead th'));
-        const idxNIngreso = headers.findIndex(h => h.textContent.trim().startsWith('Nº Ingreso'));
-        if (idxNIngreso > -1) {
-            // Limpiar indicadores
+        const idx = headers.findIndex(h =>
+            h.textContent.trim().startsWith('Nº Ingreso')
+        );
+        if (idx > -1) {
             headers.forEach(h => h.classList.remove('ascending', 'descending'));
-            // Llamar a sortTable pasándole ascending=false (descendente)
-            sortTable(table, idxNIngreso, 'number', /*ascending=*/false);
-            // Marcar el header como descendente
-            headers[idxNIngreso].classList.add('descending');
+            sortTable(table, idx, 'number', false);
+            headers[idx].classList.add('descending');
         }
     });
+
 
     // ——— Nuevo patrón para abrir/cerrar el panel ———
     btnFilters?.addEventListener('click', e => {
