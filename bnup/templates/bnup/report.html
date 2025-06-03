@@ -755,18 +755,21 @@
       {% if agrupado_por_funcionario_tipo %}
         {% for entry in agrupado_por_funcionario_tipo %}
           <h3 style="margin-top: 1.5em;">{{ entry.funcionario }}</h3>
+    
           <table>
             <thead>
               <tr>
-                <th style="width: 70%;">Tipo de Solicitud</th>
-                <th style="width: 30%;">Cantidad</th>
+                <th style="width: 50%;">Tipo de Solicitud</th>
+                <th style="width: 25%;">Ingresos</th>
+                <th style="width: 25%;">Salidas</th>
               </tr>
             </thead>
             <tbody>
               {% for t in entry.tipos %}
                 <tr>
                   <td>{{ t.tipo }}</td>
-                  <td>{{ t.total }}</td>
+                  <td>{{ t.ingresos }}</td>
+                  <td>{{ t.salidas }}</td>
                 </tr>
               {% endfor %}
             </tbody>

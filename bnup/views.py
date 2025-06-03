@@ -23,6 +23,7 @@ from principal.models import PerfilUsuario
 from django.db.models import Prefetch
 from django.contrib import messages
 from bnup.models import Funcionario  # asegúrate de tenerlo importado
+from collections import defaultdict
 from django.db.models import Count
 from datetime import datetime, date
 
@@ -1025,40 +1026,59 @@ def report_view(request):
         for item in sem_act_qs
     ]
 
-    stats_por_funcionario_tipo = (
-        active_solicitudes
-        .values(
-            'funcionarios_asignados__nombre',
-            'tipo_solicitud__tipo'
-        )
-        .annotate(total=Count('id'))
-        .order_by('funcionarios_asignados__nombre', 'tipo_solicitud__tipo')
-    )
-    lista_por_funcionario_tipo = [
-        {
-            'funcionario': item['funcionarios_asignados__nombre'],
-            'tipo':        item['tipo_solicitud__tipo'],
-            'total':       item['total'],
-        }
-        for item in stats_por_funcionario_tipo
-    ]
+    # Vamos a acumular dos contadores:
+    #   ingresos_by[(nombre_funcionario, tipo_solicitud)] = cantidad de ingresos
+    #   salidas_by[(nombre_funcionario, tipo_solicitud)]  = cantidad de salidas asociadas
+    ingresos_by = defaultdict(int)
+    salidas_by  = defaultdict(int)
+
+    # Prefetch para no golpear la BD en cada iteración
+    qs_ingresos_prefetch = active_solicitudes.prefetch_related('funcionarios_asignados', 
+                                                               'salidas')
+
+    for ingreso in qs_ingresos_prefetch:
+        tipo = ingreso.tipo_solicitud.tipo
+        # Contamos cuántas salidas activas de este ingreso cayeron en el año actual:
+        # (suponemos que SalidaSOLICITUD.fe​cha_salida__year=current_year ya está filtrado en salidas_qs)
+        salidas_del_ingreso = ingreso.salidas.filter(is_active=True, 
+                                                      fecha_salida__year=current_year).count()
+
+        for funcionario in ingreso.funcionarios_asignados.all():
+            nombre_func = funcionario.nombre
+            ingresos_by[(nombre_func, tipo)] += 1
+            salidas_by[(nombre_func, tipo)]  += salidas_del_ingreso
+
+    # Convertimos esos dos dicts en una lista “plana”:
+    # [
+    #   {'funcionario': 'Ana Pérez', 'tipo': 'Oficio', 'ingresos': 12, 'salidas': 15}, …
+    # ]
+    lista_por_funcionario_tipo = []
+    for (nombre_func, tipo), count_ing in ingresos_by.items():
+        lista_por_funcionario_tipo.append({
+            'funcionario': nombre_func,
+            'tipo':        tipo,
+            'ingresos':    count_ing,
+            'salidas':     salidas_by[(nombre_func, tipo)],
+        })
+    # (opcionalmente ordenar por funcionario y tipo)
+    lista_por_funcionario_tipo.sort(key=lambda x: (x['funcionario'], x['tipo']))
+    # ———————————————————————————————————————————————————————————————————————
 
     # ——————————————————————————
-    # Agrupar por funcionario en un dict intermedio
-    # ——————————————————————————
+    # Ahora agrupamos esa lista plana en una estructura por funcionario,
+    # para luego iterar cómodo en la plantilla:
     agrupado_por_funcionario_tipo = {}
     for item in lista_por_funcionario_tipo:
         nombre_func = item['funcionario']
-        tipo        = item['tipo']
-        total       = item['total']
         if nombre_func not in agrupado_por_funcionario_tipo:
             agrupado_por_funcionario_tipo[nombre_func] = []
         agrupado_por_funcionario_tipo[nombre_func].append({
-            'tipo':  tipo,
-            'total': total
+            'tipo':    item['tipo'],
+            'ingresos': item['ingresos'],
+            'salidas':  item['salidas'],
         })
 
-    # Convertir al formato lista para la plantilla:
+    # Convertimos en lista de dicts:
     lista_agrupada = [
         {
           'funcionario': nombre,
