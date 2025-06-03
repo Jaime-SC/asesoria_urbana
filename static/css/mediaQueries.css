@@ -25,8 +25,16 @@
     }
 
     .logo {
-        display: flex;
-        align-items: center;
+        padding-block: .10rem;
+        padding-left: .35rem;
+    }
+
+    .logoAU {
+        height: 5.5rem;
+    }
+
+    .logoMuniValpo {
+        height: 5.5rem;
     }
 
     .separador {
@@ -39,15 +47,7 @@
         height: 69px;
         margin-bottom: 20px;
         width: 45px;
-    }
-
-    .logoAU {
-        height: 5.75rem;
-    }
-
-    .logoMuniValpo {
-        height: 5.75rem;
-    }
+    }    
 
     .logoIlustreMunicipalidad {
         position: absolute;
@@ -460,9 +460,18 @@
     }
 
     .logo {
-        display: flex;
-        align-items: center;
+        padding-block: .2rem;
+        padding-left: .65rem;
     }
+
+    .logoAU {
+        height: 6rem;
+    }
+
+    .logoMuniValpo {
+        height: 6rem;
+    }
+
 
     .separador {
         height: 40px;
@@ -474,15 +483,7 @@
         height: 69px;
         margin-bottom: 20px;
         width: 45px;
-    }
-
-    .logoAU {
-        height: 7rem;
-    }
-
-    .logoMuniValpo {
-        height: 7rem;
-    }
+    }    
 
     .logoIlustreMunicipalidad {
         position: absolute;

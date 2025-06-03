@@ -251,6 +251,12 @@ function setupFilters(tableId, searchInputId) {
             headers[idxNIngreso].classList.add('descending');
         }
 
+        // 2) RECONSTRUIR el <tbody> a partir de state.filteredRows
+        tbody.innerHTML = '';
+        state.filteredRows.forEach(row => {
+            tbody.appendChild(row);
+        });
+
         state.currentPage = 1;
         displayRows(state, 1);
         setupPagination(state);

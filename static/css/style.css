@@ -112,7 +112,16 @@ h1 {
 .logo {
   display: flex;
   align-items: center;
+  padding-block: .25rem;
+  padding-left: .7rem;
+}
 
+.logoAU {
+  height: 8rem;
+}
+
+.logoMuniValpo {
+  height: 8rem;
 }
 
 .user {
@@ -328,13 +337,7 @@ h1 {
   width: 52px;
 }
 
-.logoAU {
-  height: 8.5rem;
-}
 
-.logoMuniValpo {
-  height: 8.5rem;
-}
 
 .logoIlustreMunicipalidad {
   position: absolute;
