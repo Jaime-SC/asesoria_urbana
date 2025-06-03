@@ -1025,6 +1025,48 @@ def report_view(request):
         for item in sem_act_qs
     ]
 
+    stats_por_funcionario_tipo = (
+        active_solicitudes
+        .values(
+            'funcionarios_asignados__nombre',
+            'tipo_solicitud__tipo'
+        )
+        .annotate(total=Count('id'))
+        .order_by('funcionarios_asignados__nombre', 'tipo_solicitud__tipo')
+    )
+    lista_por_funcionario_tipo = [
+        {
+            'funcionario': item['funcionarios_asignados__nombre'],
+            'tipo':        item['tipo_solicitud__tipo'],
+            'total':       item['total'],
+        }
+        for item in stats_por_funcionario_tipo
+    ]
+
+    # ——————————————————————————
+    # Agrupar por funcionario en un dict intermedio
+    # ——————————————————————————
+    agrupado_por_funcionario_tipo = {}
+    for item in lista_por_funcionario_tipo:
+        nombre_func = item['funcionario']
+        tipo        = item['tipo']
+        total       = item['total']
+        if nombre_func not in agrupado_por_funcionario_tipo:
+            agrupado_por_funcionario_tipo[nombre_func] = []
+        agrupado_por_funcionario_tipo[nombre_func].append({
+            'tipo':  tipo,
+            'total': total
+        })
+
+    # Convertir al formato lista para la plantilla:
+    lista_agrupada = [
+        {
+          'funcionario': nombre,
+          'tipos':       agrupado_por_funcionario_tipo[nombre]
+        }
+        for nombre in agrupado_por_funcionario_tipo
+    ]
+
 
     context = {
         "total_solicitudes": total_solicitudes,
@@ -1078,6 +1120,8 @@ def report_view(request):
         "semanas_ultimos_3m": semanas_ult3m,
         "semana_actual_desc": semana_actual_desc,
         "solicitudes_semana_actual_por_funcionario": solicitudes_semana_actual_por_funcionario,
+        'solicitudes_por_tipo_por_funcionario': lista_por_funcionario_tipo,
+        'agrupado_por_funcionario_tipo': lista_agrupada,
     }
 
     return render(request, "bnup/report.html", context)

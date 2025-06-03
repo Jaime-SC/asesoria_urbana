@@ -749,5 +749,33 @@
         </tbody>
       </table>
     </div>
+    <div class="solicitudesPorFuncionarioTipo">
+      <h2>Solicitudes por Funcionario y Tipo de Solicitud</h2>
+    
+      {% if agrupado_por_funcionario_tipo %}
+        {% for entry in agrupado_por_funcionario_tipo %}
+          <h3 style="margin-top: 1.5em;">{{ entry.funcionario }}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 70%;">Tipo de Solicitud</th>
+                <th style="width: 30%;">Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in entry.tipos %}
+                <tr>
+                  <td>{{ t.tipo }}</td>
+                  <td>{{ t.total }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endfor %}
+      {% else %}
+        <p>No hay datos de solicitudes por funcionario y tipo.</p>
+      {% endif %}
+    </div>
+    
   </body>
 </html>
