@@ -2080,7 +2080,7 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   position: absolute;
   inset: 0;                    /* ocupa todo el contenedor */
   background: rgba(0, 0, 0, 0.5); /* negro al 50% de opacidad */
-  pointer-events: none;        /* para que no interfiera con clics */
+  pointer-events: all;        /* para que no interfiera con clics */
   z-index: 10;                 /* encima del contenido difuminado */
 }
 
