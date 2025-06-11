@@ -2014,7 +2014,9 @@
                     });
 
                     // Inicializar la paginación de la tabla de salidas
-                    initializeTable('tablaSalidas', 'paginationSalidas', 8, 'searchSalidas');
+                    // pasamos null como searchInputId para indicar “sin filtros”
+                    initializeTable('tablaSalidas', 'paginationSalidas', 8, null);
+
 
                     // — capturo todos los checkboxes recién creados —
                     salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');

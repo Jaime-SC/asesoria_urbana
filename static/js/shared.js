@@ -162,6 +162,11 @@ function setupFilters(tableId, searchInputId) {
         funcionario: headers.findIndex(h => h.textContent.trim().startsWith('Funcionario')),
     };
 
+    // Si no tenemos las dos columnas de fecha, no aplicamos filtros aquí:
+    if (colIdx.ingreso < 0 || colIdx.solicitud < 0) {
+        return;
+    }
+
     const state = tableStates[tableId];
     const tbody = table.tBodies[0];
 
@@ -427,7 +432,9 @@ function initializeTable(tableId, paginationId, rowsPerPage, searchInputId) {
     setupSorting(tableId);
 
     // 3) Filtros (incluye búsqueda global)
-    setupFilters(tableId, searchInputId);
+    if (searchInputId) {
+        setupFilters(tableId, searchInputId);
+    }
 
     // 4) Ordenamiento inicial por “Nº Ingreso” desc (opcional)
     const headers = Array.from(table.querySelectorAll('thead th'));
