@@ -42,30 +42,30 @@
     <div id="reportContent">
       <div class="totalSolicitudesSalidas">
         <!-- Sección existente de Total de Solicitudes y Salidas -->
-        <h2>Total de Solicitudes y Salidas</h2>
+        <h2>Total de Solicitudes y Egresos</h2>
         <p>
           Durante el presente año, se han registrado un total de
           <strong>{{ total_solicitudes }}</strong> solicitudes activas, excluyendo aquellas catalogadas bajo el tipo especial (CONOCIMIENTO Y DISTRIBUCION). Estas solicitudes representan la actividad general gestionada por nuestra unidad durante el periodo actual.
         </p>
         {% if total_solicitudes == 0 %}
-          <p>Es importante mencionar que, hasta el momento, no se han registrado solicitudes activas, por lo que no existen salidas asociadas.</p>
+          <p>Es importante mencionar que, hasta el momento, no se han registrado solicitudes activas, por lo que no existen egresos asociadas.</p>
         {% else %}
           <p>
-            En respuesta a estas solicitudes, se han generado <strong>{{ total_salidas }}</strong> documentos de salida.{% if total_salidas > 0 %}
-              Esto indica una tasa de respuesta de <strong>{{ tasa_respuesta|floatformat:2 }}%</strong>, lo cual significa que, en promedio, cada solicitud generó <strong>{{ promedio_salidas|floatformat:1 }}</strong> salidas aproximadamente. Además, el porcentaje de solicitudes que tuvieron al menos una salida es del <strong>{{ porcentaje_solicitudes_con_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_salida }}</strong> solicitudes), y el porcentaje de solicitudes que generaron más de una salida es del <strong>{{ porcentaje_solicitudes_con_mas_de_una_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_mas_de_una }}</strong> solicitudes).
+            En respuesta a estas solicitudes, se han generado <strong>{{ total_salidas }}</strong> documentos de egreso.{% if total_salidas > 0 %}
+              Esto indica una tasa de respuesta de <strong>{{ tasa_respuesta|floatformat:2 }}%</strong>, lo cual significa que, en promedio, cada solicitud generó <strong>{{ promedio_salidas|floatformat:1 }}</strong> egresos aproximadamente. Además, el porcentaje de solicitudes que tuvieron al menos una egreso es del <strong>{{ porcentaje_solicitudes_con_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_salida }}</strong> solicitudes), y el porcentaje de solicitudes que generaron más de una egreso es del <strong>{{ porcentaje_solicitudes_con_mas_de_una_salida|floatformat:2 }}%</strong> (lo que equivale a <strong>{{ solicitudes_con_mas_de_una }}</strong> solicitudes).
             {% else %}
-              Actualmente, no se ha emitido ninguna salida asociada a las solicitudes registradas.
+              Actualmente, no se ha emitido ninguna egreso asociada a las solicitudes registradas.
             {% endif %}
           </p>
         {% endif %}
       </div>
       <!-- Solicitudes pendientes de salida -->
       <div class="solicitudesPendientesDeSalida">
-        <h2>Solicitudes Pendientes de Salida</h2>
+        <h2>Solicitudes Pendientes de Egreso</h2>
         <div class="salidasPendientesFuncionario">
           <h3>Por Funcionario</h3>
           {% if pendientes_por_funcionario %}
-            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por funcionario:</p>
+            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen egreso, agrupadas por funcionario:</p>
             <table>
               <thead>
                 <tr>
@@ -87,14 +87,14 @@
               </tbody>
             </table>
           {% else %}
-            <p>No hay solicitudes pendientes de salida.</p>
+            <p>No hay solicitudes pendientes de egreso.</p>
           {% endif %}
         </div>
         <!-- Nueva sección: Solicitudes Pendientes de Salida por Solicitante (Departamento) -->
         <div class="solicitudesPendientesDeSalida">
           <h3>Por Solicitante</h3>
           {% if pendientes_por_depto %}
-            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por solicitante:</p>
+            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen egreso, agrupadas por solicitante:</p>
             <table>
               <thead>
                 <tr>
@@ -116,7 +116,7 @@
               </tbody>
             </table>
           {% else %}
-            <p>No hay solicitudes pendientes de salida por solicitante.</p>
+            <p>No hay solicitudes pendientes de egreso por solicitante.</p>
           {% endif %}
         </div>
 
@@ -124,7 +124,7 @@
         <div class="solicitudesPendientesPorTipo">
           <h3>Por Tipo de Solicitud</h3>
           {% if pendientes_por_tipo_solicitud %}
-            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen salida, agrupadas por el tipo de solicitud:</p>
+            <p>A continuación se muestra el detalle de las solicitudes que aún no tienen egreso, agrupadas por el tipo de solicitud:</p>
             <table>
               <thead>
                 <tr>
@@ -146,7 +146,7 @@
               </tbody>
             </table>
           {% else %}
-            <p>No hay solicitudes pendientes de salida por tipo de solicitud.</p>
+            <p>No hay solicitudes pendientes de egreso por tipo de solicitud.</p>
           {% endif %}
         </div>
 
@@ -155,7 +155,7 @@
           <h3>5 Solicitudes Sin Respuesta Más Antiguas</h3>
           {% if solicitudes_mas_antiguas %}
             <p>
-              A continuación se detallan las 5 solicitudes sin respuesta (sin salida) más antiguas:<br />{% for sol in solicitudes_mas_antiguas %}
+              A continuación se detallan las 5 solicitudes sin respuesta (sin egreso) más antiguas:<br />{% for sol in solicitudes_mas_antiguas %}
                 <br />- La solicitud de tipo <strong>{{ sol.tipo_solicitud }}</strong> del solicitante <strong>{{ sol.solicitante }}</strong>
                 {% if sol.funcionarios %}
                   asignada a <strong>{{ sol.funcionarios }}</strong>
@@ -389,7 +389,7 @@
       </div>  
 
       <div class="salidasPorCategorias">
-        <h2>Salidas Agrupadas por Categorías</h2>
+        <h2>Egresos Agrupadas por Categorías</h2>
         
         <h3>Por Solicitante</h3>
         {% if salidas_por_solicitante_top10 %}
@@ -397,7 +397,7 @@
             <thead>
               <tr>
                 <th>Solicitante</th>
-                <th>Salidas</th>
+                <th>Egresos</th>
               </tr>
             </thead>
             <tbody>
@@ -432,21 +432,21 @@
               {% widthratio combined total_salidas 100 as pct_combined %}
           
               <p>
-                De la tabla se desprende una marcada concentración de salidas en unos pocos solicitantes. Por ejemplo, los tres primeros—
+                De la tabla se desprende una marcada concentración de egresos en unos pocos solicitantes. Por ejemplo, los tres primeros—
                 <strong>{{ salidas_por_solicitante_top10.0.ingreso_solicitud__depto_solicitante__nombre }}</strong>
                 ({{ salidas_por_solicitante_top10.0.total }} salidas, <strong>{{ pct1|floatformat:0 }} %</strong>),
                 <strong>{{ salidas_por_solicitante_top10.1.ingreso_solicitud__depto_solicitante__nombre }}</strong>
                 ({{ salidas_por_solicitante_top10.1.total }} salidas, <strong>{{ pct2|floatformat:0 }} %</strong>) y
                 <strong>{{ salidas_por_solicitante_top10.2.ingreso_solicitud__depto_solicitante__nombre }}</strong>
                 ({{ salidas_por_solicitante_top10.2.total }} salidas, <strong>{{ pct3|floatformat:0 }} %</strong>)—
-                acaparan en conjunto casi el <strong>{{ pct_combined|floatformat:0 }} %</strong> del total de {{ total_salidas }} salidas.
+                acaparan en conjunto casi el <strong>{{ pct_combined|floatformat:0 }} %</strong> del total de {{ total_salidas }} egresos.
               </p>
             {% endwith %}
           </div>
           
           
         {% else %}
-          <p>No hay salidas registradas por solicitante.</p>
+          <p>No hay egresos registradas por solicitante.</p>
         {% endif %}
 
         <h3>Por Funcionario Asignado</h3>
@@ -455,7 +455,7 @@
             <thead>
               <tr>
                 <th>Funcionario</th>
-                <th>Salidas</th>
+                <th>Egresos</th>
               </tr>
             </thead>
             <tbody>
@@ -483,15 +483,15 @@
             <div class="analisisFuncionario">
               <p>
                 En el desglose por funcionario se aprecia que tres miembros—
-                <strong>{{ salidas_por_funcionario.0.nombre }}</strong> ({{ salidas_por_funcionario.0.total }} salidas, <strong>{{ pct0|floatformat:0 }}%</strong>),
-                <strong>{{ salidas_por_funcionario.1.nombre }}</strong> ({{ salidas_por_funcionario.1.total }} salidas, <strong>{{ pct1|floatformat:0 }}%</strong>) y
-                <strong>{{ salidas_por_funcionario.2.nombre }}</strong> ({{ salidas_por_funcionario.2.total }} salidas, <strong>{{ pct2|floatformat:0 }}%</strong>)—
-                concentran casi el <strong>{{ pct_comb|floatformat:0 }}%</strong> de todas las salidas.
+                <strong>{{ salidas_por_funcionario.0.nombre }}</strong> ({{ salidas_por_funcionario.0.total }} egresos, <strong>{{ pct0|floatformat:0 }}%</strong>),
+                <strong>{{ salidas_por_funcionario.1.nombre }}</strong> ({{ salidas_por_funcionario.1.total }} egresos, <strong>{{ pct1|floatformat:0 }}%</strong>) y
+                <strong>{{ salidas_por_funcionario.2.nombre }}</strong> ({{ salidas_por_funcionario.2.total }} egresos, <strong>{{ pct2|floatformat:0 }}%</strong>)—
+                concentran casi el <strong>{{ pct_comb|floatformat:0 }}%</strong> de todas las egresos.
               </p>
             </div>
           {% endwith %}
         {% else %}
-          <p>No hay salidas registradas por funcionario asignado.</p>
+          <p>No hay egresos registradas por funcionario asignado.</p>
         {% endif %}
 
 
@@ -501,7 +501,7 @@
           {% if salidas_por_tipo_recepcion %}
             <table>
               <thead>
-                <tr><th>Tipo de Recepción</th><th>Salidas</th></tr>
+                <tr><th>Tipo de Recepción</th><th>Egresos</th></tr>
               </thead>
               <tbody>
                 {% for item in salidas_por_tipo_recepcion %}
@@ -528,12 +528,12 @@
                 <p>
                   Los tres canales principales de recepción 
                   <strong>{{ salidas_por_tipo_recepcion.0.ingreso_solicitud__tipo_recepcion__tipo }}</strong>
-                  ({{ salidas_por_tipo_recepcion.0.total }} salidas, <strong>{{ pct1|floatformat:0 }} %</strong>),
+                  ({{ salidas_por_tipo_recepcion.0.total }} egresos, <strong>{{ pct1|floatformat:0 }} %</strong>),
                   <strong>{{ salidas_por_tipo_recepcion.1.ingreso_solicitud__tipo_recepcion__tipo }}</strong>
-                  ({{ salidas_por_tipo_recepcion.1.total }} salidas, <strong>{{ pct2|floatformat:0 }} %</strong>) y
+                  ({{ salidas_por_tipo_recepcion.1.total }} egresos, <strong>{{ pct2|floatformat:0 }} %</strong>) y
                   <strong>{{ salidas_por_tipo_recepcion.2.ingreso_solicitud__tipo_recepcion__tipo }}</strong>
-                  ({{ salidas_por_tipo_recepcion.2.total }} salidas, <strong>{{ pct3|floatformat:0 }} %</strong>)
-                  representan en conjunto casi el <strong>{{ pct_combined|floatformat:0 }} %</strong> de todas las salidas.
+                  ({{ salidas_por_tipo_recepcion.2.total }} egresos, <strong>{{ pct3|floatformat:0 }} %</strong>)
+                  representan en conjunto casi el <strong>{{ pct_combined|floatformat:0 }} %</strong> de todas las egresos.
                 </p>
                 <p>
                   Esto indica que la mayoría de las respuestas se gestionan a través de estos canales; conviene revisar si los canales menos frecuentes necesitan mayor promoción o simplificación para equilibrar la carga de trabajo.
@@ -541,7 +541,7 @@
               </div>
             {% endwith %}
           {% else %}
-            <p>No hay salidas registradas por tipo de recepción.</p>
+            <p>No hay egresos registradas por tipo de recepción.</p>
           {% endif %}
 
           <!-- Por Tipo de Solicitud -->
@@ -549,7 +549,7 @@
           {% if salidas_por_tipo_solicitud %}
             <table>
               <thead>
-                <tr><th>Tipo de Solicitud</th><th>Salidas</th></tr>
+                <tr><th>Tipo de Solicitud</th><th>Egresos</th></tr>
               </thead>
               <tbody>
                 {% for item in salidas_por_tipo_solicitud %}
@@ -573,18 +573,18 @@
                 <p>
                   Los tres tipos de solicitud más frecuentes 
                   <strong>{{ salidas_por_tipo_solicitud.0.ingreso_solicitud__tipo_solicitud__tipo }}</strong>
-                  ({{ salidas_por_tipo_solicitud.0.total }} salidas, <strong>{{ pct1|floatformat:0 }} %</strong>),
+                  ({{ salidas_por_tipo_solicitud.0.total }} egresos, <strong>{{ pct1|floatformat:0 }} %</strong>),
                   <strong>{{ salidas_por_tipo_solicitud.1.ingreso_solicitud__tipo_solicitud__tipo }}</strong>
-                  ({{ salidas_por_tipo_solicitud.1.total }} salidas, <strong>{{ pct2|floatformat:0 }} %</strong>) y
+                  ({{ salidas_por_tipo_solicitud.1.total }} egresos, <strong>{{ pct2|floatformat:0 }} %</strong>) y
                   <strong>{{ salidas_por_tipo_solicitud.2.ingreso_solicitud__tipo_solicitud__tipo }}</strong>
-                  ({{ salidas_por_tipo_solicitud.2.total }} salidas, <strong>{{ pct3|floatformat:0 }} %</strong>) 
-                  representan en conjunto casi el <strong>{{ pct_combined|floatformat:0 }} %</strong> de todas las salidas.
+                  ({{ salidas_por_tipo_solicitud.2.total }} egresos, <strong>{{ pct3|floatformat:0 }} %</strong>) 
+                  representan en conjunto casi el <strong>{{ pct_combined|floatformat:0 }} %</strong> de todas las egresos.
                 </p>
                 
               </div>
             {% endwith %}
           {% else %}
-            <p>No hay salidas registradas por tipo de solicitud.</p>
+            <p>No hay egresos registradas por tipo de solicitud.</p>
           {% endif %}
 
       
@@ -761,7 +761,7 @@
               <tr>
                 <th style="width: 50%;">Tipo de Solicitud</th>
                 <th style="width: 25%;">Ingresos</th>
-                <th style="width: 25%;">Salidas</th>
+                <th style="width: 25%;">Egresos</th>
               </tr>
             </thead>
             <tbody>

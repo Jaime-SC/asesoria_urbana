@@ -220,7 +220,7 @@
             
             <div style="display: flex; flex-direction: row;">
               <div class="salidas-legend" style="display: flex;flex-direction: row;padding: 5px;border-radius: 5px;max-width: 100%;align-items: center;margin-right: 10px;background: #f5f5f5;box-shadow: inset 0 0 5px 0.5px #16233E;">
-                <h4 style="margin-right: 10px;">Columna Salidas:</h4>
+                <h4 style="margin-right: 10px;">Columna Egresos:</h4>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; gap: 20px; align-items: center;">
                   <li style="display: flex; align-items: center;">
                     <span style="display: inline-block; width: 20px; height: 20px; background-color: #17d244; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
@@ -258,7 +258,7 @@
                 <th class="shadow" data-type="string">Funcionario</th>
                 <th class="shadow" data-type="string">Descripción</th>
                 <th class="shadow" data-type="string">Entradas</th>
-                <th class="shadow" data-type="string">Salidas</th>
+                <th class="shadow" data-type="string">Egresos</th>
               </tr> 
             </thead>
             <tbody>
@@ -340,14 +340,14 @@
                               <span class="material-symbols-outlined bell">group</span>
                               <p>|</p>
                               <span class="material-symbols-outlined bell">find_in_page</span>
-                              <div class="tooltip">Ver archivo de salida</div>
+                              <div class="tooltip">Ver archivo de egreso</div>
                             </button>
                           {% else %}
                             <button class="buttonLogin buttonPreview" style="background: #17d244;">
                               <span class="material-symbols-outlined bell">check</span>
                               <p>|</p>
                               <span class="material-symbols-outlined bell">find_in_page</span>
-                              <div class="tooltip">Ver archivo de salida</div>
+                              <div class="tooltip">Ver archivo de egreso</div>
                             </button>
                           {% endif %}
                         {% else %}
@@ -357,14 +357,14 @@
                               <p>|</p>
                               <span class="material-symbols-outlined bell">upload_file</span>
                             </button>
-                            <div class="tooltip">Subir Salidas</div>
+                            <div class="tooltip">Subir Egresos</div>
                           {% else %}
                             <button class="buttonLogin buttonSubirSalida">
                               <span class="material-symbols-outlined bell">schedule</span>
                               <p>|</p>
                               <span class="material-symbols-outlined bell">upload_file</span>
                             </button>
-                            <div class="tooltip">Subir Salidas</div>
+                            <div class="tooltip">Subir Egresos</div>
                           {% endif %}
                         {% endif %}
                       </a>
@@ -464,9 +464,9 @@
       <div style="display: flex; align-items: center; justify-content: space-between;">
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
 
-          <h2>Registrar Salida</h2>
+          <h2>Registrar Egreso</h2>
         {% else %}
-          <h2>Salidas Registradas</h2>
+          <h2>Egresos Registradas</h2>
         {% endif %}
         <span class="close">
           <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
@@ -483,11 +483,11 @@
               <!-- Fila de Nº Salida y Fecha -->
               <div style="display: flex; justify-content: space-between; gap: 10px;">
                 <div class="form-group" style="width: 48%;">
-                  <label for="numero_salida">Nº de Salida</label>
+                  <label for="numero_salida">Nº de Egreso</label>
                   <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
                 </div>
                 <div class="form-group" style="width: 48%;">
-                  <label for="fecha_salida">Fecha de Salida</label>
+                  <label for="fecha_salida">Fecha de Egreso</label>
                   <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
                 </div>
               </div>
@@ -504,7 +504,7 @@
 
               <!-- Nuevo campo: Selección de funcionarios para la salida -->
               <div class="form-group">
-                <label>Funcionarios que realizaron la salida</label>
+                <label>Funcionarios que realizaron el egreso</label>
                 <div id="salidaFuncionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
                   <!-- Primer grupo de selección -->
                   <div class="funcionario-select-group" style="display: flex; align-items: center;">
@@ -523,7 +523,7 @@
 
               <!-- Nuevo campo: Descripción de salida (opcional) -->
               <div class="form-group">
-                <label for="descripcion_salida">Descripción de Salida (opcional)</label>
+                <label for="descripcion_salida">Descripción de Egreso (opcional)</label>
                 <textarea name="descripcion_salida" id="descripcion_salida" rows="3" placeholder="Ingrese observaciones, links, etc."></textarea>
               </div>
 
@@ -555,7 +555,7 @@
                   {% if tipo_usuario == 'ADMIN' %}
                     <th style="width:1em;"><input type="checkbox" id="selectAllSalidas" /></th>
                   {% endif %}
-                  <th>Nº Salida</th>
+                  <th>Nº Egreso</th>
                   <th>Fecha</th>
                   <th>Descripción</th>
                   <th>Adjunto</th>
@@ -573,17 +573,17 @@
         <div id="descripcionSalidaModal" class="modal">
           <div class="modal-content animate__animated">
             <div style="display: flex; align-items: center; justify-content: space-between;">
-              <h2>Detalle de Salida</h2>
+              <h2>Detalle de Egreso</h2>
               <span class="close" onclick="closeSalidaDescripcionModal()">
                 <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
               </span>
             </div>
             <div class="modal-info" style="font-family: 'Space Mono';">
               <div class="modal-field">
-                <strong>Nº de Salida:</strong> <span id="salida_numero"></span>
+                <strong>Nº de Egreso:</strong> <span id="salida_numero"></span>
               </div>
               <div class="modal-field">
-                <strong>Fecha de Salida:</strong> <span id="salida_fecha"></span>
+                <strong>Fecha de Egreso:</strong> <span id="salida_fecha"></span>
               </div>
               <div class="modal-field">
                 <strong>Descripción:</strong>

@@ -2090,7 +2090,7 @@
                                             <span class="material-symbols-outlined bell">upload_file</span>
                                           </button>
                                         </a>
-                                        <div class="tooltip">Subir Salidas</div>
+                                        <div class="tooltip">Subir Egresos</div>
                                       </div>
                                     `;
                                                 } else {
@@ -2102,7 +2102,7 @@
                                             <span class="material-symbols-outlined bell">check</span>
                                             <p>|</p>
                                             <span class="material-symbols-outlined bell">find_in_page</span>
-                                            <div class="tooltip">Ver archivo de salida</div>
+                                            <div class="tooltip">Ver archivo de egreso</div>
                                           </button>
                                         </a>
                                       </div>
@@ -2113,7 +2113,7 @@
                                             Swal.fire({
                                                 icon: 'success',
                                                 title: 'Eliminadas',
-                                                text: 'Las salidas han sido eliminadas',
+                                                text: 'Los egresos han sido eliminados',
                                                 heightAuto: false,
                                                 scrollbarPadding: false,
                                                 didOpen: () => {
@@ -2144,11 +2144,11 @@
 
 
                 } else {
-                    console.error('Error al obtener las salidas:', data.error);
+                    console.error('Error al obtener los egresos:', data.error);
                 }
             })
             .catch(error => {
-                console.error('Error al obtener las salidas:', error);
+                console.error('Error al obtener los egresos:', error);
             });
 
         // Para usuarios con permisos (no visualizadores)
@@ -2272,8 +2272,8 @@
                     Swal.fire({
                         heightAuto: false,
                         scrollbarPadding: false,
-                        title: '¿Desea confirmar la salida?',
-                        text: "Se guardará la salida con los datos ingresados.",
+                        title: '¿Desea confirmar el egreso?',
+                        text: "Se guardará el egreso con los datos ingresados.",
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#4BBFE0',
@@ -2360,7 +2360,7 @@
                                             spanIcon.textContent = "find_in_page";
                                             const tooltipDivArchivo = document.createElement('div');
                                             tooltipDivArchivo.className = "tooltip";
-                                            tooltipDivArchivo.textContent = "Ver archivo de salida";
+                                            tooltipDivArchivo.textContent = "Ver archivo de egreso";
                                             button.appendChild(spanIcon);
                                             button.appendChild(tooltipDivArchivo);
                                             link.appendChild(button);
@@ -2402,8 +2402,8 @@
                                             heightAuto: false,
                                             scrollbarPadding: false,
                                             icon: 'success',
-                                            title: 'Salida creada',
-                                            text: 'La salida ha sido registrada correctamente.',
+                                            title: 'Egreso creado',
+                                            text: 'El egreso ha sido registrado correctamente.',
                                             showConfirmButton: false,
                                             timer: 2000
                                         });
@@ -2413,18 +2413,18 @@
                                             scrollbarPadding: false,
                                             icon: 'error',
                                             title: 'Error',
-                                            text: data.error || 'Ha ocurrido un error al crear la salida.'
+                                            text: data.error || 'Ha ocurrido un error al crear el egreso.'
                                         });
                                     }
                                 })
                                 .catch(error => {
-                                    console.error('Error al crear la salida:', error);
+                                    console.error('Error al crear el egreso:', error);
                                     Swal.fire({
                                         heightAuto: false,
                                         scrollbarPadding: false,
                                         icon: 'error',
                                         title: 'Error',
-                                        text: 'Ha ocurrido un error al crear la salida.'
+                                        text: 'Ha ocurrido un error al crear el egreso.'
                                     });
                                 });
                         }
@@ -2643,7 +2643,7 @@
                                                 <span class="material-symbols-outlined bell">group</span>
                                                 <p>|</p>
                                                 <span class="material-symbols-outlined bell">find_in_page</span>
-                                                <div class="tooltip">Ver archivo de salida</div>
+                                                <div class="tooltip">Ver archivo de egreso</div>
                                             </button>
                                         </a>
                                     </div>
@@ -2656,7 +2656,7 @@
                                                 <span class="material-symbols-outlined bell">check</span>
                                                 <p>|</p>
                                                 <span class="material-symbols-outlined bell">find_in_page</span>
-                                                <div class="tooltip">Ver archivo de salida</div>
+                                                <div class="tooltip">Ver archivo de egreso</div>
                                             </button>
                                         </a>
                                     </div>
@@ -2673,7 +2673,7 @@
                                                 <span class="material-symbols-outlined bell">upload_file</span>
                                             </button>
                                         </a>
-                                        <div class="tooltip">Subir Salidas</div>
+                                        <div class="tooltip">Subir Egresos</div>
                                     </div>
                                 `;
                             } else {
@@ -2686,7 +2686,7 @@
                                                 <span class="material-symbols-outlined bell">upload_file</span>
                                             </button>
                                         </a>
-                                        <div class="tooltip">Subir Salidas</div>
+                                        <div class="tooltip">Subir Egresos</div>
                                     </div>
                                 `;
                             }
@@ -2862,7 +2862,7 @@
                                 <span class="material-symbols-outlined bell">group</span>
                                 <p>|</p>
                                 <span class="material-symbols-outlined bell">find_in_page</span>
-                                <div class="tooltip">Ver archivo de salida</div>
+                                <div class="tooltip">Ver archivo de egreso</div>
                             </button>
                         </a>
                     </div>
@@ -2875,7 +2875,7 @@
                                 <span class="material-symbols-outlined bell">check</span>
                                 <p>|</p>
                                 <span class="material-symbols-outlined bell">find_in_page</span>
-                                <div class="tooltip">Ver archivo de salida</div>
+                                <div class="tooltip">Ver archivo de egreso</div>
                             </button>
                         </a>
                     </div>
@@ -2892,7 +2892,7 @@
                                 <span class="material-symbols-outlined bell">upload_file</span>
                             </button>
                         </a>
-                        <div class="tooltip">Subir Salidas</div>
+                        <div class="tooltip">Subir Egresos</div>
                     </div>
                 `;
             } else {
@@ -2905,7 +2905,7 @@
                                 <span class="material-symbols-outlined bell">upload_file</span>
                             </button>
                         </a>
-                        <div class="tooltip">Subir Salidas</div>
+                        <div class="tooltip">Subir Egresos</div>
                     </div>
                 `;
             }

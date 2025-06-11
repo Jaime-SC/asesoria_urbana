@@ -229,14 +229,14 @@
                 // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
                 label: function (context) {
                     let value = context.raw;
-                    return value === 1 ? value + " Salida" : value + " Salidas";
+                    return value === 1 ? value + " Egreso" : value + " Egresos";
                 }
             };
 
             // Agregar un título al gráfico
             options.plugins.title = {
                 display: true,
-                text: 'Salidas por Funcionario',
+                text: 'Egresos por Funcionario',
                 font: { size: 14 }
             };
 
@@ -408,7 +408,7 @@
             options.plugins.tooltip.callbacks = {
                 label: function (context) {
                     let value = context.raw;
-                    return value === 1 ? value + " Salida" : value + " Salidas";
+                    return value === 1 ? value + " Egreso" : value + " Egresos";
                 }
             };
 
@@ -448,14 +448,14 @@
                 options.plugins.legend = { display: false };
 
             } else if (ctx.canvas.id === 'salidasTotalesMesChart') {
-                options.plugins.title.text = 'Salidas Totales por Mes';
+                options.plugins.title.text = 'Egresos Totales por Mes';
                 // Configurar el tooltip
                 options.plugins = options.plugins || {};
                 options.plugins.tooltip = options.plugins.tooltip || {};
                 options.plugins.tooltip.callbacks = {
                     label: function (context) {
                         let value = context.raw;
-                        return value === 1 ? value + " Salida" : value + " Salidas";
+                        return value === 1 ? value + " Egreso" : value + " Egresos";
                     }
                 };
                 options.plugins.legend = { display: false };
@@ -472,14 +472,14 @@
                 // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
                 label: function (context) {
                     let value = context.raw;
-                    return value === 1 ? value + " Salida" : value + " Salidas";
+                    return value === 1 ? value + " Egreso" : value + " Egresos";
                 }
             };
 
             // Agregar un título al gráfico
             options.plugins.title = {
                 display: true,
-                text: 'Salidas por Funcionario - Semana Actual',
+                text: 'Egresos por Funcionario - Semana Actual',
                 font: { size: 14 }
             };
 
@@ -497,14 +497,14 @@
                 // Aquí retornamos únicamente el valor formateado, sin incluir el label del dataset
                 label: function (context) {
                     let value = context.raw;
-                    return value === 1 ? value + " Salida" : value + " Salidas";
+                    return value === 1 ? value + " Egreso" : value + " Egresos";
                 }
             };
 
             // Agregar un título al gráfico
             options.plugins.title = {
                 display: true,
-                text: 'Salidas por Funcionario - Mes Actual',
+                text: 'Egresos por Funcionario - Mes Actual',
                 font: { size: 14 }
             };
 
@@ -815,11 +815,11 @@
             { id: 'tipoSolicitudChart', dataId: 'solicitudesPorTipoSolicitud', label: 'Ingresos por Tipo de Solicitud', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)', axis: 'y' },
             { id: 'entradasSemanaChart', dataId: 'entradasPorSemana', label: 'Ingresos por Semana - Ultimos 3 Meses', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' },
             { id: 'entradasMesChart', dataId: 'entradasPorMes', label: 'Ingresos Totales por Mes', color: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)' },
-            { id: 'salidasFuncionarioChart', dataId: 'salidasPorFuncionario', label: 'Salidas por Funcionario', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)', axis: 'y' },
-            { id: 'salidasSemanaActualChart', dataId: 'salidasSemanaActual', label: 'Salidas por Funcionario - Semana Actual', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'y' },
-            { id: 'salidasMesActualChart', dataId: 'salidasMesActual', label: 'Salidas por Funcionario - Mes Actual', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)', axis: 'y' },
-            { id: 'salidasSemanaChart', dataId: 'salidasPorSemana', label: 'Salidas por Semana - Ultimos 3 Meses', color: 'rgba(255, 206, 86, 0.6)', border: 'rgba(255, 206, 86, 1)' },
-            { id: 'salidasTotalesMesChart', dataId: 'salidasTotalesMes', label: 'Salidas Totales por Mes', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)' },
+            { id: 'salidasFuncionarioChart', dataId: 'salidasPorFuncionario', label: 'Egresos por Funcionario', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)', axis: 'y' },
+            { id: 'salidasSemanaActualChart', dataId: 'salidasSemanaActual', label: 'Egresos por Funcionario - Semana Actual', color: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)', axis: 'y' },
+            { id: 'salidasMesActualChart', dataId: 'salidasMesActual', label: 'Egresos por Funcionario - Mes Actual', color: 'rgba(255, 159, 64, 0.6)', border: 'rgba(255, 159, 64, 1)', axis: 'y' },
+            { id: 'salidasSemanaChart', dataId: 'salidasPorSemana', label: 'Egresos por Semana - Ultimos 3 Meses', color: 'rgba(255, 206, 86, 0.6)', border: 'rgba(255, 206, 86, 1)' },
+            { id: 'salidasTotalesMesChart', dataId: 'salidasTotalesMes', label: 'Egresos Totales por Mes', color: 'rgba(153, 102, 255, 0.6)', border: 'rgba(153, 102, 255, 1)' },
             { id: 'entradasSemanaActualChart', dataId: 'entradasSemanaActual', label: 'Ingresos por Funcionario - Semana Actual', color: 'rgba(102, 204, 255, 0.6)', border: 'rgba(102, 204, 255, 1)', axis: 'y' },
             { id: 'entradasMesActualChart', dataId: 'entradasMesActual', label: 'Ingresos por Funcionario - Mes Actual', color: 'rgba(255, 205, 86, 0.6)', border: 'rgba(255, 205, 86, 1)', axis: 'y' },
             // Configuración para el nuevo gráfico en la página 3

@@ -2066,3 +2066,140 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 #funcionarios_asignados {
   white-space: pre-wrap;
 }
+
+
+/* efecto blur cuando cargue */
+/* Contenedor base: posición relativa para poder anidar el overlay */
+.blur-bg {
+  position: relative;
+}
+
+/* Overlay oscuro encima de todo el contenido */
+.blur-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;                    /* ocupa todo el contenedor */
+  background: rgba(0, 0, 0, 0.5); /* negro al 50% de opacidad */
+  pointer-events: none;        /* para que no interfiera con clics */
+  z-index: 10;                 /* encima del contenido difuminado */
+}
+
+/* El contenido real sigue difuminado por detrás del overlay */
+.blur-bg > * {
+  filter: blur(5px);
+  transition: filter 0.3s ease;
+  position: relative;          /* para que quede por debajo del ::before */
+  z-index: 1;
+}
+
+.loadText {
+  margin-top: .5rem;
+  justify-self: center;
+  font-family: 'Trebuchet MS';
+  font-size: 1rem;
+  font-weight: bold;
+  color: ghostwhite;
+}
+
+/* From Uiverse.io by Nawsome */
+.typewriter {
+  --blue: #5c90e2;
+  --blue-dark: #1a7cdb;
+  --key: #fff;
+  --paper: #EEF0FD;
+  --text: #16233e;
+  --tool: #FBC56C;
+  --duration: 3s;
+  position: relative;
+  animation: bounce05 var(--duration) linear infinite;
+  justify-self: center;
+}
+
+.typewriter .slide {
+  width: 92px; height: 20px; border-radius: 3px;
+  margin-left: 14px; transform: translateX(14px);
+  background: linear-gradient(var(--blue), var(--blue-dark));
+  animation: slide05 var(--duration) ease infinite;
+}
+
+.typewriter .slide:before,
+.typewriter .slide:after,
+.typewriter .slide i:before {
+  content: ""; position: absolute; background: var(--tool);
+}
+
+.typewriter .slide:before {
+  width: 2px; height: 8px; top: 6px; left: 100%;
+}
+.typewriter .slide:after {
+  left: 94px; top: 3px; height: 14px; width: 6px; border-radius: 3px;
+}
+.typewriter .slide i {
+  display: block; position: absolute; right:100%;
+  width: 6px; height: 4px; top: 4px; background: var(--tool);
+}
+.typewriter .slide i:before {
+  right:100%; top:-2px; width:4px; height:14px; border-radius:2px;
+}
+
+.typewriter .paper {
+  position: absolute; left:24px; top:-26px;
+  width:40px; height:46px; border-radius:5px;
+  background: var(--paper); transform: translateY(46px);
+  animation: paper05 var(--duration) linear infinite;
+}
+.typewriter .paper:before {
+  content:""; position:absolute; left:6px; right:6px; top:7px;
+  height:4px; transform:scaleY(.8); background: var(--text);
+  box-shadow: 0 12px 0 var(--text), 0 24px 0 var(--text), 0 36px 0 var(--text);
+}
+
+.typewriter .keyboard {
+  width:120px; height:56px; margin-top:-10px; position:relative; z-index:1;
+}
+.typewriter .keyboard:before,
+.typewriter .keyboard:after {
+  content:""; position:absolute;
+}
+.typewriter .keyboard:before {
+  top:0; left:0; right:0; bottom:0; border-radius:7px;
+  background: linear-gradient(135deg,var(--blue),var(--blue-dark));
+  transform:perspective(10px) rotateX(2deg);
+  transform-origin:50% 100%;
+}
+.typewriter .keyboard:after {
+  left:2px; top:25px; width:11px; height:4px; border-radius:2px;
+  box-shadow:
+    15px 0 0 var(--key),30px 0 0 var(--key),45px 0 0 var(--key),
+    60px 0 0 var(--key),75px 0 0 var(--key),90px 0 0 var(--key),
+    22px 10px 0 var(--key),37px 10px 0 var(--key),52px 10px 0 var(--key),
+    60px 10px 0 var(--key),68px 10px 0 var(--key),83px 10px 0 var(--key);
+  animation: keyboard05 var(--duration) linear infinite;
+}
+
+/* Keyframes */
+@keyframes bounce05 {
+  85%,92%,100% {transform:translateY(0);}
+  89%         {transform:translateY(-4px);}
+  95%         {transform:translateY(2px);}
+}
+@keyframes slide05 {
+  5%   {transform:translateX(14px);}
+  15%,30% {transform:translateX(6px);}
+  40%,55% {transform:translateX(0);}
+  65%,70% {transform:translateX(-4px);}
+  80%,89% {transform:translateX(-12px);}
+  100%     {transform:translateX(14px);}
+}
+@keyframes paper05 {
+  5%   {transform:translateY(46px);}
+  20%,30% {transform:translateY(34px);}
+  40%,55% {transform:translateY(22px);}
+  65%,70% {transform:translateY(10px);}
+  80%,85% {transform:translateY(0);}
+  92%,100%{transform:translateY(46px);}
+}
+@keyframes keyboard05 {
+  /* Sólo necesitas copiar las reglas del ejemplo original */
+  /* … todas las etapas 5%,9%,18%,… hasta 81% … */
+}

@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
   let originalBgColor = '';
-
+  let firstLoad = true;  // ← bandera para la primera carga
   /**
    * Resalta la opción de menú seleccionada.
    * @param {HTMLElement} selectedElement - El elemento de enlace del menú seleccionado.
@@ -21,122 +21,115 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+
   /**
  * Carga contenido vía AJAX e inicializa scripts específicos de la página.
  * @param {string} url - La URL desde la cual obtener el contenido.
  * @param {Function} [callback] - Función de devolución de llamada opcional para ejecutar después de cargar el contenido.
  */
-  /**
- * Carga contenido vía AJAX e inicializa scripts específicos de la página.
- * @param {string} url - La URL desde la cual obtener el contenido.
- * @param {Function} [callback] - Función de devolución de llamada opcional para ejecutar después de cargar el contenido.
- */
+  // Al inicio de menu.js (o justo antes de loadContent)
+  function showLoader() {
+    document.getElementById('globalLoader').style.display = 'block';
+    document.querySelector('.cardContent')?.classList.add('blur-bg');
+  }
+  function hideLoader() {
+    document.getElementById('globalLoader').style.display = 'none';
+    document.querySelector('.cardContent')?.classList.remove('blur-bg');
+  }
+
+
+
   function loadContent(url, callback) {
+    if (!firstLoad) {
+      showLoader();
+    }
+
     fetch(url)
       .then(response => response.text())
       .then(data => {
+        if (!firstLoad) {
+          hideLoader();
+        }
+        firstLoad = false;   // ya no será la primera
+
         // Actualiza el área de contenido con los datos obtenidos
         document.getElementById('contentMenu').innerHTML = data;
 
-        // Maneja la carga de scripts específicos de la página
+        // --- resto de tu lógica sin cambios ---
         if (url === '/bnup/') {
-          // Carga dinámicamente bnup_form.js
           const script = document.createElement('script');
           script.src = '/static/js/bnup_form.js';
           script.onload = function () {
-            // Inicializa las funcionalidades de la página BNUP
             initializeBNUPPage();
             updateBNUPFields();
             initializeFileModal();
             initializeBNUPFormModal();
             borde_thead();
 
-            // Inicializa la tabla
             const rowsPerPage = getRowsPerPage();
             initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');
 
-            // Obtener la tabla y los encabezados
             const table = document.getElementById('tablaSolicitudes');
             if (table) {
               const headers = table.querySelectorAll('thead th');
-
-              // Encontrar el índice de la columna 'Nº Ingre' (numero_ingreso)
               let columnIndex = -1;
               headers.forEach((header, index) => {
-                if (header.classList.contains('nIngre')) {
-                  columnIndex = index;
-                }
+                if (header.classList.contains('nIngre')) columnIndex = index;
               });
-
-              // Si se encontró la columna, ordenar la tabla inicialmente de mayor a menor
               if (columnIndex !== -1) {
-                sortTable(table, columnIndex, 'number', false); // Orden descendente
-                // Añadir indicador visual de ordenamiento al encabezado
+                sortTable(table, columnIndex, 'number', false);
                 headers.forEach(h => h.classList.remove('ascending', 'descending'));
-                headers[columnIndex].classList.add('descending'); // Indicador descendente
+                headers[columnIndex].classList.add('descending');
               }
-
-              // Elimina la clase 'hidden-table' después de inicializar la tabla
               table.classList.remove('hidden-table');
             }
 
-            // Añade el event listener al botón de estadísticas
             const statsButton = document.getElementById('statisticsButton');
-            if (statsButton) {
-              statsButton.addEventListener('click', function () {
-                loadContent('/bnup/statistics/');
-              });
-            }
-
+            if (statsButton) statsButton.addEventListener('click', () => loadContent('/bnup/statistics/'));
             if (typeof callback === 'function') callback();
           };
           document.head.appendChild(script);
+
         } else if (url.includes('/bnup/statistics/')) {
-          // Cambia el color de fondo de la tarjeta de estadísticas
           changeCardDetailsBgColor('#C9E8F4');
-          // Carga el script de estadísticas
           loadStatisticsScript();
-          // Carga dinámicamente report.js para exportar el reporte
           const reportScript = document.createElement('script');
           reportScript.src = '/static/js/report.js';
-          reportScript.onload = function () {
-            // Opcional: se puede inicializar alguna función específica del reporte
-            console.log("report.js cargado correctamente.");
-          };
+          reportScript.onload = () => console.log("report.js cargado correctamente.");
           document.head.appendChild(reportScript);
-          // Llama a la inicialización de paginación después de insertar el contenido
           setTimeout(initializeStatisticsPagination, 300);
           if (typeof callback === 'function') callback();
+
         } else if (url === '/patente_alcohol/') {
           const script = document.createElement('script');
           script.src = '/static/js/patente_alcohol.js';
           script.onload = function () {
-            // Inicializar funcionalidades específicas de la página de Patente de Alcohol
             initializePatenteAlcoholForm();
             initializePatenteAlcoholTable();
-            initializeSelectAllCheckbox();  // Inicializar el checkbox "Select All"
+            initializeSelectAllCheckbox();
             initializeGenerateCombinedPDFButton();
           };
           document.head.appendChild(script);
+
         } else {
           resetCardDetailsBgColor();
           if (typeof callback === 'function') callback();
         }
 
-        // Añade el event listener al botón de regresar en la página de estadísticas
         const backButton = document.getElementById('backToBNUP');
         if (backButton) {
-          backButton.addEventListener('click', function () {
+          backButton.addEventListener('click', () => {
             const bnupLink = document.querySelector('a[data-content="BNUP"]');
-            if (bnupLink) {
-              bnupLink.click();
-            }
+            if (bnupLink) bnupLink.click();
           });
         }
       })
-      .catch(error => console.error(`Error al cargar ${url}:`, error));
+      .catch(error => {
+        if (!firstLoad) hideLoader();
+        console.error(`Error al cargar ${url}:`, error);
+      });
   }
-
+  
 
 
   /**
