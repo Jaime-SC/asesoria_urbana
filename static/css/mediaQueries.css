@@ -4,8 +4,12 @@
 @media (min-width: 1272px) and (max-width: 1591px) {
 
     .cardContent {
-        margin: 0px 15px 15px 15px;
-        padding: 0.5rem;
+        padding: .75rem;
+    }
+
+    .contentMenu > div {
+        margin-bottom: .9rem;
+        margin-inline: .9rem;
     }
 
     .containerStatistics {
@@ -47,7 +51,7 @@
         height: 69px;
         margin-bottom: 20px;
         width: 45px;
-    }    
+    }
 
     .logoIlustreMunicipalidad {
         position: absolute;
@@ -455,8 +459,12 @@
 @media (min-width: 1592px) and (max-width: 1911px) {
 
     .cardContent {
-        margin: 0px 15px 15px 15px;
-        padding: 0.5rem;
+        padding: .75rem;
+    }
+
+    .contentMenu > div {
+        margin-bottom: .9rem;
+        margin-inline: .9rem;
     }
 
     .logo {
@@ -483,7 +491,7 @@
         height: 69px;
         margin-bottom: 20px;
         width: 45px;
-    }    
+    }
 
     .logoIlustreMunicipalidad {
         position: absolute;

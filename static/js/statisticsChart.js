@@ -273,6 +273,19 @@
 
 
         if (ctx.canvas.id === 'deptoChart') {
+            // Parseo original de labels y data
+            let combined = labels.map((label, i) => ({
+                label: label,
+                value: data[i]
+            }));
+            // Orden descendente por valor
+            combined.sort((a, b) => b.value - a.value);
+            // Tomamos sólo los top 10
+            combined = combined.slice(0, 10);
+            // Reasignamos arrays
+            labels = combined.map(item => item.label);
+            data = combined.map(item => item.value);
+            
             // Forzar que se muestren todas las etiquetas en el eje Y
             options.scales = options.scales || {};
             options.scales.y = options.scales.y || {};
