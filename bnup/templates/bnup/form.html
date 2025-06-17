@@ -458,7 +458,7 @@
 
 {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' or tipo_usuario == 'VISUALIZADOR' or tipo_usuario == 'JEFE'%}
   <!-- Modal para gestionar la salida -->
-  <div id="salidaModal" class="modal">
+  <div id="salidaModal" class="modal" style="margin-inline: 0;">
     <div id="salidaModalContent" class="modal-content animate__animated" style="max-width: max-content;">
       <!-- Encabezado del modal -->
       <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -474,7 +474,7 @@
       </div>
 
       <div style="display: flex; justify-content: space-between; gap: 50px;">
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
 
           <!-- Formulario para crear la salida -->
           <form id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data" style="width: -webkit-fill-available;">
@@ -569,32 +569,33 @@
           <div id="paginationSalidas" class="pagination"></div>
         </div>
 
-        <!-- Modal para Descripción de Salida -->
-        <div id="descripcionSalidaModal" class="modal">
-          <div class="modal-content animate__animated">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <h2>Detalle de Egreso</h2>
-              <span class="close" onclick="closeSalidaDescripcionModal()">
-                <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-              </span>
-            </div>
-            <div class="modal-info" style="font-family: 'Space Mono';">
-              <div class="modal-field">
-                <strong>Nº de Egreso:</strong> <span id="salida_numero"></span>
-              </div>
-              <div class="modal-field">
-                <strong>Fecha de Egreso:</strong> <span id="salida_fecha"></span>
-              </div>
-              <div class="modal-field">
-                <strong>Descripción:</strong>
-                <div id="salida_descripcion" style="text-align: justify;"></div>
-              </div>
-              <div class="modal-field">
-                <strong>Funcionarios:</strong>
-                <div id="salida_funcionarios" style="text-align: justify;"></div>
-              </div>
-            </div>
-          </div>
+        
+      </div>
+    </div>
+  </div>
+  <!-- Modal para Descripción de Salida -->
+  <div id="descripcionSalidaModal" class="modal" style="margin-inline: 0;">
+    <div class="modal-content animate__animated">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h2>Detalle de Egreso</h2>
+        <span class="close" onclick="closeSalidaDescripcionModal()">
+          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+        </span>
+      </div>
+      <div class="modal-info" style="font-family: 'Space Mono';">
+        <div class="modal-field">
+          <strong>Nº de Egreso:</strong> <span id="salida_numero"></span>
+        </div>
+        <div class="modal-field">
+          <strong>Fecha de Egreso:</strong> <span id="salida_fecha"></span>
+        </div>
+        <div class="modal-field">
+          <strong>Descripción:</strong>
+          <div id="salida_descripcion" style="text-align: justify;"></div>      
+        </div>
+        <div class="modal-field">
+          <strong>Funcionarios:</strong>
+          <div id="salida_funcionarios" style="text-align: justify;"></div>
         </div>
       </div>
     </div>
