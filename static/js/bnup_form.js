@@ -329,7 +329,12 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         // Enviar el formulario BNUP vía AJAX
+                        // const formData = new FormData(bnupForm);
+
+                        const desc = bnupForm.querySelector('#descripcion');
+                        if (desc) standardizeInput(desc);
                         const formData = new FormData(bnupForm);
+
 
                         fetch('/bnup/', {
                             method: 'POST',
@@ -503,6 +508,27 @@
                     // Cargar los funcionarios asignados en el formulario de edición
                     loadEditFormData(data.data);
 
+                    // … justo después de cargar los datos en los inputs   …
+                    if (tipo_usuario === 'FUNCIONARIO') {
+                        // 1 Ocultamos todos los grupos de campos salvo la descripción
+                        document
+                            .querySelectorAll('#editBNUPForm .form-group')
+                            .forEach(grp => {
+                                // contenedor que SÍ contiene el textarea de descripción
+                                if (!grp.contains(document.getElementById('edit_descripcion'))) {
+                                    grp.style.display = 'none';
+                                    // evitamos que envíen datos o que marquen “required”
+                                    grp.querySelectorAll('input,select,textarea')
+                                        .forEach(el => { el.disabled = true; el.required = false; });
+                                }
+                            });
+
+                        // 2 Ocultamos contenedor de funcionarios (ya está fuera de .form-group)
+                        const funcContainer = document.getElementById('editFuncionariosContainer');
+                        if (funcContainer) funcContainer.parentElement.style.display = 'none';
+                    }
+
+
                     // Mostrar el modal de edición
                     editModal.style.display = 'block';
                 } else {
@@ -547,7 +573,15 @@
                     cancelButtonText: 'Cancelar',
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        // const formData = new FormData(editForm);
+
+                        // ► Normaliza la descripción antes de leer el formulario
+                        const desc = editForm.querySelector('#edit_descripcion');
+                        if (desc) standardizeInput(desc);
+
                         const formData = new FormData(editForm);
+
+
                         fetch('/bnup/edit/', {
                             method: 'POST',
                             headers: {
@@ -817,7 +851,7 @@
             deleteButton.style.display = 'none';
         }
 
-        if (editButton && !['ADMIN', 'SECRETARIA'].includes(tipo_usuario)) {
+        if (editButton && !['ADMIN', 'SECRETARIA', 'FUNCIONARIO'].includes(tipo_usuario)) {
             editButton.style.display = 'none';
         }
 
@@ -2542,12 +2576,17 @@
     function updateTableRow(solicitudId) {
         const bnupData = document.getElementById('bnupData');
         const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
-        let cellIndex = 0;
+        // let cellIndex = 0;
 
         // Ajustar índice si hay checkbox en ADMIN o SECRETARIA
-        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
-            cellIndex = 1;
-        }
+        // if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
+        //     cellIndex = 1;
+        // }
+
+        // ¿La fila tiene checkbox?
+        const row = document.querySelector(`tr[data-id="${solicitudId}"]`);
+        const hasCheckbox = row?.querySelector('input.rowCheckbox') !== null;
+        let cellIndex = hasCheckbox ? 1 : 0;
 
         fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
             .then(response => response.json())
@@ -2722,7 +2761,7 @@
         const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
 
         // Si el usuario es ADMIN o SECRETARIA, añadir la celda del checkbox
-        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
+        if (['ADMIN', 'SECRETARIA', 'FUNCIONARIO'].includes(tipo_usuario)) {
             const checkboxCell = document.createElement('td');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';

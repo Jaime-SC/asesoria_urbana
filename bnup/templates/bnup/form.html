@@ -13,7 +13,7 @@
           {% if tipo_usuario == 'ADMIN' %}
             <button style="background-color: #E73C45; justify-content: flex-start; width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
           {% endif %}
-          {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
+          {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
             <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
           {% endif %}
         </div>
@@ -243,7 +243,7 @@
           <table id="tablaSolicitudes" class="hidden-table" border="1" cellpadding="5" cellspacing="0" style="margin-top: 10px;">
             <thead>
               <tr>
-                {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
+                {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
                   <th class="non-clickable">
                     <input type="checkbox" id="selectAll" />
                   </th>
@@ -264,7 +264,7 @@
             <tbody>
               {% for solicitud in solicitudes %}
               <tr class="animate__animated" data-id="{{ solicitud.id }}" data-salidas="{% for salida in solicitud.salidas.all %}{{ salida.numero_salida }} {{ salida.fecha_salida|date:'d/m/Y' }} {% endfor %}" data-salidas-descripciones="{% for salida in solicitud.salidas.all %}{{ salida.descripcion|escapejs }} {% endfor %}" data-email="{{ solicitud.correo_solicitante|default:'' }}">
-                  {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
+                  {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
                     <td>
                       <input type="checkbox" class="rowCheckbox" data-id="{{ solicitud.id }}" />
                     </td>

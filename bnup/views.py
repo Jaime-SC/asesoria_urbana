@@ -239,10 +239,33 @@ def edit_bnup_record(request):
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
-    if tipo_usuario not in ["ADMIN", "SECRETARIA"]:
+    if tipo_usuario not in ["ADMIN", "SECRETARIA", "FUNCIONARIO"]:
         return JsonResponse({"success": False, "error": "No tiene permiso para editar registros."})
 
     if request.method == "POST":
+
+        # … dentro de edit_bnup_record, en la sección POST …
+
+        if tipo_usuario == "FUNCIONARIO":
+            solicitud_id = request.POST.get("solicitud_id")
+            solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
+
+            # único campo que puede modificar
+            solicitud.descripcion = request.POST.get("descripcion", "").strip()
+            solicitud.save(update_fields=["descripcion"])
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "data": {
+                        "id": solicitud.id,
+                        "descripcion": solicitud.descripcion,
+                    },
+                }
+            )
+
+    # … a partir de aquí continúa el flujo normal (valida todo) para ADMIN y SECRETARIA
+
         solicitud_id = request.POST.get("solicitud_id")
         solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
 
