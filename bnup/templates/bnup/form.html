@@ -548,6 +548,16 @@
                   <span class="material-symbols-outlined">delete</span> Eliminar
                 </button>
               {% endif %}
+              {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'FUNCIONARIO' %}
+                <button
+                    id="btnEditarSalidas"
+                    class="btn-stats"
+                    style="background:#4BBFE0;justify-content:flex-start;width:150px;margin-left:.5rem;"
+                    disabled>
+                    <span class="material-symbols-outlined">edit</span> Editar
+                </button>
+              {% endif %}
+
             </div>
             <table style="width: 350px;" id="tablaSalidas" class="table table-bordered">
               <thead>
@@ -600,6 +610,50 @@
       </div>
     </div>
   </div>
+
+  <div id="editSalidaModal" class="modal" style="margin-inline:0;">
+    <div class="modal-content animate__animated" style="max-width:max-content;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h2>Editar Egreso</h2>
+        <span class="close"><span class="material-symbols-outlined"
+              style="color:#E73C45;font-size:40px;">close</span></span>
+      </div>
+
+      <form id="editSalidaForm" enctype="multipart/form-data" style="width:450px;">
+        {% csrf_token %}
+        <input type="hidden" name="salida_id" id="edit_salida_id">
+
+        <div class="form-group">
+          <label for="edit_numero_salida">Nº de Egreso</label>
+          <input type="number" id="edit_numero_salida" name="numero_salida" required>
+        </div>
+
+        <div class="form-group">
+          <label for="edit_fecha_salida">Fecha de Egreso</label>
+          <input type="date" id="edit_fecha_salida" name="fecha_salida" required>
+        </div>
+
+        <div class="form-group">
+          <label for="edit_archivo_adjunto_salida">Adjuntar archivo (opcional)</label>
+          <input type="file" id="edit_archivo_adjunto_salida"
+                name="archivo_adjunto_salida">
+        </div>
+
+        <div class="form-group">
+          <label for="edit_descripcion_salida">Descripción (opcional)</label>
+          <textarea id="edit_descripcion_salida" name="descripcion_salida" rows="3"></textarea>
+        </div>
+
+        <!-- reutilizamos el mismo selector múltiple de funcionarios -->
+        <div id="salidaFuncionariosContainerEdit" data-total-funcionarios="{{ total_funcionarios }}">
+          <!-- los selects se generan vía JS -->
+        </div>
+
+        <button id="guardarEdicionSalida" class="btn btn-primary">Guardar</button>
+      </form>
+    </div>
+  </div>
+
 {% endif %}
 
 

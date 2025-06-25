@@ -10,6 +10,7 @@
     let salidaSelectAll;      // checkbox “marcar todas” dentro del modal de salidas
     let salidaRowCheckboxes;   // checkbox por fila de salida
     let btnEliminarSalidas;    // botón “Eliminar seleccionadas” en el modal
+    let btnEditarSalidas;      // botón de edición en modal de salidas
 
 
     /**
@@ -38,6 +39,8 @@
         // → Inicializo bots y checkboxes del modal de salidas
         salidaSelectAll = document.getElementById('selectAllSalidas');
         btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
+        btnEditarSalidas = document.getElementById('btnEditarSalidas');
+
 
     }
     /**
@@ -1811,6 +1814,8 @@
             return group;
         }
 
+        window.createSalidaFuncionarioSelectGroup = createSalidaFuncionarioSelectGroup;
+
         function createAddSalidaButton() {
             const addBtn = document.createElement('button');
             addBtn.type = 'button';
@@ -1891,6 +1896,7 @@
         const tablaSalidasBody = document.querySelector('#tablaSalidas tbody');
         const salidaSelectAll = document.getElementById('selectAllSalidas');
         const btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
+
 
         // Validar elementos esenciales
         if (!salidaModal || !salidaContent || !closeBtn || !tablaSalidasBody) {
@@ -1973,6 +1979,7 @@
                 if (data.success) {
                     data.salidas.forEach(salida => {
                         const row = document.createElement('tr');
+                        row.dataset.salidaId = salida.id;
 
                         // — nuevo td checkbox sólo ADMIN —
                         if (tipo_usuario === 'ADMIN') {
@@ -2054,6 +2061,20 @@
 
                     // — capturo todos los checkboxes recién creados —
                     salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
+
+                    function updateSalidaButtonsState() {
+                        const anyChecked = [...salidaRowCheckboxes].filter(c => c.checked).length === 1;
+                        if (btnEditarSalidas) btnEditarSalidas.disabled = !anyChecked;
+                    }
+                    salidaRowCheckboxes.forEach(cb => cb.addEventListener('change', updateSalidaButtonsState));
+
+                    btnEditarSalidas?.addEventListener('click', () => {
+                        const checked = [...salidaRowCheckboxes].filter(c => c.checked);
+                        if (checked.length !== 1) { Swal.fire({ icon: 'warning', text: 'Seleccione un egreso.' }); return; }
+                        const salidaId = checked[0].value;
+                        openEditSalidaModal(salidaId);
+                    });
+
 
                     if (salidaSelectAll) {
                         salidaSelectAll.addEventListener('change', e => {
@@ -2475,6 +2496,136 @@
             }
         }
     }
+
+    function openEditSalidaModal(salidaId) {
+        const modal = document.getElementById('editSalidaModal');
+        const content = modal.querySelector('.modal-content');
+        const form = document.getElementById('editSalidaForm');
+        const closeX = modal.querySelector('.close');
+
+        // limpiar
+        form.reset();
+        document.getElementById('salidaFuncionariosContainerEdit').innerHTML = '';
+
+        /* ---------- NUEVO COMPORTAMIENTO DE CIERRE ---------- */
+        // Queremos saber dónde empezó el clic
+        let downOnOverlay = false;
+
+        const onMouseDown = e => { downOnOverlay = (e.target === modal); };
+        const onMouseUp = e => {
+            if (downOnOverlay && e.target === modal) {   // comenzó y terminó fuera
+                cerrar();
+            }
+            downOnOverlay = false;                       // reseteamos
+        };
+
+        modal.addEventListener('mousedown', onMouseDown);
+        modal.addEventListener('mouseup', onMouseUp);
+
+        // quitamos los listeners cuando el modal se cierra para no duplicar
+        function cerrar() {
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut');
+                modal.removeEventListener('mousedown', onMouseDown);
+                modal.removeEventListener('mouseup', onMouseUp);
+            }, { once: true });
+        }
+
+        closeX.onclick = cerrar;
+
+        // cargar datos
+        fetch(`/bnup/edit_salida/?salida_id=${salidaId}`)
+            .then(r => r.json()).then(json => {
+                if (!json.success) { Swal.fire({ icon: 'error', text: json.error }); return; }
+                const s = json.data;
+                document.getElementById('edit_salida_id').value = s.id;
+                document.getElementById('edit_numero_salida').value = s.numero_salida;
+                document.getElementById('edit_fecha_salida').value = s.fecha_salida;
+                document.getElementById('edit_descripcion_salida').value = s.descripcion || '';
+                document.getElementById('guardarEdicionSalida').onclick = e => {
+                    e.preventDefault();
+                    const form = document.getElementById('editSalidaForm');
+                    const fd = new FormData(form);
+
+                    // normalizar descripción
+                    const desc = form.querySelector('#edit_descripcion_salida');
+                    if (desc) standardizeInput(desc);
+
+                    Swal.fire({
+                        title: '¿Guardar cambios?',
+                        icon: 'warning', showCancelButton: true,
+                        confirmButtonColor: '#4BBFE0', cancelButtonColor: '#E73C45'
+                    }).then(res => {
+                        if (!res.isConfirmed) return;
+
+                        fetch('/bnup/edit_salida/', {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': getCSRFToken() },
+                            body: fd
+                        })
+                            .then(r => r.json()).then(json => {
+                                if (json.success) {
+                                    Swal.fire({ icon: 'success', title: 'Egreso actualizado', timer: 1500, showConfirmButton: false });
+                                    // refrescar la fila en la tabla del modal
+                                    updateSalidaRow(json.data);
+                                    // refrescar contador en tabla principal
+                                    updateTableRow(json.data.solicitud_id);
+                                    document.querySelector('#editSalidaModal .close').click();
+                                } else {
+                                    Swal.fire({ icon: 'error', text: json.error });
+                                }
+                            });
+                    });
+                };
+
+
+                // funcionarios
+                const cont = document.getElementById('salidaFuncionariosContainerEdit');
+                s.funcionarios.forEach((f, idx) => {
+                    const grp = createSalidaFuncionarioSelectGroup(idx === s.funcionarios.length - 1);
+                    grp.querySelector('select').value = f.id;
+                    cont.appendChild(grp);
+                });
+            });
+
+        // mostrar
+        content.classList.add('animate__bounceIn');
+        modal.style.display = 'block';
+    }
+
+    /**
+ * Actualiza la fila de una salida ya mostrada en el modal.
+ * @param {{id:number, numero_salida:number, fecha_salida:string,
+ *          descripcion:string, funcionarios?:Array}} s
+ */
+    function updateSalidaRow(s) {
+        const row = document.querySelector(
+            `#tablaSalidas tbody tr[data-salida-id="${s.id}"]`
+        );
+        if (!row) return;   // si la fila no existe, salimos silenciosamente
+
+        // si el usuario ADMIN tiene el checkbox salta la primera celda
+        let idx = (tipo_usuario === 'ADMIN') ? 1 : 0;
+
+        // Nº egreso y fecha
+        row.cells[idx++].textContent = s.numero_salida;
+        row.cells[idx++].textContent = s.fecha_salida;
+
+        // Botón de descripción → re-inyectamos el nuevo handler
+        const descBtn = row.cells[idx].querySelector('button');
+        if (descBtn) {
+            descBtn.onclick = () => openSalidaDescripcionModal(
+                s.numero_salida,
+                s.fecha_salida,
+                s.descripcion,
+                s.funcionarios || []
+            );
+        }
+    }
+    window.updateSalidaRow = updateSalidaRow;   //  ←  make it global
 
 
     function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
