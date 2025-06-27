@@ -1880,6 +1880,9 @@
                 updateSalidaSelectOptions();
             }, { once: true });
         }
+
+        window.addSalidaFuncionarioSelect = addSalidaFuncionarioSelect;
+        window.removeSalidaFuncionarioSelect = removeSalidaFuncionarioSelect;
     }
 
 
@@ -2052,6 +2055,7 @@
                         row.appendChild(archivoCell);
 
                         tablaSalidasBody.appendChild(row);
+
                     });
 
                     // Inicializar la paginación de la tabla de salidas
@@ -2068,12 +2072,21 @@
                     }
                     salidaRowCheckboxes.forEach(cb => cb.addEventListener('change', updateSalidaButtonsState));
 
-                    btnEditarSalidas?.addEventListener('click', () => {
-                        const checked = [...salidaRowCheckboxes].filter(c => c.checked);
-                        if (checked.length !== 1) { Swal.fire({ icon: 'warning', text: 'Seleccione un egreso.' }); return; }
-                        const salidaId = checked[0].value;
-                        openEditSalidaModal(salidaId);
-                    });
+                    /* ---------- AQUÍ VA EL NUEVO BLOQUE ---------- */
+                    if (btnEditarSalidas) {
+                        // 1. Limpio cualquier handler acumulado de aperturas anteriores
+                        btnEditarSalidas.onclick = null;
+
+                        // 2. Asigno el único handler que necesito
+                        btnEditarSalidas.onclick = () => {
+                            const checked = [...salidaRowCheckboxes].filter(c => c.checked);
+                            if (checked.length !== 1) {
+                                Swal.fire({ icon: 'warning', text: 'Seleccione un egreso.' });
+                                return;
+                            }
+                            openEditSalidaModal(checked[0].value);
+                        };
+                    }
 
 
                     if (salidaSelectAll) {
@@ -2548,16 +2561,18 @@
                 document.getElementById('guardarEdicionSalida').onclick = e => {
                     e.preventDefault();
                     const form = document.getElementById('editSalidaForm');
-                    const fd = new FormData(form);
 
                     // normalizar descripción
                     const desc = form.querySelector('#edit_descripcion_salida');
                     if (desc) standardizeInput(desc);
+                    const fd = new FormData(form);
 
                     Swal.fire({
                         title: '¿Guardar cambios?',
                         icon: 'warning', showCancelButton: true,
-                        confirmButtonColor: '#4BBFE0', cancelButtonColor: '#E73C45'
+                        confirmButtonColor: '#4BBFE0', cancelButtonColor: '#E73C45',
+                        heightAuto: false,
+                        scrollbarPadding: false,
                     }).then(res => {
                         if (!res.isConfirmed) return;
 
@@ -2568,7 +2583,7 @@
                         })
                             .then(r => r.json()).then(json => {
                                 if (json.success) {
-                                    Swal.fire({ icon: 'success', title: 'Egreso actualizado', timer: 1500, showConfirmButton: false });
+                                    Swal.fire({ icon: 'success', title: 'Egreso actualizado', timer: 1500, showConfirmButton: false, heightAuto: false, scrollbarPadding: false, });
                                     // refrescar la fila en la tabla del modal
                                     updateSalidaRow(json.data);
                                     // refrescar contador en tabla principal
@@ -2589,7 +2604,25 @@
                     grp.querySelector('select').value = f.id;
                     cont.appendChild(grp);
                 });
-            });
+                // …después de s.funcionarios.forEach(…) { … }
+
+                const maxSelects =
+                    parseInt(cont.getAttribute('data-total-funcionarios'), 10) || 12;
+
+                cont.addEventListener('click', function handleClick(e) {
+                    const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
+                    const removeBtn = e.target.closest('.removeSalidaFuncionarioBtn');
+
+                    if (addBtn) {
+                        const currentGroup = addBtn.parentElement;
+                        addSalidaFuncionarioSelect(currentGroup, cont, maxSelects);
+                    } else if (removeBtn) {
+                        const currentGroup = removeBtn.parentElement;
+                        removeSalidaFuncionarioSelect(currentGroup);
+                    }
+                });
+
+            })
 
         // mostrar
         content.classList.add('animate__bounceIn');

@@ -540,11 +540,11 @@
         <div style="display: flex; flex-direction: column; justify-content: space-between;">
           <div style="margin: 0px; width: -webkit-fill-available;">
             <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-              <div class="search-container" style="width: -webkit-fill-available;">
+              {% comment %} <div class="search-container" style="width: -webkit-fill-available;">
                 <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
-              </div>
+              </div> {% endcomment %}
               {% if tipo_usuario == 'ADMIN' %}
-                <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;margin-left: .5rem;" id="btnEliminarSalidas" class="btn-stats btnDelBNUP" disabled>
+                <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="btnEliminarSalidas" class="btn-stats btnDelBNUP" disabled>
                   <span class="material-symbols-outlined">delete</span> Eliminar
                 </button>
               {% endif %}
@@ -552,7 +552,7 @@
                 <button
                     id="btnEditarSalidas"
                     class="btn-stats"
-                    style="background:#4BBFE0;justify-content:flex-start;width:150px;margin-left:.5rem;"
+                    style="background:#f7ea53;justify-content:flex-start;width:150px;"
                     disabled>
                     <span class="material-symbols-outlined">edit</span> Editar
                 </button>
@@ -633,11 +633,11 @@
           <input type="date" id="edit_fecha_salida" name="fecha_salida" required>
         </div>
 
-        <div class="form-group">
+        {% comment %} <div class="form-group">
           <label for="edit_archivo_adjunto_salida">Adjuntar archivo (opcional)</label>
           <input type="file" id="edit_archivo_adjunto_salida"
                 name="archivo_adjunto_salida">
-        </div>
+        </div> {% endcomment %}
 
         <div class="form-group">
           <label for="edit_descripcion_salida">Descripción (opcional)</label>
