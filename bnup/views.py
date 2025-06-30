@@ -431,58 +431,67 @@ def edit_bnup_record(request):
 
 # views.py
 @login_required
-@require_http_methods(["GET","POST"])
+@require_http_methods(["GET", "POST"])
 def edit_salida(request):
+    # ───────────────────────────────────────────────────────── permisos ──
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
     tipo   = perfil.tipo_usuario.nombre if perfil else None
-    if tipo not in ["ADMIN","SECRETARIA","FUNCIONARIO","JEFE"]:
-        return JsonResponse({"success":False,"error":"Sin permiso."})
+    if tipo not in ["ADMIN", "SECRETARIA", "FUNCIONARIO", "JEFE"]:
+        return JsonResponse({"success": False, "error": "Sin permiso."})
 
+    # ────────────────────────────────────────────────────────── GET ▸ datos
     if request.method == "GET":
         salida_id = request.GET.get("salida_id")
         salida = get_object_or_404(SalidaSOLICITUD, id=salida_id, is_active=True)
 
         data = {
-            "id": salida.id,
-            "solicitud_id": salida.ingreso_solicitud.id,
+            "id":            salida.id,
+            "solicitud_id":  salida.ingreso_solicitud.id,
             "numero_salida": salida.numero_salida,
-            "fecha_salida": salida.fecha_salida.strftime("%Y-%m-%d"),
-            "descripcion": salida.descripcion or "",
-            "funcionarios":[{"id":f.id,"nombre":f.nombre} for f in salida.funcionarios.all()],
+            "fecha_salida":  salida.fecha_salida.strftime("%Y-%m-%d"),
+            "descripcion":   salida.descripcion or "",
+            "funcionarios":  [
+                {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
+            ],
         }
-        return JsonResponse({"success":True,"data":data})
+        return JsonResponse({"success": True, "data": data})
 
-    # POST  —  actualizar
+    # ───────────────────────────────────────────────────────── POST ▸ save
     salida_id = request.POST.get("salida_id")
     salida = get_object_or_404(SalidaSOLICITUD, id=salida_id, is_active=True)
 
-    salida.numero_salida = request.POST.get("numero_salida")
-    fecha_txt = request.POST.get("fecha_salida")
-    salida.fecha_salida = (
-        datetime.strptime(fecha_txt, "%Y-%m-%d").date()
-        if fecha_txt else salida.fecha_salida
-    )
-    salida.descripcion   = request.POST.get("descripcion_salida","").strip()
+    # ❶ Actualiza Nº y Fecha sólo si llegan en la petición
+    num = request.POST.get("numero_salida")
+    if num:                         # ⇐ evita sobrescribir con None
+        salida.numero_salida = num
 
+    fecha_txt = request.POST.get("fecha_salida")
+    if fecha_txt:
+        salida.fecha_salida = datetime.strptime(fecha_txt, "%Y-%m-%d").date()
+
+    # ❷ Descripción (puede ser vacía)
+    salida.descripcion = request.POST.get("descripcion_salida", "").strip()
+
+    # ❸ Archivo adjunto (opcional)
     if request.FILES.get("archivo_adjunto_salida"):
         salida.archivo_adjunto_salida = request.FILES["archivo_adjunto_salida"]
 
-    # funcionarios (sólo perfiles con permiso)
-    if tipo in ["ADMIN","SECRETARIA","JEFE"]:
+    # ❹ Funcionarios (sólo ADMIN / SECRETARIA / JEFE)
+    if tipo in ["ADMIN", "SECRETARIA", "JEFE"]:
         ids = request.POST.getlist("funcionarios_salidas")
         salida.funcionarios.set(Funcionario.objects.filter(id__in=ids))
 
     salida.save()
 
+    # ─────────────────────────────────────────────── respuesta JSON final ─
     return JsonResponse({
         "success": True,
         "data": {
-            "id":          salida.id,
-            "solicitud_id": salida.ingreso_solicitud.id,
+            "id":            salida.id,
+            "solicitud_id":  salida.ingreso_solicitud.id,
             "numero_salida": salida.numero_salida,
             "fecha_salida":  salida.fecha_salida.strftime("%d/%m/%Y"),
             "descripcion":   salida.descripcion or "",
-            # NUEVA LÍNEA ────────────────────────────────────────────────
             "funcionarios": [
                 {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
             ],

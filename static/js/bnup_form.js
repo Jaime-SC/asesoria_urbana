@@ -1768,121 +1768,7 @@
             });
         }
 
-        // Crea un nuevo grupo de selección para funcionarios en salidas
-        function createSalidaFuncionarioSelectGroup(isLast = false) {
-            const group = document.createElement('div');
-            group.classList.add('funcionario-select-group');
-            group.style.cssText = "display: flex; align-items: center; margin-top: 10px;";
 
-            const select = document.createElement('select');
-            select.name = 'funcionarios_salidas';
-            select.classList.add('salidaFuncionarioSelect');
-            select.style.maxWidth = "20rem";
-            select.required = true;
-
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '0';
-            // defaultOption.disabled = true;
-            defaultOption.selected = true;
-            defaultOption.textContent = 'Seleccione';
-            select.appendChild(defaultOption);
-
-            // Clonar opciones desde un elemento oculto (asegúrate de tenerlo en el HTML con id "allFuncionariosOptions")
-            const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
-            allOptions.forEach(option => {
-                const clonedOption = option.cloneNode(true);
-                select.appendChild(clonedOption);
-            });
-
-            group.appendChild(select);
-
-            if (isLast) {
-                const addBtn = createAddSalidaButton();
-                group.appendChild(addBtn);
-            } else {
-                const cancelBtn = createCancelSalidaButton();
-                group.appendChild(cancelBtn);
-            }
-
-            if (typeof $(select).select2 === 'function') {
-                $(select).select2({
-                    placeholder: "Seleccione",
-                    allowClear: true,
-                    width: '100%'
-                });
-            }
-            return group;
-        }
-
-        window.createSalidaFuncionarioSelectGroup = createSalidaFuncionarioSelectGroup;
-
-        function createAddSalidaButton() {
-            const addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.classList.add('addSalidaFuncionarioBtn', 'btn', 'btn-icon');
-            addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-            addBtn.style.cssText = "margin-left: 10px; padding: 0;";
-            return addBtn;
-        }
-
-        function createCancelSalidaButton() {
-            const cancelBtn = document.createElement('button');
-            cancelBtn.type = 'button';
-            cancelBtn.classList.add('removeSalidaFuncionarioBtn', 'btn', 'btn-icon');
-            cancelBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
-            cancelBtn.style.cssText = "margin-left: 10px; padding: 0;";
-            return cancelBtn;
-        }
-
-        // Función para agregar un nuevo grupo de selección de funcionario
-        function addSalidaFuncionarioSelect(currentGroup, container, maxSelects) {
-            if (!currentGroup) {
-                console.error("addSalidaFuncionarioSelect: currentGroup es null o undefined");
-                return;
-            }
-            const currentSelects = container.querySelectorAll('.salidaFuncionarioSelect');
-            if (currentSelects.length >= maxSelects) {
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    icon: 'warning',
-                    title: 'Límite alcanzado',
-                    text: `No puedes agregar más de ${maxSelects} funcionarios.`,
-                });
-                return;
-            }
-            // Remover el botón "Añadir" del grupo actual
-            const addBtn = currentGroup.querySelector('.addSalidaFuncionarioBtn');
-            if (addBtn) {
-                addBtn.remove();
-            }
-            // Si no existe ya el botón "Cancelar", lo añadimos
-            if (!currentGroup.querySelector('.removeSalidaFuncionarioBtn')) {
-                const cancelBtn = createCancelSalidaButton();
-                currentGroup.appendChild(cancelBtn);
-            }
-            // Crear y añadir un nuevo grupo de selección con botón "Añadir"
-            const newGroup = createSalidaFuncionarioSelectGroup(true);
-            newGroup.style.setProperty('--animate-duration', '0.5s');
-            newGroup.classList.add('animate__animated', 'animate__fadeInDown');
-            container.appendChild(newGroup);
-            newGroup.addEventListener('animationend', function () {
-                newGroup.classList.remove('animate__animated', 'animate__fadeInDown');
-            });
-            updateSalidaSelectOptions();
-        }
-
-        function removeSalidaFuncionarioSelect(group) {
-            group.style.setProperty('--animate-duration', '0.5s');
-            group.classList.add('animate__animated', 'animate__fadeOutUp');
-            group.addEventListener('animationend', function () {
-                group.remove();
-                updateSalidaSelectOptions();
-            }, { once: true });
-        }
-
-        window.addSalidaFuncionarioSelect = addSalidaFuncionarioSelect;
-        window.removeSalidaFuncionarioSelect = removeSalidaFuncionarioSelect;
     }
 
 
@@ -1961,8 +1847,10 @@
         // --- Mostrar u ocultar controles de ADMIN ---
         const thSelectAll = salidaSelectAll?.closest('th');
         if (thSelectAll) {
-            thSelectAll.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
+            thSelectAll.style.display =
+                (['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario) ? '' : 'none');
         }
+
         if (btnEliminarSalidas) {
             btnEliminarSalidas.style.display = (tipo_usuario === 'ADMIN' ? '' : 'none');
         }
@@ -1985,7 +1873,7 @@
                         row.dataset.salidaId = salida.id;
 
                         // — nuevo td checkbox sólo ADMIN —
-                        if (tipo_usuario === 'ADMIN') {
+                        if (['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario)) {
                             const chkTd = document.createElement('td');
                             chkTd.style.textAlign = 'center';
                             const chk = document.createElement('input');
@@ -2067,34 +1955,48 @@
                     salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
 
                     function updateSalidaButtonsState() {
-                        const anyChecked = [...salidaRowCheckboxes].filter(c => c.checked).length === 1;
-                        if (btnEditarSalidas) btnEditarSalidas.disabled = !anyChecked;
+                        const checkedCount = [...salidaRowCheckboxes].filter(c => c.checked).length;
+
+                        // 🔸 des-habilita solo si NO hay selección
+                        if (btnEditarSalidas) btnEditarSalidas.disabled = (checkedCount === 0);
                     }
                     salidaRowCheckboxes.forEach(cb => cb.addEventListener('change', updateSalidaButtonsState));
 
-                    /* ---------- AQUÍ VA EL NUEVO BLOQUE ---------- */
                     if (btnEditarSalidas) {
                         // 1. Limpio cualquier handler acumulado de aperturas anteriores
                         btnEditarSalidas.onclick = null;
 
                         // 2. Asigno el único handler que necesito
                         btnEditarSalidas.onclick = () => {
-                            const checked = [...salidaRowCheckboxes].filter(c => c.checked);
-                            if (checked.length !== 1) {
-                                Swal.fire({ icon: 'warning', text: 'Seleccione un egreso.' });
+                            const checkedRows = [...salidaRowCheckboxes].filter(c => c.checked);
+
+                            if (checkedRows.length !== 1) {
+                                const msg =
+                                    (salidaSelectAll && salidaSelectAll.checked)
+                                        ? 'Solo puede editar un egreso a la vez.'
+                                        : 'Seleccione solo un egreso para editar.';
+
+                                Swal.fire({ icon: 'warning', text: msg, heightAuto: false,  scrollbarPadding: false});
                                 return;
                             }
-                            openEditSalidaModal(checked[0].value);
+
+                            openEditSalidaModal(checkedRows[0].value);
                         };
                     }
 
 
                     if (salidaSelectAll) {
                         salidaSelectAll.addEventListener('change', e => {
+                            // marcar / desmarcar todas las filas
                             salidaRowCheckboxes.forEach(c => c.checked = e.target.checked);
+
+                            // habilitar / deshabilitar “Eliminar”
                             if (btnEliminarSalidas) {
                                 btnEliminarSalidas.disabled = !e.target.checked;
                             }
+
+                            // --- NUEVA LÍNEA ---
+                            updateSalidaButtonsState();   // <- habilita “Editar” si procede
                         });
                     }
 
@@ -2461,10 +2363,16 @@
                                         //    y habilitar/deshabilitar “Eliminar” si es necesario:
                                         if (salidaSelectAll) {
                                             salidaSelectAll.addEventListener('change', e => {
+                                                // marcar / desmarcar todas las filas
                                                 salidaRowCheckboxes.forEach(c => c.checked = e.target.checked);
+
+                                                // habilitar / deshabilitar “Eliminar”
                                                 if (btnEliminarSalidas) {
                                                     btnEliminarSalidas.disabled = !e.target.checked;
                                                 }
+
+                                                // --- NUEVA LÍNEA ---
+                                                updateSalidaButtonsState();   // <- habilita “Editar” si procede
                                             });
                                         }
 
@@ -2510,6 +2418,98 @@
         }
     }
 
+    /* ===========================================================
+   UTILIDADES GLOBALES  (cólalas al inicio de bnup_form.js)
+   =========================================================== */
+    function createAddSalidaButton() {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'addSalidaFuncionarioBtn btn btn-icon';
+        btn.style.cssText = 'margin-left:10px;padding:0';
+        btn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+        return btn;
+    }
+
+    function createCancelSalidaButton() {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'removeSalidaFuncionarioBtn btn btn-icon';
+        btn.style.cssText = 'margin-left:10px;padding:0';
+        btn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+        return btn;
+    }
+
+    function createSalidaFuncionarioSelectGroup(isLast = false) {
+        const group = document.createElement('div');
+        group.className = 'funcionario-select-group';
+        group.style.cssText = 'display:flex;align-items:center;margin-top:10px';
+
+        /* <select> */
+        const select = document.createElement('select');
+        select.name = 'funcionarios_salidas';
+        select.className = 'salidaFuncionarioSelect';
+        select.style.maxWidth = '20rem';
+        select.required = true;
+
+        /* opción “Seleccione” */
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.disabled = true;
+        opt.selected = true;
+        opt.textContent = 'Seleccione';
+        select.appendChild(opt);
+
+        /* clonar todas las opciones del elemento oculto */
+        document
+            .querySelectorAll('#allFuncionariosOptions option')
+            .forEach(o => select.appendChild(o.cloneNode(true)));
+
+        group.appendChild(select);
+        group.appendChild(isLast ? createAddSalidaButton()
+            : createCancelSalidaButton());
+
+        // activar Select2 si existe
+        if (typeof $(select).select2 === 'function') {
+            $(select).select2({ placeholder: 'Seleccione', allowClear: true, width: '100%' });
+        }
+        return group;
+    }
+
+    function addSalidaFuncionarioSelect(currentGroup, container, maxSelects) {
+        if (!currentGroup || !container) return;              // ← salvaguarda
+
+        const selects = container.querySelectorAll('.salidaFuncionarioSelect');
+        if (selects.length >= maxSelects) {
+            Swal.fire({
+                icon: 'warning',
+                text: `No puedes agregar más de ${maxSelects} funcionarios.`
+            });
+            return;
+        }
+
+        /* sustituir + por – en el grupo actual */
+        currentGroup.querySelector('.addSalidaFuncionarioBtn')?.remove();
+        if (!currentGroup.querySelector('.removeSalidaFuncionarioBtn')) {
+            currentGroup.appendChild(createCancelSalidaButton());
+        }
+
+        /* crear el nuevo grupo al final */
+        container.appendChild(createSalidaFuncionarioSelectGroup(true));
+    }
+
+    function removeSalidaFuncionarioSelect(group) {
+        group.remove();
+    }
+
+    /* exponerlas en window por si algún otro script las necesita */
+    window.createSalidaFuncionarioSelectGroup = createSalidaFuncionarioSelectGroup;
+    window.addSalidaFuncionarioSelect = addSalidaFuncionarioSelect;
+    window.removeSalidaFuncionarioSelect = removeSalidaFuncionarioSelect;
+    /* =========================================================== */
+
+
+    /* ------------ el resto de tu código (initialize…, openModal…) -------- */
+
     function openEditSalidaModal(salidaId) {
         const modal = document.getElementById('editSalidaModal');
         const content = modal.querySelector('.modal-content');
@@ -2518,7 +2518,10 @@
 
         // limpiar
         form.reset();
-        document.getElementById('salidaFuncionariosContainerEdit').innerHTML = '';
+        /* ───────────── aquí ↓ ───────────── */
+        const contEdit = document.getElementById('salidaFuncionariosContainerEdit');
+        if (contEdit) contEdit.innerHTML = '';   // ← comprueba que exista
+        /* ─────────────────────────────────── */
 
         /* ---------- NUEVO COMPORTAMIENTO DE CIERRE ---------- */
         // Queremos saber dónde empezó el clic
@@ -2555,8 +2558,11 @@
                 if (!json.success) { Swal.fire({ icon: 'error', text: json.error }); return; }
                 const s = json.data;
                 document.getElementById('edit_salida_id').value = s.id;
-                document.getElementById('edit_numero_salida').value = s.numero_salida;
-                document.getElementById('edit_fecha_salida').value = s.fecha_salida;
+                const numeroInput = document.getElementById('edit_numero_salida');
+                if (numeroInput) numeroInput.value = s.numero_salida;
+
+                const fechaInput = document.getElementById('edit_fecha_salida');
+                if (fechaInput) fechaInput.value = s.fecha_salida;
                 document.getElementById('edit_descripcion_salida').value = s.descripcion || '';
                 document.getElementById('guardarEdicionSalida').onclick = e => {
                     e.preventDefault();
@@ -2597,30 +2603,57 @@
                 };
 
 
-                // funcionarios
-                const cont = document.getElementById('salidaFuncionariosContainerEdit');
-                s.funcionarios.forEach((f, idx) => {
-                    const grp = createSalidaFuncionarioSelectGroup(idx === s.funcionarios.length - 1);
-                    grp.querySelector('select').value = f.id;
-                    cont.appendChild(grp);
-                });
-                // …después de s.funcionarios.forEach(…) { … }
-
-                const maxSelects =
-                    parseInt(cont.getAttribute('data-total-funcionarios'), 10) || 12;
-
-                cont.addEventListener('click', function handleClick(e) {
-                    const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
-                    const removeBtn = e.target.closest('.removeSalidaFuncionarioBtn');
-
-                    if (addBtn) {
-                        const currentGroup = addBtn.parentElement;
-                        addSalidaFuncionarioSelect(currentGroup, cont, maxSelects);
-                    } else if (removeBtn) {
-                        const currentGroup = removeBtn.parentElement;
-                        removeSalidaFuncionarioSelect(currentGroup);
+                /* Añadir selects solo si hay contenedor */
+                if (contEdit) {
+                    if (s.funcionarios.length) {
+                        // caso normal → pinta los que existan
+                        s.funcionarios.forEach((f, i) => {
+                            const grp = window.createSalidaFuncionarioSelectGroup(
+                                i === s.funcionarios.length - 1   // el último lleva botón “+”
+                            );
+                            grp.querySelector('select').value = f.id;
+                            contEdit.appendChild(grp);
+                        });
+                    } else {
+                        // ↳ LISTA VACÍA → al menos un select en blanco
+                        const grp = window.createSalidaFuncionarioSelectGroup(true);
+                        contEdit.appendChild(grp);
                     }
-                });
+
+                    /* listeners internos del contenedor */
+                    const max = parseInt(contEdit.dataset.totalFuncionarios, 10) || 12;
+                    contEdit.addEventListener('click', e => {
+                        const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
+                        const delBtn = e.target.closest('.removeSalidaFuncionarioBtn');
+
+                        if (addBtn) {
+                            // 👉 sube hasta el grupo real
+                            const group = addBtn.closest('.funcionario-select-group');
+                            if (group) addSalidaFuncionarioSelect(group, contEdit, max);
+                            return;
+                        }
+                        if (delBtn) {
+                            const group = delBtn.closest('.funcionario-select-group');
+                            if (group) removeSalidaFuncionarioSelect(group);
+                        }
+                    });
+                }
+
+                // const maxSelects =
+                //     parseInt(cont.getAttribute('data-total-funcionarios'), 10) || 12;
+
+                // cont.addEventListener('click', function handleClick(e) {
+                //     const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
+                //     const removeBtn = e.target.closest('.removeSalidaFuncionarioBtn');
+
+                //     if (addBtn) {
+                //         const currentGroup = addBtn.parentElement;
+                //         addSalidaFuncionarioSelect(currentGroup, cont, maxSelects);
+                //     } else if (removeBtn) {
+                //         const currentGroup = removeBtn.parentElement;
+                //         removeSalidaFuncionarioSelect(currentGroup);
+                //     }
+                // });
 
             })
 
@@ -2638,24 +2671,26 @@
         const row = document.querySelector(
             `#tablaSalidas tbody tr[data-salida-id="${s.id}"]`
         );
-        if (!row) return;   // si la fila no existe, salimos silenciosamente
+        if (!row) return;
 
-        // si el usuario ADMIN tiene el checkbox salta la primera celda
-        let idx = (tipo_usuario === 'ADMIN') ? 1 : 0;
+        /* ➊ ¿La tabla lleva checkbox al principio? */
+        const hasCheckbox = ['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario);
+        let col = hasCheckbox ? 1 : 0;   // ← ¡AQUÍ estaba el error!
 
-        // Nº egreso y fecha
-        row.cells[idx++].textContent = s.numero_salida;
-        row.cells[idx++].textContent = s.fecha_salida;
+        /* ➋ Nº de egreso y fecha */
+        row.cells[col++].textContent = s.numero_salida;
+        row.cells[col++].textContent = s.fecha_salida;
 
-        // Botón de descripción → re-inyectamos el nuevo handler
-        const descBtn = row.cells[idx].querySelector('button');
-        if (descBtn) {
-            descBtn.onclick = () => openSalidaDescripcionModal(
-                s.numero_salida,
-                s.fecha_salida,
-                s.descripcion,
-                s.funcionarios || []
-            );
+        /* ➌ Botón de descripción (se mantiene en la misma celda) */
+        const btn = row.cells[col].querySelector('button');
+        if (btn) {
+            btn.onclick = () =>
+                openSalidaDescripcionModal(
+                    s.numero_salida,
+                    s.fecha_salida,
+                    s.descripcion,
+                    s.funcionarios || []
+                );
         }
     }
     window.updateSalidaRow = updateSalidaRow;   //  ←  make it global
