@@ -1,4 +1,4 @@
-import json
+import json, re
 import calendar
 from .models import (
     SalidaSOLICITUD,
@@ -56,7 +56,7 @@ def bnup_form(request):
         num_memo_str = request.POST.get("num_memo", "").strip()
 
         # Si el tipo de recepción es 2 u 8, el número de memo se ignora (se deja como None)
-        if tipo_recepcion_id in ["2", "8"]:
+        if tipo_recepcion_id in ["2", "6", "8"]:
             numero_memo = None
         # Si el tipo de solicitud es 10, el número de documento es opcional:
         elif tipo_solicitud_id == "10":
@@ -71,9 +71,23 @@ def bnup_form(request):
 
 
         correo_solicitante = (
-            request.POST.get(
-                "correo_solicitante") if tipo_recepcion_id == "2" else None
+            request.POST.get("correo_solicitante") if tipo_recepcion_id in ["2", "6"] else None
         )
+        EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+        # ─── correo ──────────────────────────────────────────────
+        if tipo_recepcion_id in ["2", "6"]:          # CORREO o CONTRIBUYENTE
+            correo_solicitante = request.POST.get("correo_solicitante", "").strip()
+            if not correo_solicitante:
+                return JsonResponse({"success": False,
+                                    "error": "Debe ingresar un correo del solicitante."})
+            if not EMAIL_RE.match(correo_solicitante):
+                return JsonResponse({"success": False,
+                                    "error": "El correo ingresado no es válido."})
+        else:
+            correo_solicitante = None
+        # ─────────────────────────────────────────────────────────
+
         depto_solicitante_id = request.POST.get("depto_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
         fecha_ingreso_au_str = request.POST.get(
@@ -248,22 +262,38 @@ def edit_bnup_record(request):
         # … dentro de edit_bnup_record, en la sección POST …
 
         if tipo_usuario == "FUNCIONARIO":
+            EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
             solicitud_id = request.POST.get("solicitud_id")
             solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
 
-            # único campo que puede modificar
-            solicitud.descripcion = request.POST.get("descripcion", "").strip()
-            solicitud.save(update_fields=["descripcion"])
+            nueva_descripcion = request.POST.get("descripcion", "").strip()
+            nuevo_correo     = request.POST.get("correo_solicitante", "").strip()
 
-            return JsonResponse(
-                {
-                    "success": True,
-                    "data": {
-                        "id": solicitud.id,
-                        "descripcion": solicitud.descripcion,
-                    },
-                }
-            )
+            campos_a_grabar = ["descripcion"]
+            solicitud.descripcion = nueva_descripcion
+
+            # sólo si el tipo de recepción exige correo ────────────────
+            if solicitud.tipo_recepcion_id in (2, 6):        # 2 = CORREO, 6 = CONTRIBUYENTE
+                if not nuevo_correo:
+                    return JsonResponse({"success": False,
+                                        "error": "Debe ingresar un correo del solicitante."})
+                if not EMAIL_RE.match(nuevo_correo):
+                    return JsonResponse({"success": False,
+                                        "error": "El correo ingresado no es válido."})
+                solicitud.correo_solicitante = nuevo_correo
+                campos_a_grabar.append("correo_solicitante")
+
+            solicitud.save(update_fields=campos_a_grabar)
+
+            return JsonResponse({
+                "success": True,
+                "data": {
+                    "id": solicitud.id,
+                    "descripcion": solicitud.descripcion,
+                    "correo_solicitante": solicitud.correo_solicitante,
+                },
+            })
 
     # … a partir de aquí continúa el flujo normal (valida todo) para ADMIN y SECRETARIA
 
@@ -273,7 +303,7 @@ def edit_bnup_record(request):
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
         num_memo_str = request.POST.get("num_memo", "").strip()
-        if tipo_recepcion_id in ["2", "8"]:
+        if tipo_recepcion_id in ["2", "6", "8"]:
             numero_memo = None
         elif tipo_solicitud_id == "10":
             numero_memo = int(num_memo_str) if num_memo_str != "" else None
@@ -283,8 +313,19 @@ def edit_bnup_record(request):
             else:
                 numero_memo = int(num_memo_str)
 
-        correo_solicitante = request.POST.get(
-            "correo_solicitante") if tipo_recepcion_id == "2" else None
+        EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+        correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id in ["2", "6"] else None
+        if tipo_recepcion_id in ["2", "6"]:
+            correo_solicitante = request.POST.get("correo_solicitante", "").strip()
+            if not correo_solicitante:
+                return JsonResponse({"success": False,
+                                    "error": "Debe ingresar un correo del solicitante."})
+            if not EMAIL_RE.match(correo_solicitante):
+                return JsonResponse({"success": False,
+                                    "error": "El correo ingresado no es válido."})
+        else:
+            correo_solicitante = None
         depto_solicitante_id = request.POST.get("depto_solicitante")
         numero_ingreso = request.POST.get("numero_ingreso")
         fecha_ingreso_au_str = request.POST.get(

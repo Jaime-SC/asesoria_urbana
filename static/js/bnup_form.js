@@ -64,18 +64,17 @@
         correo_solicitante,
         departamento,
         funcionarios_asignados,
-        tipo_recepcion,
+        tipo_recepcion,          // puede llegar como id ("2") o texto ("CORREO")
         tipo_solicitud,
         numero_memo,
         fecha_solicitud,
         tablaOrigen
     ) {
         const modal = document.getElementById('descripcionModal');
-        if (!modal) {
-            console.error("Modal 'descripcionModal' no encontrado.");
-            return;
-        }
-        const modalContent = modal.querySelector('.modal-content');
+        if (!modal) { console.error("Modal 'descripcionModal' no encontrado."); return; }
+
+        const content = modal.querySelector('.modal-content');
+        const spanX = modal.querySelector('.close');
 
         const descripcionCompleta = document.getElementById('descripcionCompleta');
         const fechaIngreso = document.getElementById('fechaIngreso');
@@ -83,153 +82,145 @@
         const correoSolicitante = document.getElementById('correo_solicitante');
         const deptoSolicitante = document.getElementById('deptoSolicitante');
         const funcionariosAsignados = document.getElementById('funcionarios_asignados');
-        const tipoRecepcion = document.getElementById('tipoRecepcion');
-        const tipoSolicitud = document.getElementById('tipoSolicitud');
+        const tipoRecepcionSpan = document.getElementById('tipoRecepcion');
+        const tipoSolicitudSpan = document.getElementById('tipoSolicitud');
         const numeroMemoElement = document.getElementById('numeroMemo');
-        const fechaSolicitudElement = document.getElementById('fechaSolicitud'); // Nuevo elemento para la fecha de solicitud
+        const fechaSolicitudElement = document.getElementById('fechaSolicitud');
         const correoField = document.getElementById('correoField');
+        const numeroMemoField = numeroMemoElement ? numeroMemoElement.parentElement : null;
 
-        // Verificar la existencia de cada elemento (puedes dejar estos console.error para debug)
-        if (!descripcionCompleta) { console.error("Elemento 'descripcionCompleta' no encontrado."); }
-        if (!fechaIngreso) { console.error("Elemento 'fechaIngreso' no encontrado."); }
-        if (!numeroIngresoSpan) { console.error("Elemento 'numero_ingreso' no encontrado."); }
-        if (!correoSolicitante) { console.error("Elemento 'correo_solicitante' no encontrado."); }
-        if (!deptoSolicitante) { console.error("Elemento 'deptoSolicitante' no encontrado."); }
-        if (!funcionariosAsignados) { console.error("Elemento 'funcionarios_asignados' no encontrado."); }
-        if (!tipoRecepcion) { console.error("Elemento 'tipoRecepcion' no encontrado."); }
-        if (!tipoSolicitud) { console.error("Elemento 'tipoSolicitud' no encontrado."); }
-        if (!numeroMemoElement) { console.error("Elemento 'numeroMemo' no encontrado."); }
-        if (!fechaSolicitudElement) { console.error("Elemento 'fechaSolicitud' no encontrado."); }
-        if (!correoField) { console.error("Elemento 'correoField' no encontrado."); }
+        /* ---------- rellenar textos ---------- */
+        descripcionCompleta && (descripcionCompleta.textContent = descripcion);
+        fechaIngreso && (fechaIngreso.textContent = fecha_ingreso);
+        numeroIngresoSpan && (numeroIngresoSpan.textContent = numero_ingreso);
+        tipoRecepcionSpan && (tipoRecepcionSpan.textContent = tipo_recepcion);
+        tipoSolicitudSpan && (tipoSolicitudSpan.textContent = tipo_solicitud);
+        deptoSolicitante && (deptoSolicitante.textContent = departamento);
+        fechaSolicitudElement && (fechaSolicitudElement.textContent = fecha_solicitud);
 
-        // Rellenar los campos del modal con los datos proporcionados
-        if (descripcionCompleta) descripcionCompleta.textContent = descripcion;
-        if (fechaIngreso) fechaIngreso.textContent = fecha_ingreso;
-        if (numeroIngresoSpan) numeroIngresoSpan.textContent = numero_ingreso;
-        if (tipoRecepcion) tipoRecepcion.textContent = tipo_recepcion;
-        if (tipoSolicitud) tipoSolicitud.textContent = tipo_solicitud;
-        if (numeroMemoElement) numeroMemoElement.textContent = numero_memo;
-        if (deptoSolicitante) deptoSolicitante.textContent = departamento;
-        if (fechaSolicitudElement) fechaSolicitudElement.textContent = fecha_solicitud; // Asignar la nueva fecha de solicitud
+        /* ---------- funcionarios en líneas separadas ---------- */
+        if (funcionariosAsignados) {
+            funcionariosAsignados.textContent =
+                (funcionarios_asignados || '').replace(/,\s*/g, '\n');
+        }
 
-        // Reemplazar comas por saltos de línea para los funcionarios asignados
-        if (funcionariosAsignados) funcionariosAsignados.textContent = funcionarios_asignados;
+        /* ========== NUEVA LÓGICA CORREO / MEMO ========== */
+        const emailTypes = ['2', '6', 'CORREO', 'CONTRIBUYENTE'];   // ids o textos
+        const isEmailType = emailTypes.includes(String(tipo_recepcion).toUpperCase());
 
-        // Mostrar u ocultar el campo de correo según la tabla de origen
+        /* --- bloque CORREO --- */
         if (correoField) {
-            if (!correo_solicitante || correo_solicitante === "None") {
-                correoSolicitante.textContent = "Sin correo asignado";
-                correoSolicitante.style = "color: red;";
-            } else {
-                correoSolicitante.textContent = correo_solicitante;
-                correoSolicitante.style = "color: black;";
-            }
-            correoField.style.display = 'flex';
-        }
+            if (isEmailType) {
+                correoField.style.display = 'flex';
 
-
-        // Mostrar u ocultar el campo de número de memo según si tiene un valor
-        if (numeroMemoElement) {
-            if (numero_memo) {
-                numeroMemoElement.parentElement.style.display = 'flex';
+                if (!correo_solicitante || correo_solicitante === 'None') {
+                    correoSolicitante.textContent = 'Sin correo asignado';
+                    correoSolicitante.style.color = 'red';
+                } else {
+                    correoSolicitante.textContent = correo_solicitante;
+                    correoSolicitante.style.color = 'black';
+                }
             } else {
-                numeroMemoElement.parentElement.style.display = 'none';
+                correoField.style.display = 'none';
             }
         }
 
+        /* --- bloque N° DOC (memo) --- */
+        if (numeroMemoField) {
+            if (isEmailType || !numero_memo) {
+                numeroMemoField.style.display = 'none';
+            } else {
+                numeroMemoElement.textContent = numero_memo;
+                numeroMemoField.style.display = 'flex';
+            }
+        }
+
+        /* ---------- mostrar ---------- */
         modal.style.display = 'block';
-        modalContent.classList.add('animate__bounceIn');
-        // modalContent.classList.remove('animate__bounceOut');
+        content.classList.remove('animate__bounceOut');
+        content.classList.add('animate__animated', 'animate__bounceIn');
 
-        // Manejar el cierre del modal
-        const spanClose = modal.querySelector('.close');
-        if (spanClose) {
-            spanClose.onclick = function () {
+        /* ---------- cierre ---------- */
+        let downOnOverlay = false;
 
-                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
-                modalContent.classList.remove('animate__bounceIn');
-                modalContent.classList.add('animate__bounceOut');
-                // modal.style.display = 'none';
-
-                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
-                modalContent.addEventListener('animationend', function handleAnimationEnd() {
-                    modal.style.display = 'none';
-                    // Limpia la clase de salida para que la próxima vez se use la de entrada
-                    modalContent.classList.remove('animate__bounceOut');
-                    modalContent.classList.add('animate__bounceIn');
-                    // Remover el listener para no duplicar eventos
-                    modalContent.removeEventListener('animationend', handleAnimationEnd);
-                });
-
-            };
-        }
-
-        window.onclick = function (event) {
-            if (event.target == modal) {
-                modal.style.display = 'block';
-                modalContent.classList.add('animate__bounceOut');
-
-                setTimeout(() => {
-                    modalContent.style.display = 'none';
-                    modal.style.display = 'none';
-                    modalContent.classList.remove('animate__animated', 'animate__bounceOut');
-                    modalContent.style.display = 'block';
-
-                }, 700);
-
-
-            }
+        const onMouseDown = e => { downOnOverlay = (e.target === modal); };
+        const onMouseUp = e => {
+            if (downOnOverlay && e.target === modal) cerrar();
+            downOnOverlay = false;     // reseteamos
         };
+
+        spanX.onclick = cerrar;
+        modal.addEventListener('mousedown', onMouseDown);
+        modal.addEventListener('mouseup', onMouseUp);
+
+        function cerrar() {
+            // Limpia listeners para que no se dupliquen en futuras aperturas
+            modal.removeEventListener('mousedown', onMouseDown);
+            modal.removeEventListener('mouseup', onMouseUp);
+            spanX.onclick = null;
+
+            // Animación de salida
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut', 'animate__animated');
+            }, { once: true });
+        }
     }
 
+    /* Exportar a window si lo usas inline */
     window.openBNUPDescripcionModal = openBNUPDescripcionModal;
 
+    function toggleRecepcionFields(selectEl, memoWrap, correoWrap, memoInput, correoInput) {
+        const val = selectEl.value;
+        const esCorreo = ['2', '6'].includes(val);          // 2 = CORREO, 6 = CONTRIBUYENTE
 
-    /**
-     * Función para cerrar el modal de descripción.
-     */
-    function closeDescripcionModal() {
-        const modal = document.getElementById('descripcionModal');
-        if (modal) {
-            modal.style.display = 'none';
+        if (esCorreo) {
+            memoWrap.style.display = 'none';
+            correoWrap.style.display = 'block';
+
+            memoInput.required = false;
+            correoInput.required = true;
+        } else {
+            memoWrap.style.display = 'block';
+            correoWrap.style.display = 'none';
+
+            memoInput.required = true;
+            correoInput.required = false;
         }
     }
-
-    window.closeDescripcionModal = closeDescripcionModal;
-
     /**
      * Actualiza la visibilidad de los campos en el formulario BNUP según el tipo de recepción seleccionado.
      */
     function updateBNUPFields() {
-        const tipoRecepcionSelect = document.getElementById('tipo_recepcion');
-        const memoFields = document.getElementById('memoFields');
-        const correoFields = document.getElementById('correoFields');
+        const recepSel = document.getElementById('tipo_recepcion');
+        const memoWrap = document.getElementById('memoFields');
+        const correoWrap = document.getElementById('correoFields');
+        const memoInput = document.getElementById('num_memo');
+        const correoInput = document.getElementById('correoSolicitante');
+        if (!recepSel) return;
 
-        if (!tipoRecepcionSelect || !memoFields || !correoFields) {
-            return;
-        }
+        recepSel.addEventListener('change', () => toggleRecepcionFields(
+            recepSel, memoWrap, correoWrap, memoInput, correoInput));
+        toggleRecepcionFields(recepSel, memoWrap, correoWrap, memoInput, correoInput);
+    }
 
-        /**
-         * Alterna la visibilidad de los campos según el valor seleccionado en el tipo de recepción.
-         */
-        function toggleFields() {
-            const selectedValue = tipoRecepcionSelect.value;
 
-            if (['1', '3', '4', '5', '6', '7'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
-                memoFields.style.display = 'block';
-                correoFields.style.display = 'none';
-            } else if (selectedValue === '2') { // ID para Correo
-                memoFields.style.display = 'none';
-                correoFields.style.display = 'block';
-            } else {
-                memoFields.style.display = 'block';
-                correoFields.style.display = 'none';
-            }
-        }
+    /**
+     * Actualiza la visibilidad de los campos en el formulario de edición BNUP según el tipo de recepción seleccionado.
+     */
+    function updateEditBNUPFields() {
+        const recepSel = document.getElementById('edit_tipo_recepcion');
+        const memoWrap = document.getElementById('edit_memoFields');
+        const correoWrap = document.getElementById('edit_correoFields');
+        const memoInput = document.getElementById('edit_num_memo');
+        const correoInput = document.getElementById('edit_correoSolicitante');
+        if (!recepSel) return;
 
-        // Evento para cambiar la visibilidad cuando se selecciona un tipo de recepción diferente
-        tipoRecepcionSelect.addEventListener('change', toggleFields);
-        toggleFields();
+        recepSel.addEventListener('change', () => toggleRecepcionFields(
+            recepSel, memoWrap, correoWrap, memoInput, correoInput));
+        toggleRecepcionFields(recepSel, memoWrap, correoWrap, memoInput, correoInput);
     }
 
     /**
@@ -316,6 +307,23 @@
                     });
                     return;
                 }
+
+                function esEmailValido(str) {
+                    return /^\S+@\S+\.\S+$/.test(str);
+                }
+
+                /* en guardar BNUP */
+                const tipoRecep = document.getElementById('tipo_recepcion').value;
+                if (['2', '6'].includes(tipoRecep)) {
+                    const mail = document.getElementById('correoSolicitante').value.trim();
+                    if (!mail) {
+                        Swal.fire({ icon: 'error', title: 'Correo requerido', text: 'Debe ingresar un correo.' }); return;
+                    }
+                    if (!esEmailValido(mail)) {
+                        Swal.fire({ icon: 'error', title: 'Correo inválido', text: 'Ingrese un correo válido.' }); return;
+                    }
+                }
+
 
                 // Mostrar ventana de confirmación antes de guardar
                 Swal.fire({
@@ -492,12 +500,14 @@
                         updateEditBNUPFields();
                     }
 
-                    if (['1', '3', '4', '5', '6', '7'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
+                    if (['1', '3', '4', '5', '7'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
                         const numMemoField = document.getElementById('edit_num_memo');
                         if (numMemoField) numMemoField.value = data.data.numero_memo || '';
-                    } else if (data.data.tipo_recepcion.toString() === '2') { // ID para Correo
+                    } else if (['2', '6'].includes(data.data.tipo_recepcion.toString())) { // ID para Correo
                         const correoSolicitanteField = document.getElementById('edit_correoSolicitante');
-                        if (correoSolicitanteField) correoSolicitanteField.value = data.data.correo_solicitante || '';
+                        if (correoSolicitanteField) {
+                            correoSolicitanteField.value = data.data.correo_solicitante || '';
+                        }
                     }
 
                     const deptoSelect = document.getElementById('edit_depto_solicitante');
@@ -512,24 +522,41 @@
                     loadEditFormData(data.data);
 
                     // … justo después de cargar los datos en los inputs   …
-                    if (tipo_usuario === 'FUNCIONARIO') {
-                        // 1 Ocultamos todos los grupos de campos salvo la descripción
-                        document
-                            .querySelectorAll('#editBNUPForm .form-group')
-                            .forEach(grp => {
-                                // contenedor que SÍ contiene el textarea de descripción
-                                if (!grp.contains(document.getElementById('edit_descripcion'))) {
-                                    grp.style.display = 'none';
-                                    // evitamos que envíen datos o que marquen “required”
-                                    grp.querySelectorAll('input,select,textarea')
-                                        .forEach(el => { el.disabled = true; el.required = false; });
-                                }
-                            });
+                    // dentro de openEditModal, después de recibir los datos …
 
-                        // 2 Ocultamos contenedor de funcionarios (ya está fuera de .form-group)
-                        const funcContainer = document.getElementById('editFuncionariosContainer');
-                        if (funcContainer) funcContainer.parentElement.style.display = 'none';
+                    /* ----------  vista limitada para el perfil FUNCIONARIO ---------- */
+                    if (tipo_usuario === 'FUNCIONARIO') {
+
+                        /** helper: muestra un grupo y todos sus ancestros `.form-group`  */
+                        const showWithAncestors = (el) => {
+                            let n = el;
+                            while (n && n.id !== 'editBNUPForm') {
+                                if (n.classList && n.classList.contains('form-group')) n.style.display = '';
+                                n = n.parentElement;
+                            }
+                            el.querySelectorAll('input,textarea').forEach(i => i.disabled = false);
+                        };
+
+                        /** 1 ▸ oculta y deshabilita todo el formulario */
+                        document.querySelectorAll('#editBNUPForm .form-group').forEach(g => {
+                            g.style.display = 'none';
+                            g.querySelectorAll('input,select,textarea').forEach(el => el.disabled = true);
+                        });
+
+                        /** 2 ▸ la descripción SIEMPRE es editable */
+                        const descGrp = document.getElementById('edit_descripcion').closest('.form-group');
+                        showWithAncestors(descGrp);
+
+                        /** 3 ▸ sólo para CORREO (id 2) o CONTRIBUYENTE (id 6) mostramos el e-mail */
+                        const recepId = data.data.tipo_recepcion.toString();          // «2» ó «6»
+                        if (['2', '6'].includes(recepId)) {
+                            const correoGrp = document.getElementById('edit_correoFields');
+                            showWithAncestors(correoGrp);
+                        }
                     }
+                    /* ---------------------------------------------------------------- */
+
+
 
 
                     // Mostrar el modal de edición
@@ -1976,7 +2003,7 @@
                                         ? 'Solo puede editar un egreso a la vez.'
                                         : 'Seleccione solo un egreso para editar.';
 
-                                Swal.fire({ icon: 'warning', text: msg, heightAuto: false,  scrollbarPadding: false});
+                                Swal.fire({ icon: 'warning', text: msg, heightAuto: false, scrollbarPadding: false });
                                 return;
                             }
 
@@ -2698,47 +2725,68 @@
 
     function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
         const modal = document.getElementById('descripcionSalidaModal');
-        if (!modal) {
-            console.error("Modal 'descripcionSalidaModal' no encontrado.");
-            return;
-        }
-        const modalContent = modal.querySelector('.modal-content');
+        if (!modal) { console.error("Modal 'descripcionSalidaModal' no encontrado."); return; }
 
+        const content = modal.querySelector('.modal-content');
+
+        /* ---------- rellenar campos ---------- */
         document.getElementById('salida_numero').textContent = numeroSalida;
         document.getElementById('salida_fecha').textContent = fechaSalida;
         document.getElementById('salida_descripcion').textContent = descripcion || "Sin descripción";
 
-        // Mostrar la lista de funcionarios
-        const funcionariosContainer = document.getElementById('salida_funcionarios');
-        if (funcionariosContainer) {
-            funcionariosContainer.innerHTML = "";
-            if (funcionarios && funcionarios.length > 0) {
-                funcionarios.forEach(func => {
+        const lista = document.getElementById('salida_funcionarios');
+        if (lista) {
+            lista.innerHTML = '';
+            if (funcionarios?.length) {
+                funcionarios.forEach(f => {
                     const p = document.createElement('p');
-                    p.textContent = func.nombre;
-                    funcionariosContainer.appendChild(p);
+                    p.textContent = f.nombre;
+                    lista.appendChild(p);
                 });
             } else {
-                funcionariosContainer.textContent = "No hay funcionarios asignados";
+                lista.textContent = "No hay funcionarios asignados";
             }
         }
 
+        /* ---------- mostrar con animación ---------- */
         modal.style.display = 'block';
-        modalContent.classList.remove('animate__bounceOut');
-        modalContent.classList.add('animate__animated', 'animate__bounceIn');
+        content.classList.remove('animate__bounceOut');
+        content.classList.add('animate__animated', 'animate__bounceIn');
 
-        const closeBtn = modal.querySelector('.close');
-        if (closeBtn) {
-            closeBtn.onclick = function () {
-                modalContent.classList.remove('animate__bounceIn');
-                modalContent.classList.add('animate__bounceOut');
-                modalContent.addEventListener('animationend', function handleAnim() {
-                    modal.style.display = 'none';
-                    modalContent.classList.remove('animate__animated', 'animate__bounceOut');
-                }, { once: true });
-            };
+        /* ---------- gestión de cierre ---------- */
+        const closeX = modal.querySelector('.close');
+
+        // 1️⃣ Queremos saber si el clic comenzó en el overlay
+        let downOnOverlay = false;
+        const onMouseDown = e => { downOnOverlay = (e.target === modal); };
+        const onMouseUp = e => {
+            if (downOnOverlay && e.target === modal) cerrar();   // empezó y terminó fuera
+            downOnOverlay = false;
+        };
+
+        // 2️⃣ Cerrar con la “X”
+        closeX.onclick = cerrar;
+
+        // 3️⃣ Listeners en el overlay
+        modal.addEventListener('mousedown', onMouseDown);
+        modal.addEventListener('mouseup', onMouseUp);
+
+        function cerrar() {
+            // Evita cierres duplicados
+            closeX.onclick = null;
+            modal.removeEventListener('mousedown', onMouseDown);
+            modal.removeEventListener('mouseup', onMouseUp);
+
+            // Animación de salida
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut', 'animate__animated');
+            }, { once: true });
         }
     }
+
 
     function closeSalidaDescripcionModal() {
         const modal = document.getElementById('descripcionSalidaModal');
@@ -2753,40 +2801,7 @@
         }
     }
 
-    /**
-     * Actualiza la visibilidad de los campos en el formulario de edición BNUP según el tipo de recepción seleccionado.
-     */
-    function updateEditBNUPFields() {
-        const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
-        const memoFields = document.getElementById('edit_memoFields');
-        const correoFields = document.getElementById('edit_correoFields');
 
-        if (!tipoRecepcionSelect || !memoFields || !correoFields) {
-            return;
-        }
-
-        /**
-         * Alterna la visibilidad de los campos según el valor seleccionado en el tipo de recepción.
-         */
-        function toggleFields() {
-            const selectedValue = tipoRecepcionSelect.value;
-
-            if (['1', '3', '4', '5', '6', '7'].includes(selectedValue)) { // IDs para Memo, Providencia, Oficio, Ordinario
-                memoFields.style.display = 'block';
-                correoFields.style.display = 'none';
-            } else if (selectedValue === '2') { // ID para Correo
-                memoFields.style.display = 'none';
-                correoFields.style.display = 'block';
-            } else {
-                memoFields.style.display = 'block';
-                correoFields.style.display = 'none';
-            }
-        }
-
-        // Evento para cambiar la visibilidad cuando se selecciona un tipo de recepción diferente
-        tipoRecepcionSelect.addEventListener('change', toggleFields);
-        toggleFields();
-    }
 
     /**
      * Actualiza una fila específica de la tabla con los datos más recientes de la solicitud.
