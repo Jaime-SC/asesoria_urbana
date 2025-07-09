@@ -668,13 +668,13 @@
 {% endif %}
 
 <!-- Modal para editar una solicitud (Formulario de edición) -->
-<div id="editBNUPFormModal" class="modal">
+<div id="editBNUPFormModal" class="modal" style="margin-inline: 0;">
   <div class="modal-content animate__animated animate__bounceIn">
     <!-- Formulario para editar solicitudes -->
     <form id="editBNUPForm" method="post" action="{% url 'edit_bnup_record' %}" enctype="multipart/form-data">
       {% csrf_token %}
       <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-        <h2>Editar Solicitud</h2>
+        <h2>Editar Ingreso</h2>
         <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
       </div>
 
@@ -712,15 +712,51 @@
           <label for="edit_numeroIngreso">N° de Ingreso</label>
           <input type="number" name="numero_ingreso" id="edit_numeroIngreso" required />
         </div>
+        <!-- Nuevo Campo: Fecha de Ingreso -->
         <div class="form-group">
           <label for="edit_fecha_ingreso_au">Fecha de Ingreso</label>
           <input type="date" name="fecha_ingreso_au" id="edit_fecha_ingreso_au" required />
         </div>
+        <!-- Nuevo Campo: Tipo de Solicitud -->
+        <div class="form-group">
+          <label for="edit_tipo_solicitud">Tipo de Solicitud</label>
+          <select name="tipo_solicitud" id="edit_tipo_solicitud" required>
+            <option value="" disabled selected>Seleccione</option>
+            {% for tipo in tipos_solicitud %}
+              <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if tipo_usuario == 'ADMIN' %}
+          <div class="form-group">
+              <label for="openEditFileModal">Adjuntar</label>
+
+              <!-- botón que abre el modal -->
+              <button type="button"
+                      id="openEditFileModal"
+                      class="btn"
+                      style="margin-top:5px;height:2.2rem;padding:5px 0;">
+                  <span class="material-symbols-outlined" style="color:ghostwhite;">attach_file</span>
+              </button>
+
+              <!-- input REAL que se envía al servidor (oculto) -->
+              <div id="hiddenEditFileInput" style="display:none;">
+                  <input type="file"
+                        name="archivo_adjunto_ingreso"
+                        id="edit_archivo_adjunto"
+                        class="file">
+              </div>
+
+              <!-- flag para indicar borrado (0 = mantener, 1 = borrar) -->
+              <input type="hidden" name="delete_archivo" id="edit_delete_archivo" value="0">
+          </div>
+        {% endif %}
+        
       </div>
-      <!-- Nuevo Campo: Fecha de Ingreso -->
+
 
       <div class="form-group">
-        <label for="edit_depto_solicitante">Departamento Solicitante</label>
+        <label for="edit_depto_solicitante">Solicitante</label>
         <select name="depto_solicitante" id="edit_depto_solicitante" required>
           <option value="" disabled selected>Seleccione</option>
           {% for depto in departamentos %}
@@ -729,16 +765,32 @@
         </select>
       </div>
 
-      <!-- Nuevo Campo: Tipo de Solicitud -->
-      <div class="form-group">
-        <label for="edit_tipo_solicitud">Tipo de Solicitud</label>
-        <select name="tipo_solicitud" id="edit_tipo_solicitud" required>
-          <option value="" disabled selected>Seleccione</option>
-          {% for tipo in tipos_solicitud %}
-            <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
-          {% endfor %}
-        </select>
-      </div>
+      {% comment %} {% if tipo_usuario == 'ADMIN' %}
+        <div class="form-group">
+            <label for="openEditFileModal">Adjuntar</label>
+
+            <!-- botón que abre el modal -->
+            <button type="button"
+                    id="openEditFileModal"
+                    class="btn"
+                    style="margin-top:5px;height:2.2rem;padding:5px 0;">
+                <span class="material-symbols-outlined" style="color:ghostwhite;">attach_file</span>
+            </button>
+
+            <!-- input REAL que se envía al servidor (oculto) -->
+            <div id="hiddenEditFileInput" style="display:none;">
+                <input type="file"
+                      name="archivo_adjunto_ingreso"
+                      id="edit_archivo_adjunto"
+                      class="file">
+            </div>
+
+            <!-- flag para indicar borrado (0 = mantener, 1 = borrar) -->
+            <input type="hidden" name="delete_archivo" id="edit_delete_archivo" value="0">
+        </div>
+      {% endif %} {% endcomment %}
+
+
 
       <!-- Funcionarios asignados en el formulario de edición -->
       {% if tipo_usuario == 'ADMIN' %}
@@ -775,6 +827,25 @@
     </form>
   </div>
 </div>
+
+{% if tipo_usuario == 'ADMIN' %}
+<div id="editFileModal" class="modal" style="display:none; margin-inline: 0;">
+  <div class="modal-content animate__animated animate__bounceIn">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <label>Adjuntar archivo</label>
+      <span class="close"><span class="material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span></span>
+    </div>
+
+    <!-- aquí vive el plugin fileinput -->
+    <input type="file" id="editFileModalInput" class="file">
+
+    <div style="margin-top:15px;display:flex;justify-content:flex-end;">
+      <button id="editConfirmFileButton" class="btn">Confirmar</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 
 <!-- Fuente Oculta de Opciones de Funcionarios -->
 <select id="allFuncionariosOptions" style="display: none;">

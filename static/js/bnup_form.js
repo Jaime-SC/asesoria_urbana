@@ -26,6 +26,7 @@
             updateEditBNUPFields();
             initializeNewDeptoFeature();
             initializeFileModal();
+            initializeEditFileModal();
             initializeBNUPFormModal();
             initializeStandardizeInputs(); // Utiliza la función de utilities.js
             // Inicializar la funcionalidad de múltiples funcionarios
@@ -521,6 +522,38 @@
                     // Cargar los funcionarios asignados en el formulario de edición
                     loadEditFormData(data.data);
 
+                    // pasa la URL del adjunto al botón, para que el modal la use como preview
+                    const btnFile = document.getElementById('openEditFileModal');
+                    if (btnFile) {
+                        btnFile.dataset.currentFile = data.data.archivo_adjunto_ingreso_url || '';
+                    }
+
+
+                    /* ---------- archivo adjunto (sólo ADMIN) --------------------- */
+                    // if (tipo_usuario === 'ADMIN') {
+                    //     const $fileInput = $('#edit_archivo_adjunto');
+                    //     const deleteFlag = document.getElementById('edit_delete_archivo');
+
+                    //     // destruye instancia previa del plugin si existe
+                    //     if ($fileInput.data('fileinput')) { $fileInput.fileinput('destroy'); }
+
+                    //     // const tieneArchivo = !!data.data.archivo_adjunto_ingreso_url;
+                    //     // const initialPreview = tieneArchivo ? [data.data.archivo_adjunto_ingreso_url] : [];
+                    //     // const initialConfig = tieneArchivo ? [{
+                    //     //     caption: data.data.archivo_adjunto_ingreso_url.split('/').pop(),
+                    //     //     key: 1                    // sólo referencia; no se usa en el backend
+                    //     // }] : [];
+
+                    //     if ($fileInput.data('fileinput')) { $fileInput.fileinput('destroy'); }
+                    //     $fileInput.fileinput(buildFileInputOpts({
+                    //         urlActual: data.data.archivo_adjunto_ingreso_url || '',
+                    //         allowZoom: true
+                    //     }))
+                    //         .on('filecleared', () => { deleteFlag.value = '1'; })
+                    //         .on('fileselect', () => { deleteFlag.value = '0'; });
+                    // }
+
+
                     // … justo después de cargar los datos en los inputs   …
                     // dentro de openEditModal, después de recibir los datos …
 
@@ -663,6 +696,184 @@
             };
         }
     }
+
+
+
+    /* ─────────────────────────────────────────────────────────── */
+    function initializeEditFileModal() {
+        const btn = document.getElementById('openEditFileModal');
+        const modal = document.getElementById('editFileModal');
+        if (!btn || !modal) { return; }          // no es ADMIN
+
+        const inputReal = document.getElementById('edit_archivo_adjunto');
+        const flagDelete = document.getElementById('edit_delete_archivo');
+        const inputModal = document.getElementById('editFileModalInput');
+        const btnClose = modal.querySelector('.close');
+        const btnOK = document.getElementById('editConfirmFileButton');
+        const content = modal.querySelector('.modal-content');
+
+        /* helper animado */
+        const cerrar = () => {
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', function h() {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut');
+                content.classList.add('animate__bounceIn');
+                content.removeEventListener('animationend', h);
+            });
+        };
+
+        /* 1 · abrir modal (creamos/recargamos plugin con preview) */
+        btn.onclick = () => {
+            // le pasamos la URL actual que cargó openEditModal
+            const urlActual = btn.dataset.currentFile || '';
+            const tieneArchivo = !!urlActual;
+
+            /* destruir instancia previa del plugin */
+            if ($(inputModal).data('fileinput')) { $(inputModal).fileinput('destroy'); }
+
+            /* recrear con la preview (si existe) */
+            $(inputModal).fileinput(buildFileInputOpts({
+                urlActual: btn.dataset.currentFile || '',
+                allowZoom: true            // aquí sí queremos el zoom
+            }))
+                .on('filecleared', () => { flagDelete.value = '1'; })
+                .on('fileselect', () => { flagDelete.value = '0'; });
+            modal.style.display = 'block';
+        };
+
+        /* 2 · cerrar (X o click fuera) */
+        btnClose.onclick = cerrar;
+        modal.onclick = (e) => { if (e.target === modal) cerrar(); };
+
+        /* 3 · Confirmar: aplicar el cambio al input real y refrescar su plugin */
+        btnOK.onclick = () => {
+
+            const $real = $('#edit_archivo_adjunto');              // plugin del form
+
+            /* --- 1. borrar --- */
+            if (flagDelete.value === '1' && !inputModal.files.length) {
+                // ⇒ sólo borrar
+                $real.fileinput('clear');          // quita preview y lanza filecleared
+                cerrar();
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'success',
+                    text: 'Archivo eliminado.'
+                });
+                return;
+            }
+
+            /* --- 2. reemplazar --- */
+            if (inputModal.files.length) {
+                flagDelete.value = '0';            // anulamos el borrado
+                const nuevoFile = inputModal.files[0];
+
+                /* asignamos el FileList al input REAL (no importa que sea hidden) */
+                const dt = new DataTransfer();
+                dt.items.add(nuevoFile);
+                inputReal.files = dt.files;
+
+                /* refrescamos el plugin del input real con la nueva preview */
+                if ($real.data('fileinput')) { $real.fileinput('destroy'); }
+
+                $real.fileinput(buildFileInputOpts({
+                    urlActual: URL.createObjectURL(nuevoFile),
+                    allowZoom: true
+                }))
+                    .on('filecleared', () => { flagDelete.value = '1'; });
+
+                cerrar();
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'success',
+                    text: 'Archivo reemplazado.'
+                });
+                return;
+            }
+
+            /* --- 3. ni borró ni subió --- */
+            Swal.fire({ icon: 'error', text: 'Seleccione un archivo o elimine el actual.' });
+        };
+
+    }
+
+
+    function buildFileInputOpts({ urlActual = '', allowZoom = true } = {}) {
+
+        /* ── 1. ¿hay un archivo? y tipo ─────────────────────────── */
+        const tieneArchivo = !!urlActual;
+        const ext = urlActual.split('.').pop().toLowerCase();
+        const esImg = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext);
+        const esPDF = ext === 'pdf';
+        const fileType = esImg ? 'image' : esPDF ? 'pdf' : 'other';
+
+        /* preview dinámico */
+        const preview = tieneArchivo ? [urlActual] : [];
+        const previewConfig = tieneArchivo ? [{
+            caption: urlActual.split('/').pop(),
+            key: 1,
+            type: fileType,
+            filetype: esPDF ? 'application/pdf' : undefined,
+            downloadUrl: urlActual,
+            frameClass: 'bnup-edit-frame'   // ← NUEVO
+        }] : [];
+
+
+        /* ── 2. configuración unificada ─────────────────────────── */
+        return {
+            /* apariencia */
+            showUpload: false,
+            showRemove: true,
+            showPreview: true,
+            showCaption: false,
+            browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
+            removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+            mainClass: 'input-group-sm',
+            dropZoneTitle: 'Arrastra y suelta los archivos aquí',
+
+            fileActionSettings: {
+                showRemove: false,
+                showUpload: false,
+                showZoom: false,
+                showDrag: false,
+                showDelete: false,
+                showDownload: false,
+            },
+
+            layoutTemplates: {
+                close: '',
+                indicator: '',
+                actionCancel: '',
+                actionDelete: '',
+            },
+
+
+
+            /* ------------- PREVIEW ------------- */
+            initialPreview: preview,
+            initialPreviewConfig: previewConfig,
+            initialPreviewAsData: true,     // siempre como dato
+            initialPreviewFileType: fileType,
+
+            /* ------------- iconos (igual a Salidas) ------------- */
+            preferIconicPreview: true,
+            previewFileIconSettings: {                 // iconos por extensión
+                'pdf': '<span class="material-symbols-outlined kv-file-pdf" style="font-size: 100px;color: red;">picture_as_pdf</span>'
+            },
+            previewFileExtSettings: {                 // vínculo ext-icono
+                'pdf': ext => ext.match(/(pdf)$/i)
+            }
+        };
+    }
+
+
+
+
+
 
     /**
      * Inicializa el modal para la selección y confirmación de archivos.

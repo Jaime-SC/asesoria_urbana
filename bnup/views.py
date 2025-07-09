@@ -334,6 +334,20 @@ def edit_bnup_record(request):
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
+        # ————————— Manejo del archivo adjunto ————————————
+        delete_flag = request.POST.get("delete_archivo") == "1"
+
+        if delete_flag and solicitud.archivo_adjunto_ingreso:
+            # el usuario pidió eliminar el archivo sin subir otro
+            solicitud.archivo_adjunto_ingreso.delete(save=False)
+            solicitud.archivo_adjunto_ingreso = None
+
+        # si llega un archivo nuevo, siempre sustituye al que hubiera
+        if archivo_adjunto:
+            solicitud.archivo_adjunto_ingreso = archivo_adjunto
+        # ————————————————————————————————————————————————
+
+
         # Convertir fecha_ingreso_au_str a objeto datetime.date
         try:
             fecha_ingreso_au = datetime.strptime(

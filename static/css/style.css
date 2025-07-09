@@ -515,7 +515,12 @@ h1 {
   opacity: 1;
 }
 
-/* -------------------------------------- */
+.krajee-default .file-caption-info, .krajee-default .file-size-info {
+    width: min-content !important;
+    height: auto !important;
+    font-size: 20px;
+    font-family: 'HelveticaNeue';
+}
 
 
 .form-container {
