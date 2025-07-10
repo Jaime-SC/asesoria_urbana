@@ -27,6 +27,7 @@
             initializeNewDeptoFeature();
             initializeFileModal();
             initializeEditFileModal();
+            initializeEditSalidaFileModal();
             initializeBNUPFormModal();
             initializeStandardizeInputs(); // Utiliza la función de utilities.js
             // Inicializar la funcionalidad de múltiples funcionarios
@@ -697,6 +698,96 @@
         }
     }
 
+    /**
+         * Carga los datos de una solicitud en el formulario de edición.
+         * @param {Object} data - Datos de la solicitud.
+         */
+    function loadEditFormData(data) {
+        // Limpiar los selects actuales de funcionarios asignados
+        const funcionariosContainer = document.getElementById('editFuncionariosContainer');
+        if (funcionariosContainer) {
+            funcionariosContainer.innerHTML = '';
+
+            data.funcionarios_asignados.forEach((funcionario, index) => {
+                const group = document.createElement('div');
+                group.classList.add('funcionario-select-group');
+
+                const select = document.createElement('select');
+                select.name = 'funcionarios_asignados';
+                select.classList.add('funcionarioSelect');
+                select.style = "max-width: 20rem;";
+
+                select.required = true;
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                defaultOption.textContent = 'Seleccione';
+                select.appendChild(defaultOption);
+
+                // Clone options from #allFuncionariosOptions
+                const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
+                allOptions.forEach(option => {
+                    const clonedOption = option.cloneNode(true);
+                    if (option.value === funcionario.id.toString()) {
+                        clonedOption.selected = true;
+                    }
+                    select.appendChild(clonedOption);
+                });
+
+                group.appendChild(select);
+
+                // Añadir el botón "+" solo al último funcionario
+                if (index === data.funcionarios_asignados.length - 1) {
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
+                    addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+                    addBtn.style = "margin-left: 10px; padding: 0;";
+                    group.appendChild(addBtn);
+                }
+
+                funcionariosContainer.appendChild(group);
+            });
+
+            // Si no hay funcionarios asignados, crear al menos un select
+            if (data.funcionarios_asignados.length === 0) {
+                const group = document.createElement('div');
+                group.classList.add('funcionario-select-group');
+
+                const select = document.createElement('select');
+                select.name = 'funcionarios_asignados';
+                select.classList.add('funcionarioSelect');
+                select.required = true;
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                defaultOption.textContent = 'Seleccione';
+                select.appendChild(defaultOption);
+
+                // Clone options from #allFuncionariosOptions
+                const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
+                allOptions.forEach(option => {
+                    const clonedOption = option.cloneNode(true);
+                    select.appendChild(clonedOption);
+                });
+
+                group.appendChild(select);
+
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
+                addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+                addBtn.style = "margin-left: 10px; padding: 0;";
+                group.appendChild(addBtn);
+
+                funcionariosContainer.appendChild(group);
+            }
+        }
+    }
 
 
     /* ─────────────────────────────────────────────────────────── */
@@ -726,22 +817,28 @@
 
         /* 1 · abrir modal (creamos/recargamos plugin con preview) */
         btn.onclick = () => {
-            // le pasamos la URL actual que cargó openEditModal
             const urlActual = btn.dataset.currentFile || '';
-            const tieneArchivo = !!urlActual;
+            const opciones = buildFileInputOpts({ urlActual, allowZoom: true });
 
-            /* destruir instancia previa del plugin */
-            if ($(inputModal).data('fileinput')) { $(inputModal).fileinput('destroy'); }
+            if ($(inputModal).data('fileinput')) {
+                // Ya existe → refrescamos (sin duplicar)
+                $(inputModal).fileinput('refresh', opciones);
+            } else {
+                // Primera vez
+                $(inputModal).fileinput(opciones);
+            }
 
-            /* recrear con la preview (si existe) */
-            $(inputModal).fileinput(buildFileInputOpts({
-                urlActual: btn.dataset.currentFile || '',
-                allowZoom: true            // aquí sí queremos el zoom
-            }))
-                .on('filecleared', () => { flagDelete.value = '1'; })
-                .on('fileselect', () => { flagDelete.value = '0'; });
+            // reseteamos flags
+            flagDelete.value = '0';
+
+            $(inputModal)
+                .off('filecleared fileselect')        // limpiamos antiguos handlers
+                .on('filecleared', () => flagDelete.value = '1')
+                .on('fileselect', () => flagDelete.value = '0');
+
             modal.style.display = 'block';
         };
+
 
         /* 2 · cerrar (X o click fuera) */
         btnClose.onclick = cerrar;
@@ -801,17 +898,15 @@
 
     }
 
+    function buildFileInputOpts({ urlActual = '' } = {}) {
 
-    function buildFileInputOpts({ urlActual = '', allowZoom = true } = {}) {
-
-        /* ── 1. ¿hay un archivo? y tipo ─────────────────────────── */
+        /* 1 ▸ datos del archivo (si existe) -------------------------------- */
         const tieneArchivo = !!urlActual;
         const ext = urlActual.split('.').pop().toLowerCase();
         const esImg = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext);
         const esPDF = ext === 'pdf';
         const fileType = esImg ? 'image' : esPDF ? 'pdf' : 'other';
 
-        /* preview dinámico */
         const preview = tieneArchivo ? [urlActual] : [];
         const previewConfig = tieneArchivo ? [{
             caption: urlActual.split('/').pop(),
@@ -819,15 +914,14 @@
             type: fileType,
             filetype: esPDF ? 'application/pdf' : undefined,
             downloadUrl: urlActual,
-            frameClass: 'bnup-edit-frame'   // ← NUEVO
+            frameClass: 'bnup-edit-frame'
         }] : [];
 
-
-        /* ── 2. configuración unificada ─────────────────────────── */
+        /* 2 ▸ configuración del plugin ------------------------------------ */
         return {
-            /* apariencia */
+            /* apariencia general */
             showUpload: false,
-            showRemove: true,
+            showRemove: true,          // ⟵ sin botón “Eliminar” (trash)
             showPreview: true,
             showCaption: false,
             browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
@@ -835,45 +929,44 @@
             mainClass: 'input-group-sm',
             dropZoneTitle: 'Arrastra y suelta los archivos aquí',
 
+            /* acciones por thumbnail (todo OFF) */
             fileActionSettings: {
                 showRemove: false,
                 showUpload: false,
-                showZoom: false,
+                showZoom: false,    // ⟵ sin icono de lupa
                 showDrag: false,
                 showDelete: false,
-                showDownload: false,
+                showDownload: false
             },
 
+            /* sin plantilla de modal-zoom */
             layoutTemplates: {
-                close: '',
-                indicator: '',
-                actionCancel: '',
-                actionDelete: '',
+                close: '', indicator: '', actionCancel: '', actionDelete: '', modal: ''
             },
 
+            /* botones dentro del modal zoom (no se usarán, pero los limpiamos) */
+            previewZoomButtonIcons: {
+                prev: '', next: '', rotate: '', toggleheader: '',
+                fullscreen: '', borderless: '', close: ''
+            },
 
-
-            /* ------------- PREVIEW ------------- */
+            /* previews dinámicas */
+            overwriteInitial: true,
             initialPreview: preview,
             initialPreviewConfig: previewConfig,
-            initialPreviewAsData: true,     // siempre como dato
+            initialPreviewAsData: true,
             initialPreviewFileType: fileType,
 
-            /* ------------- iconos (igual a Salidas) ------------- */
+            /* icono grande para PDFs (igual estilo que usabas) */
             preferIconicPreview: true,
-            previewFileIconSettings: {                 // iconos por extensión
-                'pdf': '<span class="material-symbols-outlined kv-file-pdf" style="font-size: 100px;color: red;">picture_as_pdf</span>'
+            previewFileIconSettings: {
+                'pdf': '<span class="material-symbols-outlined kv-file-pdf" style="font-size:100px;color:red;">picture_as_pdf</span>'
             },
-            previewFileExtSettings: {                 // vínculo ext-icono
+            previewFileExtSettings: {
                 'pdf': ext => ext.match(/(pdf)$/i)
             }
         };
     }
-
-
-
-
-
 
     /**
      * Inicializa el modal para la selección y confirmación de archivos.
@@ -1421,98 +1514,6 @@
             addDeptoButton.style.display = '';
             newDeptoInput.value = '';
         });
-    }
-
-
-    /**
-     * Carga los datos de una solicitud en el formulario de edición.
-     * @param {Object} data - Datos de la solicitud.
-     */
-    function loadEditFormData(data) {
-        // Limpiar los selects actuales de funcionarios asignados
-        const funcionariosContainer = document.getElementById('editFuncionariosContainer');
-        if (funcionariosContainer) {
-            funcionariosContainer.innerHTML = '';
-
-            data.funcionarios_asignados.forEach((funcionario, index) => {
-                const group = document.createElement('div');
-                group.classList.add('funcionario-select-group');
-
-                const select = document.createElement('select');
-                select.name = 'funcionarios_asignados';
-                select.classList.add('funcionarioSelect');
-                select.style = "max-width: 20rem;";
-
-                select.required = true;
-
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.disabled = true;
-                defaultOption.selected = true;
-                defaultOption.textContent = 'Seleccione';
-                select.appendChild(defaultOption);
-
-                // Clone options from #allFuncionariosOptions
-                const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
-                allOptions.forEach(option => {
-                    const clonedOption = option.cloneNode(true);
-                    if (option.value === funcionario.id.toString()) {
-                        clonedOption.selected = true;
-                    }
-                    select.appendChild(clonedOption);
-                });
-
-                group.appendChild(select);
-
-                // Añadir el botón "+" solo al último funcionario
-                if (index === data.funcionarios_asignados.length - 1) {
-                    const addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
-                    addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-                    addBtn.style = "margin-left: 10px; padding: 0;";
-                    group.appendChild(addBtn);
-                }
-
-                funcionariosContainer.appendChild(group);
-            });
-
-            // Si no hay funcionarios asignados, crear al menos un select
-            if (data.funcionarios_asignados.length === 0) {
-                const group = document.createElement('div');
-                group.classList.add('funcionario-select-group');
-
-                const select = document.createElement('select');
-                select.name = 'funcionarios_asignados';
-                select.classList.add('funcionarioSelect');
-                select.required = true;
-
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.disabled = true;
-                defaultOption.selected = true;
-                defaultOption.textContent = 'Seleccione';
-                select.appendChild(defaultOption);
-
-                // Clone options from #allFuncionariosOptions
-                const allOptions = document.querySelectorAll('#allFuncionariosOptions option');
-                allOptions.forEach(option => {
-                    const clonedOption = option.cloneNode(true);
-                    select.appendChild(clonedOption);
-                });
-
-                group.appendChild(select);
-
-                const addBtn = document.createElement('button');
-                addBtn.type = 'button';
-                addBtn.classList.add('addFuncionarioBtn', 'btn', 'btn-icon');
-                addBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-                addBtn.style = "margin-left: 10px; padding: 0;";
-                group.appendChild(addBtn);
-
-                funcionariosContainer.appendChild(group);
-            }
-        }
     }
 
     /**
@@ -2656,6 +2657,384 @@
         }
     }
 
+    function openEditSalidaModal(salidaId) {
+
+        /* ─────────────────────────── refs básicas ────────────────────────── */
+        const modal = document.getElementById('editSalidaModal');
+        const content = modal.querySelector('.modal-content');
+        const form = document.getElementById('editSalidaForm');
+        const closeX = modal.querySelector('.close');
+
+        /* ─────────── limpiar formulario y contenedor de funcionarios ─────── */
+        form.reset();
+        const contEdit = document.getElementById('salidaFuncionariosContainerEdit');
+        if (contEdit) contEdit.innerHTML = '';
+
+        /* ───────────────────── overlay-click para cerrar ─────────────────── */
+        let downOnOverlay = false;
+        const onMouseDown = e => { downOnOverlay = (e.target === modal); };
+        const onMouseUp = e => {
+            if (downOnOverlay && e.target === modal) cerrar();
+            downOnOverlay = false;
+        };
+        const cerrar = () => {
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut');
+                modal.removeEventListener('mousedown', onMouseDown);
+                modal.removeEventListener('mouseup', onMouseUp);
+            }, { once: true });
+        };
+        modal.addEventListener('mousedown', onMouseDown);
+        modal.addEventListener('mouseup', onMouseUp);
+        closeX.onclick = cerrar;
+
+        /* ───────────────────────── carga por AJAX ────────────────────────── */
+        fetch(`/bnup/edit_salida/?salida_id=${salidaId}`)
+            .then(r => r.json())
+            .then(json => {
+
+                if (!json.success) { Swal.fire({ icon: 'error', text: json.error }); return; }
+                const s = json.data;
+
+                /* ---------- campos básicos ---------- */
+                document.getElementById('edit_salida_id').value = s.id;
+                const numeroInput = document.getElementById('edit_numero_salida');
+                if (numeroInput) numeroInput.value = s.numero_salida;
+
+                const fechaInput = document.getElementById('edit_fecha_salida');
+                if (fechaInput) fechaInput.value = s.fecha_salida;
+
+                document.getElementById('edit_descripcion_salida').value = s.descripcion || '';
+
+                /* ─────────────―― FILE – NUEVO BLOQUE ――───────────── */
+
+                /* botón 📎 ⇒ dataset con URL actual */
+                const btnFile = document.getElementById('openEditSalidaFileModal');
+                if (btnFile) {
+                    btnFile.dataset.currentFile = s.archivo_url || '';
+                }
+
+                /* input REAL con preview inmediato */
+                const $fileReal = $('#edit_archivo_adjunto_salida');
+                const flagDel = document.getElementById('edit_delete_archivo_salida');
+
+                if ($fileReal.data('fileinput')) { $fileReal.fileinput('destroy'); }
+
+                $fileReal.fileinput(
+                    buildFileInputOpts({ urlActual: s.archivo_url || '' })
+                )
+                    .on('filecleared', () => { flagDel.value = '1'; })   // marcar borrado
+                    .on('fileselect', () => { flagDel.value = '0'; });   // se sube nuevo
+
+                /* ─────────────────────────────────────────────────── */
+
+
+                /* ---------- guardar ---------- */
+                document.getElementById('guardarEdicionSalida').onclick = e => {
+                    e.preventDefault();
+
+                    /* normalizar texto */
+                    const desc = form.querySelector('#edit_descripcion_salida');
+                    if (desc) standardizeInput(desc);
+
+                    const fd = new FormData(form);
+
+                    Swal.fire({
+                        title: '¿Guardar cambios?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#4BBFE0',
+                        cancelButtonColor: '#E73C45',
+                        heightAuto: false,
+                        scrollbarPadding: false
+                    }).then(res => {
+                        if (!res.isConfirmed) return;
+
+                        fetch('/bnup/edit_salida/', {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': getCSRFToken() },
+                            body: fd
+                        })
+                            .then(r => r.json())
+                            .then(json => {
+                                if (json.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Egreso actualizado',
+                                        timer: 1500,
+                                        showConfirmButton: false,
+                                        heightAuto: false,
+                                        scrollbarPadding: false
+                                    });
+                                    updateSalidaRow(json.data);          // modal
+                                    updateTableRow(json.data.solicitud_id); // tabla principal
+                                    cerrar();
+                                } else {
+                                    Swal.fire({ icon: 'error', text: json.error });
+                                }
+                            });
+                    });
+                };
+
+                /* ---------- select(s) de funcionarios ---------- */
+                if (contEdit) {
+                    if (s.funcionarios.length) {
+                        s.funcionarios.forEach((f, i) => {
+                            const grp = window.createSalidaFuncionarioSelectGroup(
+                                i === s.funcionarios.length - 1
+                            );
+                            grp.querySelector('select').value = f.id;
+                            contEdit.appendChild(grp);
+                        });
+                    } else {
+                        contEdit.appendChild(
+                            window.createSalidaFuncionarioSelectGroup(true)
+                        );
+                    }
+
+                    const max = parseInt(contEdit.dataset.totalFuncionarios, 10) || 12;
+                    contEdit.addEventListener('click', e => {
+                        const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
+                        const delBtn = e.target.closest('.removeSalidaFuncionarioBtn');
+                        if (addBtn) {
+                            const g = addBtn.closest('.funcionario-select-group');
+                            if (g) addSalidaFuncionarioSelect(g, contEdit, max);
+                        }
+                        if (delBtn) {
+                            const g = delBtn.closest('.funcionario-select-group');
+                            if (g) removeSalidaFuncionarioSelect(g);
+                        }
+                    });
+                }
+
+            });
+
+        /* ─────────────────────────── mostrar modal ───────────────────────── */
+        content.classList.add('animate__bounceIn');
+        modal.style.display = 'block';
+    }
+
+
+    function initializeEditSalidaFileModal () {
+
+    /* ─────────────── refs básicas ─────────────── */
+    const btn      = document.getElementById('openEditSalidaFileModal');
+    const modal    = document.getElementById('editSalidaFileModal');
+    if (!btn || !modal) return;          // solo ADMIN
+
+    const inputReal  = document.getElementById('edit_archivo_adjunto_salida');
+    const flagDel    = document.getElementById('edit_delete_archivo_salida');
+    const inputModal = document.getElementById('editSalidaFileModalInput');
+
+    const btnOK      = document.getElementById('editConfirmSalidaFileButton');
+    const btnClose   = modal.querySelector('.close');
+    const content    = modal.querySelector('.modal-content');
+
+    /* helper → destruye plugin y elimina wrapper .file-input */
+    const resetFileInput = (el) => {
+        if ($(el).data('fileinput')) { $(el).fileinput('destroy'); }
+        const wrap = el.closest('.file-input');   // contenedor que crea el plugin
+        if (wrap) {
+            wrap.parentNode.insertBefore(el, wrap); // movemos <input> 1 nivel arriba
+            wrap.remove();                          // adiós wrapper + previews viejas
+        }
+        el.value = '';                              // limpia FileList residual
+    };
+
+    /* ═══════════════════ abrir modal ═══════════════════ */
+    btn.onclick = () => {
+        const url = btn.dataset.currentFile || '';
+
+        resetFileInput(inputModal);                 //← limpieza antes de crear
+
+        $(inputModal).fileinput( buildFileInputOpts({ urlActual: url }) )
+            .on('filecleared', () => { flagDel.value = '1'; })
+            .on('fileselect', () => { flagDel.value = '0'; });
+
+        modal.style.display = 'block';
+    };
+
+    /* ═══════════════════ cerrar modal ═══════════════════ */
+    const cerrar = () => {
+        content.classList.remove('animate__bounceIn');
+        content.classList.add   ('animate__bounceOut');
+        content.addEventListener('animationend', () => {
+            modal.style.display = 'none';
+            content.classList.remove('animate__bounceOut');
+            content.classList.add   ('animate__bounceIn');
+
+            /* limpieza EXTRA para evitar duplicados en la siguiente apertura */
+            resetFileInput(inputModal);
+        }, { once:true });
+    };
+
+    btnClose.onclick = cerrar;
+    modal.onclick    = e => { if (e.target === modal) cerrar(); };
+
+    /* ═══════════════════ confirmar ═══════════════════ */
+    btnOK.onclick = () => {
+        const $real = $('#edit_archivo_adjunto_salida');
+
+        /* solo borrar */
+        if (flagDel.value === '1' && !inputModal.files.length) {
+            $real.fileinput('clear');
+            cerrar();
+            Swal.fire({ icon:'success', text:'Archivo eliminado.', heightAuto:false, scrollbarPadding:false });
+            return;
+        }
+
+        /* reemplazo */
+        if (inputModal.files.length) {
+            flagDel.value = '0';
+            const file = inputModal.files[0];
+
+            // pasa el FileList al input REAL
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            inputReal.files = dt.files;
+
+            // refrescamos vista previa del input REAL
+            if ($real.data('fileinput')) {
+                $real.fileinput('destroy');
+                const wrap = inputReal.closest('.file-input');
+                if (wrap) {
+                    wrap.parentNode.insertBefore(inputReal, wrap);
+                    wrap.remove();
+                }
+            }
+            $real.fileinput( buildFileInputOpts({ urlActual: URL.createObjectURL(file) }) )
+                 .on('filecleared', () => { flagDel.value = '1'; });
+
+            cerrar();
+            Swal.fire({ icon:'success', text:'Archivo reemplazado.', heightAuto:false, scrollbarPadding:false });
+            return;
+        }
+
+        Swal.fire({ icon:'error', text:'Seleccione un archivo o elimine el actual.', heightAuto:false, scrollbarPadding:false });
+    };
+}
+
+
+
+    /**
+ * Actualiza la fila de una salida ya mostrada en el modal.
+ * @param {{id:number, numero_salida:number, fecha_salida:string,
+ *          descripcion:string, funcionarios?:Array}} s
+ */
+    function updateSalidaRow(s) {
+        const row = document.querySelector(
+            `#tablaSalidas tbody tr[data-salida-id="${s.id}"]`
+        );
+        if (!row) return;
+
+        /* 1 ▸ posición de columnas (hay checkbox sólo para ADMIN / FUNCIONARIO) */
+        const hasCheckbox = ['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario);
+        const colNumero = hasCheckbox ? 1 : 0;
+        const colFecha = colNumero + 1;
+        const colDesc = colFecha + 1;
+        const colAdj = colDesc + 1;          // ← nueva referencia
+
+        /* 2 ▸ Nº de egreso y fecha */
+        row.cells[colNumero].textContent = s.numero_salida;
+        row.cells[colFecha].textContent = s.fecha_salida;
+
+        /* 3 ▸ Botón de descripción */
+        const btnDesc = row.cells[colDesc].querySelector('button');
+        if (btnDesc) {
+            btnDesc.onclick = () =>
+                openSalidaDescripcionModal(
+                    s.numero_salida,
+                    s.fecha_salida,
+                    s.descripcion,
+                    s.funcionarios || []
+                );
+        }
+
+        /* 4 ▸ Celda de adjunto — se reconstruye según exista archivo */
+        const tdAdj = row.cells[colAdj];
+        if (s.archivo_url) {
+            tdAdj.innerHTML = `
+            <a href="${s.archivo_url}" target="_blank" aria-label="Ver Archivo" title="Ver Archivo">
+                <button class="buttonLogin buttonPreview" style="background:#f7ea53;margin-inline:auto;">
+                    <span class="material-symbols-outlined bell">find_in_page</span>
+                    <div class="tooltip">Ver archivo de egreso</div>
+                </button>
+            </a>`;
+        } else {
+            tdAdj.textContent = 'No adjunto';
+        }
+    }
+    window.updateSalidaRow = updateSalidaRow;
+
+
+
+    function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
+        const modal = document.getElementById('descripcionSalidaModal');
+        if (!modal) { console.error("Modal 'descripcionSalidaModal' no encontrado."); return; }
+
+        const content = modal.querySelector('.modal-content');
+
+        /* ---------- rellenar campos ---------- */
+        document.getElementById('salida_numero').textContent = numeroSalida;
+        document.getElementById('salida_fecha').textContent = fechaSalida;
+        document.getElementById('salida_descripcion').textContent = descripcion || "Sin descripción";
+
+        const lista = document.getElementById('salida_funcionarios');
+        if (lista) {
+            lista.innerHTML = '';
+            if (funcionarios?.length) {
+                funcionarios.forEach(f => {
+                    const p = document.createElement('p');
+                    p.textContent = f.nombre;
+                    lista.appendChild(p);
+                });
+            } else {
+                lista.textContent = "No hay funcionarios asignados";
+            }
+        }
+
+        /* ---------- mostrar con animación ---------- */
+        modal.style.display = 'block';
+        content.classList.remove('animate__bounceOut');
+        content.classList.add('animate__animated', 'animate__bounceIn');
+
+        /* ---------- gestión de cierre ---------- */
+        const closeX = modal.querySelector('.close');
+
+        // 1️⃣ Queremos saber si el clic comenzó en el overlay
+        let downOnOverlay = false;
+        const onMouseDown = e => { downOnOverlay = (e.target === modal); };
+        const onMouseUp = e => {
+            if (downOnOverlay && e.target === modal) cerrar();   // empezó y terminó fuera
+            downOnOverlay = false;
+        };
+
+        // 2️⃣ Cerrar con la “X”
+        closeX.onclick = cerrar;
+
+        // 3️⃣ Listeners en el overlay
+        modal.addEventListener('mousedown', onMouseDown);
+        modal.addEventListener('mouseup', onMouseUp);
+
+        function cerrar() {
+            // Evita cierres duplicados
+            closeX.onclick = null;
+            modal.removeEventListener('mousedown', onMouseDown);
+            modal.removeEventListener('mouseup', onMouseUp);
+
+            // Animación de salida
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut', 'animate__animated');
+            }, { once: true });
+        }
+    }
+
     /* ===========================================================
    UTILIDADES GLOBALES  (cólalas al inicio de bnup_form.js)
    =========================================================== */
@@ -2748,255 +3127,7 @@
 
     /* ------------ el resto de tu código (initialize…, openModal…) -------- */
 
-    function openEditSalidaModal(salidaId) {
-        const modal = document.getElementById('editSalidaModal');
-        const content = modal.querySelector('.modal-content');
-        const form = document.getElementById('editSalidaForm');
-        const closeX = modal.querySelector('.close');
 
-        // limpiar
-        form.reset();
-        /* ───────────── aquí ↓ ───────────── */
-        const contEdit = document.getElementById('salidaFuncionariosContainerEdit');
-        if (contEdit) contEdit.innerHTML = '';   // ← comprueba que exista
-        /* ─────────────────────────────────── */
-
-        /* ---------- NUEVO COMPORTAMIENTO DE CIERRE ---------- */
-        // Queremos saber dónde empezó el clic
-        let downOnOverlay = false;
-
-        const onMouseDown = e => { downOnOverlay = (e.target === modal); };
-        const onMouseUp = e => {
-            if (downOnOverlay && e.target === modal) {   // comenzó y terminó fuera
-                cerrar();
-            }
-            downOnOverlay = false;                       // reseteamos
-        };
-
-        modal.addEventListener('mousedown', onMouseDown);
-        modal.addEventListener('mouseup', onMouseUp);
-
-        // quitamos los listeners cuando el modal se cierra para no duplicar
-        function cerrar() {
-            content.classList.remove('animate__bounceIn');
-            content.classList.add('animate__bounceOut');
-            content.addEventListener('animationend', () => {
-                modal.style.display = 'none';
-                content.classList.remove('animate__bounceOut');
-                modal.removeEventListener('mousedown', onMouseDown);
-                modal.removeEventListener('mouseup', onMouseUp);
-            }, { once: true });
-        }
-
-        closeX.onclick = cerrar;
-
-        // cargar datos
-        fetch(`/bnup/edit_salida/?salida_id=${salidaId}`)
-            .then(r => r.json()).then(json => {
-                if (!json.success) { Swal.fire({ icon: 'error', text: json.error }); return; }
-                const s = json.data;
-                document.getElementById('edit_salida_id').value = s.id;
-                const numeroInput = document.getElementById('edit_numero_salida');
-                if (numeroInput) numeroInput.value = s.numero_salida;
-
-                const fechaInput = document.getElementById('edit_fecha_salida');
-                if (fechaInput) fechaInput.value = s.fecha_salida;
-                document.getElementById('edit_descripcion_salida').value = s.descripcion || '';
-                document.getElementById('guardarEdicionSalida').onclick = e => {
-                    e.preventDefault();
-                    const form = document.getElementById('editSalidaForm');
-
-                    // normalizar descripción
-                    const desc = form.querySelector('#edit_descripcion_salida');
-                    if (desc) standardizeInput(desc);
-                    const fd = new FormData(form);
-
-                    Swal.fire({
-                        title: '¿Guardar cambios?',
-                        icon: 'warning', showCancelButton: true,
-                        confirmButtonColor: '#4BBFE0', cancelButtonColor: '#E73C45',
-                        heightAuto: false,
-                        scrollbarPadding: false,
-                    }).then(res => {
-                        if (!res.isConfirmed) return;
-
-                        fetch('/bnup/edit_salida/', {
-                            method: 'POST',
-                            headers: { 'X-CSRFToken': getCSRFToken() },
-                            body: fd
-                        })
-                            .then(r => r.json()).then(json => {
-                                if (json.success) {
-                                    Swal.fire({ icon: 'success', title: 'Egreso actualizado', timer: 1500, showConfirmButton: false, heightAuto: false, scrollbarPadding: false, });
-                                    // refrescar la fila en la tabla del modal
-                                    updateSalidaRow(json.data);
-                                    // refrescar contador en tabla principal
-                                    updateTableRow(json.data.solicitud_id);
-                                    document.querySelector('#editSalidaModal .close').click();
-                                } else {
-                                    Swal.fire({ icon: 'error', text: json.error });
-                                }
-                            });
-                    });
-                };
-
-
-                /* Añadir selects solo si hay contenedor */
-                if (contEdit) {
-                    if (s.funcionarios.length) {
-                        // caso normal → pinta los que existan
-                        s.funcionarios.forEach((f, i) => {
-                            const grp = window.createSalidaFuncionarioSelectGroup(
-                                i === s.funcionarios.length - 1   // el último lleva botón “+”
-                            );
-                            grp.querySelector('select').value = f.id;
-                            contEdit.appendChild(grp);
-                        });
-                    } else {
-                        // ↳ LISTA VACÍA → al menos un select en blanco
-                        const grp = window.createSalidaFuncionarioSelectGroup(true);
-                        contEdit.appendChild(grp);
-                    }
-
-                    /* listeners internos del contenedor */
-                    const max = parseInt(contEdit.dataset.totalFuncionarios, 10) || 12;
-                    contEdit.addEventListener('click', e => {
-                        const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
-                        const delBtn = e.target.closest('.removeSalidaFuncionarioBtn');
-
-                        if (addBtn) {
-                            // 👉 sube hasta el grupo real
-                            const group = addBtn.closest('.funcionario-select-group');
-                            if (group) addSalidaFuncionarioSelect(group, contEdit, max);
-                            return;
-                        }
-                        if (delBtn) {
-                            const group = delBtn.closest('.funcionario-select-group');
-                            if (group) removeSalidaFuncionarioSelect(group);
-                        }
-                    });
-                }
-
-                // const maxSelects =
-                //     parseInt(cont.getAttribute('data-total-funcionarios'), 10) || 12;
-
-                // cont.addEventListener('click', function handleClick(e) {
-                //     const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
-                //     const removeBtn = e.target.closest('.removeSalidaFuncionarioBtn');
-
-                //     if (addBtn) {
-                //         const currentGroup = addBtn.parentElement;
-                //         addSalidaFuncionarioSelect(currentGroup, cont, maxSelects);
-                //     } else if (removeBtn) {
-                //         const currentGroup = removeBtn.parentElement;
-                //         removeSalidaFuncionarioSelect(currentGroup);
-                //     }
-                // });
-
-            })
-
-        // mostrar
-        content.classList.add('animate__bounceIn');
-        modal.style.display = 'block';
-    }
-
-    /**
- * Actualiza la fila de una salida ya mostrada en el modal.
- * @param {{id:number, numero_salida:number, fecha_salida:string,
- *          descripcion:string, funcionarios?:Array}} s
- */
-    function updateSalidaRow(s) {
-        const row = document.querySelector(
-            `#tablaSalidas tbody tr[data-salida-id="${s.id}"]`
-        );
-        if (!row) return;
-
-        /* ➊ ¿La tabla lleva checkbox al principio? */
-        const hasCheckbox = ['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario);
-        let col = hasCheckbox ? 1 : 0;   // ← ¡AQUÍ estaba el error!
-
-        /* ➋ Nº de egreso y fecha */
-        row.cells[col++].textContent = s.numero_salida;
-        row.cells[col++].textContent = s.fecha_salida;
-
-        /* ➌ Botón de descripción (se mantiene en la misma celda) */
-        const btn = row.cells[col].querySelector('button');
-        if (btn) {
-            btn.onclick = () =>
-                openSalidaDescripcionModal(
-                    s.numero_salida,
-                    s.fecha_salida,
-                    s.descripcion,
-                    s.funcionarios || []
-                );
-        }
-    }
-    window.updateSalidaRow = updateSalidaRow;   //  ←  make it global
-
-
-    function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
-        const modal = document.getElementById('descripcionSalidaModal');
-        if (!modal) { console.error("Modal 'descripcionSalidaModal' no encontrado."); return; }
-
-        const content = modal.querySelector('.modal-content');
-
-        /* ---------- rellenar campos ---------- */
-        document.getElementById('salida_numero').textContent = numeroSalida;
-        document.getElementById('salida_fecha').textContent = fechaSalida;
-        document.getElementById('salida_descripcion').textContent = descripcion || "Sin descripción";
-
-        const lista = document.getElementById('salida_funcionarios');
-        if (lista) {
-            lista.innerHTML = '';
-            if (funcionarios?.length) {
-                funcionarios.forEach(f => {
-                    const p = document.createElement('p');
-                    p.textContent = f.nombre;
-                    lista.appendChild(p);
-                });
-            } else {
-                lista.textContent = "No hay funcionarios asignados";
-            }
-        }
-
-        /* ---------- mostrar con animación ---------- */
-        modal.style.display = 'block';
-        content.classList.remove('animate__bounceOut');
-        content.classList.add('animate__animated', 'animate__bounceIn');
-
-        /* ---------- gestión de cierre ---------- */
-        const closeX = modal.querySelector('.close');
-
-        // 1️⃣ Queremos saber si el clic comenzó en el overlay
-        let downOnOverlay = false;
-        const onMouseDown = e => { downOnOverlay = (e.target === modal); };
-        const onMouseUp = e => {
-            if (downOnOverlay && e.target === modal) cerrar();   // empezó y terminó fuera
-            downOnOverlay = false;
-        };
-
-        // 2️⃣ Cerrar con la “X”
-        closeX.onclick = cerrar;
-
-        // 3️⃣ Listeners en el overlay
-        modal.addEventListener('mousedown', onMouseDown);
-        modal.addEventListener('mouseup', onMouseUp);
-
-        function cerrar() {
-            // Evita cierres duplicados
-            closeX.onclick = null;
-            modal.removeEventListener('mousedown', onMouseDown);
-            modal.removeEventListener('mouseup', onMouseUp);
-
-            // Animación de salida
-            content.classList.remove('animate__bounceIn');
-            content.classList.add('animate__bounceOut');
-            content.addEventListener('animationend', () => {
-                modal.style.display = 'none';
-                content.classList.remove('animate__bounceOut', 'animate__animated');
-            }, { once: true });
-        }
-    }
 
 
     function closeSalidaDescripcionModal() {

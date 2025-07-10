@@ -505,7 +505,9 @@ def edit_salida(request):
             "numero_salida": salida.numero_salida,
             "fecha_salida":  salida.fecha_salida.strftime("%Y-%m-%d"),
             "descripcion":   salida.descripcion or "",
-            "funcionarios":  [
+            "archivo_url":   salida.archivo_adjunto_salida.url      # ★ NUEVO
+                            if salida.archivo_adjunto_salida else "",
+            "funcionarios": [
                 {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
             ],
         }
@@ -528,8 +530,18 @@ def edit_salida(request):
     salida.descripcion = request.POST.get("descripcion_salida", "").strip()
 
     # ❸ Archivo adjunto (opcional)
+    delete_flag = request.POST.get("delete_archivo_salida") == "1"
+
+    if delete_flag and salida.archivo_adjunto_salida:
+        salida.archivo_adjunto_salida.delete(save=False)
+        salida.archivo_adjunto_salida = None
+
     if request.FILES.get("archivo_adjunto_salida"):
         salida.archivo_adjunto_salida = request.FILES["archivo_adjunto_salida"]
+        # (si sube uno nuevo, ignoramos delete_flag)
+
+    # --------------------------------------------------------
+
 
     # ❹ Funcionarios (sólo ADMIN / SECRETARIA / JEFE)
     if tipo in ["ADMIN", "SECRETARIA", "JEFE"]:
@@ -540,13 +552,15 @@ def edit_salida(request):
 
     # ─────────────────────────────────────────────── respuesta JSON final ─
     return JsonResponse({
-        "success": True,
-        "data": {
+    "success": True,
+    "data": {
             "id":            salida.id,
             "solicitud_id":  salida.ingreso_solicitud.id,
             "numero_salida": salida.numero_salida,
             "fecha_salida":  salida.fecha_salida.strftime("%d/%m/%Y"),
             "descripcion":   salida.descripcion or "",
+            "archivo_url":   salida.archivo_adjunto_salida.url     # ★ NUEVO
+                            if salida.archivo_adjunto_salida else "",
             "funcionarios": [
                 {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
             ],
