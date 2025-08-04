@@ -34,7 +34,7 @@
   font-weight: 500;
 }
 
-.descripcion-cell div{
+.descripcion-cell div {
   display: flex;
   justify-content: space-between;
 }
@@ -117,12 +117,49 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
   border-bottom: 1px #16233E dashed;
 }
 
-.celda-adjunto div{
+.celda-adjunto div {
   display: flex;
   justify-content: center;
 }
 
-/* #tablaEgresosAU tbody tr td span {
+#preview_funcionario {
   display: flex;
-  justify-content: space-between;
-} */
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+#preview_destinatario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.multi-select-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selected-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.selected-item {
+  background: #c8e6c9;
+  border: 1px solid #4caf50;
+  padding: 4px 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.selected-item span {
+  margin-left: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #d32f2f;
+}

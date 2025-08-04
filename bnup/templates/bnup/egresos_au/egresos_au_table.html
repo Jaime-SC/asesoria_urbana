@@ -23,19 +23,26 @@
         <tr
           data-numero="{{ e.numero_egreso }}"
           data-fecha="{{ e.fecha_egreso }}"
-          data-funcionario="{{ e.funcionario.nombre }}"
+          data-funcionario="{% for f in e.funcionarios.all %}{{ f.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}"
           data-destinatario="{{ e.destinatario.nombre }}"
           data-descripcion="{{ e.descripcion|default:''|escapejs }}"
         > 
           <td>{{ e.numero_egreso }}</td>
-          <td>{{ e.fecha_egreso }}</td>
-          <td>{{ e.funcionario.nombre }}</td>
+          <td>{{ e.fecha_egreso|date:"d/m/Y" }}</td>
+          <td>
+            {% for f in e.funcionarios.all %}
+              {{ f.nombre }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              —
+            {% endfor %}
+          </td>
+
           <td>{{ e.destinatario.nombre }}</td>
           <td class="descripcion-cell">
             <div>
               <span class="span-descripcion-cell" style="cursor:pointer;">
-                {{ e.descripcion|default:"—"|truncatechars:40 }}
-                {% if e.descripcion|length > 40 %} {% endif %}
+                {{ e.descripcion|default:"—"|truncatechars:60 }}
+                {% if e.descripcion|length > 60 %} {% endif %}
               </span>
               <span class="material-symbols-outlined preview-btn">preview</span>
             </div>

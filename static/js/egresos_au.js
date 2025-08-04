@@ -89,6 +89,78 @@
             overlay.style.display = 'flex';
             content.classList.add('animate__animated', 'animate__bounceIn');
 
+            const selectFuncionarios = content.querySelector('#multi_funcionarios');
+            const displaySeleccionados = content.querySelector('#funcionariosSeleccionados');
+            const hiddenInput = content.querySelector('#funcionariosHidden');
+            const seleccionados = new Map();  // clave: ID, valor: nombre
+
+            selectFuncionarios.addEventListener('change', () => {
+                const selectedOption = selectFuncionarios.selectedOptions[0];
+                const id = selectedOption.value;
+                const nombre = selectedOption.textContent;
+
+                if (!id || seleccionados.has(id)) return;
+
+                seleccionados.set(id, nombre);
+
+                // Deshabilitar la opción seleccionada
+                selectedOption.disabled = true;
+
+                updateFuncionariosUI();
+                selectFuncionarios.selectedIndex = 0;
+            });
+
+
+            function updateFuncionariosUI() {
+                const yaRenderizados = new Set(
+                    Array.from(displaySeleccionados.children).map(el => el.dataset.id)
+                );
+
+                seleccionados.forEach((nombre, id) => {
+                    if (!yaRenderizados.has(id)) {
+                        const span = document.createElement('span');
+                        span.className = 'selected-item animate__animated animate__bounceIn';
+                        span.setAttribute('data-id', id);
+                        span.innerHTML = `${nombre}<span data-id="${id}" class="material-symbols-outlined">close_small</span>`;
+                        displaySeleccionados.appendChild(span);
+                    }
+                });
+
+                hiddenInput.value = Array.from(seleccionados.keys()).join(',');
+            }
+
+
+
+
+            displaySeleccionados.addEventListener('click', (e) => {
+                if (e.target.tagName === 'SPAN' && e.target.dataset.id) {
+                    const id = e.target.dataset.id;
+                    const spanToRemove = e.target.closest('.selected-item');
+
+                    if (!spanToRemove) return;
+
+                    // aplicar animación de salida
+                    spanToRemove.classList.remove('animate__bounceIn');
+                    spanToRemove.classList.add('animate__animated', 'animate__bounceOut');
+
+                    // esperar a que termine animación y luego eliminar del DOM y Map
+                    spanToRemove.addEventListener('animationend', () => {
+                        spanToRemove.remove();
+                        seleccionados.delete(id);
+
+                        // actualizar campo oculto
+                        hiddenInput.value = Array.from(seleccionados.keys()).join(',');
+
+                        // volver a habilitar opción en select
+                        const optionToEnable = selectFuncionarios.querySelector(`option[value="${id}"]`);
+                        if (optionToEnable) optionToEnable.disabled = false;
+                    }, { once: true });
+                }
+            });
+
+
+
+
             // bind cierre
             const spanX = content.querySelector('.close');
             if (spanX) spanX.onclick = cerrarFormModal;
@@ -99,7 +171,13 @@
                 evt.preventDefault();
                 if (!numeroValido) {
                     inputNumero.focus();
-                    return Swal.fire('Error', 'El número de egreso ya existe.', 'error');
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El número de egreso ya existe',
+                        heightAuto: false,
+                        scrollbarPadding: false
+                    });
                 }
                 const data = new FormData(form);
                 const res = await fetch('/bnup/egresos_au_create/', {
@@ -112,44 +190,76 @@
                     cerrarFormModal();
 
                     // inserta fila nueva
-                    const { numero_egreso, fecha_egreso, descripcion, funcionario, destinatario, archivo_url } = json.egreso;
+                    const { numero_egreso, fecha_egreso, descripcion, funcionarios, destinatario, archivo_url } = json.egreso;
+                    // ➤ Formatear fecha
+                    function formatFecha(fechaStr) {
+                        if (!fechaStr || typeof fechaStr !== 'string' || !fechaStr.includes('-')) return fechaStr;
+                        const [a, m, d] = fechaStr.split('-');
+                        return `${d}/${m}/${a}`;
+                    }
+
+                    const fechaFormateada = formatFecha(fecha_egreso);
+
                     const tabla = document.getElementById('tablaEgresosAU');
                     const tbody = tabla.querySelector('tbody');
                     const tr = document.createElement('tr');
+
                     tr.dataset.numero = numero_egreso;
-                    tr.dataset.fecha = fecha_egreso;
-                    tr.dataset.funcionario = funcionario;
+                    tr.dataset.fecha = fechaFormateada;
+                    tr.dataset.funcionario = funcionarios;
                     tr.dataset.destinatario = destinatario;
-                    tr.dataset.descripcion = descripcion;
+                    tr.dataset.descripcion = descripcion || '';
+
                     tr.innerHTML = `
-            <td>${numero_egreso}</td>
-            <td>${fecha_egreso}</td>
-            <td>${funcionario}</td>
-            <td>${destinatario}</td>
-            <td>
-              <span class="descripcion-preview">
-                ${descripcion || '—'}
-                <span class="material-symbols-outlined preview-btn">preview</span>
-              </span>
-            </td>
-            <td>${archivo_url
-                            ? `<div class="icon-container">
-                     <a href="${archivo_url}" target="_blank" style="text-decoration:none;">
-                       <button class="buttonLogin buttonPreview">
-                         <span class="material-symbols-outlined bell">find_in_page</span>
-                       </button>
-                     </a>
-                     <div class="tooltip">Ver adjunto</div>
-                   </div>`
-                            : '—'
-                        }</td>`;
+                        <td>${numero_egreso}</td>
+                        <td>${fechaFormateada}</td>
+                        <td>${funcionarios}</td>
+                        <td>${destinatario}</td>
+                        <td class="descripcion-cell">
+                            <div>
+                                <span class="span-descripcion-cell" style="cursor:pointer;">
+                                    ${descripcion ? descripcion.slice(0, 40) : '—'}
+                                </span>
+                                <span class="material-symbols-outlined preview-btn">preview</span>
+                            </div>
+                        </td>
+                        <td class="celda-adjunto">
+                            ${archivo_url
+                            ? `<div>
+                                    <div class="icon-container">
+                                        <a href="${archivo_url}" target="_blank" style="text-decoration:none;">
+                                            <button class="buttonLogin buttonPreview">
+                                                <span class="material-symbols-outlined bell">find_in_page</span>
+                                            </button>
+                                        </a>
+                                        <div class="tooltip">Ver adjunto</div>
+                                    </div>
+                                </div>`
+
+                            : '—'}
+                        </td>
+                    `;
+
                     tbody.insertBefore(tr, tbody.firstChild);
                     initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
 
-                    Swal.fire('Éxito', 'Egreso creado', 'success');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'Egreso creado',
+                        heightAuto: false,
+                        scrollbarPadding: false
+                    });
                 } else {
-                    Swal.fire('Error', json.error || 'Algo falló', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: json.error || 'Algo falló',
+                        heightAuto: false,
+                        scrollbarPadding: false
+                    });
                 }
+
             };
 
             return;
@@ -166,44 +276,47 @@
 
             modal.querySelector('#preview_numero').textContent = tr.dataset.numero;
             modal.querySelector('#preview_fecha').textContent = tr.dataset.fecha;
-            modal.querySelector('#preview_funcionario').textContent = tr.dataset.funcionario;
+            const spanFuncionario = modal.querySelector('#preview_funcionario');
+            const nombres = (tr.dataset.funcionario || '').split(',').map(s => s.trim());
+            spanFuncionario.innerHTML = nombres.map(nombre => `<div>${nombre}</div>`).join('');
+
             modal.querySelector('#preview_destinatario').textContent = tr.dataset.destinatario;
             // aquí usamos el texto completo, no el truncado
             modal.querySelector('#preview_descripcion').textContent = tr.dataset.descripcion || '—';
 
             // (resto de tu lógica de animación y cierre…)
-        
 
 
-        // función de cierre
-        function cerrarPreview() {
-            spanX.onclick = null;
-            modal.classList.remove('animate__bounceIn');
-            modal.classList.add('animate__animated', 'animate__bounceOut');
-            modal.addEventListener('animationend', () => {
-                overlay.style.display = 'none';
-                modal.classList.remove('animate__animated', 'animate__bounceOut');
-            }, { once: true });
+
+            // función de cierre
+            function cerrarPreview() {
+                spanX.onclick = null;
+                modal.classList.remove('animate__bounceIn');
+                modal.classList.add('animate__animated', 'animate__bounceOut');
+                modal.addEventListener('animationend', () => {
+                    overlay.style.display = 'none';
+                    modal.classList.remove('animate__animated', 'animate__bounceOut');
+                }, { once: true });
+            }
+
+            // abrir con animación
+            overlay.style.display = 'flex';
+            modal.classList.add('animate__animated', 'animate__bounceIn');
+
+            // bind cierre
+            const spanX = modal.querySelector('.close');
+            if (spanX) spanX.onclick = cerrarPreview;
+
+            return;
         }
-
-        // abrir con animación
-        overlay.style.display = 'flex';
-        modal.classList.add('animate__animated', 'animate__bounceIn');
-
-        // bind cierre
-        const spanX = modal.querySelector('.close');
-        if (spanX) spanX.onclick = cerrarPreview;
-
-        return;
-    }
 
         // 4) Volver a BNUP
         const btnBack = event.target.closest('#backToBNUP');
-    if (btnBack) {
-        event.preventDefault();
-        const bnupLink = document.querySelector('a[data-content="BNUP"]');
-        if (bnupLink) bnupLink.click();
-        return;
-    }
-});
-}) ();
+        if (btnBack) {
+            event.preventDefault();
+            const bnupLink = document.querySelector('a[data-content="BNUP"]');
+            if (bnupLink) bnupLink.click();
+            return;
+        }
+    });
+})();
