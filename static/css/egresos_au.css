@@ -1,0 +1,128 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  /* JS lo cambia a flex */
+  justify-content: center;
+  /* centra horizontal */
+  align-items: center;
+  /* centra vertical */
+  z-index: 9999;
+}
+
+.modal-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+}
+
+/* Tu nuevo botón de cierre (esquina superior derecha) */
+.modal-content .close {
+  cursor: pointer;
+}
+
+#tablaEgresosAU {
+  font-size: 16px !important;
+  font-weight: 500;
+}
+
+.descripcion-cell div{
+  display: flex;
+  justify-content: space-between;
+}
+
+.descripcion-cell:hover .material-symbols-outlined {
+  color: red;
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.span-descripcion-cell {
+  display: inline-block;
+  /* para poder aplicar width y overflow */
+  max-width: 300px;
+  /* ajusta al ancho que quieras mostrar */
+  white-space: nowrap;
+  /* líneas únicas */
+  overflow: hidden;
+  position: relative;
+  /* para el ::after */
+  vertical-align: middle;
+}
+
+
+
+/* el “fade” */
+.span-descripcion-cell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4rem;
+  /* ancho del degradado, ajusta a tu gusto */
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(201 232 244) 75%)
+}
+
+tr:hover .span-descripcion-cell::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(254, 241, 145) 75%)
+}
+
+.tableInfor_container tr:nth-child(even) .span-descripcion-cell::after {
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(242 242 242) 75%);
+}
+
+tr:nth-child(even):hover .span-descripcion-cell::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(254, 241, 145) 75%)
+}
+
+/* opcional: al hacer hover aclaras el texto o quitas el fade */
+.span-descripcion-cell:hover::after {
+  background: none;
+}
+
+
+.modal-field {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed gray;
+}
+
+.modal-field.descripcion {
+  flex-direction: column;
+  border-bottom: 0px;
+}
+
+.modal-field.descripcion #preview_descripcion {
+  margin-top: 0px !important;
+}
+
+#tablaEgresosAU {
+  margin-top: 10px !important;
+}
+
+#tablaEgresosAU tbody tr td {
+  border-inline: 1px #16233E dashed;
+  border-bottom: 1px #16233E dashed;
+}
+
+.celda-adjunto div{
+  display: flex;
+  justify-content: center;
+}
+
+/* #tablaEgresosAU tbody tr td span {
+  display: flex;
+  justify-content: space-between;
+} */

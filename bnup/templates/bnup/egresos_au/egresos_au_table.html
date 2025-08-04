@@ -1,0 +1,77 @@
+{% load static %}
+<!— Carga tu CSS de modal —>
+<link rel="stylesheet" href="{% static 'css/egresos_au.css' %}" />
+
+<div id="egresosAUTable">
+  <div>
+    <div id="paginationEgresosAU" class="pagination"></div>
+  </div>
+
+  <table id="tablaEgresosAU">
+    <thead>
+      <tr>
+        <th>Nº Egreso</th>
+        <th>Fecha</th>
+        <th>Funcionario</th>
+        <th>Destinatario</th>
+        <th>Descripción</th>       {# ← nueva columna #}
+        <th>Adjunto</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in egresos %}
+        <tr
+          data-numero="{{ e.numero_egreso }}"
+          data-fecha="{{ e.fecha_egreso }}"
+          data-funcionario="{{ e.funcionario.nombre }}"
+          data-destinatario="{{ e.destinatario.nombre }}"
+          data-descripcion="{{ e.descripcion|default:''|escapejs }}"
+        > 
+          <td>{{ e.numero_egreso }}</td>
+          <td>{{ e.fecha_egreso }}</td>
+          <td>{{ e.funcionario.nombre }}</td>
+          <td>{{ e.destinatario.nombre }}</td>
+          <td class="descripcion-cell">
+            <div>
+              <span class="span-descripcion-cell" style="cursor:pointer;">
+                {{ e.descripcion|default:"—"|truncatechars:40 }}
+                {% if e.descripcion|length > 40 %} {% endif %}
+              </span>
+              <span class="material-symbols-outlined preview-btn">preview</span>
+            </div>
+          </td>
+          <td class="celda-adjunto">
+            <div>
+              {% if e.archivo_adjunto %}
+                <div class="icon-container">
+                  <a href="{{ e.archivo_adjunto.url }}" target="_blank" style="text-decoration: none;">
+                    <button class="buttonLogin buttonPreview">
+                      <span class="material-symbols-outlined bell">find_in_page</span>
+                    </button>
+                  </a>
+                  <div class="tooltip">Ver adjunto</div>
+                </div>
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6">No hay egresos registrados.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+
+  </table>  
+
+
+  
+</div>
+{% include 'bnup/egresos_au/preview_modal.html' %}
+
+<!-- NO lo tengas aquí dentro: -->
+  <div id="egresoModalOverlay" class="modal-overlay" style="display:none;">
+    <div class="modal-content"></div>
+  </div>

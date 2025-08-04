@@ -7,17 +7,17 @@ from .models import (
     Funcionario,
     TipoRecepcion,
     TipoSolicitud,
+    EgresoAU
 )
 from collections import defaultdict
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import OuterRef, Subquery, IntegerField, F
 from django.db.models.functions import TruncWeek, TruncMonth
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from dateutil.relativedelta import relativedelta
 from principal.models import PerfilUsuario
@@ -27,7 +27,7 @@ from bnup.models import Funcionario  # asegúrate de tenerlo importado
 from collections import defaultdict
 from django.db.models import Count
 from datetime import datetime, date
-
+from django.urls import reverse
 
 def bnup_form(request):
     """
@@ -1468,5 +1468,137 @@ def add_departamento(request):
         )
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "error": "Datos inválidos."})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
+
+
+@login_required
+def egresos_au_fragment(request):
+    """
+    Devuelve el fragmento HTML con la tabla de egresos AU (máx. 100).
+    """
+    egresos = (
+        EgresoAU.objects
+        .prefetch_related('funcionarios')  # <- cambio clave
+        .select_related('destinatario')
+        .order_by('-numero_egreso')[:100]
+    )
+    return render(request, 'bnup/egresos_au/egresos_au_table.html', {
+        'egresos': egresos
+    })
+
+@login_required
+def egresos_au_list(request):
+    egresos = (
+        EgresoAU.objects
+        .prefetch_related('funcionarios')
+        .select_related('destinatario')
+        .order_by('-numero_egreso')
+    )
+    return render(request, 'bnup/egresos_au_list.html', {'egresos': egresos})
+
+
+@login_required
+@require_GET
+def validate_egreso_numero(request):
+    numero = request.GET.get("numero")
+    exists = EgresoAU.objects.filter(numero_egreso=numero).exists() if numero else False
+    return JsonResponse({"exists": exists})
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def egresos_au_create(request):
+    if request.method == "GET":
+        funcionarios = Funcionario.objects.order_by('nombre')
+        departamentos = Departamento.objects.order_by('nombre')
+        return render(request, "bnup/egresos_au/egresos_au_form.html", {
+            "funcionarios": funcionarios,
+            "departamentos": departamentos,
+        })
+
+    # POST → Crear nuevo egreso
+    numero = request.POST.get("numero_egreso")
+    fecha_str = request.POST.get("fecha_egreso")
+    descr     = request.POST.get("descripcion", "").strip()
+    dest_id   = request.POST.get("destinatario")
+    archivo   = request.FILES.get("archivo_adjunto")
+    funcionarios_ids = request.POST.getlist("funcionarios")  # <- muchos
+
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return JsonResponse({"success": False, "error": "Fecha de egreso inválida."})
+
+    try:
+        # Crear egreso sin funcionario aún
+        eg = EgresoAU.objects.create(
+            numero_egreso=numero,
+            fecha_egreso=fecha,
+            descripcion=descr,
+            destinatario_id=dest_id or None,
+            archivo_adjunto=archivo or None
+        )
+
+        # Asignar funcionarios (ManyToMany)
+        if funcionarios_ids:
+            eg.funcionarios.set(Funcionario.objects.filter(id__in=funcionarios_ids))
+
+        # Mostrar nombres concatenados
+        nombres_funcionarios = ", ".join(f.nombre for f in eg.funcionarios.all())
+
+        data = {
+            "id": eg.id,
+            "numero_egreso": eg.numero_egreso,
+            "fecha_egreso": eg.fecha_egreso.strftime("%Y-%m-%d"),
+            "descripcion": eg.descripcion,
+            "funcionario": nombres_funcionarios,
+            "destinatario": eg.destinatario.nombre if eg.destinatario else "",
+            "archivo_url": eg.archivo_adjunto.url if eg.archivo_adjunto else ""
+        }
+        return JsonResponse({"success": True, "egreso": data})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
+    if request.method == "GET":
+        # envía sólo el fragmento del formulario
+        funcionarios = Funcionario.objects.order_by('nombre')
+        departamentos = Departamento.objects.order_by('nombre')
+        return render(request, "bnup/egresos_au/egresos_au_form.html", {
+            "funcionarios": funcionarios,
+            "departamentos": departamentos,
+        })
+
+    # POST → crear nuevo EgresoAU
+    numero = request.POST.get("numero_egreso")
+    fecha_str = request.POST.get("fecha_egreso")
+    try:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return JsonResponse({"success": False, "error": "Fecha de egreso inválida."})
+
+    descr   = request.POST.get("descripcion")
+    func_id = request.POST.get("funcionario")
+    dest_id = request.POST.get("destinatario")
+    archivo = request.FILES.get("archivo_adjunto")
+
+    try:
+        eg = EgresoAU.objects.create(
+            numero_egreso=numero,
+            fecha_egreso=fecha,
+            descripcion=descr or "",
+            funcionario_id=func_id,
+            destinatario_id=dest_id or None,
+            archivo_adjunto=archivo or None
+        )
+        data = {
+            "id": eg.id,
+            "numero_egreso": eg.numero_egreso,
+            "fecha_egreso": eg.fecha_egreso.strftime("%Y-%m-%d"),
+            "descripcion": eg.descripcion,                 # ← lo añadimos
+            "funcionario": eg.funcionario.nombre,
+            "destinatario": eg.destinatario.nombre if eg.destinatario else "",
+            "archivo_url": eg.archivo_adjunto.url if eg.archivo_adjunto else ""
+        }
+        return JsonResponse({"success": True, "egreso": data})
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})

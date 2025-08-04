@@ -1,5 +1,4 @@
 # bnup/models.py
-
 from django.db import models
 
 class Departamento(models.Model):
@@ -68,3 +67,40 @@ class SalidaSOLICITUD(models.Model):
 
     def __str__(self):
         return f"Salida Nº {self.numero_salida} - Solicitud Nº {self.ingreso_solicitud.numero_ingreso}"
+
+class EgresoAU(models.Model):
+    numero_egreso = models.IntegerField("Número de Egreso", unique=True)
+    fecha_egreso = models.DateField("Fecha de Egreso")
+    descripcion = models.TextField("Descripción", blank=True, null=True)
+
+    # Cambiamos de ForeignKey a ManyToManyField
+    funcionarios = models.ManyToManyField(
+        Funcionario,
+        related_name='egresos_au',
+        verbose_name="Funcionarios responsables"
+    )
+
+    destinatario = models.ForeignKey(
+        'Departamento',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='egresos_recibidos',
+        verbose_name="Destinatario"
+    )
+    archivo_adjunto = models.FileField(
+        "Archivo Adjunto",
+        upload_to='egresos_adjuntos/',
+        blank=True,
+        null=True
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-numero_egreso']
+        verbose_name = "Egreso AU"
+        verbose_name_plural = "Egresos AU"
+
+    def __str__(self):
+        return f"Egreso {self.numero_egreso} — {self.fecha_egreso}"

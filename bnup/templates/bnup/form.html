@@ -19,8 +19,11 @@
         </div>
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'JEFE' %}
         {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
-          <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
-        {% endif %}
+          <div>
+            <button id="egresosAUButton" style="justify-content: flex-start; width: 150px; background-color: #73bba1;" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+          </div>
+          {% endif %}
       </div>
 
       <!-- Ventana modal para el formulario BNUP -->
@@ -53,7 +56,7 @@
                   <input type="email" name="correo_solicitante" id="correoSolicitante" />
                 </div>
                 <!-- Nuevo Campo: Fecha -->
-                <div class="form-group" style="width: 33%;">
+                <div class="form-group">
                   <label for="fecha_solicitud">Fecha de Solicitud</label>
                   <input type="date" name="fecha_solicitud" id="fecha_solicitud" />
                 </div>
@@ -390,7 +393,7 @@
 </div>
 
 <!-- Modal para descripción -->
-<div id="descripcionModal" class="modal">
+<div id="descripcionModal" class="modal" style="margin-inline: 0px;">
   <div class="modal-content animate__animated">
     <div style="display: flex; align-items: center; justify-content: space-between;">
       <h2>Vista Previa</h2>

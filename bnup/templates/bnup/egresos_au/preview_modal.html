@@ -1,0 +1,30 @@
+{% load static %}
+<!-- Modal para vista previa de descripción -->
+<div id="descripcionModalOverlay" class="modal-overlay" style="display:none;">
+  <div id="descripcionModal" class="modal-content animate__animated">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <h2>Vista Previa</h2>
+      <span class="close">
+        <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
+      </span>
+    </div>
+    <div class="modal-info" style="font-family: 'Space Mono';">
+      <div class="modal-field">
+        <strong>Nº Egreso:</strong> <span id="preview_numero"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Fecha:</strong> <span id="preview_fecha"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Funcionario:</strong> <span id="preview_funcionario"></span>
+      </div>
+      <div class="modal-field">
+        <strong>Destinatario:</strong> <span id="preview_destinatario"></span>
+      </div>
+      <div class="modal-field descripcion">
+        <strong>Descripción:</strong>
+        <div id="preview_descripcion" style="margin-top: .5rem; text-align: justify;"></div>
+      </div>
+    </div>
+  </div>
+</div>
