@@ -2087,7 +2087,7 @@
         const thSelectAll = salidaSelectAll?.closest('th');
         if (thSelectAll) {
             thSelectAll.style.display =
-                (['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario) ? '' : 'none');
+                (['ADMIN', 'FUNCIONARIO', 'SECRETARIA'].includes(tipo_usuario) ? '' : 'none');
         }
 
         if (btnEliminarSalidas) {
@@ -2112,7 +2112,7 @@
                         row.dataset.salidaId = salida.id;
 
                         // — nuevo td checkbox sólo ADMIN —
-                        if (['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario)) {
+                        if (['ADMIN', 'FUNCIONARIO', 'SECRETARIA'].includes(tipo_usuario)) {
                             const chkTd = document.createElement('td');
                             chkTd.style.textAlign = 'center';
                             const chk = document.createElement('input');
@@ -2517,7 +2517,7 @@
                                         const row = document.createElement('tr');
 
                                         // 1) Checkbox sólo ADMIN
-                                        if (tipo_usuario === 'ADMIN') {
+                                        if (['ADMIN', 'FUNCIONARIO', 'SECRETARIA'].includes(tipo_usuario)) {
                                             const chkTd = document.createElement('td');
                                             chkTd.style.textAlign = 'center';
                                             const chk = document.createElement('input');
@@ -2582,6 +2582,8 @@
                                         row.appendChild(archivoCell);
 
                                         tablaSalidasBody.insertBefore(row, tablaSalidasBody.firstChild);
+                                        initializeTable('tablaSalidas', 'paginationSalidas', 8, null);
+
 
                                         // no olvides volver a capturar los checkboxes y re-enlazar tus listeners
                                         salidaRowCheckboxes = document.querySelectorAll('.chkEliminarSalida');
@@ -2931,7 +2933,7 @@
         if (!row) return;
 
         /* 1 ▸ posición de columnas (hay checkbox sólo para ADMIN / FUNCIONARIO) */
-        const hasCheckbox = ['ADMIN', 'FUNCIONARIO'].includes(tipo_usuario);
+        const hasCheckbox = ['ADMIN', 'FUNCIONARIO', 'SECRETARIA'].includes(tipo_usuario);
         const colNumero = hasCheckbox ? 1 : 0;
         const colFecha = colNumero + 1;
         const colDesc = colFecha + 1;

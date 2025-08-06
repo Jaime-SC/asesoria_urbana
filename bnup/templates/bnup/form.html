@@ -20,7 +20,10 @@
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'JEFE' %}
         {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
           <div>
-            <button id="egresosAUButton" style="justify-content: flex-start; width: 150px; background-color: #73bba1;" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            {% if tipo_usuario == 'ADMIN' %}
+              <button id="egresosAUButton" style="justify-content: flex-start; width: 150px; background-color: #73bba1;" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            {% endif %}
+
             <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
           </div>
           {% endif %}
@@ -552,7 +555,7 @@
                   <span class="material-symbols-outlined">delete</span> Eliminar
                 </button>
               {% endif %}
-              {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'FUNCIONARIO' %}
+              {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'FUNCIONARIO' or tipo_usuario == 'SECRETARIA' %}
                 <button
                     id="btnEditarSalidas"
                     class="btn-stats"
@@ -566,7 +569,7 @@
             <table style="width: 350px;" id="tablaSalidas" class="table table-bordered">
               <thead>
                 <tr>
-                  {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'FUNCIONARIO' %}
+                  {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'FUNCIONARIO' or tipo_usuario == 'SECRETARIA' %}
                     <th style="width:1em;">
                       <input type="checkbox" id="selectAllSalidas" />
                     </th>
@@ -628,7 +631,8 @@
       <form id="editSalidaForm" enctype="multipart/form-data" style="width:450px;">
         {% csrf_token %}
         <input type="hidden" name="salida_id" id="edit_salida_id">
-        {% if tipo_usuario == 'ADMIN'%}
+
+        {% if tipo_usuario == 'ADMIN' %}
           <div style="display: flex; flex-direction: row; justify-content: space-between;">            
             <div class="form-group">
               <label for="edit_numero_salida">Nº de Egreso</label>
@@ -640,56 +644,48 @@
               <input type="date" id="edit_fecha_salida" name="fecha_salida" required>
             </div>
 
-            {% if tipo_usuario == 'ADMIN' %}
-              <div class="form-group">
-                <label for="openEditSalidaFileModal">Adjuntar</label>
+            <div class="form-group">
+              <label for="openEditSalidaFileModal">Adjuntar</label>
+              <button type="button"
+                      id="openEditSalidaFileModal"
+                      class="btn"
+                      style="margin-top:5px;height:2.2rem;padding:5px 0;">
+                <span class="material-symbols-outlined">attach_file</span>
+              </button>
 
-                <!-- Botón que abre el modal -->
-                <button type="button"
-                        id="openEditSalidaFileModal"
-                        class="btn"
-                        style="margin-top:5px;height:2.2rem;padding:5px 0;">
-                    <span class="material-symbols-outlined">attach_file</span>
-                </button>
-
-                <!-- Input REAL oculto -->
-                <div id="hiddenEditSalidaFileInput" style="display:none;">
-                    <input type="file"
-                          id="edit_archivo_adjunto_salida"
-                          name="archivo_adjunto_salida"
-                          class="file">
-                </div>
-
-                <!-- Flag 0/1 para borrado -->
-                <input type="hidden"
-                      name="delete_archivo_salida"
-                      id="edit_delete_archivo_salida"
-                      value="0">
+              <div id="hiddenEditSalidaFileInput" style="display:none;">
+                <input type="file"
+                      id="edit_archivo_adjunto_salida"
+                      name="archivo_adjunto_salida"
+                      class="file">
               </div>
-            {% endif %}
-          </div>
 
-          
+              <input type="hidden"
+                    name="delete_archivo_salida"
+                    id="edit_delete_archivo_salida"
+                    value="0">
+            </div>
+          </div>
         {% endif %}
 
-
+        <!-- Este campo lo puede ver y editar ADMIN y SECRETARIA -->
         <div class="form-group">
           <label for="edit_descripcion_salida">Descripción (opcional)</label>
           <textarea id="edit_descripcion_salida" name="descripcion_salida" rows="3"></textarea>
         </div>
-        {% if tipo_usuario == 'ADMIN'%}
 
-          <!-- reutilizamos el mismo selector múltiple de funcionarios -->
+        {% if tipo_usuario == 'ADMIN' %}
+          <!-- Solo ADMIN puede editar funcionarios -->
           <div id="salidaFuncionariosContainerEdit" data-total-funcionarios="{{ total_funcionarios }}">
             <!-- los selects se generan vía JS -->
           </div>
         {% endif %}
 
-
         <button id="guardarEdicionSalida" class="btn btn-primary">Guardar</button>
       </form>
     </div>
   </div>
+
 
   {% if tipo_usuario == 'ADMIN' %}
     <div id="editSalidaFileModal" class="modal" style="display:none;">
