@@ -799,12 +799,12 @@ function initializeFileInput(inputSelector, options = {}) {
  */
 function initializeMultiSelect(cfg) {
     // ─── normalizamos referencias ───────────────────────────────────
-    const $sel   = typeof cfg.selectSelector      === 'string' ? document.querySelector(cfg.selectSelector)      : cfg.selectSelector;
-    const $cont  = typeof cfg.containerSelector   === 'string' ? document.querySelector(cfg.containerSelector)   : cfg.containerSelector;
-    const $hid   = typeof cfg.hiddenInputSelector === 'string' ? document.querySelector(cfg.hiddenInputSelector) : cfg.hiddenInputSelector;
+    const $sel = typeof cfg.selectSelector === 'string' ? document.querySelector(cfg.selectSelector) : cfg.selectSelector;
+    const $cont = typeof cfg.containerSelector === 'string' ? document.querySelector(cfg.containerSelector) : cfg.containerSelector;
+    const $hid = typeof cfg.hiddenInputSelector === 'string' ? document.querySelector(cfg.hiddenInputSelector) : cfg.hiddenInputSelector;
     if (!$sel || !$cont || !$hid) return console.warn('initializeMultiSelect: selector no encontrado');
 
-    const ANIM_IN  = cfg.animationIn  || 'animate__bounceIn';
+    const ANIM_IN = cfg.animationIn || 'animate__bounceIn';
     const ANIM_OUT = cfg.animationOut || 'animate__bounceOut';
 
     const seleccionados = new Map();           // id → nombre
@@ -844,7 +844,7 @@ function initializeMultiSelect(cfg) {
     // ─── click en chips (eliminar) ──────────────────────────────────
     $cont.addEventListener('click', e => {
         if (e.target.dataset.id) {
-            const id   = e.target.dataset.id;
+            const id = e.target.dataset.id;
             const chip = e.target.closest('.selected-item');
             chip.classList.remove(ANIM_IN);
             chip.classList.add('animate__animated', ANIM_OUT);
@@ -904,5 +904,44 @@ function initializeStandardizeInputs(root = document) {
         input.addEventListener("blur", () => standardizeInput(input));
         // → si quieres estandarizar “en vivo”, des-comenta:
         // input.addEventListener("input", () => standardizeInput(input));
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/*   MÓDULO  SELECCIÓN  DE  FILAS  CON  CHECKBOX                      */
+/* ------------------------------------------------------------------ */
+function setupRowSelection(tableId, {
+    highlightClass = 'fila-marcada'
+} = {}) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    const headChk = table.querySelector('thead .select-all');
+    const rowChecks = () => table.querySelectorAll('tbody .rowCheckbox');
+
+    // ——— helper para actualizar estado global ———
+    function refreshState() {
+        // marca / desmarca cabecera según correspondan todos
+        const all = rowChecks();
+        const on = [...all].filter(cb => cb.checked);
+        if (headChk) headChk.checked = on.length === all.length;
+        updateActionButtonsState();                 // <-- ya lo tenías
+    }
+
+    // ——— cabecera selecciona / des-selecciona todos ———
+    headChk?.addEventListener('change', () => {
+        rowChecks().forEach(cb => {
+            cb.checked = headChk.checked;
+            toggleRowHighlight(cb.closest('tr'), cb.checked);
+        });
+        refreshState();
+    });
+
+    // ——— cada checkbox de fila ———
+    table.addEventListener('change', e => {
+        if (!e.target.classList.contains('rowCheckbox')) return;
+        const cb = e.target;
+        toggleRowHighlight(cb.closest('tr'), cb.checked);
+        refreshState();
     });
 }

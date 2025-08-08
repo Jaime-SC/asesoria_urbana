@@ -10,6 +10,9 @@
   <table id="tablaEgresosAU">
     <thead>
       <tr>
+        <th class="non-clickable" style="width:40px">
+          <input type="checkbox" id="checkAllEgresos" class="select-all" />
+        </th>
         <th>Nº Egreso</th>
         <th>Fecha</th>
         <th>Funcionario</th>
@@ -27,6 +30,9 @@
           data-destinatario="{{ e.destinatario.nombre }}"
           data-descripcion="{{ e.descripcion|default:''|escapejs }}"
         > 
+          <td>
+            <input type="checkbox" class="rowCheckbox" />
+          </td>
           <td>{{ e.numero_egreso }}</td>
           <td>{{ e.fecha_egreso|date:"d/m/Y" }}</td>
           <td>

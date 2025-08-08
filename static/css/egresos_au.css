@@ -212,3 +212,15 @@ select#multi_funcionarios,
 select#destinatario {
   width: 15rem;
 }
+
+.fila-marcada .span-descripcion-cell::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(98, 255, 149) 75%);
+}
+
+.tableInfor_container tr:nth-child(even).fila-marcada .span-descripcion-cell::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(98, 255, 149) 75%);
+}
+
+.tableInfor_container tr:nth-child(even).fila-marcada:hover .span-descripcion-cell::after {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(254, 241, 145) 75%);
+}

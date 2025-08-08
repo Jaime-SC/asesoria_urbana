@@ -15,6 +15,7 @@
                 const html = await r.text();
                 container.innerHTML = html;
                 initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
+                setupRowSelection('tablaEgresosAU');
 
                 // sustituimos botones
                 btnEgresos.outerHTML = `
@@ -155,6 +156,7 @@
                     tr.dataset.descripcion = descripcion || '';
 
                     tr.innerHTML = `
+                        <td><input type="checkbox" class="rowCheckbox"></td>
                         <td>${numero_egreso}</td>
                         <td>${fechaFormateada}</td>
                         <td>${funcionarios}</td>
@@ -186,6 +188,8 @@
 
                     tbody.insertBefore(tr, tbody.firstChild);
                     initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
+                    setupRowSelection('tablaEgresosAU');
+
 
                     Swal.fire({
                         icon: 'success',
