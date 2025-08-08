@@ -22,41 +22,42 @@
       <input id="fecha_egreso" name="fecha_egreso" type="date" required class="form-control" style="width: min-content;" />
     </div>
   </div>
-  <div style="display: flex; flex-direction: row; gap: 1rem; justify-content: space-between;">
-    <div class="form-group">
-      <label for="multi_funcionarios">Funcionario(s) responsables</label>
+  <div class="form-group">
+    <label for="multi_funcionarios">Funcionario(s) responsables</label>
 
-      <div class="multi-select-container">
-        <select id="multi_funcionarios" class="select-multiple">
-          <option value="" disabled selected>Seleccione...</option>
-          {% for f in funcionarios %}
-            <option value="{{ f.id }}">{{ f.nombre }}</option>
-          {% endfor %}
-        </select>
-
-        <div id="funcionariosSeleccionados" class="selected-items"></div>
-        <input type="hidden" name="funcionarios_seleccionados" id="funcionariosHidden" />
-      </div>
-    </div>
-
-    <div class="form-group" style="width: 50%;">
-      <label for="destinatario">Destinatario</label>
-      <select id="destinatario" name="destinatario" class="form-control">
-        <option value="">Seleccione Destinatario...</option>
-        {% for d in departamentos %}
-          <option value="{{ d.id }}">{{ d.nombre }}</option>
+    <div class="multi-select-container">
+      <select id="multi_funcionarios" class="select-multiple">
+        <option value="" disabled selected>Seleccione...</option>
+        {% for f in funcionarios %}
+          <option value="{{ f.id }}">{{ f.nombre }}</option>
         {% endfor %}
       </select>
+
+      <div id="funcionariosSeleccionados" class="selected-items"></div>
+      <input type="hidden" name="funcionarios_seleccionados" id="funcionariosHidden" />
     </div>
+  </div>
+
+  <div class="form-group">
+    <label for="destinatario">Destinatario</label>
+    <select id="destinatario" name="destinatario" class="form-control">
+      <option value="">Seleccione Destinatario...</option>
+      {% for d in departamentos %}
+        <option value="{{ d.id }}">{{ d.nombre }}</option>
+      {% endfor %}
+    </select>
   </div>
   <div class="form-group">
     <label for="archivo_adjunto">Archivo Adjunto</label>
-    <input id="archivo_adjunto" name="archivo_adjunto" type="file" class="form-control" />
+    <input id="archivo_adjunto" name="archivo_adjunto" type="file" class="file" data-show-preview="false" />
   </div>
+
   <div class="form-group">
     <label for="descripcion">Descripción</label>
-    <textarea id="descripcion" name="descripcion" class="form-control"></textarea>
+    <!-- 👇 la nueva clase -->
+    <textarea id="descripcion" name="descripcion" class="form-control standardize-input" placeholder="Escriba la descripción…"></textarea>
   </div>
+
   <div class="modal-footer">
     {% comment %} <button type="button" class="btn btn-secondary modal-close">Cancelar</button> {% endcomment %}
     <button type="submit" class="btn btn-primary">Guardar Egreso</button>

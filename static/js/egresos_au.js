@@ -53,6 +53,22 @@
             }
             content.innerHTML = await resp.text();
 
+            // ──────────────────────────────────────────────────────────────
+            // Inicializa multi-select reutilizable (define chips animados) 
+            initializeMultiSelect({
+                selectSelector: '#multi_funcionarios',
+                containerSelector: '#funcionariosSeleccionados',
+                hiddenInputSelector: '#funcionariosHidden',
+                // animationIn:  'animate__fadeIn',     // <- opcionales
+                // animationOut: 'animate__fadeOut',
+            });
+            // ──────────────────────────────────────────────────────────────
+
+            //  ⬇️  formatear los inputs que lleven la clase
+            initializeStandardizeInputs(content);
+            const inputArchivo = content.querySelector('#archivo_adjunto');
+            initializeFileInput(inputArchivo);
+
             // validación número único
             const inputNumero = content.querySelector('#numero_egreso');
             const numeroError = content.querySelector('#error_numero');
@@ -88,78 +104,6 @@
             // mostrar + anim in
             overlay.style.display = 'flex';
             content.classList.add('animate__animated', 'animate__bounceIn');
-
-            const selectFuncionarios = content.querySelector('#multi_funcionarios');
-            const displaySeleccionados = content.querySelector('#funcionariosSeleccionados');
-            const hiddenInput = content.querySelector('#funcionariosHidden');
-            const seleccionados = new Map();  // clave: ID, valor: nombre
-
-            selectFuncionarios.addEventListener('change', () => {
-                const selectedOption = selectFuncionarios.selectedOptions[0];
-                const id = selectedOption.value;
-                const nombre = selectedOption.textContent;
-
-                if (!id || seleccionados.has(id)) return;
-
-                seleccionados.set(id, nombre);
-
-                // Deshabilitar la opción seleccionada
-                selectedOption.disabled = true;
-
-                updateFuncionariosUI();
-                selectFuncionarios.selectedIndex = 0;
-            });
-
-
-            function updateFuncionariosUI() {
-                const yaRenderizados = new Set(
-                    Array.from(displaySeleccionados.children).map(el => el.dataset.id)
-                );
-
-                seleccionados.forEach((nombre, id) => {
-                    if (!yaRenderizados.has(id)) {
-                        const span = document.createElement('span');
-                        span.className = 'selected-item animate__animated animate__bounceIn';
-                        span.setAttribute('data-id', id);
-                        span.innerHTML = `${nombre}<span data-id="${id}" class="material-symbols-outlined">close_small</span>`;
-                        displaySeleccionados.appendChild(span);
-                    }
-                });
-
-                hiddenInput.value = Array.from(seleccionados.keys()).join(',');
-            }
-
-
-
-
-            displaySeleccionados.addEventListener('click', (e) => {
-                if (e.target.tagName === 'SPAN' && e.target.dataset.id) {
-                    const id = e.target.dataset.id;
-                    const spanToRemove = e.target.closest('.selected-item');
-
-                    if (!spanToRemove) return;
-
-                    // aplicar animación de salida
-                    spanToRemove.classList.remove('animate__bounceIn');
-                    spanToRemove.classList.add('animate__animated', 'animate__bounceOut');
-
-                    // esperar a que termine animación y luego eliminar del DOM y Map
-                    spanToRemove.addEventListener('animationend', () => {
-                        spanToRemove.remove();
-                        seleccionados.delete(id);
-
-                        // actualizar campo oculto
-                        hiddenInput.value = Array.from(seleccionados.keys()).join(',');
-
-                        // volver a habilitar opción en select
-                        const optionToEnable = selectFuncionarios.querySelector(`option[value="${id}"]`);
-                        if (optionToEnable) optionToEnable.disabled = false;
-                    }, { once: true });
-                }
-            });
-
-
-
 
             // bind cierre
             const spanX = content.querySelector('.close');

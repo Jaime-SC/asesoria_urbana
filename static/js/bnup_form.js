@@ -29,7 +29,7 @@
             initializeEditFileModal();
             initializeEditSalidaFileModal();
             initializeBNUPFormModal();
-            initializeStandardizeInputs(); // Utiliza la función de utilities.js
+            initializeStandardizeInputs();
             // Inicializar la funcionalidad de múltiples funcionarios
             initializeMultipleFuncionarios();
             initializeMultipleFuncionariosEdit();
@@ -528,35 +528,6 @@
                     if (btnFile) {
                         btnFile.dataset.currentFile = data.data.archivo_adjunto_ingreso_url || '';
                     }
-
-
-                    /* ---------- archivo adjunto (sólo ADMIN) --------------------- */
-                    // if (tipo_usuario === 'ADMIN') {
-                    //     const $fileInput = $('#edit_archivo_adjunto');
-                    //     const deleteFlag = document.getElementById('edit_delete_archivo');
-
-                    //     // destruye instancia previa del plugin si existe
-                    //     if ($fileInput.data('fileinput')) { $fileInput.fileinput('destroy'); }
-
-                    //     // const tieneArchivo = !!data.data.archivo_adjunto_ingreso_url;
-                    //     // const initialPreview = tieneArchivo ? [data.data.archivo_adjunto_ingreso_url] : [];
-                    //     // const initialConfig = tieneArchivo ? [{
-                    //     //     caption: data.data.archivo_adjunto_ingreso_url.split('/').pop(),
-                    //     //     key: 1                    // sólo referencia; no se usa en el backend
-                    //     // }] : [];
-
-                    //     if ($fileInput.data('fileinput')) { $fileInput.fileinput('destroy'); }
-                    //     $fileInput.fileinput(buildFileInputOpts({
-                    //         urlActual: data.data.archivo_adjunto_ingreso_url || '',
-                    //         allowZoom: true
-                    //     }))
-                    //         .on('filecleared', () => { deleteFlag.value = '1'; })
-                    //         .on('fileselect', () => { deleteFlag.value = '0'; });
-                    // }
-
-
-                    // … justo después de cargar los datos en los inputs   …
-                    // dentro de openEditModal, después de recibir los datos …
 
                     /* ----------  vista limitada para el perfil FUNCIONARIO ---------- */
                     if (tipo_usuario === 'FUNCIONARIO') {

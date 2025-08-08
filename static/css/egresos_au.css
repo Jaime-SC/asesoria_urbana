@@ -163,3 +163,52 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
   font-weight: bold;
   color: #d32f2f;
 }
+
+.input-group {
+  display: flex;
+  justify-content: space-between;
+}
+
+.input-group-btn.input-group-append {
+  display: flex;
+}
+
+.hidden-xs {
+  display: flex;
+  align-items: center;
+}
+
+.btn-danger.fileinput-remove.fileinput-remove-button {
+  padding: 0;
+  width: min-content;
+  cursor: pointer;
+}
+
+.btn-info.btn-file {
+  padding: 5px;
+  cursor: pointer;
+  background: #4bbfe0;
+  border-radius: 10px;
+  box-shadow: 0px 1px 5px 0px #16233E;
+}
+
+.btn-danger.fileinput-remove.fileinput-remove-button {
+  padding: 5px;
+  cursor: pointer;
+  background: #e73c45;
+  border-radius: 10px;
+  box-shadow: 0px 1px 5px 0px #16233E;
+}
+
+.file-caption-name:not(.file-caption-disabled) {
+  background-color: transparent;
+  border: solid 1px black;
+  border-radius: 10px;
+  padding: 10px !important;
+  width: 15rem;
+}
+
+select#multi_funcionarios,
+select#destinatario {
+  width: 15rem;
+}

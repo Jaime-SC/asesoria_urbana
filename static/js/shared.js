@@ -746,3 +746,163 @@ window.addEventListener('resize', function () {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(handleResize, 500);
 });
+
+
+// PLUGIN BOOTSTRAP FILE INPUT PARA ARCHIVOS ADJUNTOS
+/**
+ * Inicializa un input de archivo con el plugin Bootstrap File Input.
+ * @param {HTMLElement|string} inputSelector - El input DOM o su selector.
+ * @param {Object} [options={}] - Opciones adicionales para personalización.
+ */
+function initializeFileInput(inputSelector, options = {}) {
+    const $input = typeof inputSelector === 'string' ? $(inputSelector) : $(inputSelector);
+    if (!$input.length) return;
+
+    const defaultOptions = {
+        showUpload: false,
+        previewFileType: 'any',
+        theme: 'fas',
+        browseClass: 'btn-info',
+        removeClass: 'btn-danger',
+        browseLabel: '<span class="material-symbols-outlined" style="vertical-align: middle;">upload_file</span> Seleccionar archivo',
+        removeLabel: '<span class="material-symbols-outlined" style="vertical-align: middle;">close</span> Quitar',
+    };
+
+    const config = { ...defaultOptions, ...options };
+    $input.fileinput(config);
+
+    // Ocultar/mostrar botones según eventos
+    $input.on('fileloaded', () => {
+        $('.kv-fileinput-caption, .fileinput-remove').show();
+        $('.fileinput-upload, .btn-file').hide();
+    });
+
+    $input.on('fileclear fileinputreset', () => {
+        $('.btn-file').show();
+        $('.fileinput-remove').hide();
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/*   MÓDULO MULTI-SELECT (funcionarios, etiquetas, etc.)              */
+/* ------------------------------------------------------------------ */
+/**
+ * Permite seleccionar varios elementos de un <select> y mostrarlos
+ * como chips “cerrables”.  Devuelve un objeto con utilidades.
+ *
+ * @param {Object} cfg
+ *  ├─ selectSelector      (string|HTMLElement)  <select>
+ *  ├─ containerSelector   (string|HTMLElement)  donde se dibujan chips
+ *  ├─ hiddenInputSelector (string|HTMLElement)  input hidden con IDs
+ *  ├─ animationIn         (string)  clase AnimateCSS de entrada
+ *  └─ animationOut        (string)  clase AnimateCSS de salida
+ */
+function initializeMultiSelect(cfg) {
+    // ─── normalizamos referencias ───────────────────────────────────
+    const $sel   = typeof cfg.selectSelector      === 'string' ? document.querySelector(cfg.selectSelector)      : cfg.selectSelector;
+    const $cont  = typeof cfg.containerSelector   === 'string' ? document.querySelector(cfg.containerSelector)   : cfg.containerSelector;
+    const $hid   = typeof cfg.hiddenInputSelector === 'string' ? document.querySelector(cfg.hiddenInputSelector) : cfg.hiddenInputSelector;
+    if (!$sel || !$cont || !$hid) return console.warn('initializeMultiSelect: selector no encontrado');
+
+    const ANIM_IN  = cfg.animationIn  || 'animate__bounceIn';
+    const ANIM_OUT = cfg.animationOut || 'animate__bounceOut';
+
+    const seleccionados = new Map();           // id → nombre
+
+    // ─── render helper ──────────────────────────────────────────────
+    function render() {
+        // Evita re-renderizar chips que ya existen
+        const ya = new Set(Array.from($cont.children).map(el => el.dataset.id));
+
+        seleccionados.forEach((nombre, id) => {
+            if (ya.has(id)) return;
+            const chip = document.createElement('span');
+            chip.className = `selected-item animate__animated ${ANIM_IN}`;
+            chip.dataset.id = id;
+            chip.innerHTML = `${nombre}
+                <span data-id="${id}" class="material-symbols-outlined">close_small</span>`;
+            $cont.appendChild(chip);
+        });
+
+        // actualiza hidden
+        $hid.value = Array.from(seleccionados.keys()).join(',');
+    }
+
+    // ─── evento change en <select> ──────────────────────────────────
+    $sel.addEventListener('change', e => {
+        const opt = $sel.selectedOptions[0];
+        if (!opt || !opt.value) return;
+
+        if (!seleccionados.has(opt.value)) {
+            seleccionados.set(opt.value, opt.textContent.trim());
+            opt.disabled = true;
+            render();
+        }
+        $sel.selectedIndex = 0;               // reset placeholder
+    });
+
+    // ─── click en chips (eliminar) ──────────────────────────────────
+    $cont.addEventListener('click', e => {
+        if (e.target.dataset.id) {
+            const id   = e.target.dataset.id;
+            const chip = e.target.closest('.selected-item');
+            chip.classList.remove(ANIM_IN);
+            chip.classList.add('animate__animated', ANIM_OUT);
+
+            chip.addEventListener('animationend', () => {
+                chip.remove();
+                seleccionados.delete(id);
+                $hid.value = Array.from(seleccionados.keys()).join(',');
+
+                // rehabilita opción en <select>
+                const opt = $sel.querySelector(`option[value="${id}"]`);
+                if (opt) opt.disabled = false;
+            }, { once: true });
+        }
+    });
+
+    // ─── API pública ────────────────────────────────────────────────
+    return {
+        /** Devuelve array de IDs actualmente seleccionados */
+        getSelectedIds: () => Array.from(seleccionados.keys()),
+        /** Limpia selección y restablece UI */
+        reset() {
+            seleccionados.clear();
+            $cont.innerHTML = '';
+            $hid.value = '';
+            $sel.querySelectorAll('option').forEach(o => o.disabled = false);
+        }
+    };
+}
+
+/* ------------------------------------------------------------------ */
+/*   STANDARDIZE INPUT                                                */
+/* ------------------------------------------------------------------ */
+function standardizeInput(input) {
+    if (!input) return;
+
+    let value = input.value;
+
+    // 1) quitar acentos
+    value = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // 2) a MAYÚSCULAS
+    value = value.toUpperCase();
+
+    // 3) trim + colapsar espacios
+    value = value.trim().replace(/\s+/g, " ");
+
+    input.value = value;
+}
+
+/**
+ * Recorre todos los elementos con la clase `.standardize-input`
+ * y aplica `standardizeInput` al perder el foco.
+ */
+function initializeStandardizeInputs(root = document) {
+    root.querySelectorAll(".standardize-input").forEach(input => {
+        input.addEventListener("blur", () => standardizeInput(input));
+        // → si quieres estandarizar “en vivo”, des-comenta:
+        // input.addEventListener("input", () => standardizeInput(input));
+    });
+}
