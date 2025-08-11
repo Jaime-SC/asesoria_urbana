@@ -23,7 +23,9 @@ function toggleRowHighlight(row, isChecked) {
 function updateActionButtonsState() {
     // Estas variables deben ser definidas en el ámbito global o pasar como parámetros
     const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
-    const deleteButton = document.getElementById('deleteSelected');
+    const deleteButton =
+        document.getElementById('deleteSelectedEgresos') ||
+        document.getElementById('deleteSelected');
     const editButton = document.getElementById('editSelected');
 
     const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
@@ -945,3 +947,4 @@ function setupRowSelection(tableId, {
         refreshState();
     });
 }
+

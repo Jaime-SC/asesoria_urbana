@@ -24,6 +24,7 @@
     <tbody>
       {% for e in egresos %}
         <tr
+          data-id="{{ e.id }}"
           data-numero="{{ e.numero_egreso }}"
           data-fecha="{{ e.fecha_egreso }}"
           data-funcionario="{% for f in e.funcionarios.all %}{{ f.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}"
@@ -31,7 +32,7 @@
           data-descripcion="{{ e.descripcion|default:''|escapejs }}"
         > 
           <td>
-            <input type="checkbox" class="rowCheckbox" />
+            <input type="checkbox" class="rowCheckbox" data-id="{{ e.id }}" />
           </td>
           <td>{{ e.numero_egreso }}</td>
           <td>{{ e.fecha_egreso|date:"d/m/Y" }}</td>

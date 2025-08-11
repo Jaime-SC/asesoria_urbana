@@ -72,6 +72,7 @@ class EgresoAU(models.Model):
     numero_egreso = models.IntegerField("Número de Egreso", unique=True)
     fecha_egreso = models.DateField("Fecha de Egreso")
     descripcion = models.TextField("Descripción", blank=True, null=True)
+    is_active = models.BooleanField(default=True, db_index=True)
 
     # Cambiamos de ForeignKey a ManyToManyField
     funcionarios = models.ManyToManyField(

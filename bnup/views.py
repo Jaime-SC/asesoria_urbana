@@ -1499,7 +1499,7 @@ def egresos_au_list(request):
 @require_GET
 def validate_egreso_numero(request):
     numero = request.GET.get("numero")
-    exists = EgresoAU.objects.filter(numero_egreso=numero).exists() if numero else False
+    exists = EgresoAU.objects.filter(numero_egreso=numero, is_active=True).exists() if numero else False
     return JsonResponse({"exists": exists})
 
 @login_required
@@ -1519,41 +1519,97 @@ def egresos_au_create(request):
     descr      = request.POST.get("descripcion", "").strip()
     dest_id    = request.POST.get("destinatario")
     archivo    = request.FILES.get("archivo_adjunto")
-    func_ids   = request.POST.get("funcionarios_seleccionados", "")  # ← hidden input con IDs separados por coma
+    func_ids   = request.POST.get("funcionarios_seleccionados", "")
 
     try:
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         return JsonResponse({"success": False, "error": "Fecha de egreso inválida."})
 
-    try:
-        eg = EgresoAU.objects.create(
-            numero_egreso=numero,
-            fecha_egreso=fecha,
-            descripcion=descr,
-            destinatario_id=dest_id or None,
-            archivo_adjunto=archivo or None
-        )
+    # IDs m2m
+    lista_ids = [int(fid) for fid in func_ids.split(',') if fid.strip().isdigit()]
 
-        # Asignar funcionarios si hay IDs válidos
-        lista_ids = [int(fid) for fid in func_ids.split(',') if fid.strip().isdigit()]
-        if lista_ids:
-            eg.funcionarios.set(lista_ids)
+    try:
+        # ➊ Si existe uno ACTIVO con ese número → error
+        if EgresoAU.objects.filter(numero_egreso=numero, is_active=True).exists():
+            return JsonResponse({"success": False, "error": "Ya existe un egreso activo con ese número."})
+
+        # ➋ Si existe INACTIVO → lo reactivamos (reuso del registro)
+        eg_inactivo = EgresoAU.objects.filter(numero_egreso=numero, is_active=False).first()
+        if eg_inactivo:
+            eg = eg_inactivo
+            eg.fecha_egreso    = fecha
+            eg.descripcion     = descr
+            eg.destinatario_id = dest_id or None
+            if archivo:  # si sube uno nuevo, reemplaza
+                eg.archivo_adjunto = archivo
+            eg.is_active = True
+            eg.save()
+
+            eg.funcionarios.set(lista_ids) if lista_ids else eg.funcionarios.clear()
+
+        else:
+            # ➌ No hay ninguno: creamos normal
+            eg = EgresoAU.objects.create(
+                numero_egreso=numero,
+                fecha_egreso=fecha,
+                descripcion=descr,
+                destinatario_id=dest_id or None,
+                archivo_adjunto=archivo or None,
+                is_active=True
+            )
+            if lista_ids:
+                eg.funcionarios.set(lista_ids)
 
         nombres_funcionarios = ", ".join(f.nombre for f in eg.funcionarios.all())
-
         data = {
             "id": eg.id,
             "numero_egreso": eg.numero_egreso,
             "fecha_egreso": eg.fecha_egreso.strftime("%Y-%m-%d"),
             "descripcion": eg.descripcion,
-            "funcionarios": nombres_funcionarios,  # ← antes decía "funcionario"
+            "funcionarios": nombres_funcionarios,
             "destinatario": eg.destinatario.nombre if eg.destinatario else "",
             "archivo_url": eg.archivo_adjunto.url if eg.archivo_adjunto else ""
         }
-
-
         return JsonResponse({"success": True, "egreso": data})
 
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
+
+@login_required
+@require_POST
+def delete_egresos_au(request):
+    perfil = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    if tipo != "ADMIN":
+        return JsonResponse({"success": False, "error": "No tiene permiso para eliminar registros."})
+
+    try:
+        data = json.loads(request.body)
+        ids = data.get("ids", [])
+        if not ids:
+            return JsonResponse({"success": False, "error": "Sin IDs para eliminar."})
+
+        # Borrado lógico
+        EgresoAU.objects.filter(id__in=ids).update(is_active=False)
+
+        # (Opcional) limpiar M2M si quieres:
+        # for eg in EgresoAU.objects.filter(id__in=ids):
+        #     eg.funcionarios.clear()
+
+        return JsonResponse({"success": True, "removed": len(ids)})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
+
+@login_required
+def egresos_au_fragment(request):
+    egresos = (
+        EgresoAU.objects
+        .filter(is_active=True)  # ← solo activos
+        .prefetch_related('funcionarios')
+        .select_related('destinatario')
+        .order_by('-numero_egreso')[:100]
+    )
+    return render(request, 'bnup/egresos_au/egresos_au_table.html', {
+        'egresos': egresos
+    })
