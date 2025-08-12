@@ -26,7 +26,9 @@ function updateActionButtonsState() {
     const deleteButton =
         document.getElementById('deleteSelectedEgresos') ||
         document.getElementById('deleteSelected');
-    const editButton = document.getElementById('editSelected');
+    const editButton =
+        document.getElementById('editSelectedEgresos') ||
+        document.getElementById('editSelected');
 
     const selectedCheckboxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
     const anyChecked = selectedCheckboxes.length > 0;
@@ -756,34 +758,33 @@ window.addEventListener('resize', function () {
  * @param {HTMLElement|string} inputSelector - El input DOM o su selector.
  * @param {Object} [options={}] - Opciones adicionales para personalización.
  */
+// shared.js (nuevo)
 function initializeFileInput(inputSelector, options = {}) {
     const $input = typeof inputSelector === 'string' ? $(inputSelector) : $(inputSelector);
     if (!$input.length) return;
 
     const defaultOptions = {
-        showUpload: false,
-        previewFileType: 'any',
         theme: 'fas',
+        previewFileType: 'any',
+        showUpload: false,
+        // Ojo: el botón eliminar lo controlamos por options.showRemove
         browseClass: 'btn-info',
         removeClass: 'btn-danger',
-        browseLabel: '<span class="material-symbols-outlined" style="vertical-align: middle;">upload_file</span> Seleccionar archivo',
+        browseLabel: '<span class="material-symbols-outlined" style="vertical-align: middle;">upload_file</span> Adjuntar',
         removeLabel: '<span class="material-symbols-outlined" style="vertical-align: middle;">close</span> Quitar',
     };
 
     const config = { ...defaultOptions, ...options };
     $input.fileinput(config);
 
-    // Ocultar/mostrar botones según eventos
+    // Mantener visible el caption; no ocultar el botón "Seleccionar archivo"
     $input.on('fileloaded', () => {
-        $('.kv-fileinput-caption, .fileinput-remove').show();
-        $('.fileinput-upload, .btn-file').hide();
+        $input.closest('.file-input').find('.kv-fileinput-caption').show();
     });
 
-    $input.on('fileclear fileinputreset', () => {
-        $('.btn-file').show();
-        $('.fileinput-remove').hide();
-    });
+    // No hacemos nada especial en 'fileclear' ya que no mostramos botón eliminar
 }
+
 
 /* ------------------------------------------------------------------ */
 /*   MÓDULO MULTI-SELECT (funcionarios, etiquetas, etc.)              */

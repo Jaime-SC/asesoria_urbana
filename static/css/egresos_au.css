@@ -58,8 +58,6 @@
   vertical-align: middle;
 }
 
-
-
 /* el “fade” */
 .span-descripcion-cell::after {
   content: "";
@@ -107,6 +105,9 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
 .modal-field.descripcion #preview_descripcion {
   margin-top: 0px !important;
 }
+
+
+
 
 #tablaEgresosAU {
   margin-top: 10px !important;
@@ -209,8 +210,47 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
 }
 
 select#multi_funcionarios,
-select#destinatario {
+select#destinatario,
+select#multi_funcionarios_edit,
+select#destinatario_edit {
   width: 15rem;
+}
+
+.form-group-new-numFecha,
+.form-group-edit-numFecha {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.btn-file,
+.file-caption,
+.file-input,
+.file-loading:before,
+.file-preview,
+.file-zoom-dialog .modal-dialog,
+.krajee-default .file-thumbnail-footer,
+.krajee-default.file-preview-frame {
+  width: 100%;
+}
+
+.form-group-adjunto {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+
+.mb-2 {
+  margin-left: 1rem;
+}
+
+.mb-2 .buttonLogin.buttonPreview {
+  height: -webkit-fill-available;
+}
+
+.mb-2 .buttonLogin.buttonPreview span {
+  padding-inline: .5rem;
 }
 
 .fila-marcada .span-descripcion-cell::after {

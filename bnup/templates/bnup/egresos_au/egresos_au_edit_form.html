@@ -1,0 +1,81 @@
+<form id="egresoAUEditForm" method="post" enctype="multipart/form-data">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h2>Editar Egreso</h2>
+    <span class="close"><span class="material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span></span>
+  </div>
+  {% csrf_token %}
+
+  <div class="form-group-edit-numFecha">
+    <div class="form-group">
+      <label for="numero_egreso_edit">Número de Egreso</label>
+      <input id="numero_egreso_edit" name="numero_egreso" type="number" required class="form-control" style="width:4rem" value="{{ egreso.numero_egreso }}" />
+      <small id="error_numero_edit" class="text-danger" style="display:none;">
+        <div style="display:flex;align-items:center;">
+          <span class="material-symbols-outlined" style="color:#E73C45;">info</span>
+          <span style="color:#E73C45;font-weight:600;">Ya existe un egreso con ese número.</span>
+        </div>
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label for="fecha_egreso_edit">Fecha de Egreso</label>
+      <input id="fecha_egreso_edit" name="fecha_egreso" type="date" required class="form-control" value="{{ egreso.fecha_egreso|date:'Y-m-d' }}" />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="multi_funcionarios_edit">Funcionario(s) responsables</label>
+    <div class="multi-select-container">
+      <select id="multi_funcionarios_edit" class="select-multiple">
+        <option value="" disabled selected>Seleccione...</option>
+        {% for f in funcionarios %}
+          <option value="{{ f.id }}">{{ f.nombre }}</option>
+        {% endfor %}
+      </select>
+
+      <div id="funcionariosSeleccionados_edit" class="selected-items"></div>
+      <input type="hidden" name="funcionarios_seleccionados" id="funcionariosHidden_edit" value="{{ preseleccion|join:',' }}" />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="destinatario_edit">Destinatario</label>
+    <select id="destinatario_edit" name="destinatario" class="form-control">
+        <option value="">Seleccione Destinatario...</option>
+        {% for d in departamentos %}
+            <option value="{{ d.id }}" {% if egreso.destinatario_id == d.id %}selected{% endif %}>{{ d.nombre }}</option>
+        {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Archivo Adjunto</label>
+    <div class="form-group-adjunto">
+      {% if egreso.archivo_adjunto %}
+        <div class="mb-2">
+          <a href="{{ egreso.archivo_adjunto.url }}" target="_blank" class="buttonLogin buttonPreview">
+            <span class="material-symbols-outlined bell">find_in_page</span>
+          </a>
+        </div>
+      {% endif %}
+      <input
+        id="archivo_adjunto_edit"
+        name="archivo_adjunto"
+        type="file"
+        class="file"
+        data-show-preview="false"
+        data-initial-caption="{{ archivo_nombre }}"
+        {% if not egreso.archivo_adjunto %}required{% endif %}
+      />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="descripcion_edit">Descripción</label>
+    <textarea id="descripcion_edit" name="descripcion" class="form-control standardize-input" placeholder="Escriba la descripción…">{{ egreso.descripcion }}</textarea>
+  </div>
+
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+  </div>
+</form>

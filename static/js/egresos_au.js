@@ -19,7 +19,7 @@
 
         update();
     }
-    
+
     document.addEventListener('click', async function (event) {
         // 1) Pulsar "Egresos AU"
         const btnEgresos = event.target.closest('#egresosAUButton');
@@ -63,6 +63,34 @@
                         <span class="material-symbols-outlined">delete</span> Eliminarsh
                         </button>`;
                 }
+
+                // dentro del bloque que arma los botones al pulsar "#egresosAUButton"
+                const toolbar = document.querySelector('.accionesBNUP') || document; // ajústalo a tu contenedor
+
+                // Si existe el de BNUP, reemplázalo; si no, lo insertas donde corresponda:
+                const editMarkup = `
+                    <button id="editSelectedEgresos"
+                            class="btn-stats btnEditEgresoAU"
+                            style="background-color:#F5A623;justify-content:flex-start;width:150px;"
+                            disabled>
+                        <span class="material-symbols-outlined">edit</span> Editar
+                    </button>`;
+
+                // 1) Si existe el botón de editar de BNUP, lo reemplazo
+                const btnEditBNUP = document.getElementById('editSelected');
+                if (btnEditBNUP) {
+                    btnEditBNUP.outerHTML = editMarkup;
+                } else if (!document.getElementById('editSelectedEgresos')) {
+                    // 2) Si no existe, lo inserto cerca de los otros controles
+                    const toolbar = document.querySelector('.accionesBNUP');
+                    if (toolbar) {
+                        toolbar.insertAdjacentHTML('beforeend', editMarkup);
+                    } else {
+                        const anchor = document.getElementById('deleteSelectedEgresos') || document.getElementById('openEgresoFormModal');
+                        anchor?.insertAdjacentHTML('afterend', editMarkup);
+                    }
+                }
+
             } catch {
                 Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar egresos AU.' });
             } finally {
@@ -246,6 +274,180 @@
 
             return;
         }
+
+        // ─────────────────────────────────────────────
+        // clic en "Editar" (debe haber 1 seleccionado)
+        // ─────────────────────────────────────────────
+        if (event.target.closest('#editSelectedEgresos')) {
+            event.preventDefault();
+
+            const table = document.getElementById('tablaEgresosAU');
+            if (!table) return;
+
+            const checked = Array.from(table.querySelectorAll('tbody .rowCheckbox:checked'));
+            if (checked.length === 0) {
+                return Swal.fire('Atención', 'Seleccione un egreso para editar.', 'info');
+            }
+            if (checked.length > 1) {
+                return Swal.fire('Atención', 'Sólo puede editar uno a la vez.', 'info');
+            }
+
+            const tr = checked[0].closest('tr');
+            const egresoId = tr?.dataset.id;
+            if (!egresoId) return;
+
+            const overlay = document.getElementById('egresoEditModalOverlay');
+            const content = overlay.querySelector('.modal-content');
+
+            // cargar formulario de edición
+            const resp = await fetch(`/bnup/egresos_au_edit/${egresoId}/`);
+            if (!resp.ok) {
+                return Swal.fire('Error', 'No se pudo cargar el formulario de edición', 'error');
+            }
+            content.innerHTML = await resp.text();
+
+            // multi-select
+            initializeMultiSelect({
+                selectSelector: '#multi_funcionarios_edit',
+                containerSelector: '#funcionariosSeleccionados_edit',
+                hiddenInputSelector: '#funcionariosHidden_edit',
+            });
+
+            // Precargar seleccionados: tomamos el hidden CSV y disparamos "change" por cada id
+            const hidden = content.querySelector('#funcionariosHidden_edit');
+            const sel = content.querySelector('#multi_funcionarios_edit');
+            (hidden.value || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean)
+                .forEach(id => {
+                    const opt = sel.querySelector(`option[value="${id}"]`);
+                    if (opt) {
+                        sel.value = id;
+                        sel.dispatchEvent(new Event('change')); // esto crea el chip y deshabilita la opción
+                    }
+                });
+
+            // estandarizador + file input
+            initializeStandardizeInputs(content);
+            // inicializar fileinput con el nombre actual como caption y sin botón eliminar
+            const $file = content.querySelector('#archivo_adjunto_edit');
+            const initialCaption = ($file && $file.dataset.initialCaption) ? $file.dataset.initialCaption : '';
+            initializeFileInput('#archivo_adjunto_edit', {
+                showUpload: false,
+                showRemove: false,
+                showCancel: false,
+                dropZoneEnabled: false,
+                initialCaption: initialCaption
+            });
+
+
+            // validación del número (excluyendo este registro)
+            const inputNumero = content.querySelector('#numero_egreso_edit');
+            const numeroError = content.querySelector('#error_numero_edit');
+            let numeroValido = true;
+
+            inputNumero.addEventListener('blur', async () => {
+                const num = inputNumero.value.trim();
+                if (!num) return;
+                const r = await fetch(`/bnup/egresos_au/validate_numero/?numero=${encodeURIComponent(num)}&exclude=${encodeURIComponent(egresoId)}`);
+                if (!r.ok) return;
+                const { exists } = await r.json();
+                numeroValido = !exists;
+                numeroError.style.display = exists ? 'block' : 'none';
+            });
+
+            // mostrar modal + animaciones
+            function cerrarEditModal() {
+                spanX.onclick = null;
+                content.classList.remove('animate__bounceIn');
+                content.classList.add('animate__animated', 'animate__bounceOut');
+                content.addEventListener('animationend', () => {
+                    overlay.style.display = 'none';
+                    content.classList.remove('animate__animated', 'animate__bounceOut');
+                }, { once: true });
+            }
+            overlay.style.display = 'flex';
+            content.classList.add('animate__animated', 'animate__bounceIn');
+            const spanX = content.querySelector('.close');
+            if (spanX) spanX.onclick = cerrarEditModal;
+
+            // submit edición
+            const form = content.querySelector('#egresoAUEditForm');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                if (!numeroValido) {
+                    inputNumero.focus();
+                    return Swal.fire({ icon: 'error', title: 'Error', text: 'El número de egreso ya existe', heightAuto: false, scrollbarPadding: false });
+                }
+
+                const data = new FormData(form);
+                const res = await fetch(`/bnup/egresos_au_edit/${egresoId}/`, {
+                    method: 'POST',
+                    body: data,
+                    headers: { 'X-CSRFToken': getCSRFToken() }
+                });
+                const json = await res.json();
+                if (!json.success) {
+                    return Swal.fire({ icon: 'error', title: 'Error', text: json.error || 'No se pudo guardar.', heightAuto: false, scrollbarPadding: false });
+                }
+
+                // actualizar la fila en la tabla
+                const eg = json.egreso;
+
+                // helper fecha YYYY-MM-DD → DD/MM/YYYY
+                const formatFecha = (s) => {
+                    if (!s || !s.includes('-')) return s;
+                    const [y, m, d] = s.split('-');
+                    return `${d}/${m}/${y}`;
+                };
+
+                tr.dataset.numero = eg.numero_egreso;
+                tr.dataset.fecha = formatFecha(eg.fecha_egreso);
+                tr.dataset.funcionario = eg.funcionarios;
+                tr.dataset.destinatario = eg.destinatario;
+                tr.dataset.descripcion = eg.descripcion || '';
+
+                // celdas visibles
+                tr.querySelector('td:nth-child(2)').textContent = eg.numero_egreso;
+                tr.querySelector('td:nth-child(3)').textContent = formatFecha(eg.fecha_egreso);
+                tr.querySelector('td:nth-child(4)').textContent = eg.funcionarios || '—';
+                tr.querySelector('td:nth-child(5)').textContent = eg.destinatario || '—';
+
+                // descripción (truncada)
+                const descCellSpan = tr.querySelector('.descripcion-cell .span-descripcion-cell');
+                if (descCellSpan) descCellSpan.textContent = eg.descripcion ? eg.descripcion.slice(0, 60) : '—';
+
+                // adjunto
+                const adjCell = tr.querySelector('.celda-adjunto > div');
+                if (adjCell) {
+                    if (eg.archivo_url) {
+                        adjCell.innerHTML = `
+                            <div class="icon-container">
+                                <a href="${eg.archivo_url}" target="_blank" style="text-decoration:none;">
+                                <button class="buttonLogin buttonPreview">
+                                    <span class="material-symbols-outlined bell">find_in_page</span>
+                                </button>
+                                </a>
+                                <div class="tooltip">Ver adjunto</div>
+                            </div>`;
+                    } else {
+                        adjCell.textContent = '—';
+                    }
+                }
+
+                // re-setup (paginación/selección si hace falta)
+                initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
+                setupRowSelection('tablaEgresosAU');
+                setupEgresosDeleteToggle();
+
+                cerrarEditModal();
+                Swal.fire({ icon: 'success', title: 'Guardado', text: 'Egreso actualizado.', heightAuto: false, scrollbarPadding: false });
+            };
+
+            return; // ← terminamos el flujo de editar
+        }
+
 
         // 3) Pulsar “preview” de descripción (texto + icono)
         // en la sección "preview" de tu egresos_au.js
