@@ -60,7 +60,7 @@
                                 class="btn-stats btnDelEgresoAU"
                                 style="background-color:#E73C45;justify-content:flex-start;width:150px;"
                                 disabled>
-                        <span class="material-symbols-outlined">delete</span> Eliminarsh
+                        <span class="material-symbols-outlined">delete</span> Eliminar
                         </button>`;
                 }
 
@@ -128,6 +128,8 @@
             initializeStandardizeInputs(content);
             const inputArchivo = content.querySelector('#archivo_adjunto');
             initializeFileInput(inputArchivo);
+            // Subir respuesta
+            initializeFileInput('#archivo_respuesta');
 
             // validación número único
             const inputNumero = content.querySelector('#numero_egreso');
@@ -243,6 +245,14 @@
                                 </div>`
 
                             : '—'}
+                        </td>
+                        <td class="celda-respuesta">
+                            <div class="icon-container">
+                            <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="${id}">
+                                <span class="material-symbols-outlined bell">note_add</span>
+                            </button>
+                            <div class="tooltip">Subir respuesta</div>
+                            </div>
                         </td>
                     `;
 
@@ -490,6 +500,85 @@
             // bind cierre
             const spanX = modal.querySelector('.close');
             if (spanX) spanX.onclick = cerrarPreview;
+
+            return;
+        }
+
+        // ─────────────────────────────────────────────
+        // clic en "Subir respuesta" (icono note_add)
+        // ─────────────────────────────────────────────
+        const btnAddResp = event.target.closest('.btn-add-respuesta');
+        if (btnAddResp) {
+            event.preventDefault();
+            const egresoId = btnAddResp.dataset.id;
+            if (!egresoId) return;
+
+            const overlay = document.getElementById('egresoRespuestaModalOverlay');
+            const content = overlay.querySelector('.modal-content');
+
+            // Cargar form
+            const r = await fetch(`/bnup/egresos_au_respuesta/${egresoId}/`);
+            if (!r.ok) {
+                return Swal.fire('Error', 'No se pudo cargar el formulario de respuesta', 'error');
+            }
+            content.innerHTML = await r.text();
+
+            // Inicializa fileinput
+            initializeFileInput('#archivo_respuesta', {
+                showUpload: false,
+                dropZoneEnabled: false
+            });
+
+            // Animaciones + cierre
+            function cerrar() {
+                spanX.onclick = null;
+                content.classList.remove('animate__bounceIn');
+                content.classList.add('animate__animated', 'animate__bounceOut');
+                content.addEventListener('animationend', () => {
+                    overlay.style.display = 'none';
+                    content.classList.remove('animate__animated', 'animate__bounceOut');
+                }, { once: true });
+            }
+            overlay.style.display = 'flex';
+            content.classList.add('animate__animated', 'animate__bounceIn');
+            const spanX = content.querySelector('.close');
+            if (spanX) spanX.onclick = cerrar;
+
+            // Submit
+            const form = content.querySelector('#egresoAURespuestaForm');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const data = new FormData(form);
+                const res = await fetch(`/bnup/egresos_au_respuesta/${egresoId}/`, {
+                    method: 'POST',
+                    body: data,
+                    headers: { 'X-CSRFToken': getCSRFToken() }
+                });
+                const json = await res.json();
+                if (!json.success) {
+                    return Swal.fire({ icon: 'error', title: 'Error', text: json.error || 'No se pudo guardar.', heightAuto: false, scrollbarPadding: false });
+                }
+
+                // Actualiza la celda en la fila
+                const table = document.getElementById('tablaEgresosAU');
+                const tr = table.querySelector(`tbody tr[data-id="${egresoId}"]`);
+                const cell = tr?.querySelector('.celda-respuesta > div');
+                if (cell) {
+                    const url = json.egreso.archivo_respuesta_url;
+                    cell.innerHTML = `
+                        <div class="icon-container">
+                        <a href="${url}" target="_blank" style="text-decoration: none;">
+                            <button class="buttonLogin buttonPreview btn-view-respuesta">
+                                <span class="material-symbols-outlined bell">find_in_page</span>
+                            </button>
+                        </a>
+                        <div class="tooltip">Ver respuesta</div>
+                        </div>`;
+                }
+
+                cerrar();
+                Swal.fire({ icon: 'success', title: 'Guardado', text: 'Respuesta subida.', heightAuto: false, scrollbarPadding: false });
+            };
 
             return;
         }

@@ -1680,3 +1680,30 @@ def egresos_au_fragment(request):
     return render(request, 'bnup/egresos_au/egresos_au_table.html', {
         'egresos': egresos
     })
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def egresos_au_respuesta(request, egreso_id):
+    eg = get_object_or_404(EgresoAU, id=egreso_id, is_active=True)
+
+    if request.method == "GET":
+        # solo dibuja form simple para adjuntar respuesta
+        return render(request, "bnup/egresos_au/egreso_respuesta_form.html", {
+            "egreso": eg,
+        })
+
+    # POST: guardar archivo
+    archivo = request.FILES.get("archivo_respuesta")
+    if not archivo:
+        return JsonResponse({"success": False, "error": "Debe seleccionar un archivo de respuesta."})
+
+    eg.archivo_respuesta = archivo
+    eg.save(update_fields=["archivo_respuesta"])
+
+    return JsonResponse({
+        "success": True,
+        "egreso": {
+            "id": eg.id,
+            "archivo_respuesta_url": eg.archivo_respuesta.url if eg.archivo_respuesta else ""
+        }
+    })

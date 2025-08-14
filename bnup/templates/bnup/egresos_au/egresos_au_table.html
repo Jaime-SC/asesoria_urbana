@@ -6,11 +6,10 @@
   <div>
     <div id="paginationEgresosAU" class="pagination"></div>
   </div>
-
   <table id="tablaEgresosAU">
     <thead>
       <tr>
-        <th class="non-clickable" style="width:40px">
+        <th class="non-clickable">
           <input type="checkbox" id="checkAllEgresos" class="select-all" />
         </th>
         <th>Nº Egreso</th>
@@ -19,6 +18,7 @@
         <th>Destinatario</th>
         <th>Descripción</th>       {# ← nueva columna #}
         <th>Adjunto</th>
+        <th>Respuesta</th> <!-- ← NUEVA COLUMNA -->
       </tr>
     </thead>
     <tbody>
@@ -31,8 +31,10 @@
           data-destinatario="{{ e.destinatario.nombre }}"
           data-descripcion="{{ e.descripcion|default:''|escapejs }}"
         > 
-          <td>
-            <input type="checkbox" class="rowCheckbox" data-id="{{ e.id }}" />
+          <td class="celda-checkbox">
+            <div>
+              <input type="checkbox" class="rowCheckbox" data-id="{{ e.id }}" />
+            </div>
           </td>
           <td>{{ e.numero_egreso }}</td>
           <td>{{ e.fecha_egreso|date:"d/m/Y" }}</td>
@@ -43,7 +45,6 @@
               —
             {% endfor %}
           </td>
-
           <td>{{ e.destinatario.nombre }}</td>
           <td class="descripcion-cell">
             <div>
@@ -70,6 +71,27 @@
               {% endif %}
             </div>
           </td>
+          <td class="celda-respuesta">
+            <div>
+              {% if e.archivo_respuesta %}
+                <div class="icon-container">
+                  <a href="{{ e.archivo_respuesta.url }}" target="_blank" style="text-decoration: none;">
+                    <button class="buttonLogin buttonPreview btn-view-respuesta">
+                      <span class="material-symbols-outlined bell">find_in_page</span>
+                    </button>
+                  </a>
+                  <div class="tooltip">Ver respuesta</div>
+                </div>
+              {% else %}
+                <div class="icon-container">
+                  <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="{{ e.id }}">
+                    <span class="material-symbols-outlined bell">note_add</span>
+                  </button>
+                  <div class="tooltip">Subir respuesta</div>
+                </div>
+              {% endif %}
+            </div>
+          </td>
         </tr>
       {% empty %}
         <tr>
@@ -77,10 +99,7 @@
         </tr>
       {% endfor %}
     </tbody>
-
   </table>  
-
-
   
 </div>
 {% include 'bnup/egresos_au/preview_modal.html' %}
@@ -93,4 +112,9 @@
   <div id="egresoEditModalOverlay" class="modal-overlay" style="display:none;">
     <div class="modal-content"></div>
   </div>
+
+  <div id="egresoRespuestaModalOverlay" class="modal-overlay" style="display:none;">
+    <div class="modal-content"></div>
+  </div>
+
 

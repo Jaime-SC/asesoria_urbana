@@ -95,6 +95,15 @@ class EgresoAU(models.Model):
         blank=True,
         null=True
     )
+
+    # NUEVO: archivo de respuesta
+    archivo_respuesta = models.FileField(
+        "Archivo Respuesta",
+        upload_to='egresos_respuestas/',
+        blank=True,
+        null=True
+    )
+    
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 

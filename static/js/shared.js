@@ -292,7 +292,6 @@ function setupFilters(tableId, searchInputId) {
         searchInput.addEventListener('input', () => {
             state.searchTerm = searchInput.value.trim().toLowerCase();
             applyFilters();
-
             // Si la búsqueda quedó vacía, restauramos el orden inicial por Nº Ingreso (descendente)
             if (!state.searchTerm) {
                 // 1) Reordenar siempre por Nº Ingreso desc:
@@ -374,7 +373,6 @@ function setupFilters(tableId, searchInputId) {
                 document.removeEventListener('click', closePanel);
             }
         };
-
         // Registrarlo en la próxima vuelta de evento
         setTimeout(() => document.addEventListener('click', closePanel), 0);
     });
@@ -763,11 +761,19 @@ function initializeFileInput(inputSelector, options = {}) {
     const $input = typeof inputSelector === 'string' ? $(inputSelector) : $(inputSelector);
     if (!$input.length) return;
 
+    // Si ya estaba inicializado (por tener class="file" o reusar el nodo), lo destruimos
+    if ($input.data('fileinput')) {
+        $input.fileinput('destroy');
+    }
+
     const defaultOptions = {
         theme: 'fas',
         previewFileType: 'any',
+        showPreview: false,        // ← DESACTIVA PREVIEW
+        dropZoneEnabled: false,    // ← SIN DROPZONE
         showUpload: false,
-        // Ojo: el botón eliminar lo controlamos por options.showRemove
+        showRemove: false,
+        showCancel: false,
         browseClass: 'btn-info',
         removeClass: 'btn-danger',
         browseLabel: '<span class="material-symbols-outlined" style="vertical-align: middle;">upload_file</span> Adjuntar',
@@ -777,13 +783,11 @@ function initializeFileInput(inputSelector, options = {}) {
     const config = { ...defaultOptions, ...options };
     $input.fileinput(config);
 
-    // Mantener visible el caption; no ocultar el botón "Seleccionar archivo"
     $input.on('fileloaded', () => {
         $input.closest('.file-input').find('.kv-fileinput-caption').show();
     });
-
-    // No hacemos nada especial en 'fileclear' ya que no mostramos botón eliminar
 }
+
 
 
 /* ------------------------------------------------------------------ */

@@ -118,7 +118,9 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
   border-bottom: 1px #16233E dashed;
 }
 
-.celda-adjunto div {
+.celda-adjunto div,
+.celda-respuesta div,
+.celda-checkbox div{
   display: flex;
   justify-content: center;
 }
@@ -263,4 +265,12 @@ select#destinatario_edit {
 
 .tableInfor_container tr:nth-child(even).fila-marcada:hover .span-descripcion-cell::after {
   background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgb(254, 241, 145) 75%);
+}
+
+.btn-add-respuesta {
+  background: #4bbfe0;
+}
+
+.btn-view-respuesta {
+  background: #17d244;
 }

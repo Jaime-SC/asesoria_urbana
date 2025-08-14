@@ -1,0 +1,15 @@
+<div class="modal-header">
+  <h3>Subir respuesta — Egreso Nº {{ egreso.numero_egreso }}</h3>
+  <span class="close" role="button" aria-label="Cerrar" title="Cerrar" style="cursor:pointer; display:inline-flex; align-items:center;"><span class="material-symbols-outlined" style="color:#E73C45; font-size:40px;">close</span></span>
+</div>
+
+<form id="egresoAURespuestaForm" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="form-group">
+    <label for="archivo_respuesta">Archivo de respuesta</label>
+    <input id="archivo_respuesta" name="archivo_respuesta" type="file" required />
+  </div>
+  <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+    <button type="submit" class="btn btn-primary">Guardar</button>
+  </div>
+</form>
