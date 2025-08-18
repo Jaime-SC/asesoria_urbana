@@ -1590,12 +1590,15 @@ def egresos_au_edit(request, egreso_id):
         departamentos = Departamento.objects.order_by('nombre')
         preseleccion = list(eg.funcionarios.values_list('id', flat=True))
         archivo_nombre = os.path.basename(eg.archivo_adjunto.name) if eg.archivo_adjunto else ""
+        archivo_respuesta_nombre = os.path.basename(eg.archivo_respuesta.name) if eg.archivo_respuesta else ""
+
         return render(request, "bnup/egresos_au/egresos_au_edit_form.html", {
             "egreso": eg,
             "funcionarios": funcionarios,
             "departamentos": departamentos,
             "preseleccion": preseleccion,
             "archivo_nombre": archivo_nombre,
+            "archivo_respuesta_nombre": archivo_respuesta_nombre,  # ← NUEVO
         })
 
     # POST: guardar cambios (sin opción de borrar archivo)
@@ -1604,6 +1607,7 @@ def egresos_au_edit(request, egreso_id):
     descr     = request.POST.get("descripcion", "").strip()
     dest_id   = request.POST.get("destinatario")
     archivo   = request.FILES.get("archivo_adjunto")
+    archivo_resp = request.FILES.get("archivo_respuesta")
     func_ids  = request.POST.get("funcionarios_seleccionados", "")
 
     if EgresoAU.objects.filter(numero_egreso=numero).exclude(id=eg.id).exists():
@@ -1622,6 +1626,8 @@ def egresos_au_edit(request, egreso_id):
     # Solo reemplaza si suben archivo nuevo; nunca lo borra
     if archivo:
         eg.archivo_adjunto = archivo
+    if archivo_resp:                     # ← NUEVO
+        eg.archivo_respuesta = archivo_resp
 
     # Evitar que quede sin archivo adjunto
     if not eg.archivo_adjunto:
@@ -1640,6 +1646,7 @@ def egresos_au_edit(request, egreso_id):
         "funcionarios": ", ".join(f.nombre for f in eg.funcionarios.all()),
         "destinatario": eg.destinatario.nombre if eg.destinatario else "",
         "archivo_url": eg.archivo_adjunto.url if eg.archivo_adjunto else "",
+        "archivo_respuesta_url": eg.archivo_respuesta.url if eg.archivo_respuesta else "",  # ← NUEVO
     }
     return JsonResponse({"success": True, "egreso": data})
 

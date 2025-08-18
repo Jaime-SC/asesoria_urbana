@@ -70,6 +70,29 @@
     </div>
   </div>
 
+  {% if egreso.archivo_respuesta %}
+    <div class="form-group">
+      <label>Archivo de Respuesta</label>
+      <div class="form-group-adjunto">
+        <div class="mb-2">
+          <a href="{{ egreso.archivo_respuesta.url }}" target="_blank" class="buttonLogin buttonPreview">
+            <span class="material-symbols-outlined bell">find_in_page</span>
+          </a>
+        </div>
+        <input
+          id="archivo_respuesta_edit"
+          name="archivo_respuesta"
+          type="file"
+          class="file"
+          data-show-preview="false"
+          data-initial-caption="{{ archivo_respuesta_nombre }}"
+        />
+      </div>
+      <small class="form-text text-muted">Si sube un nuevo archivo, reemplazará el actual.</small>
+    </div>
+  {% endif %}
+
+
   <div class="form-group">
     <label for="descripcion_edit">Descripción</label>
     <textarea id="descripcion_edit" name="descripcion" class="form-control standardize-input" placeholder="Escriba la descripción…">{{ egreso.descripcion }}</textarea>

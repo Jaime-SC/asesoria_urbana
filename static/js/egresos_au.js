@@ -350,6 +350,17 @@
                 dropZoneEnabled: false,
                 initialCaption: initialCaption
             });
+            const fileResp = content.querySelector('#archivo_respuesta_edit');
+            if (fileResp) {
+                const initialCap = fileResp.dataset.initialCaption || '';
+                initializeFileInput('#archivo_respuesta_edit', {
+                    showUpload: false,
+                    showRemove: false,
+                    showCancel: false,
+                    dropZoneEnabled: false,
+                    initialCaption: initialCap
+                });
+            }
 
 
             // validación del número (excluyendo este registro)
@@ -445,6 +456,32 @@
                         adjCell.textContent = '—';
                     }
                 }
+
+                // respuesta (columna "Respuesta")
+                const respCell = tr.querySelector('.celda-respuesta > div');
+                if (respCell) {
+                    if (eg.archivo_respuesta_url) {
+                        respCell.innerHTML = `
+                        <div class="icon-container">
+                            <a href="${eg.archivo_respuesta_url}" target="_blank" style="text-decoration: none;">
+                            <button class="buttonLogin buttonPreview btn-view-respuesta">
+                                <span class="material-symbols-outlined bell">find_in_page</span>
+                            </button>
+                            </a>
+                            <div class="tooltip">Ver respuesta</div>
+                        </div>`;
+                                        } else {
+                                            // si (por lo que sea) no hay respuesta, dejamos el botón para subir
+                                            respCell.innerHTML = `
+                        <div class="icon-container">
+                            <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="${eg.id}">
+                            <span class="material-symbols-outlined bell">note_add</span>
+                            </button>
+                            <div class="tooltip">Subir respuesta</div>
+                        </div>`;
+                    }
+                }
+
 
                 // re-setup (paginación/selección si hace falta)
                 initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
