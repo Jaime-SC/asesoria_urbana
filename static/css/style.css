@@ -361,7 +361,7 @@ h1 {
   font-size: 16px;
 }
 
-.contentMenu > div {
+.contentMenu>div {
   height: 100%;
   margin-bottom: 1.6rem;
   margin-inline: 1.6rem;
@@ -515,11 +515,12 @@ h1 {
   opacity: 1;
 }
 
-.krajee-default .file-caption-info, .krajee-default .file-size-info {
-    width: min-content !important;
-    height: auto !important;
-    font-size: 20px;
-    font-family: 'HelveticaNeue';
+.krajee-default .file-caption-info,
+.krajee-default .file-size-info {
+  width: min-content !important;
+  height: auto !important;
+  font-size: 20px;
+  font-family: 'HelveticaNeue';
 }
 
 
@@ -583,14 +584,7 @@ label {
   width: 100%;
 }
 
-#btnToggleFilters {
-  margin-top: 0px;
-  padding: 0px;
-  padding-inline: .5rem;
-  width: 100%;
-  height: auto;
-  background: #ffa5ff;
-}
+
 
 .search-filters-container #filterPanel {
   display: none;
@@ -1871,7 +1865,8 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 
 
 /* Estilo base para el contenedor de búsqueda */
-.searchContainer {
+.searchContainer,
+.searchContainerEgresosAU {
   display: flex;
   align-items: center;
   background-color: #e5f4fa;
@@ -1880,11 +1875,36 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   transition: border 0.3s ease-in-out;
 }
 
+.search-input,
+.search-input-egresosAU {
+  width: 400px !important;
+  margin-top: 0px !important;
+  border: 0px !important;
+}
+
 /* Estilo base para el ícono de búsqueda */
-.searchContainer span {
+.searchContainer span,
+.searchContainerEgresosAU span {
   margin-inline: 2px;
   color: #16233E;
   transition: color 0.3s ease-in-out;
+}
+
+#btnToggleFilters,
+#btnToggleFiltersEgresosAU {
+  margin-top: 0px;
+  padding: 0px;
+  padding-inline: .5rem;
+  width: 100%;
+  height: auto;
+  background: #ffa5ff;
+}
+
+#btnResetFiltersEgresosAU,
+#btnResetFilters {
+  width: max-content;
+  margin-top: .25rem;
+  background: #ffa5ff;
 }
 
 /* Estilo base para el input de búsqueda */
@@ -2088,17 +2108,22 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 .blur-bg::before {
   content: "";
   position: absolute;
-  inset: 0;                    /* ocupa todo el contenedor */
-  background: rgba(0, 0, 0, 0.5); /* negro al 50% de opacidad */
-  pointer-events: all;        /* para que no interfiera con clics */
-  z-index: 10;                 /* encima del contenido difuminado */
+  inset: 0;
+  /* ocupa todo el contenedor */
+  background: rgba(0, 0, 0, 0.5);
+  /* negro al 50% de opacidad */
+  pointer-events: all;
+  /* para que no interfiera con clics */
+  z-index: 10;
+  /* encima del contenido difuminado */
 }
 
 /* El contenido real sigue difuminado por detrás del overlay */
-.blur-bg > * {
+.blur-bg>* {
   filter: blur(5px);
   transition: filter 0.3s ease;
-  position: relative;          /* para que quede por debajo del ::before */
+  position: relative;
+  /* para que quede por debajo del ::before */
   z-index: 1;
 }
 
@@ -2126,8 +2151,11 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 }
 
 .typewriter .slide {
-  width: 92px; height: 20px; border-radius: 3px;
-  margin-left: 14px; transform: translateX(14px);
+  width: 92px;
+  height: 20px;
+  border-radius: 3px;
+  margin-left: 14px;
+  transform: translateX(14px);
   background: linear-gradient(var(--blue), var(--blue-dark));
   animation: slide05 var(--duration) ease infinite;
 }
@@ -2135,80 +2163,186 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
 .typewriter .slide:before,
 .typewriter .slide:after,
 .typewriter .slide i:before {
-  content: ""; position: absolute; background: var(--tool);
+  content: "";
+  position: absolute;
+  background: var(--tool);
 }
 
 .typewriter .slide:before {
-  width: 2px; height: 8px; top: 6px; left: 100%;
+  width: 2px;
+  height: 8px;
+  top: 6px;
+  left: 100%;
 }
+
 .typewriter .slide:after {
-  left: 94px; top: 3px; height: 14px; width: 6px; border-radius: 3px;
+  left: 94px;
+  top: 3px;
+  height: 14px;
+  width: 6px;
+  border-radius: 3px;
 }
+
 .typewriter .slide i {
-  display: block; position: absolute; right:100%;
-  width: 6px; height: 4px; top: 4px; background: var(--tool);
+  display: block;
+  position: absolute;
+  right: 100%;
+  width: 6px;
+  height: 4px;
+  top: 4px;
+  background: var(--tool);
 }
+
 .typewriter .slide i:before {
-  right:100%; top:-2px; width:4px; height:14px; border-radius:2px;
+  right: 100%;
+  top: -2px;
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
 }
 
 .typewriter .paper {
-  position: absolute; left:24px; top:-26px;
-  width:40px; height:46px; border-radius:5px;
-  background: var(--paper); transform: translateY(46px);
+  position: absolute;
+  left: 24px;
+  top: -26px;
+  width: 40px;
+  height: 46px;
+  border-radius: 5px;
+  background: var(--paper);
+  transform: translateY(46px);
   animation: paper05 var(--duration) linear infinite;
 }
+
 .typewriter .paper:before {
-  content:""; position:absolute; left:6px; right:6px; top:7px;
-  height:4px; transform:scaleY(.8); background: var(--text);
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 7px;
+  height: 4px;
+  transform: scaleY(.8);
+  background: var(--text);
   box-shadow: 0 12px 0 var(--text), 0 24px 0 var(--text), 0 36px 0 var(--text);
 }
 
 .typewriter .keyboard {
-  width:120px; height:56px; margin-top:-10px; position:relative; z-index:1;
+  width: 120px;
+  height: 56px;
+  margin-top: -10px;
+  position: relative;
+  z-index: 1;
 }
+
 .typewriter .keyboard:before,
 .typewriter .keyboard:after {
-  content:""; position:absolute;
+  content: "";
+  position: absolute;
 }
+
 .typewriter .keyboard:before {
-  top:0; left:0; right:0; bottom:0; border-radius:7px;
-  background: linear-gradient(135deg,var(--blue),var(--blue-dark));
-  transform:perspective(10px) rotateX(2deg);
-  transform-origin:50% 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  transform: perspective(10px) rotateX(2deg);
+  transform-origin: 50% 100%;
 }
+
 .typewriter .keyboard:after {
-  left:2px; top:25px; width:11px; height:4px; border-radius:2px;
+  left: 2px;
+  top: 25px;
+  width: 11px;
+  height: 4px;
+  border-radius: 2px;
   box-shadow:
-    15px 0 0 var(--key),30px 0 0 var(--key),45px 0 0 var(--key),
-    60px 0 0 var(--key),75px 0 0 var(--key),90px 0 0 var(--key),
-    22px 10px 0 var(--key),37px 10px 0 var(--key),52px 10px 0 var(--key),
-    60px 10px 0 var(--key),68px 10px 0 var(--key),83px 10px 0 var(--key);
+    15px 0 0 var(--key), 30px 0 0 var(--key), 45px 0 0 var(--key),
+    60px 0 0 var(--key), 75px 0 0 var(--key), 90px 0 0 var(--key),
+    22px 10px 0 var(--key), 37px 10px 0 var(--key), 52px 10px 0 var(--key),
+    60px 10px 0 var(--key), 68px 10px 0 var(--key), 83px 10px 0 var(--key);
   animation: keyboard05 var(--duration) linear infinite;
 }
 
 /* Keyframes */
 @keyframes bounce05 {
-  85%,92%,100% {transform:translateY(0);}
-  89%         {transform:translateY(-4px);}
-  95%         {transform:translateY(2px);}
+
+  85%,
+  92%,
+  100% {
+    transform: translateY(0);
+  }
+
+  89% {
+    transform: translateY(-4px);
+  }
+
+  95% {
+    transform: translateY(2px);
+  }
 }
+
 @keyframes slide05 {
-  5%   {transform:translateX(14px);}
-  15%,30% {transform:translateX(6px);}
-  40%,55% {transform:translateX(0);}
-  65%,70% {transform:translateX(-4px);}
-  80%,89% {transform:translateX(-12px);}
-  100%     {transform:translateX(14px);}
+  5% {
+    transform: translateX(14px);
+  }
+
+  15%,
+  30% {
+    transform: translateX(6px);
+  }
+
+  40%,
+  55% {
+    transform: translateX(0);
+  }
+
+  65%,
+  70% {
+    transform: translateX(-4px);
+  }
+
+  80%,
+  89% {
+    transform: translateX(-12px);
+  }
+
+  100% {
+    transform: translateX(14px);
+  }
 }
+
 @keyframes paper05 {
-  5%   {transform:translateY(46px);}
-  20%,30% {transform:translateY(34px);}
-  40%,55% {transform:translateY(22px);}
-  65%,70% {transform:translateY(10px);}
-  80%,85% {transform:translateY(0);}
-  92%,100%{transform:translateY(46px);}
+  5% {
+    transform: translateY(46px);
+  }
+
+  20%,
+  30% {
+    transform: translateY(34px);
+  }
+
+  40%,
+  55% {
+    transform: translateY(22px);
+  }
+
+  65%,
+  70% {
+    transform: translateY(10px);
+  }
+
+  80%,
+  85% {
+    transform: translateY(0);
+  }
+
+  92%,
+  100% {
+    transform: translateY(46px);
+  }
 }
+
 @keyframes keyboard05 {
   /* Sólo necesitas copiar las reglas del ejemplo original */
   /* … todas las etapas 5%,9%,18%,… hasta 81% … */

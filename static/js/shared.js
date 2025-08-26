@@ -379,6 +379,300 @@ function setupFilters(tableId, searchInputId) {
 
 }
 
+/**
+ * Filtros y búsqueda para la tabla de Egresos AU.
+ * Campos: Nº Egreso, Fecha (desde/hasta), Funcionario (contiene), Destinatario (select),
+ * Descripción (contiene), Adjunto (sí/no), Respuesta (sí/no) + búsqueda global.
+ */
+function setupFiltersEgresosAU(tableId, searchInputId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    const headers = Array.from(table.querySelectorAll('thead th'));
+    const colIdx = {
+        numero: headers.findIndex(h => h.textContent.trim().startsWith('Nº Egreso')),
+        fecha: headers.findIndex(h => h.textContent.trim().startsWith('Fecha')),
+        funcionario: headers.findIndex(h => h.textContent.trim().startsWith('Funcionario')),
+        destinatario: headers.findIndex(h => h.textContent.trim().startsWith('Destinatario')),
+        descripcion: headers.findIndex(h => h.textContent.trim().startsWith('Descripción')),
+        adjunto: headers.findIndex(h => h.textContent.trim().startsWith('Adjunto')),
+        respuesta: headers.findIndex(h => h.textContent.trim().startsWith('Respuesta')),
+    };
+    if (colIdx.numero < 0 || colIdx.fecha < 0) return; // sin columnas base
+
+    const state = tableStates[tableId];
+    const tbody = table.tBodies[0];
+
+    // UI
+    const searchInput = searchInputId && document.getElementById(searchInputId);
+    const btnFilters = document.getElementById('btnToggleFiltersEgresosAU');
+    const panel = document.getElementById('filterPanelEgresosAU');
+
+    const fNum = document.getElementById('filtroNumeroEgreso');
+    const fFecD = document.getElementById('filtroFechaDesdeEgreso');
+    const fFecH = document.getElementById('filtroFechaHastaEgreso');
+    const fFunc = document.getElementById('filtroFuncionarioEgreso');
+    const fDest = document.getElementById('filtroDestinatarioEgreso');
+    const fDesc = document.getElementById('filtroDescripcionEgreso');
+    const fAdj = document.getElementById('filtroAdjuntoEgreso');
+    const fResp = document.getElementById('filtroRespuestaEgreso');
+    const btnReset = document.getElementById('btnResetFiltersEgresosAU');
+
+    // Helper: normaliza para búsquedas "accent-insensitive"
+    const norm = (s) => (s || '')
+        .toString()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().trim();
+
+    // Carga opciones de funcionarios desde la tabla (soporta varios por fila "A, B, C")
+    (function fillFuncionarios() {
+        if (!fFunc) return;
+        // limpiar opciones (dejar solo "Todos")
+        Array.from(fFunc.options).slice(1).forEach(o => o.remove());
+
+        const set = new Set();
+        state.rows.forEach(row => {
+            const txt = row.cells[colIdx.funcionario]?.innerText || '';
+            txt.split(',').forEach(n => {
+                const name = n.trim();
+                if (name && name !== '—') set.add(name);
+            });
+        });
+        [...set].sort((a, b) => a.localeCompare(b)).forEach(name => {
+            const op = document.createElement('option');
+            op.value = name;
+            op.textContent = name;
+            fFunc.appendChild(op);
+        });
+    })();
+
+    // Rango por defecto: año en curso (opcional)
+    (function defaultYearRange() {
+        if (!fFecD || !fFecH) return;
+        const now = new Date();
+        const y = now.getFullYear();
+        if (!fFecD.value) fFecD.value = `${y}-01-01`;
+        if (!fFecH.value) fFecH.value = `${y}-12-31`;
+    })();
+
+    function parseFechaDDMMYYYY(txt) {
+        const [d, m, y] = (txt || '').split('/');
+        if (!y || !m || !d) return null;
+        return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    }
+
+    function hasLink(cellIndex, row) {
+        const cell = row.cells[cellIndex];
+        return !!cell?.querySelector('a');
+    }
+
+    function matchNumero(pattern, cellTxt) {
+        const t = (cellTxt || '').trim();
+        if (!pattern) return true;
+        // Soporta comodín * al final (ej: 12* → empieza por 12)
+        if (pattern.endsWith('*')) {
+            const base = pattern.slice(0, -1);
+            return t.startsWith(base);
+        }
+        // si no, "contiene"
+        return t.includes(pattern);
+    }
+
+    // Carga opciones de destinatario desde la tabla
+    (function fillDestinatarios() {
+        if (!fDest) return;
+        if (colIdx.destinatario < 0) return; // por si cambia el header
+
+        // limpiar opciones (dejar solo "Todos")
+        Array.from(fDest.options).slice(1).forEach(o => o.remove());
+
+        const set = new Set();
+        state.rows.forEach(row => {
+            const val = row.cells[colIdx.destinatario]?.innerText?.trim();
+            if (val && val !== '—') set.add(val);
+        });
+        [...set].sort((a, b) => a.localeCompare(b)).forEach(txt => {
+            const op = document.createElement('option');
+            op.value = txt;
+            op.textContent = txt;
+            fDest.appendChild(op);
+        });
+    })();
+
+
+
+
+    function applyFilters() {
+        tbody.querySelectorAll('.no-results').forEach(r => r.remove());
+
+        state.filteredRows = state.rows.filter(row => {
+            const c = row.cells;
+
+            // Nº egreso
+            if (fNum && fNum.value) {
+                if (!matchNumero(fNum.value.trim(), c[colIdx.numero].innerText)) return false;
+            }
+
+            // Fecha rango (dd/mm/yyyy en celda)
+            const f = parseFechaDDMMYYYY(c[colIdx.fecha].innerText);
+            if (fFecD?.value && f && f < new Date(fFecD.value)) return false;
+            if (fFecH?.value && f && f > new Date(fFecH.value)) return false;
+
+            // Funcionario (select)
+            if (fFunc && fFunc.value) {
+                const selected = norm(fFunc.value);
+                const names = (c[colIdx.funcionario].innerText || '')
+                    .split(',').map(s => norm(s));
+                if (!names.includes(selected)) return false;
+            }
+
+            // ⬇️ Destinatario (select; match exacto normalizado)
+            if (fDest && fDest.value) {
+                const selected = norm(fDest.value);
+                const cellVal = norm(c[colIdx.destinatario].innerText);
+                if (cellVal !== selected) return false;
+            }
+
+            // Descripción (contiene)
+            if (fDesc && fDesc.value) {
+                const fromData = row.getAttribute('data-descripcion') || '';
+                const texto = (fromData || c[colIdx.descripcion].innerText || '');
+                if (!norm(texto).includes(norm(fDesc.value))) return false;
+            }
+
+            // Adjunto
+            if (fAdj && fAdj.value) {
+                const tiene = hasLink(colIdx.adjunto, row);
+                if (fAdj.value === 'si' && !tiene) return false;
+                if (fAdj.value === 'no' && tiene) return false;
+            }
+
+            // Respuesta
+            if (fResp && fResp.value) {
+                const tiene = hasLink(colIdx.respuesta, row);
+                if (fResp.value === 'si' && !tiene) return false;
+                if (fResp.value === 'no' && tiene) return false;
+            }
+
+            // Búsqueda global
+            if (state.searchTerm) {
+                const fullRow = [
+                    c[colIdx.numero].innerText,
+                    c[colIdx.fecha].innerText,
+                    c[colIdx.funcionario].innerText,
+                    c[colIdx.destinatario].innerText,
+                    (row.getAttribute('data-descripcion') || c[colIdx.descripcion].innerText || '')
+                ].join(' ');
+                if (!norm(fullRow).includes(state.searchTerm)) return false;
+            }
+
+            return true;
+        });
+
+        // Orden por Nº Egreso (desc) por defecto
+        const idx = colIdx.numero;
+        state.filteredRows.sort((a, b) => {
+            const rawA = a.cells[idx].getAttribute('data-order') || a.cells[idx].innerText;
+            const rawB = b.cells[idx].getAttribute('data-order') || b.cells[idx].innerText;
+            const va = parseFloat((rawA || '').replace(/[^\d.-]/g, '')) || 0;
+            const vb = parseFloat((rawB || '').replace(/[^\d.-]/g, '')) || 0;
+            return vb - va;
+        });
+        headers.forEach(h => h.classList.remove('ascending', 'descending'));
+        if (idx > -1) headers[idx].classList.add('descending');
+
+        // Reconstruir tbody
+        tbody.innerHTML = '';
+        state.filteredRows.forEach(r => tbody.appendChild(r));
+
+        state.currentPage = 1;
+        displayRows(state, 1);
+        setupPagination(state);
+
+        if (state.filteredRows.length === 0) {
+            const tr = document.createElement('tr');
+            tr.classList.add('no-results');
+            const td = document.createElement('td');
+            td.colSpan = headers.length;
+            td.textContent = '🚫 No se encontraron resultados. Ajusta los filtros.';
+            td.style.textAlign = 'center';
+            td.style.fontStyle = 'italic';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        }
+    }
+
+    // Primera pasada
+    applyFilters();
+
+    // Buscar
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            state.searchTerm = norm(searchInput.value);
+            applyFilters();
+        });
+    }
+
+    // Eventos de filtros
+    [fNum, fFecD, fFecH, fFunc, fDest, fDesc, fAdj, fResp]
+        .forEach(el => el && el.addEventListener('change', applyFilters));
+
+    // Reset
+    btnReset?.addEventListener('click', () => {
+        [fNum, fFunc, fDest, fDesc, fAdj, fResp].forEach(el => { if (el) el.value = ''; });
+
+        if (fFecD && fFecH) {
+            const y = new Date().getFullYear();
+            fFecD.value = `${y}-01-01`;
+            fFecH.value = `${y}-12-31`;
+        }
+        if (searchInput) {
+            searchInput.value = '';
+            state.searchTerm = '';
+        }
+        applyFilters();
+    });
+
+    // Abrir/cerrar panel
+    // Abrir/cerrar panel anclado al botón (popover)
+    // btnFilters?.addEventListener('click', (e) => {
+    //     e.stopPropagation();
+
+    //     const isOpen = panel.style.display === 'block';
+    //     const closePanel = () => {
+    //         panel.style.display = 'none';
+    //         btnFilters.setAttribute('aria-expanded', 'false');
+    //         document.removeEventListener('click', outsideHandler);
+    //         document.removeEventListener('keydown', escHandler);
+    //     };
+    //     const outsideHandler = (ev) => {
+    //         if (!panel.contains(ev.target) && !btnFilters.contains(ev.target)) {
+    //             closePanel();
+    //         }
+    //     };
+    //     const escHandler = (ev) => {
+    //         if (ev.key === 'Escape') closePanel();
+    //     };
+
+    //     if (isOpen) {
+    //         // cerrar si ya está abierto
+    //         closePanel();
+    //         return;
+    //     }
+
+    //     // abrir
+    //     panel.style.display = 'block';
+    //     btnFilters.setAttribute('aria-expanded', 'true');
+
+    //     // listeners para cerrar
+    //     setTimeout(() => {
+    //         document.addEventListener('click', outsideHandler);
+    //         document.addEventListener('keydown', escHandler);
+    //     }, 0);
+    // });
+
+}
+
 
 /**
  * Inicializa la lógica de ordenamiento por columna en la tabla.
@@ -953,3 +1247,48 @@ function setupRowSelection(tableId, {
     });
 }
 
+// Toggle global para el panel de filtros de Egresos AU (delegado y a prueba de re-render)
+(function () {
+    if (window.__egresosAUToggleBound) return; // evita duplicarlo si re-importas
+    window.__egresosAUToggleBound = true;
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#btnToggleFiltersEgresosAU');
+        if (!btn) return;
+
+        const panel = document.getElementById('filterPanelEgresosAU');
+        if (!panel) return; // por si no está en esta vista
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isOpen = panel.style.display === 'block';
+
+        const closePanel = () => {
+            panel.style.display = 'none';
+            btn.setAttribute('aria-expanded', 'false');
+            document.removeEventListener('click', outsideHandler);
+            document.removeEventListener('keydown', escHandler);
+        };
+        const outsideHandler = (ev) => {
+            if (!panel.contains(ev.target) && !btn.contains(ev.target)) {
+                closePanel();
+            }
+        };
+        const escHandler = (ev) => {
+            if (ev.key === 'Escape') closePanel();
+        };
+
+        if (isOpen) {
+            closePanel();
+        } else {
+            panel.style.display = 'block';
+            btn.setAttribute('aria-expanded', 'true');
+            // registra los listeners para cerrar
+            setTimeout(() => {
+                document.addEventListener('click', outsideHandler);
+                document.addEventListener('keydown', escHandler);
+            }, 0);
+        }
+    });
+})();

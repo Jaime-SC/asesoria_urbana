@@ -120,7 +120,9 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
 
 .celda-adjunto div,
 .celda-respuesta div,
-.celda-checkbox div{
+.celda-checkbox div,
+.celda-numEgreso div,
+.celda-fecha div {
   display: flex;
   justify-content: center;
 }
@@ -273,4 +275,86 @@ select#destinatario_edit {
 
 .btn-view-respuesta {
   background: #17d244;
+}
+
+/* Ancla para posicionar el popover relativo al botón */
+.filters-popover-anchor {
+  position: relative;
+  display: flex;
+  /* para que el ancho sea el del botón */
+}
+
+.filters.flex {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filters-flex div {
+  margin-bottom: 5px;
+}
+
+/* Ventana modal flotante del panel de filtros */
+.filter-flyout {
+  position: absolute;
+  top: calc(100% + 5px);
+  /* debajo del botón */
+  left: 0;
+  /* alineado al borde derecho del botón */
+  z-index: 2000;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(16, 24, 40, 0.18), 0 2px 6px rgba(16, 24, 40, 0.12);
+  overflow: auto;
+  /*  */
+  display: none;
+  border: 1px solid #e1e5ef;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+/* Flechita decorativa */
+.filter-flyout::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 28px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #e1e5ef;
+  /* borde */
+}
+
+.filter-flyout::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 28px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 7px solid #fff;
+  /* relleno */
+}
+
+.confirmacion-egreso div{
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Space Mono';
+}
+
+@media (max-width: 640px) {
+  .filter-flyout {
+    left: 0;
+    right: auto;
+    width: 92vw;
+  }
+}
+
+.funcionarios-confirmar {
+    margin-top: 4px;
+    flex-direction: column;
+    align-items: flex-end;
 }

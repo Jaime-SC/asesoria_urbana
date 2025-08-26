@@ -1,10 +1,27 @@
 {% load static %}
-<!— Carga tu CSS de modal —>
 <link rel="stylesheet" href="{% static 'css/egresos_au.css' %}" />
 
 <div id="egresosAUTable">
-  <div>
+  <div style="display: flex; justify-content: space-between;">
+    <div class="egresos-toolbar" style="display: flex;gap: 1rem;align-items: stretch;">
+      <div class="searchContainerEgresosAU">
+        <span class="material-symbols-outlined">search</span>
+        <input id="searchEgresosAU" type="text" placeholder="Buscar Egresos AU..." class="search-input-egresosAU">
+      </div>
+      <!-- ANCLA RELATIVA PARA EL POPOVER -->
+      <div class="filters-popover-anchor">
+        <button id="btnToggleFiltersEgresosAU" class="buttonLogin" aria-expanded="false" aria-controls="filterPanelEgresosAU">
+          <span class="material-symbols-outlined">manage_search</span>
+          <p>Filtros</p>
+        </button>
+
+        {# el panel va aquí, pegado al botón #}
+        {% include 'bnup/egresos_au/egresos_au_filters_panel.html' %}
+      </div>
+    </div>
     <div id="paginationEgresosAU" class="pagination"></div>
+  </div>
+
   </div>
   <table id="tablaEgresosAU">
     <thead>
@@ -12,13 +29,14 @@
         <th class="non-clickable">
           <input type="checkbox" id="checkAllEgresos" class="select-all" />
         </th>
-        <th>Nº Egreso</th>
-        <th>Fecha</th>
+        <th data-type="number">Nº Egreso</th>
+        <th data-type="date">Fecha</th>
         <th>Funcionario</th>
         <th>Destinatario</th>
-        <th>Descripción</th>       {# ← nueva columna #}
+        <th>Descripción</th>
         <th>Adjunto</th>
-        <th>Respuesta</th> <!-- ← NUEVA COLUMNA -->
+        <th>Respuesta</th>
+
       </tr>
     </thead>
     <tbody>
@@ -36,8 +54,13 @@
               <input type="checkbox" class="rowCheckbox" data-id="{{ e.id }}" />
             </div>
           </td>
-          <td>{{ e.numero_egreso }}</td>
-          <td>{{ e.fecha_egreso|date:"d/m/Y" }}</td>
+          <td class="celda-numEgreso" data-order="{{ e.numero_egreso }}">
+            <div>{{ e.numero_egreso }}</div>
+          </td>
+
+          <td class="celda-fecha" data-order="{{ e.fecha_egreso|date:'Ymd' }}">
+            <div>{{ e.fecha_egreso|date:'d/m/Y' }}</div>
+          </td>
           <td>
             {% for f in e.funcionarios.all %}
               {{ f.nombre }}{% if not forloop.last %}, {% endif %}

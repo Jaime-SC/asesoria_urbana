@@ -1,0 +1,69 @@
+{# bnup/egresos_au/_filters_panel.html #}
+<div id="filterPanelEgresosAU" class="filter-panel filter-flyout">
+  <div class="filters-flex">
+    {% comment %} <div>
+      <label for="filtroNumeroEgreso" class="form-label">Nº Egreso</label>
+      <input id="filtroNumeroEgreso" type="text" inputmode="numeric" class="form-control" placeholder="Ej: 123 o 12*" />
+    </div> {% endcomment %}
+    <div style="display: flex; flex-direction: row; gap: 10px;">
+      <div>
+        <label for="filtroFechaDesdeEgreso" class="form-label">Fecha desde</label>
+        <input id="filtroFechaDesdeEgreso" type="date" class="form-control" />
+      </div>
+      <div>
+        <label for="filtroFechaHastaEgreso" class="form-label">Fecha hasta</label>
+        <input id="filtroFechaHastaEgreso" type="date" class="form-control" />
+      </div>
+    </div>
+
+    {% comment %} <div>
+      <label for="filtroFuncionarioEgreso" class="form-label">Funcionario (contiene)</label>
+      <input id="filtroFuncionarioEgreso" type="text" class="form-control" placeholder="Nombre o parte" />
+    </div> {% endcomment %}
+    <div>
+      <label for="filtroFuncionarioEgreso" class="form-label">Funcionario</label>
+      <select id="filtroFuncionarioEgreso" class="form-select">
+        <option value="">Todos</option>
+        {# Se completa en JS leyendo la tabla #}
+      </select>
+    </div>
+
+    <div>
+      <label for="filtroDestinatarioEgreso" class="form-label">Destinatario</label>
+      <select id="filtroDestinatarioEgreso" class="form-select">
+        <option value="">Todos</option>
+        {# Se completa en JS leyendo la tabla #}
+      </select>
+    </div>
+
+    {% comment %} <div>
+      <label for="filtroDescripcionEgreso" class="form-label">Descripción (contiene)</label>
+      <input id="filtroDescripcionEgreso" type="text" class="form-control" placeholder="Texto libre" />
+    </div> {% endcomment %}
+
+    <div>
+      <label for="filtroAdjuntoEgreso" class="form-label">Adjunto</label>
+      <select id="filtroAdjuntoEgreso" class="form-select">
+        <option value="">Todos</option>
+        <option value="si">Con adjunto</option>
+        <option value="no">Sin adjunto</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="filtroRespuestaEgreso" class="form-label">Respuesta</label>
+      <select id="filtroRespuestaEgreso" class="form-select">
+        <option value="">Todos</option>
+        <option value="si">Con respuesta</option>
+        <option value="no">Sin respuesta</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display:flex; margin-top:10px;">
+    <button id="btnResetFiltersEgresosAU" class="buttonLogin" type="button">
+      <span class="material-symbols-outlined bell">reset_settings</span>
+      <p>Borrar Filtros</p>
+    </button>
+  </div>
+</div>

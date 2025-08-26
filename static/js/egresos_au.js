@@ -34,7 +34,9 @@
                 if (!r.ok) throw new Error();
                 const html = await r.text();
                 container.innerHTML = html;
-                initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
+                initializeTable('tablaEgresosAU', 'paginationEgresosAU', 10, null);
+                setupFiltersEgresosAU('tablaEgresosAU', 'searchEgresosAU');
+
                 setupRowSelection('tablaEgresosAU');
                 setupEgresosDeleteToggle();
 
@@ -71,7 +73,7 @@
                 const editMarkup = `
                     <button id="editSelectedEgresos"
                             class="btn-stats btnEditEgresoAU"
-                            style="background-color:#F5A623;justify-content:flex-start;width:150px;"
+                            style="justify-content:flex-start;width:150px;"
                             disabled>
                         <span class="material-symbols-outlined">edit</span> Editar
                     </button>`;
@@ -134,20 +136,18 @@
             // validación número único
             const inputNumero = content.querySelector('#numero_egreso');
             const numeroError = content.querySelector('#error_numero');
-            let numeroValido = false;
-            inputNumero.addEventListener('blur', async () => {
-                const num = inputNumero.value.trim();
-                if (!num) return;
+            let numeroValido = null;
+            async function validarNumeroCreate(num) {
+                if (!num) return null;
                 const r = await fetch(`/bnup/egresos_au/validate_numero/?numero=${encodeURIComponent(num)}`);
-                if (!r.ok) return;
-                const { exists } = await r.json();
-                if (exists) {
-                    numeroError.style.display = 'block';
-                    numeroValido = false;
-                } else {
-                    numeroError.style.display = 'none';
-                    numeroValido = true;
-                }
+                if (!r.ok) return null;
+                const { exists } = await r.json();      // exists => ya hay ACTIVO
+                return !exists;                         // true => válido
+            }
+
+            inputNumero.addEventListener('blur', async () => {
+                const ok = await validarNumeroCreate(inputNumero.value.trim());
+                numeroError.style.display = ok === false ? 'block' : 'none';
             });
 
             // funciones de animación
@@ -171,115 +171,234 @@
             const spanX = content.querySelector('.close');
             if (spanX) spanX.onclick = cerrarFormModal;
 
-            // submit AJAX
+            // submit AJAX (reemplaza TODO este bloque)
             const form = content.querySelector('form');
-            form.onsubmit = async evt => {
+            form.onsubmit = async (evt) => {
                 evt.preventDefault();
-                if (!numeroValido) {
+
+                // Evitar dobles envíos
+                if (form.dataset.sending === "1") return;
+
+                // 1) Validación del número (por si no hubo blur)
+                if (numeroValido === null) {
+                    numeroValido = await validarNumeroCreate(inputNumero.value.trim());
+                }
+                if (numeroValido === false) {
                     inputNumero.focus();
                     return Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'El número de egreso ya existe',
+                        text: 'El número de egreso ya existe en un registro activo.',
                         heightAuto: false,
                         scrollbarPadding: false
                     });
                 }
-                const data = new FormData(form);
-                const res = await fetch('/bnup/egresos_au_create/', {
-                    method: 'POST',
-                    body: data,
-                    headers: { 'X-CSRFToken': getCSRFToken() }
-                });
-                const json = await res.json();
-                if (json.success) {
-                    cerrarFormModal();
 
-                    // inserta fila nueva
-                    const { id, numero_egreso, fecha_egreso, descripcion, funcionarios, destinatario, archivo_url } = json.egreso;
-                    // ➤ Formatear fecha
-                    function formatFecha(fechaStr) {
-                        if (!fechaStr || typeof fechaStr !== 'string' || !fechaStr.includes('-')) return fechaStr;
-                        const [a, m, d] = fechaStr.split('-');
-                        return `${d}/${m}/${a}`;
+                // 2) Recoger valores para la previa
+                const numero = (content.querySelector('#numero_egreso')?.value || '').trim();
+                const fechaISO = (content.querySelector('#fecha_egreso')?.value || '').trim();
+                const descripcion = (content.querySelector('#descripcion')?.value || '').trim();
+                const archivo = content.querySelector('#archivo_adjunto')?.files?.[0]?.name || '—';
+
+                const selDest = content.querySelector('#destinatario');
+                const destinatario = (selDest && selDest.value)
+                    ? selDest.options[selDest.selectedIndex].text
+                    : '—';
+
+                // Nombres de funcionarios (robusto usando hidden + select)
+                const selFunc = content.querySelector('#multi_funcionarios');
+                const hiddenIds = content.querySelector('#funcionariosHidden');
+
+                let nombresFuncionarios = [];
+                if (hiddenIds && selFunc) {
+                    const ids = (hiddenIds.value || '')
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    // Mapear IDs -> texto del <option>
+                    nombresFuncionarios = ids
+                        .map(id => selFunc.querySelector(`option[value="${id}"]`)?.textContent?.trim())
+                        .filter(Boolean);
+
+                    // Fallback: si por alguna razón el hidden está vacío, intenta por selectedOptions
+                    if (nombresFuncionarios.length === 0) {
+                        nombresFuncionarios = Array.from(selFunc.selectedOptions || [])
+                            .map(o => o.textContent.trim())
+                            .filter(Boolean);
                     }
 
-                    const fechaFormateada = formatFecha(fecha_egreso);
+                    // Segundo fallback: intenta leer chips con varios selectores posibles
+                    if (nombresFuncionarios.length === 0) {
+                        nombresFuncionarios = Array.from(
+                            content.querySelectorAll('#funcionariosSeleccionados .chip-text, \
+                                #funcionariosSeleccionados .chip__text, \
+                                #funcionariosSeleccionados .ms-chip-text, \
+                                #funcionariosSeleccionados .chip-item, \
+                                #funcionariosSeleccionados .tag-text')
+                        ).map(el => el.textContent.trim()).filter(Boolean);
+                    }
+                }
 
-                    const tabla = document.getElementById('tablaEgresosAU');
-                    const tbody = tabla.querySelector('tbody');
-                    const tr = document.createElement('tr');
+                const funcionariosHTML = nombresFuncionarios.length
+                    ? nombresFuncionarios.map(n => `<p style="margin:0">${escapeHtml(n)}</p>`).join("")
+                    : "—";
 
-                    tr.dataset.id = id;
-                    tr.dataset.numero = numero_egreso;
-                    tr.dataset.fecha = fechaFormateada;
-                    tr.dataset.funcionario = funcionarios;
-                    tr.dataset.destinatario = destinatario;
-                    tr.dataset.descripcion = descripcion || '';
+                // descripción SIEMPRE dentro de <p>, preservando \n
+                const descripcionHTML = `<p style="margin:4px 0 0; white-space:pre-wrap;">${descripcion ? escapeHtml(descripcion) : "—"
+                    }</p>`;
 
-                    tr.innerHTML = `
-                        <td><input type="checkbox" class="rowCheckbox" data-id="${id}"></td>
-                        <td>${numero_egreso}</td>
-                        <td>${fechaFormateada}</td>
-                        <td>${funcionarios}</td>
-                        <td>${destinatario}</td>
-                        <td class="descripcion-cell">
-                            <div>
-                                <span class="span-descripcion-cell" style="cursor:pointer;">
-                                    ${descripcion ? descripcion.slice(0, 40) : '—'}
-                                </span>
-                                <span class="material-symbols-outlined preview-btn">preview</span>
+
+
+                // Helper de fecha
+                const formatFecha = (s) => {
+                    if (!s || !s.includes('-')) return s || '—';
+                    const [y, m, d] = s.split('-');
+                    return `${d}/${m}/${y}`;
+                };
+
+                // 3) Confirmación
+                const { isConfirmed } = await Swal.fire({
+                    icon: 'question',
+                    title: 'Confirmar creación',
+                    html: `
+                        <div class="confirmacion-egreso" style="text-align:left">
+                            <div><strong>Nº Egreso:</strong> ${numero || '—'}</div>
+                            <div><strong>Fecha:</strong> ${formatFecha(fechaISO)}</div>
+                            <div><strong>Destinatario:</strong> ${destinatario}</div>
+                            <div><strong>Funcionarios:</strong>
+                                <div class="funcionarios-confirmar" style="margin-top:4px">${funcionariosHTML}</div>
                             </div>
-                        </td>
-                        <td class="celda-adjunto">
-                            ${archivo_url
-                            ? `<div>
-                                    <div class="icon-container">
-                                        <a href="${archivo_url}" target="_blank" style="text-decoration:none;">
-                                            <button class="buttonLogin buttonPreview">
-                                                <span class="material-symbols-outlined bell">find_in_page</span>
-                                            </button>
-                                        </a>
-                                        <div class="tooltip">Ver adjunto</div>
-                                    </div>
-                                </div>`
-
-                            : '—'}
-                        </td>
-                        <td class="celda-respuesta">
-                            <div class="icon-container">
-                            <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="${id}">
-                                <span class="material-symbols-outlined bell">note_add</span>
-                            </button>
-                            <div class="tooltip">Subir respuesta</div>
+                            <div style="margin-top:6px;"><strong>Archivo:</strong> ${archivo}</div>
+                            <div style="margin-top:6px;flex-direction: column;">
+                                <strong>Descripción:</strong>
+                                ${descripcionHTML}
                             </div>
-                        </td>
-                    `;
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Crear egreso',
+                    cancelButtonText: 'Revisar',
+                    reverseButtons: true,
+                    heightAuto: false,
+                    scrollbarPadding: false
+                });
 
-                    tbody.insertBefore(tr, tbody.firstChild);
-                    initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
-                    setupRowSelection('tablaEgresosAU');
-                    setupEgresosDeleteToggle();
 
+                if (!isConfirmed) return;
 
+                // 4) Enviar
+                form.dataset.sending = "1";
+                const data = new FormData(form);
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Éxito',
-                        text: 'Egreso creado',
-                        heightAuto: false,
-                        scrollbarPadding: false
+                try {
+                    const res = await fetch('/bnup/egresos_au_create/', {
+                        method: 'POST',
+                        body: data,
+                        headers: { 'X-CSRFToken': getCSRFToken() }
                     });
-                } else {
+                    const json = await res.json();
+
+                    if (json.success) {
+                        // === TU FLUJO EXISTENTE (tal cual) ===
+                        cerrarFormModal();
+
+                        const { id, numero_egreso, fecha_egreso, descripcion, funcionarios, destinatario, archivo_url } = json.egreso;
+
+                        const fechaFormateada = formatFecha(fecha_egreso);
+
+                        const tabla = document.getElementById('tablaEgresosAU');
+                        const tbody = tabla.querySelector('tbody');
+                        const tr = document.createElement('tr');
+
+                        tr.dataset.id = id;
+                        tr.dataset.numero = numero_egreso;
+                        tr.dataset.fecha = fechaFormateada;
+                        tr.dataset.funcionario = funcionarios;
+                        tr.dataset.destinatario = destinatario;
+                        tr.dataset.descripcion = descripcion || '';
+
+                        const ordenFecha = (fecha_egreso || '').replaceAll('-', ''); // YYYYMMDD
+
+                        tr.innerHTML = `
+                <td class="celda-checkbox">
+                    <div>
+                    <input type="checkbox" class="rowCheckbox" data-id="${id}">
+                    </div>
+                </td>
+                <td class="celda-numEgreso" data-order="${numero_egreso}">
+                    <div>${numero_egreso}</div>
+                </td>
+                <td class="celda-fecha" data-order="${ordenFecha}">
+                    <div>${fechaFormateada}</div>
+                </td>
+                <td>${funcionarios}</td>
+                <td>${destinatario}</td>
+                <td class="descripcion-cell">
+                    <div>
+                        <span class="span-descripcion-cell" style="cursor:pointer;">
+                            ${descripcion ? descripcion.slice(0, 40) : '—'}
+                        </span>
+                        <span class="material-symbols-outlined preview-btn">preview</span>
+                    </div>
+                </td>
+                <td class="celda-adjunto">
+                    ${archivo_url
+                                ? `<div>
+                            <div class="icon-container">
+                                <a href="${archivo_url}" target="_blank" style="text-decoration:none;">
+                                    <button class="buttonLogin buttonPreview">
+                                        <span class="material-symbols-outlined bell">find_in_page</span>
+                                    </button>
+                                </a>
+                                <div class="tooltip">Ver adjunto</div>
+                            </div>
+                        </div>`
+                                : '—'}
+                </td>
+                <td class="celda-respuesta">
+                    <div class="icon-container">
+                    <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="${id}">
+                        <span class="material-symbols-outlined bell">note_add</span>
+                    </button>
+                    <div class="tooltip">Subir respuesta</div>
+                    </div>
+                </td>
+            `;
+
+                        tbody.insertBefore(tr, tbody.firstChild);
+                        initializeTable('tablaEgresosAU', 'paginationEgresosAU', 10, null);
+                        setupFiltersEgresosAU('tablaEgresosAU', 'searchEgresosAU');
+                        setupRowSelection('tablaEgresosAU');
+                        setupEgresosDeleteToggle();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Egreso creado',
+                            heightAuto: false,
+                            scrollbarPadding: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: json.error || 'Algo falló',
+                            heightAuto: false,
+                            scrollbarPadding: false
+                        });
+                    }
+                } catch (err) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: json.error || 'Algo falló',
+                        text: err?.message || 'No se pudo crear el egreso.',
                         heightAuto: false,
                         scrollbarPadding: false
                     });
+                } finally {
+                    delete form.dataset.sending;
                 }
-
             };
 
             return;
@@ -366,16 +485,21 @@
             // validación del número (excluyendo este registro)
             const inputNumero = content.querySelector('#numero_egreso_edit');
             const numeroError = content.querySelector('#error_numero_edit');
-            let numeroValido = true;
+            let numeroValido = null;
+
+            async function validarNumeroEdit(num) {
+                if (!num) return null;
+                const r = await fetch(`/bnup/egresos_au/validate_numero/?numero=${encodeURIComponent(num)}&exclude=${encodeURIComponent(egresoId)}&scope=any`);
+                if (!r.ok) return null;
+                const { exists } = await r.json();     // true => existe en cualquier estado (salvo el propio)
+                return !exists;                        // válido ↔ no existe en ningún lado
+            }
 
             inputNumero.addEventListener('blur', async () => {
-                const num = inputNumero.value.trim();
-                if (!num) return;
-                const r = await fetch(`/bnup/egresos_au/validate_numero/?numero=${encodeURIComponent(num)}&exclude=${encodeURIComponent(egresoId)}`);
-                if (!r.ok) return;
-                const { exists } = await r.json();
-                numeroValido = !exists;
-                numeroError.style.display = exists ? 'block' : 'none';
+                const ok = await validarNumeroEdit(inputNumero.value.trim());
+                if (ok === null) return;
+                numeroValido = ok;
+                numeroError.style.display = ok ? 'none' : 'block';
             });
 
             // mostrar modal + animaciones
@@ -393,104 +517,242 @@
             const spanX = content.querySelector('.close');
             if (spanX) spanX.onclick = cerrarEditModal;
 
-            // submit edición
+            // submit edición (reemplaza TODO el cuerpo actual)
             const form = content.querySelector('#egresoAUEditForm');
             form.onsubmit = async (e) => {
                 e.preventDefault();
-                if (!numeroValido) {
+
+                // evita dobles envíos
+                if (form.dataset.sending === "1") return;
+
+                // valida número si no hubo blur
+                if (numeroValido === null) {
+                    numeroValido = await validarNumeroEdit(inputNumero.value.trim());
+                }
+                if (numeroValido === false) {
                     inputNumero.focus();
-                    return Swal.fire({ icon: 'error', title: 'Error', text: 'El número de egreso ya existe', heightAuto: false, scrollbarPadding: false });
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'El número de egreso ya existe en un registro activo.',
+                        heightAuto: false,
+                        scrollbarPadding: false
+                    });
                 }
 
+                // helper
+                const getVal = (sel) => (content.querySelector(sel)?.value || '').trim();
+                const escapeHtml = (s) => String(s)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+
+                const numero = getVal('#numero_egreso_edit') || getVal('#numero_egreso');
+                const fechaISO = getVal('#fecha_egreso_edit') || getVal('#fecha_egreso');
+                const descripcion = getVal('#descripcion_edit') || getVal('#descripcion');
+
+                // destinatario (lee el texto de la opción)
+                const selDest = content.querySelector('#destinatario_edit') || content.querySelector('#destinatario');
+                const destinatario = (selDest && selDest.value)
+                    ? selDest.options[selDest.selectedIndex].text
+                    : '—';
+
+                // funcionarios (hidden + select, con fallbacks)
+                const selFunc = content.querySelector('#multi_funcionarios_edit') || content.querySelector('#multi_funcionarios');
+                const hiddenIds = content.querySelector('#funcionariosHidden_edit') || content.querySelector('#funcionariosHidden');
+                let nombresFuncionarios = [];
+
+                if (hiddenIds && selFunc) {
+                    const ids = (hiddenIds.value || '').split(',').map(s => s.trim()).filter(Boolean);
+                    nombresFuncionarios = ids
+                        .map(id => selFunc.querySelector(`option[value="${id}"]`)?.textContent?.trim())
+                        .filter(Boolean);
+
+                    if (nombresFuncionarios.length === 0) {
+                        nombresFuncionarios = Array.from(selFunc.selectedOptions || [])
+                            .map(o => o.textContent.trim())
+                            .filter(Boolean);
+                    }
+
+                    if (nombresFuncionarios.length === 0) {
+                        nombresFuncionarios = Array.from(
+                            content.querySelectorAll('#funcionariosSeleccionados_edit .chip-text, \
+                                  #funcionariosSeleccionados_edit .chip__text, \
+                                  #funcionariosSeleccionados_edit .ms-chip-text, \
+                                  #funcionariosSeleccionados_edit .chip-item, \
+                                  #funcionariosSeleccionados_edit .tag-text, \
+                                  #funcionariosSeleccionados .chip-text, \
+                                  #funcionariosSeleccionados .chip__text, \
+                                  #funcionariosSeleccionados .ms-chip-text, \
+                                  #funcionariosSeleccionados .chip-item, \
+                                  #funcionariosSeleccionados .tag-text')
+                        ).map(el => el.textContent.trim()).filter(Boolean);
+                    }
+                }
+
+                const funcionariosHTML = nombresFuncionarios.length
+                    ? nombresFuncionarios.map(n => `<p style="margin:0">${escapeHtml(n)}</p>`).join("")
+                    : `<p style="margin:0">—</p>`;
+
+                // archivos (si no hay nuevo, mostrar caption inicial)
+                const fileAdj = content.querySelector('#archivo_adjunto_edit');
+                const archivoAdjNombre = (fileAdj?.files?.[0]?.name) || (fileAdj?.dataset.initialCaption) || '—';
+
+                const fileResp = content.querySelector('#archivo_respuesta_edit');
+                const archivoRespNombre = (fileResp?.files?.[0]?.name) || (fileResp?.dataset.initialCaption) || '—';
+
+                // fecha → DD/MM/YYYY
+                const formatFecha = (s) => {
+                    if (!s || !s.includes('-')) return s || '—';
+                    const [y, m, d] = s.split('-');
+                    return `${d}/${m}/${y}`;
+                };
+
+                const descripcionHTML = `<p style="margin:4px 0 0; white-space:pre-wrap;">${descripcion ? escapeHtml(descripcion) : '—'
+                    }</p>`;
+
+                // confirmación previa
+                const { isConfirmed } = await Swal.fire({
+                    icon: 'question',
+                    title: 'Confirmar cambios',
+                    html: `
+                    <div class="confirmacion-egreso" style="text-align:left">
+                        <div><strong>Nº Egreso:</strong> ${numero || '—'}</div>
+                        <div><strong>Fecha:</strong> ${formatFecha(fechaISO)}</div>
+                        <div><strong>Destinatario:</strong> ${destinatario}</div>
+                        <div><strong>Funcionarios:</strong>
+                        <div class="funcionarios-confirmar" style="margin-top:4px">${funcionariosHTML}</div>
+                        </div>
+                        <div style="margin-top:6px;"><strong>Archivo principal:</strong> ${archivoAdjNombre}</div>
+                        <div style="margin-top:4px;"><strong>Archivo respuesta:</strong> ${archivoRespNombre}</div>
+                        <div style="margin-top:6px;flex-direction: column;">
+                            <strong>Descripción:</strong>
+                            ${descripcionHTML}
+                        </div>
+                    </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar cambios',
+                    cancelButtonText: 'Revisar',
+                    reverseButtons: true,
+                    heightAuto: false,
+                    scrollbarPadding: false
+                });
+
+                if (!isConfirmed) return;
+
+                // enviar
+                form.dataset.sending = "1";
                 const data = new FormData(form);
+
                 const res = await fetch(`/bnup/egresos_au_edit/${egresoId}/`, {
                     method: 'POST',
                     body: data,
                     headers: { 'X-CSRFToken': getCSRFToken() }
                 });
-                const json = await res.json();
-                if (!json.success) {
-                    return Swal.fire({ icon: 'error', title: 'Error', text: json.error || 'No se pudo guardar.', heightAuto: false, scrollbarPadding: false });
+
+                let payload = null, raw = "";
+                try { raw = await res.text(); payload = raw ? JSON.parse(raw) : null; } catch { }
+
+                if (!res.ok || !payload || payload.success === false) {
+                    const msg = (payload && payload.error) ? payload.error : `Error ${res.status} ${res.statusText}`;
+                    delete form.dataset.sending;
+                    return Swal.fire({ icon: 'error', title: 'Error', text: msg, heightAuto: false, scrollbarPadding: false });
                 }
 
-                // actualizar la fila en la tabla
-                const eg = json.egreso;
+                // === lo que ya tenías para actualizar la fila ===
+                const eg = payload.egreso;
 
-                // helper fecha YYYY-MM-DD → DD/MM/YYYY
-                const formatFecha = (s) => {
+                const formatFechaOut = (s) => {
                     if (!s || !s.includes('-')) return s;
                     const [y, m, d] = s.split('-');
                     return `${d}/${m}/${y}`;
                 };
 
                 tr.dataset.numero = eg.numero_egreso;
-                tr.dataset.fecha = formatFecha(eg.fecha_egreso);
+                tr.dataset.fecha = formatFechaOut(eg.fecha_egreso);
                 tr.dataset.funcionario = eg.funcionarios;
                 tr.dataset.destinatario = eg.destinatario;
                 tr.dataset.descripcion = eg.descripcion || '';
 
-                // celdas visibles
-                tr.querySelector('td:nth-child(2)').textContent = eg.numero_egreso;
-                tr.querySelector('td:nth-child(3)').textContent = formatFecha(eg.fecha_egreso);
+                const tdNum = tr.querySelector('td.celda-numEgreso');
+                if (tdNum) {
+                    tdNum.setAttribute('data-order', eg.numero_egreso);
+                    const divNum = tdNum.querySelector('div');
+                    if (divNum) divNum.textContent = eg.numero_egreso;
+                }
+
+                const tdFecha = tr.querySelector('td.celda-fecha');
+                if (tdFecha) {
+                    const yyyymmdd = (eg.fecha_egreso || '').replaceAll('-', '');
+                    tdFecha.setAttribute('data-order', yyyymmdd);
+                    const divFecha = tdFecha.querySelector('div');
+                    if (divFecha) divFecha.textContent = formatFechaOut(eg.fecha_egreso);
+                }
+
                 tr.querySelector('td:nth-child(4)').textContent = eg.funcionarios || '—';
                 tr.querySelector('td:nth-child(5)').textContent = eg.destinatario || '—';
 
-                // descripción (truncada)
                 const descCellSpan = tr.querySelector('.descripcion-cell .span-descripcion-cell');
                 if (descCellSpan) descCellSpan.textContent = eg.descripcion ? eg.descripcion.slice(0, 60) : '—';
 
-                // adjunto
                 const adjCell = tr.querySelector('.celda-adjunto > div');
                 if (adjCell) {
                     if (eg.archivo_url) {
                         adjCell.innerHTML = `
                             <div class="icon-container">
-                                <a href="${eg.archivo_url}" target="_blank" style="text-decoration:none;">
+                            <a href="${eg.archivo_url}" target="_blank" style="text-decoration:none;">
                                 <button class="buttonLogin buttonPreview">
-                                    <span class="material-symbols-outlined bell">find_in_page</span>
+                                <span class="material-symbols-outlined bell">find_in_page</span>
                                 </button>
-                                </a>
-                                <div class="tooltip">Ver adjunto</div>
+                            </a>
+                            <div class="tooltip">Ver adjunto</div>
                             </div>`;
                     } else {
                         adjCell.textContent = '—';
                     }
                 }
 
-                // respuesta (columna "Respuesta")
                 const respCell = tr.querySelector('.celda-respuesta > div');
                 if (respCell) {
                     if (eg.archivo_respuesta_url) {
                         respCell.innerHTML = `
                         <div class="icon-container">
-                            <a href="${eg.archivo_respuesta_url}" target="_blank" style="text-decoration: none;">
+                        <a href="${eg.archivo_respuesta_url}" target="_blank" style="text-decoration: none;">
                             <button class="buttonLogin buttonPreview btn-view-respuesta">
-                                <span class="material-symbols-outlined bell">find_in_page</span>
+                            <span class="material-symbols-outlined bell">find_in_page</span>
                             </button>
-                            </a>
-                            <div class="tooltip">Ver respuesta</div>
+                        </a>
+                        <div class="tooltip">Ver respuesta</div>
                         </div>`;
-                                        } else {
-                                            // si (por lo que sea) no hay respuesta, dejamos el botón para subir
-                                            respCell.innerHTML = `
+                                    } else {
+                                        respCell.innerHTML = `
                         <div class="icon-container">
-                            <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="${eg.id}">
+                        <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="${eg.id}">
                             <span class="material-symbols-outlined bell">note_add</span>
-                            </button>
-                            <div class="tooltip">Subir respuesta</div>
+                        </button>
+                        <div class="tooltip">Subir respuesta</div>
                         </div>`;
                     }
                 }
 
-
-                // re-setup (paginación/selección si hace falta)
-                initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
+                initializeTable('tablaEgresosAU', 'paginationEgresosAU', 10, null);
+                setupFiltersEgresosAU('tablaEgresosAU', 'searchEgresosAU');
                 setupRowSelection('tablaEgresosAU');
                 setupEgresosDeleteToggle();
-
                 cerrarEditModal();
-                Swal.fire({ icon: 'success', title: 'Guardado', text: 'Egreso actualizado.', heightAuto: false, scrollbarPadding: false });
+
+                delete form.dataset.sending;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Guardado',
+                    text: 'Egreso actualizado.',
+                    heightAuto: false,
+                    scrollbarPadding: false
+                });
             };
+
 
             return; // ← terminamos el flujo de editar
         }
@@ -692,7 +954,9 @@
             });
 
             // Reinicializar paginación/sorting/selección
-            initializeTable('tablaEgresosAU', 'paginationEgresosAU', 8, null);
+            initializeTable('tablaEgresosAU', 'paginationEgresosAU', 10, null);
+            setupFiltersEgresosAU('tablaEgresosAU', 'searchEgresosAU');
+
             setupRowSelection('tablaEgresosAU');
 
 

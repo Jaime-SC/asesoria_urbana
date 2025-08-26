@@ -1,5 +1,6 @@
 # bnup/models.py
 from django.db import models
+from django.db.models import Q
 
 class Departamento(models.Model):
     nombre = models.CharField(max_length=255, unique=True)
@@ -69,7 +70,7 @@ class SalidaSOLICITUD(models.Model):
         return f"Salida Nº {self.numero_salida} - Solicitud Nº {self.ingreso_solicitud.numero_ingreso}"
 
 class EgresoAU(models.Model):
-    numero_egreso = models.IntegerField("Número de Egreso", unique=True)
+    numero_egreso = models.IntegerField("Número de Egreso")
     fecha_egreso = models.DateField("Fecha de Egreso")
     descripcion = models.TextField("Descripción", blank=True, null=True)
     is_active = models.BooleanField(default=True, db_index=True)
@@ -111,6 +112,13 @@ class EgresoAU(models.Model):
         ordering = ['-numero_egreso']
         verbose_name = "Egreso AU"
         verbose_name_plural = "Egresos AU"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['numero_egreso'],
+                condition=Q(is_active=True),
+                name='uniq_numero_egreso_activo',
+            ),
+        ]
 
     def __str__(self):
         return f"Egreso {self.numero_egreso} — {self.fecha_egreso}"

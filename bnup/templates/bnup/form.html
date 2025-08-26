@@ -20,7 +20,7 @@
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'JEFE' %}
         {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
           <div>
-            {% if tipo_usuario == 'ADMIN' %}
+            {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
               <button id="egresosAUButton" style="justify-content: flex-start; width: 150px; background-color: #73bba1;" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
             {% endif %}
 
@@ -154,7 +154,7 @@
 
               <div class="searchContainer">
                 <span class="material-symbols-outlined">search</span>
-                <input style="width: 400px; margin-top: 0px; border: 0px;" type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
+                <input type="text" id="searchSolicitudes" placeholder="Buscar Solicitudes..." class="search-input" />
               </div>
               <button id="btnToggleFilters" class="buttonLogin">
                 <span class="material-symbols-outlined bell">manage_search</span> 

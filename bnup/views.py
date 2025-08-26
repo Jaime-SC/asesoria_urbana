@@ -1,5 +1,6 @@
 import json, re, os
 import calendar
+import logging
 from .models import (
     SalidaSOLICITUD,
     IngresoSOLICITUD,
@@ -28,6 +29,9 @@ from collections import defaultdict
 from django.db.models import Count
 from datetime import datetime, date
 from django.urls import reverse
+from django.db import IntegrityError
+from django.db import transaction
+
 
 def bnup_form(request):
     """
@@ -566,8 +570,6 @@ def edit_salida(request):
             ],
         }
     })
-
-
 
 def delete_bnup_records(request):
     """
@@ -1471,19 +1473,6 @@ def add_departamento(request):
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
 
-
-@login_required
-def egresos_au_fragment(request):
-    egresos = (
-        EgresoAU.objects
-        .prefetch_related('funcionarios')
-        .select_related('destinatario')
-        .order_by('-numero_egreso')[:100]
-    )
-    return render(request, 'bnup/egresos_au/egresos_au_table.html', {
-        'egresos': egresos
-    })
-
 @login_required
 def egresos_au_list(request):
     egresos = (
@@ -1494,16 +1483,21 @@ def egresos_au_list(request):
     )
     return render(request, 'bnup/egresos_au_list.html', {'egresos': egresos})
 
-
 @login_required
 @require_GET
 def validate_egreso_numero(request):
     numero = request.GET.get("numero")
     exclude_id = request.GET.get("exclude")
+    scope = request.GET.get("scope", "active")  # 'active' | 'any'
+
     qs = EgresoAU.objects.filter(numero_egreso=numero) if numero else EgresoAU.objects.none()
+    if scope == "active":
+        qs = qs.filter(is_active=True)
     if exclude_id:
         qs = qs.exclude(id=exclude_id)
+
     return JsonResponse({"exists": qs.exists()})
+
 
 
 @login_required
@@ -1518,79 +1512,102 @@ def egresos_au_create(request):
         })
 
     # POST
-    numero     = request.POST.get("numero_egreso")
-    fecha_str  = request.POST.get("fecha_egreso")
-    descr      = request.POST.get("descripcion", "").strip()
-    dest_id    = request.POST.get("destinatario")
-    archivo    = request.FILES.get("archivo_adjunto")
-    func_ids   = request.POST.get("funcionarios_seleccionados", "")
+    numero    = (request.POST.get("numero_egreso") or "").strip()
+    fecha_str = request.POST.get("fecha_egreso")
+    descr     = (request.POST.get("descripcion") or "").strip()
+    dest_id   = request.POST.get("destinatario")
+    archivo   = request.FILES.get("archivo_adjunto")
+    func_ids  = request.POST.get("funcionarios_seleccionados", "")
+
+    if not numero:
+        return JsonResponse({"success": False, "error": "Debe ingresar el número de egreso."}, status=400)
 
     try:
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     except (ValueError, TypeError):
-        return JsonResponse({"success": False, "error": "Fecha de egreso inválida."})
+        return JsonResponse({"success": False, "error": "Fecha de egreso inválida."}, status=400)
 
-    # IDs m2m
     lista_ids = [int(fid) for fid in func_ids.split(',') if fid.strip().isdigit()]
 
+    # helper para URLs seguras
+    def safe_url(fieldfile):
+        try:
+            return fieldfile.url if fieldfile else ""
+        except Exception:
+            return ""
+
     try:
-        # ➊ Si existe uno ACTIVO con ese número → error
-        if EgresoAU.objects.filter(numero_egreso=numero, is_active=True).exists():
-            return JsonResponse({"success": False, "error": "Ya existe un egreso activo con ese número."})
+        with transaction.atomic():
+            # ➊ si hay ACTIVO con ese número → error
+            if EgresoAU.objects.filter(numero_egreso=numero, is_active=True).exists():
+                return JsonResponse({"success": False, "error": "Ya existe un egreso activo con ese número."}, status=400)
 
-        # ➋ Si existe INACTIVO → lo reactivamos (reuso del registro)
-        eg_inactivo = EgresoAU.objects.filter(numero_egreso=numero, is_active=False).first()
-        if eg_inactivo:
-            eg = eg_inactivo
-            eg.fecha_egreso    = fecha
-            eg.descripcion     = descr
-            eg.destinatario_id = dest_id or None
-            if archivo:  # si sube uno nuevo, reemplaza
-                eg.archivo_adjunto = archivo
-            eg.is_active = True
-            eg.save()
-
-            eg.funcionarios.set(lista_ids) if lista_ids else eg.funcionarios.clear()
-
-        else:
-            # ➌ No hay ninguno: creamos normal
-            eg = EgresoAU.objects.create(
-                numero_egreso=numero,
-                fecha_egreso=fecha,
-                descripcion=descr,
-                destinatario_id=dest_id or None,
-                archivo_adjunto=archivo or None,
-                is_active=True
+            # ➋ si hay INACTIVO → lo reactivamos (lock para evitar carreras)
+            eg_inactivo = (
+                EgresoAU.objects
+                .select_for_update()
+                .filter(numero_egreso=numero, is_active=False)
+                .first()
             )
-            if lista_ids:
-                eg.funcionarios.set(lista_ids)
 
-        nombres_funcionarios = ", ".join(f.nombre for f in eg.funcionarios.all())
+            if eg_inactivo:
+                eg = eg_inactivo
+                eg.fecha_egreso    = fecha
+                eg.descripcion     = descr
+                eg.destinatario_id = dest_id or None
+                if archivo:
+                    eg.archivo_adjunto = archivo
+                eg.is_active = True
+                eg.save()
+                eg.funcionarios.set(lista_ids) if lista_ids else eg.funcionarios.clear()
+            else:
+                # ➌ crear normal
+                eg = EgresoAU.objects.create(
+                    numero_egreso=numero,
+                    fecha_egreso=fecha,
+                    descripcion=descr,
+                    destinatario_id=dest_id or None,
+                    archivo_adjunto=archivo or None,
+                    is_active=True
+                )
+                if lista_ids:
+                    eg.funcionarios.set(lista_ids)
+
         data = {
             "id": eg.id,
             "numero_egreso": eg.numero_egreso,
             "fecha_egreso": eg.fecha_egreso.strftime("%Y-%m-%d"),
             "descripcion": eg.descripcion,
-            "funcionarios": nombres_funcionarios,
+            "funcionarios": ", ".join(f.nombre for f in eg.funcionarios.all()),
             "destinatario": eg.destinatario.nombre if eg.destinatario else "",
-            "archivo_url": eg.archivo_adjunto.url if eg.archivo_adjunto else ""
+            "archivo_url": safe_url(eg.archivo_adjunto),
         }
         return JsonResponse({"success": True, "egreso": data})
 
     except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
+logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET", "POST"])
 def egresos_au_edit(request, egreso_id):
     eg = get_object_or_404(EgresoAU, id=egreso_id)
+
+    def safe_url(fieldfile):
+        """Devuelve fieldfile.url o '' si no existe o falla."""
+        try:
+            return fieldfile.url if fieldfile else ""
+        except Exception:
+            return ""
 
     if request.method == "GET":
         funcionarios = Funcionario.objects.order_by('nombre')
         departamentos = Departamento.objects.order_by('nombre')
         preseleccion = list(eg.funcionarios.values_list('id', flat=True))
         archivo_nombre = os.path.basename(eg.archivo_adjunto.name) if eg.archivo_adjunto else ""
-        archivo_respuesta_nombre = os.path.basename(eg.archivo_respuesta.name) if eg.archivo_respuesta else ""
+        # usar getattr por si el campo existe pero está vacío
+        archivo_respuesta_nombre = os.path.basename(getattr(eg, "archivo_respuesta").name) \
+            if getattr(eg, "archivo_respuesta", None) else ""
 
         return render(request, "bnup/egresos_au/egresos_au_edit_form.html", {
             "egreso": eg,
@@ -1598,57 +1615,80 @@ def egresos_au_edit(request, egreso_id):
             "departamentos": departamentos,
             "preseleccion": preseleccion,
             "archivo_nombre": archivo_nombre,
-            "archivo_respuesta_nombre": archivo_respuesta_nombre,  # ← NUEVO
+            "archivo_respuesta_nombre": archivo_respuesta_nombre,
         })
 
-    # POST: guardar cambios (sin opción de borrar archivo)
-    numero    = request.POST.get("numero_egreso")
-    fecha_str = request.POST.get("fecha_egreso")
-    descr     = request.POST.get("descripcion", "").strip()
-    dest_id   = request.POST.get("destinatario")
-    archivo   = request.FILES.get("archivo_adjunto")
-    archivo_resp = request.FILES.get("archivo_respuesta")
-    func_ids  = request.POST.get("funcionarios_seleccionados", "")
-
-    if EgresoAU.objects.filter(numero_egreso=numero).exclude(id=eg.id).exists():
-        return JsonResponse({"success": False, "error": "Ya existe un egreso con ese número."})
-
+    # POST
     try:
-        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
-    except (ValueError, TypeError):
-        return JsonResponse({"success": False, "error": "Fecha de egreso inválida."})
+        numero       = request.POST.get("numero_egreso")
+        fecha_str    = request.POST.get("fecha_egreso")
+        descr        = (request.POST.get("descripcion") or "").strip()
+        dest_id      = request.POST.get("destinatario")
+        archivo      = request.FILES.get("archivo_adjunto")
+        archivo_resp = request.FILES.get("archivo_respuesta")
+        func_ids     = request.POST.get("funcionarios_seleccionados", "")
 
-    eg.numero_egreso = numero
-    eg.fecha_egreso  = fecha
-    eg.descripcion   = descr
-    eg.destinatario_id = dest_id or None
+        # Duplicado de número: contra toda la tabla, excluyéndome
+        if EgresoAU.objects.filter(numero_egreso=numero).exclude(id=eg.id).exists():
+            return JsonResponse(
+                {"success": False, "error": "Ya existe un egreso con ese número."},
+                status=400
+            )
 
-    # Solo reemplaza si suben archivo nuevo; nunca lo borra
-    if archivo:
-        eg.archivo_adjunto = archivo
-    if archivo_resp:                     # ← NUEVO
-        eg.archivo_respuesta = archivo_resp
 
-    # Evitar que quede sin archivo adjunto
-    if not eg.archivo_adjunto:
-        return JsonResponse({"success": False, "error": "Debe adjuntar un archivo."})
+        # Fecha
+        try:
+            fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return JsonResponse({"success": False, "error": "Fecha de egreso inválida."}, status=400)
 
-    eg.save()
+        # Asignaciones
+        eg.numero_egreso   = numero
+        eg.fecha_egreso    = fecha
+        eg.descripcion     = descr
+        eg.destinatario_id = dest_id or None
 
-    ids = [int(fid) for fid in func_ids.split(',') if fid.strip().isdigit()]
-    eg.funcionarios.set(ids) if ids else eg.funcionarios.clear()
+        # Reemplazo de archivos sólo si llegan
+        if archivo:
+            eg.archivo_adjunto = archivo
+        if archivo_resp:
+            eg.archivo_respuesta = archivo_resp
 
-    data = {
-        "id": eg.id,
-        "numero_egreso": eg.numero_egreso,
-        "fecha_egreso": eg.fecha_egreso.strftime("%Y-%m-%d"),
-        "descripcion": eg.descripcion,
-        "funcionarios": ", ".join(f.nombre for f in eg.funcionarios.all()),
-        "destinatario": eg.destinatario.nombre if eg.destinatario else "",
-        "archivo_url": eg.archivo_adjunto.url if eg.archivo_adjunto else "",
-        "archivo_respuesta_url": eg.archivo_respuesta.url if eg.archivo_respuesta else "",  # ← NUEVO
-    }
-    return JsonResponse({"success": True, "egreso": data})
+        # Si quieres exigir archivo principal, valida aquí
+        # (esto devuelve 400, no 500)
+        if not eg.archivo_adjunto:
+            return JsonResponse({"success": False, "error": "Debe adjuntar un archivo."}, status=400)
+
+        try:
+            eg.save()
+        except IntegrityError:
+            # por si algo se escapó, respondemos limpio (no 500)
+            return JsonResponse(
+                {"success": False, "error": "Ya existe un egreso con ese número (único en base de datos)."},
+                status=400
+            )
+
+        # Many-to-many
+        ids = [int(fid) for fid in str(func_ids).split(',') if fid.strip().isdigit()]
+        eg.funcionarios.set(ids) if ids else eg.funcionarios.clear()
+
+        data = {
+            "id": eg.id,
+            "numero_egreso": eg.numero_egreso,
+            "fecha_egreso": eg.fecha_egreso.strftime("%Y-%m-%d"),
+            "descripcion": eg.descripcion,
+            "funcionarios": ", ".join(f.nombre for f in eg.funcionarios.all()),
+            "destinatario": eg.destinatario.nombre if eg.destinatario_id else "",
+            "archivo_url": safe_url(eg.archivo_adjunto),
+            "archivo_respuesta_url": safe_url(getattr(eg, "archivo_respuesta", None)),
+        }
+        return JsonResponse({"success": True, "egreso": data})
+
+    except Exception as e:
+        # verás el traceback en consola/archivo y el front recibirá JSON
+        logger.exception("Error en egresos_au_edit(%s): %s", egreso_id, e)
+        return JsonResponse({"success": False, "error": f"Error inesperado al guardar: {e}"}, status=500)
+
 
 @login_required
 @require_POST
