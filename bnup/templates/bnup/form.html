@@ -17,16 +17,14 @@
             <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
           {% endif %}
         </div>
-        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'JEFE' %}
         {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
           <div>
-            {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
-              <button id="egresosAUButton" style="justify-content: flex-start; width: 150px; background-color: #73bba1;" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            <button id="egresosAUButton" style="justify-content: flex-start; width: 150px; background-color: #73bba1;" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'JEFE' %}
+              <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
             {% endif %}
 
-            <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
           </div>
-          {% endif %}
       </div>
 
       <!-- Ventana modal para el formulario BNUP -->

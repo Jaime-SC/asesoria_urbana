@@ -46,52 +46,69 @@
             <span class="material-symbols-outlined">arrow_back</span>
             Volver a Solicitudes
           </button>`;
+                const tipoUsuario = document.getElementById('bnupData')?.dataset.tipoUsuario || '';
+                const puedeGestionar = (tipoUsuario === 'ADMIN' || tipoUsuario === 'SECRETARIA');
+
+                // Reemplazar/crear botones de toolbar SOLO si puede gestionar
                 const btnIngresar = document.getElementById('openBNUPFormModal');
                 if (btnIngresar) {
-                    btnIngresar.outerHTML = `
-            <button id="openEgresoFormModal" class="btn-stats btnAddEgreso"
-                    style="background-color:#4BBFE0;justify-content:flex-start;width:150px;">
-              <span class="material-symbols-outlined">note_add</span>
-              Crear Egreso
-            </button>`;
-                }
-                const btnDeleteBNUP = document.getElementById('deleteSelected');
-                if (btnDeleteBNUP) {
-                    btnDeleteBNUP.outerHTML = `
-                        <button id="deleteSelectedEgresos"
-                                class="btn-stats btnDelEgresoAU"
-                                style="background-color:#E73C45;justify-content:flex-start;width:150px;"
-                                disabled>
-                        <span class="material-symbols-outlined">delete</span> Eliminar
-                        </button>`;
-                }
-
-                // dentro del bloque que arma los botones al pulsar "#egresosAUButton"
-                const toolbar = document.querySelector('.accionesBNUP') || document; // ajústalo a tu contenedor
-
-                // Si existe el de BNUP, reemplázalo; si no, lo insertas donde corresponda:
-                const editMarkup = `
-                    <button id="editSelectedEgresos"
-                            class="btn-stats btnEditEgresoAU"
-                            style="justify-content:flex-start;width:150px;"
-                            disabled>
-                        <span class="material-symbols-outlined">edit</span> Editar
-                    </button>`;
-
-                // 1) Si existe el botón de editar de BNUP, lo reemplazo
-                const btnEditBNUP = document.getElementById('editSelected');
-                if (btnEditBNUP) {
-                    btnEditBNUP.outerHTML = editMarkup;
-                } else if (!document.getElementById('editSelectedEgresos')) {
-                    // 2) Si no existe, lo inserto cerca de los otros controles
-                    const toolbar = document.querySelector('.accionesBNUP');
-                    if (toolbar) {
-                        toolbar.insertAdjacentHTML('beforeend', editMarkup);
+                    if (puedeGestionar) {
+                        btnIngresar.outerHTML = `
+      <button id="openEgresoFormModal" class="btn-stats btnAddEgreso"
+              style="background-color:#4BBFE0;justify-content:flex-start;width:150px;">
+        <span class="material-symbols-outlined">note_add</span>
+        Crear Egreso
+      </button>`;
                     } else {
-                        const anchor = document.getElementById('deleteSelectedEgresos') || document.getElementById('openEgresoFormModal');
-                        anchor?.insertAdjacentHTML('afterend', editMarkup);
+                        // usuarios sin permiso: no mostrar botón de crear
+                        btnIngresar.remove();
                     }
                 }
+
+                const btnDeleteBNUP = document.getElementById('deleteSelected');
+                if (btnDeleteBNUP) {
+                    if (puedeGestionar) {
+                        btnDeleteBNUP.outerHTML = `
+      <button id="deleteSelectedEgresos"
+              class="btn-stats btnDelEgresoAU"
+              style="background-color:#E73C45;justify-content:flex-start;width:150px;"
+              disabled>
+        <span class="material-symbols-outlined">delete</span> Eliminar
+      </button>`;
+                    } else {
+                        btnDeleteBNUP.remove();
+                    }
+                }
+
+                // botón Editar
+                const btnEditBNUP = document.getElementById('editSelected');
+                if (btnEditBNUP) {
+                    if (puedeGestionar) {
+                        btnEditBNUP.outerHTML = `
+      <button id="editSelectedEgresos"
+              class="btn-stats btnEditEgresoAU"
+              style="justify-content:flex-start;width:150px;"
+              disabled>
+        <span class="material-symbols-outlined">edit</span> Editar
+      </button>`;
+                    } else {
+                        btnEditBNUP.remove();
+                    }
+                }
+
+                // Habilitar features de selección SOLO si puede gestionar
+                if (puedeGestionar) {
+                    setupRowSelection('tablaEgresosAU');
+                    setupEgresosDeleteToggle();
+                } else {
+                    // por seguridad, desactivar cualquier botón "subir respuesta" que hubiera
+                    document.querySelectorAll('#tablaEgresosAU .btn-add-respuesta').forEach(btn => {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.6';
+                        btn.style.cursor = 'not-allowed';
+                    });
+                }
+
 
             } catch {
                 Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar egresos AU.' });
@@ -725,8 +742,8 @@
                         </a>
                         <div class="tooltip">Ver respuesta</div>
                         </div>`;
-                                    } else {
-                                        respCell.innerHTML = `
+                    } else {
+                        respCell.innerHTML = `
                         <div class="icon-container">
                         <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="${eg.id}">
                             <span class="material-symbols-outlined bell">note_add</span>
@@ -808,6 +825,11 @@
         // ─────────────────────────────────────────────
         const btnAddResp = event.target.closest('.btn-add-respuesta');
         if (btnAddResp) {
+            const tipoUsuario = document.getElementById('bnupData')?.dataset.tipoUsuario || '';
+            if (tipoUsuario !== 'ADMIN' && tipoUsuario !== 'SECRETARIA') {
+                // opcional: feedback
+                return Swal.fire({ icon: 'info', title: 'Sin permiso', text: 'Solo ADMIN y SECRETARIA pueden subir respuestas.', heightAuto: false, scrollbarPadding: false });
+            }
             event.preventDefault();
             const egresoId = btnAddResp.dataset.id;
             if (!egresoId) return;

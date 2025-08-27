@@ -1503,6 +1503,14 @@ def validate_egreso_numero(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def egresos_au_create(request):
+    # ⬇️ permiso
+    perfil = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    if tipo not in ["ADMIN", "SECRETARIA"]:
+        if request.method == "GET":
+            return JsonResponse({"success": False, "error": "Sin permiso."}, status=403)
+        return JsonResponse({"success": False, "error": "No tiene permiso para crear egresos."}, status=403)
+
     if request.method == "GET":
         funcionarios = Funcionario.objects.order_by('nombre')
         departamentos = Departamento.objects.order_by('nombre')
@@ -1591,6 +1599,14 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET", "POST"])
 def egresos_au_edit(request, egreso_id):
+    # ⬇️ permiso
+    perfil = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    if tipo not in ["ADMIN", "SECRETARIA"]:
+        if request.method == "GET":
+            return JsonResponse({"success": False, "error": "Sin permiso."}, status=403)
+        return JsonResponse({"success": False, "error": "No tiene permiso para editar egresos."}, status=403)
+
     eg = get_object_or_404(EgresoAU, id=egreso_id)
 
     def safe_url(fieldfile):
@@ -1695,7 +1711,8 @@ def egresos_au_edit(request, egreso_id):
 def delete_egresos_au(request):
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
     tipo   = perfil.tipo_usuario.nombre if perfil else None
-    if tipo != "ADMIN":
+    # ⬇️ permitir ADMIN y SECRETARIA (antes era solo ADMIN)
+    if tipo not in ["ADMIN", "SECRETARIA"]:
         return JsonResponse({"success": False, "error": "No tiene permiso para eliminar registros."})
 
     try:
@@ -1717,40 +1734,40 @@ def delete_egresos_au(request):
 
 @login_required
 def egresos_au_fragment(request):
-    egresos = (
-        EgresoAU.objects
-        .filter(is_active=True)  # ← solo activos
-        .prefetch_related('funcionarios')
-        .select_related('destinatario')
-        .order_by('-numero_egreso')[:100]
-    )
+    egresos = (EgresoAU.objects.filter(is_active=True)
+               .prefetch_related('funcionarios')
+               .select_related('destinatario')
+               .order_by('-numero_egreso')[:100])
+
+    perfil = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo   = perfil.tipo_usuario.nombre if perfil else None
+
     return render(request, 'bnup/egresos_au/egresos_au_table.html', {
-        'egresos': egresos
+        'egresos': egresos,
+        'tipo_usuario': tipo,   # ⬅️ IMPORTANTE
     })
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def egresos_au_respuesta(request, egreso_id):
+    # ⬇️ permiso (sólo ADMIN/SECRETARIA pueden subir respuesta)
+    perfil = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    if tipo not in ["ADMIN", "SECRETARIA"]:
+        return JsonResponse({"success": False, "error": "Sin permiso para registrar respuesta."}, status=403)
+
     eg = get_object_or_404(EgresoAU, id=egreso_id, is_active=True)
 
     if request.method == "GET":
-        # solo dibuja form simple para adjuntar respuesta
-        return render(request, "bnup/egresos_au/egreso_respuesta_form.html", {
-            "egreso": eg,
-        })
+        return render(request, "bnup/egresos_au/egreso_respuesta_form.html", {"egreso": eg})
 
-    # POST: guardar archivo
+    # POST: guardar archivo (sin cambios)
     archivo = request.FILES.get("archivo_respuesta")
     if not archivo:
         return JsonResponse({"success": False, "error": "Debe seleccionar un archivo de respuesta."})
-
     eg.archivo_respuesta = archivo
     eg.save(update_fields=["archivo_respuesta"])
-
     return JsonResponse({
         "success": True,
-        "egreso": {
-            "id": eg.id,
-            "archivo_respuesta_url": eg.archivo_respuesta.url if eg.archivo_respuesta else ""
-        }
+        "egreso": {"id": eg.id, "archivo_respuesta_url": eg.archivo_respuesta.url if eg.archivo_respuesta else ""}
     })

@@ -26,9 +26,11 @@
   <table id="tablaEgresosAU">
     <thead>
       <tr>
-        <th class="non-clickable">
-          <input type="checkbox" id="checkAllEgresos" class="select-all" />
-        </th>
+        {% if tipo_usuario in 'ADMIN SECRETARIA' %}
+          <th class="non-clickable">
+            <input type="checkbox" id="checkAllEgresos" class="select-all" />
+          </th>
+        {% endif %}
         <th data-type="number">Nº Egreso</th>
         <th data-type="date">Fecha</th>
         <th>Funcionario</th>
@@ -49,11 +51,11 @@
           data-destinatario="{{ e.destinatario.nombre }}"
           data-descripcion="{{ e.descripcion|default:''|escapejs }}"
         > 
-          <td class="celda-checkbox">
-            <div>
-              <input type="checkbox" class="rowCheckbox" data-id="{{ e.id }}" />
-            </div>
-          </td>
+          {% if tipo_usuario in 'ADMIN SECRETARIA' %}
+            <td class="celda-checkbox">
+              <div><input type="checkbox" class="rowCheckbox" data-id="{{ e.id }}"></div>
+            </td>
+        {% endif %}
           <td class="celda-numEgreso" data-order="{{ e.numero_egreso }}">
             <div>{{ e.numero_egreso }}</div>
           </td>
@@ -95,26 +97,32 @@
             </div>
           </td>
           <td class="celda-respuesta">
-            <div>
-              {% if e.archivo_respuesta %}
-                <div class="icon-container">
-                  <a href="{{ e.archivo_respuesta.url }}" target="_blank" style="text-decoration: none;">
-                    <button class="buttonLogin buttonPreview btn-view-respuesta">
-                      <span class="material-symbols-outlined bell">find_in_page</span>
-                    </button>
-                  </a>
-                  <div class="tooltip">Ver respuesta</div>
-                </div>
+          <div class="icon-container">
+            {% if e.archivo_respuesta %}
+              {# ✅ todos pueden ver la respuesta si existe #}
+              <a href="{{ e.archivo_respuesta.url }}" target="_blank" style="text-decoration: none;">
+                <button class="buttonLogin buttonPreview btn-view-respuesta">
+                  <span class="material-symbols-outlined bell">find_in_page</span>
+                </button>
+              </a>
+              <div class="tooltip">Ver respuesta</div>
+            {% else %}
+              {% if tipo_usuario in 'ADMIN SECRETARIA' %}
+                {# ✅ solo ADMIN/SECRETARIA pueden subir #}
+                <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="{{ e.id }}">
+                  <span class="material-symbols-outlined bell">note_add</span>
+                </button>
+                <div class="tooltip">Subir respuesta</div>
               {% else %}
-                <div class="icon-container">
-                  <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="{{ e.id }}">
-                    <span class="material-symbols-outlined bell">note_add</span>
-                  </button>
-                  <div class="tooltip">Subir respuesta</div>
-                </div>
+                {# 🚫 resto la ve deshabilitada #}
+                <button class="buttonLogin buttonPreview" disabled style="opacity:.6;cursor:not-allowed;">
+                  <span class="material-symbols-outlined bell">note_add</span>
+                </button>
+                <div class="tooltip">Sin permiso para subir</div>
               {% endif %}
-            </div>
-          </td>
+            {% endif %}
+          </div>
+        </td>
         </tr>
       {% empty %}
         <tr>
