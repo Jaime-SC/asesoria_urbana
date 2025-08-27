@@ -7,7 +7,7 @@
         padding: .75rem;
     }
 
-    .contentMenu > div {
+    .contentMenu>div {
         margin-bottom: .9rem;
         margin-inline: .9rem;
     }
@@ -112,7 +112,9 @@
 
 /* Pantallas grandes (desktops) */
 @media (min-width: 1272px) and (max-width: 1366px) {
-    #tablaSolicitudes {
+
+    #tablaSolicitudes,
+    #tablaEgresosAU {
         font-size: 13px !important;
         margin-top: 10px;
     }
@@ -125,7 +127,10 @@
     .btnDelBNUP,
     .btnEditBNUP,
     .btnStatsBNUP,
-    .btn-back {
+    .btn-back,
+    .btnAddEgreso,
+    .btnDelEgresoAU,
+    .btnEditEgresoAU {
         width: 110px !important;
         height: 25px;
         font-size: 13px;
@@ -138,23 +143,29 @@
     }
 
     #btnToggleFilters,
-    #btnResetFilters {
-        width: 100%;
+    #btnResetFilters,
+    #btnToggleFiltersEgresosAU,
+    #btnResetFiltersEgresosAU {
         height: 25px;
     }
 
     #btnToggleFilters span,
-    #btnResetFilters span {
+    #btnResetFilters span,
+    #btnToggleFiltersEgresosAU span,
+    #btnResetFiltersEgresosAU span {
         font-size: 20px;
     }
 
     #btnToggleFilters p,
-    #btnResetFilters p {
+    #btnResetFilters p,
+    #btnToggleFiltersEgresosAU p,
+    #btnResetFiltersEgresosAU p {
         font-size: 13px;
     }
 
-    .btn-back {
-        width: 8rem !important;
+    .btn-back,
+    .btnAddEgreso {
+        width: auto !important;
     }
 
     .divStatistics {
@@ -211,11 +222,13 @@
         font-size: 20px;
     }
 
-    .searchContainer span {
+    .searchContainer span,
+    .searchContainerEgresosAU span {
         font-size: 18px;
     }
 
-    .searchContainer input {
+    .searchContainer input,
+    .searchContainerEgresosAU input {
         font-size: 11px;
         padding: 4px;
         height: 25px;
@@ -240,11 +253,15 @@
     }
 
     #selectAll,
-    .rowCheckbox {
+    .rowCheckbox,
+    #checkAllEgresos {
         width: 10px;
     }
 
-    #tablaSolicitudes span {
+    #tablaSolicitudes span,
+    #tablaEgresosAU .preview-btn,
+    .celda-adjunto span,
+    .celda-respuesta span {
         font-size: 20px;
     }
 
@@ -274,6 +291,7 @@
 
     .modal-content label {
         margin-bottom: 2.5px;
+        font-size: .9rem;
     }
 
     .modal-content input[type="text"],
@@ -294,15 +312,38 @@
     }
 
     .modal-content h2 {
-        font-size: 20px;
+        font-size: 1.2;
     }
 
     .tableInfor_container td {
         padding: 4px;
     }
 
-    #tablaSolicitudes tbody {
+    #tablaSolicitudes tbody,
+    #tablaEgresosAU tbody {
         font-size: 14.2px;
+    }
+
+    .file-caption-name:not(.file-caption-disabled) {
+        height: 1.55rem;
+        font-size: .75rem;
+    }
+
+    .hidden-xs span {
+        font-size: 20px;
+    }
+
+    .modal-content .close span {
+        font-size: 2rem !important;
+    }
+
+    .btn {
+        font-size: 14px;
+    }
+
+    .selected-item {
+        padding: 2px 4px;
+        font-size: 12px;
     }
 }
 
@@ -462,7 +503,7 @@
         padding: .75rem;
     }
 
-    .contentMenu > div {
+    .contentMenu>div {
         margin-bottom: .9rem;
         margin-inline: .9rem;
     }
