@@ -1211,25 +1211,24 @@ function initializeStandardizeInputs(root = document) {
 /* ------------------------------------------------------------------ */
 /*   MÓDULO  SELECCIÓN  DE  FILAS  CON  CHECKBOX                      */
 /* ------------------------------------------------------------------ */
-function setupRowSelection(tableId, {
-    highlightClass = 'fila-marcada'
-} = {}) {
+function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
     const table = document.getElementById(tableId);
     if (!table) return;
+
+    // 🔒 evita doble binding
+    if (table.dataset.rowSelBound === '1') return;
+    table.dataset.rowSelBound = '1';
 
     const headChk = table.querySelector('thead .select-all');
     const rowChecks = () => table.querySelectorAll('tbody .rowCheckbox');
 
-    // ——— helper para actualizar estado global ———
     function refreshState() {
-        // marca / desmarca cabecera según correspondan todos
         const all = rowChecks();
         const on = [...all].filter(cb => cb.checked);
         if (headChk) headChk.checked = on.length === all.length;
-        updateActionButtonsState();                 // <-- ya lo tenías
+        updateActionButtonsState();
     }
 
-    // ——— cabecera selecciona / des-selecciona todos ———
     headChk?.addEventListener('change', () => {
         rowChecks().forEach(cb => {
             cb.checked = headChk.checked;
@@ -1238,14 +1237,13 @@ function setupRowSelection(tableId, {
         refreshState();
     });
 
-    // ——— cada checkbox de fila ———
     table.addEventListener('change', e => {
         if (!e.target.classList.contains('rowCheckbox')) return;
-        const cb = e.target;
-        toggleRowHighlight(cb.closest('tr'), cb.checked);
+        toggleRowHighlight(e.target.closest('tr'), e.target.checked);
         refreshState();
     });
 }
+
 
 // Toggle global para el panel de filtros de Egresos AU (delegado y a prueba de re-render)
 (function () {

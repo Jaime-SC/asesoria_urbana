@@ -22,11 +22,10 @@
     <div id="paginationEgresosAU" class="pagination"></div>
   </div>
 
-  </div>
   <table id="tablaEgresosAU">
     <thead>
       <tr>
-        {% if tipo_usuario in 'ADMIN SECRETARIA' %}
+        {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
           <th class="non-clickable">
             <input type="checkbox" id="checkAllEgresos" class="select-all" />
           </th>
@@ -51,7 +50,7 @@
           data-destinatario="{{ e.destinatario.nombre }}"
           data-descripcion="{{ e.descripcion|default:''|escapejs }}"
         > 
-          {% if tipo_usuario in 'ADMIN SECRETARIA' %}
+          {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
             <td class="celda-checkbox">
               <div><input type="checkbox" class="rowCheckbox" data-id="{{ e.id }}"></div>
             </td>
@@ -107,7 +106,7 @@
               </a>
               <div class="tooltip">Ver respuesta</div>
             {% else %}
-              {% if tipo_usuario in 'ADMIN SECRETARIA' %}
+              {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
                 {# ✅ solo ADMIN/SECRETARIA pueden subir #}
                 <button class="buttonLogin buttonPreview btn-add-respuesta" data-id="{{ e.id }}">
                   <span class="material-symbols-outlined bell">note_add</span>
@@ -126,9 +125,12 @@
         </tr>
       {% empty %}
         <tr>
-          <td colspan="6">No hay egresos registrados.</td>
+          <td colspan="{% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}8{% else %}7{% endif %}">
+            No hay egresos registrados.
+          </td>
         </tr>
       {% endfor %}
+
     </tbody>
   </table>  
   

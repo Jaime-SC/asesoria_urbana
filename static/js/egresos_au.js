@@ -6,6 +6,13 @@
         const delBtn = document.getElementById('deleteSelectedEgresos');
         if (!table || !delBtn) return;
 
+        // 🔒 evita doble binding
+        if (table.dataset.delToggleBound === '1') {
+            delBtn.disabled = !table.querySelector('tbody .rowCheckbox:checked');
+            return;
+        }
+        table.dataset.delToggleBound = '1';
+
         const update = () => {
             const anyChecked = !!table.querySelector('tbody .rowCheckbox:checked');
             delBtn.disabled = !anyChecked;
@@ -19,6 +26,7 @@
 
         update();
     }
+
 
     document.addEventListener('click', async function (event) {
         // 1) Pulsar "Egresos AU"
@@ -34,31 +42,53 @@
                 if (!r.ok) throw new Error();
                 const html = await r.text();
                 container.innerHTML = html;
-                initializeTable('tablaEgresosAU', 'paginationEgresosAU', 10, null);
-                setupFiltersEgresosAU('tablaEgresosAU', 'searchEgresosAU');
 
-                setupRowSelection('tablaEgresosAU');
-                setupEgresosDeleteToggle();
-
-                // sustituimos botones
-                btnEgresos.outerHTML = `
-          <button id="backToBNUP" class="btn-back">
-            <span class="material-symbols-outlined">arrow_back</span>
-            Volver a Solicitudes
-          </button>`;
+                // 1) Primero resolvemos permisos
                 const tipoUsuario = document.getElementById('bnupData')?.dataset.tipoUsuario || '';
                 const puedeGestionar = (tipoUsuario === 'ADMIN' || tipoUsuario === 'SECRETARIA');
+
+                // 2) Inicializaciones que no dependen de checkboxes
+                try {
+                    initializeTable('tablaEgresosAU', 'paginationEgresosAU', 10, null);
+                    setupFiltersEgresosAU('tablaEgresosAU', 'searchEgresosAU');
+                } catch (e) {
+                    console.warn('Inicialización de tabla/filtros falló (no fatal):', e);
+                }
+
+                // 3) Solo si hay columna de selección
+                if (puedeGestionar) {
+                    try {
+                        setupRowSelection('tablaEgresosAU');
+                        setupEgresosDeleteToggle();
+                    } catch (e) {
+                        console.warn('Inicialización de selección falló (no fatal):', e);
+                    }
+                } else {
+                    document.querySelectorAll('#tablaEgresosAU .btn-add-respuesta').forEach(btn => {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.6';
+                        btn.style.cursor = 'not-allowed';
+                    });
+                }
+
+                // 4) Reemplazo de botones (igual que antes)
+                btnEgresos.outerHTML = `
+                <button id="backToBNUP" class="btn-back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Volver a Solicitudes
+                </button>`;
+
 
                 // Reemplazar/crear botones de toolbar SOLO si puede gestionar
                 const btnIngresar = document.getElementById('openBNUPFormModal');
                 if (btnIngresar) {
                     if (puedeGestionar) {
                         btnIngresar.outerHTML = `
-      <button id="openEgresoFormModal" class="btn-stats btnAddEgreso"
-              style="background-color:#4BBFE0;justify-content:flex-start;width:150px;">
-        <span class="material-symbols-outlined">note_add</span>
-        Crear Egreso
-      </button>`;
+                        <button id="openEgresoFormModal" class="btn-stats btnAddEgreso"
+                                style="background-color:#4BBFE0;justify-content:flex-start;width:150px;">
+                            <span class="material-symbols-outlined">note_add</span>
+                            Crear Egreso
+                        </button>`;
                     } else {
                         // usuarios sin permiso: no mostrar botón de crear
                         btnIngresar.remove();
@@ -69,12 +99,12 @@
                 if (btnDeleteBNUP) {
                     if (puedeGestionar) {
                         btnDeleteBNUP.outerHTML = `
-      <button id="deleteSelectedEgresos"
-              class="btn-stats btnDelEgresoAU"
-              style="background-color:#E73C45;justify-content:flex-start;width:150px;"
-              disabled>
-        <span class="material-symbols-outlined">delete</span> Eliminar
-      </button>`;
+                        <button id="deleteSelectedEgresos"
+                                class="btn-stats btnDelEgresoAU"
+                                style="background-color:#E73C45;justify-content:flex-start;width:150px;"
+                                disabled>
+                            <span class="material-symbols-outlined">delete</span> Eliminar
+                        </button>`;
                     } else {
                         btnDeleteBNUP.remove();
                     }
@@ -85,12 +115,12 @@
                 if (btnEditBNUP) {
                     if (puedeGestionar) {
                         btnEditBNUP.outerHTML = `
-      <button id="editSelectedEgresos"
-              class="btn-stats btnEditEgresoAU"
-              style="justify-content:flex-start;width:150px;"
-              disabled>
-        <span class="material-symbols-outlined">edit</span> Editar
-      </button>`;
+                        <button id="editSelectedEgresos"
+                                class="btn-stats btnEditEgresoAU"
+                                style="justify-content:flex-start;width:150px;"
+                                disabled>
+                            <span class="material-symbols-outlined">edit</span> Editar
+                        </button>`;
                     } else {
                         btnEditBNUP.remove();
                     }
@@ -148,7 +178,10 @@
             const inputArchivo = content.querySelector('#archivo_adjunto');
             initializeFileInput(inputArchivo);
             // Subir respuesta
-            initializeFileInput('#archivo_respuesta');
+            const inputResp = content.querySelector('#archivo_respuesta');
+            if (inputResp) {
+                initializeFileInput(inputResp, { showUpload: false, dropZoneEnabled: false });
+            }
 
             // validación número único
             const inputNumero = content.querySelector('#numero_egreso');
