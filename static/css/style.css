@@ -47,12 +47,40 @@
   font-style: normal;
 }
 
+/* Reset de box-sizing */
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+
+html {
+  height: 100%;
+  /* html y body ocupan toda la pantalla */
+  margin: 0;
+  /* eliminamos margen por defecto */
+  padding: 0;
+  /* eliminamos padding por defecto */
+}
+
+
 body {
-  display: grid;
-  justify-items: center;
-  align-items: end;
   font-family: "HelveticaNeue";
   background-color: #d5d6dc;
+  color: #16233E;
+  min-height: 100dvh;
+  /* en vez de 100% */
+  padding: 1rem;
+  margin: 0;
+  display: flex;
+  /* <- clave */
+  flex-direction: column;
+  /* <- clave */
 }
 
 /* Ahora puedes usar la fuente en tu CSS */
@@ -60,6 +88,14 @@ h1 {
   font-weight: bold;
   font-style: normal;
   font-size: xx-large;
+}
+
+a,
+a:link,
+a:visited,
+a:hover,
+a:active {
+  text-decoration: none;
 }
 
 .header-image {
@@ -72,29 +108,76 @@ h1 {
 }
 
 .cardMain {
-  position: absolute;
-  z-index: 10;
-  width: 98%;
-  height: 97%;
-  align-self: center;
   display: flex;
   flex-direction: column;
+  /* min-height: 100%;   <- QUITAR */
+  flex: 1 0 auto;
+  /* <- clave: mínimo ocupa el espacio disponible */
   border-radius: 10px;
-  padding: 5px;
+  padding: .5rem;
   border: 3px solid cyan;
   box-shadow: 0 0 10px 0px #16233E;
   transition: box-shadow 0.3s ease-in-out;
   background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(230, 244, 250, 1) 30%, rgba(75, 191, 224, 1) 60%, rgba(22, 35, 62, 1) 100%);
+  min-height: 0;
+  /* evita que los hijos flex “rompan” su alto */
 }
 
+.contenido {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
 
+.contentMenu {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  /* <- clave */
+  flex-direction: column;
+  /* <- clave */
+  font-family: 'Trebuchet MS', 'HelveticaNeue';
+  font-size: 16px;
+}
 
-/* .cardMain__content {
-  background: rgb(255, 255, 255);
-  border-radius: 10px;
-  width: 100%;
-  height: 100%;
-} */
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* clave */
+
+  height: auto;
+  /* crece si el contenido es mayor */
+  border-radius: 0px 10px 10px 10px;
+  background: #f5f5f5;
+  position: relative;
+  padding: 1rem;
+  border: 2px solid #c3c6ce;
+  transition: 0.5s ease-out;
+  overflow: visible;
+  font-family: 'Trebuchet MS', 'HelveticaNeue';
+  box-shadow: inset 0 0 10px 2px #16233E;
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#bnupData {
+  flex: 1 0 auto;
+  /* ocupa todo el espacio disponible como mínimo */
+  min-height: 0;
+  /* por si bnupData también usa flex internamente */
+  display: flex;
+  /* opcional, si dentro llevas layout en columna */
+  flex-direction: column;
+}
 
 .head {
   display: flex;
@@ -103,17 +186,16 @@ h1 {
   align-items: center;
   /* Centra verticalmente todos los hijos dentro de .head */
   position: relative;
+  padding-inline: 1.5rem;
 
-  height: min-content;
-  margin-bottom: 5px;
+
 
 }
 
 .logo {
   display: flex;
   align-items: center;
-  padding-block: .25rem;
-  padding-left: .7rem;
+
 }
 
 .logoAU {
@@ -140,9 +222,8 @@ h1 {
   gap: 0.5rem;
   padding: 0.5rem;
   border-radius: 10px;
+  transition-duration: .2s;
   box-shadow: 0px 1px 5px 0px #16233E;
-  /* Eliminamos el background-color predeterminado para usar clases específicas */
-  /* background-color: greenyellow; */
 }
 
 .bg-admin span,
@@ -162,6 +243,10 @@ h1 {
 .bg-admin {
   background-color: #1E90FF;
   /* DodgerBlue */
+}
+
+.bg-admin:hover {
+  background-color: #64a1ff;
 }
 
 .bg-privilegiado {
@@ -195,20 +280,15 @@ h1 {
   /* LightGray */
 }
 
-/* style.css */
-
-/* Estilos para el menú desplegable */
 .user-menu {
   position: absolute;
-  right: 11.5rem;
-  top: 6.5rem;
-
+  right: 17rem;
+  top: 7.1rem;
   color: ghostwhite;
   border-radius: 10px;
   z-index: 1000;
   width: 200px;
   box-shadow: 0px 1px 5px 0px #16233E;
-
 }
 
 .user-menu ul {
@@ -218,7 +298,7 @@ h1 {
 }
 
 .user-menu ul li {
-  padding: 10px;
+  padding: .5rem;
   cursor: pointer;
   color: ghostwhite;
 }
@@ -351,25 +431,10 @@ h1 {
   transform: translateX(-50%);
 }
 
-.contentMenu {
-  display: flex;
-  gap: 0px 0px;
-  flex-direction: column;
-  /* width: -webkit-fill-available; */
-  height: -webkit-fill-available;
-  font-family: 'Trebuchet MS', 'HelveticaNeue';
-  font-size: 16px;
-}
 
-.contentMenu>div {
-  height: 100%;
-  margin-bottom: 1.6rem;
-  margin-inline: 1.6rem;
-}
 
 .menu {
   align-content: start;
-
   background: rgba(0, 0, 0, 0);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0);
   z-index: 1000;
@@ -380,8 +445,6 @@ h1 {
   list-style-type: none;
   padding: 0;
   margin: 0;
-  margin-left: 25px;
-  /* height: -webkit-fill-available; */
   display: flex;
   flex-direction: row;
   width: max-content;
@@ -396,8 +459,6 @@ h1 {
 }
 
 .menu a {
-
-  height: 100%;
   width: 240px;
   text-decoration: none;
   color: ghostwhite;
@@ -439,33 +500,10 @@ h1 {
   /* Sombra para efecto sofisticado */
 }
 
-.contenido {
-  display: flex;
-  flex-direction: column;
-  height: -webkit-fill-available;
-}
 
-.cardContent {
-  height: 100%;
-  border-radius: 0px 10px 10px 10px;
-  background: #f5f5f5;
-  position: relative;
-  padding: 1rem;
-  border: 2px solid #c3c6ce;
-  -webkit-transition: 0.5s ease-out;
-  transition: 0.5s ease-out;
-  overflow: visible;
-  font-family: 'Trebuchet MS', 'HelveticaNeue';
-  box-shadow: inset 0 0 10px 2px #16233E;
-}
 
-.card-details {
-  color: rgb(162, 0, 255);
-  gap: 1em;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  height: 100%;
+.card-details h3 {
+  margin-block: .5rem;
 }
 
 .card-button {
@@ -539,14 +577,6 @@ h1 {
   width: -webkit-fill-available;
 }
 
-.div-container {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  /* width: min-content !important; */
-  justify-content: space-between;
-}
-
 h2 {
   text-align: center;
   /* margin-bottom: 20px; */
@@ -569,36 +599,6 @@ label {
   /* color: #000; */
   width: max-content;
 }
-
-.search-filters-container div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.search-filters-container label {
-  display: block;
-  margin-bottom: 5px;
-  /* color: #000; */
-  width: 100%;
-}
-
-
-
-.search-filters-container #filterPanel {
-  display: none;
-  position: absolute;
-  top: 20px;
-  right: -35px;
-  background: white;
-  border: 1px solid rgb(204, 204, 204);
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 8px;
-  z-index: 1000;
-}
-
 
 input[type="text"],
 input[type="date"],
@@ -672,7 +672,7 @@ textarea {
   height: max-content !important;
 }
 
-button {
+/* button {
   width: 100%;
   padding: 10px;
   border: none;
@@ -681,200 +681,15 @@ button {
   font-size: 16px;
   cursor: pointer;
   background-color: #FEFBE5;
-}
+} */
 
 
 .container {
   background-color: #C9E8F4;
   padding: 20px;
   height: min-content;
-
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* ESTILOS TABLA */
-
-.tableInfor_container {
-  background-color: #C9E8F4;
-  padding: 10px;
-  border-radius: 10px;
-  width: -webkit-fill-available;
-  /* height: -webkit-fill-available; */
-  align-content: space-between;
-  box-shadow: 0px 1px 10px 0px #16233E;
-}
-
-/* Estilos generales para la tabla */
-.tableInfor_container table {
-  width: -webkit-fill-available;
-  border-collapse: collapse;
-  margin-block: 20px 0px;
-  font-family: "Roboto Condensed", monospace;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Estilos para los encabezados */
-.tableInfor_container th {
-  background-color: #16233E;
-  color: white;
-  padding: 10px;
-  text-align: left;
-  cursor: pointer;
-  /* Indicar que es interactivo */
-  transition: background-color 0.3s;
-
-}
-
-.tableInfor_container th:hover {
-  background-color: #111522;
-  border-color: #d5d6dc;
-  box-shadow: inset 0 0 10px #000000;
-}
-
-/* Estilos para las filas de la tabla */
-.tableInfor_container td {
-  padding: 8px;
-  text-align: left;
-}
-
-/* .tableInfor_container .fechaTable {
-  font-family: "Lekton", monospace;
-} */
-
-/* Alternar el color de fondo para las filas */
-.tableInfor_container tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-/* Resaltar una fila cuando el mouse pasa sobre ella */
-.tableInfor_container tbody tr:hover {
-  background-color: #fef191;
-  color: ghostwhite;
-  /* font-weight: bold; */
-  box-shadow: 0 0 15px #fef191;
-  border-radius: 3px;
-  padding: 1px;
-
-}
-
-/* Estilo para cuando no hay datos en la tabla */
-.tableInfor_container td[colspan] {
-  text-align: center;
-  color: #888;
-  font-style: italic;
-}
-
-/* Estilo para el título de las tablas */
-.tableInfor_container h3 {
-  color: #333;
-  font-weight: bold;
-  font-size: 1.2em;
-}
-
-/* El TH no reacciona a clics, PERO los selects dentro sí */
-th.non-clickable {
-  /* elimina solo el cursor pointer, pero no bloquees pointer-events al 100% */
-  cursor: default;
-}
-
-/* Asegúrate de que todo en th.non-clickable siga recibiendo eventos */
-th.non-clickable * {
-  pointer-events: auto;
-}
-
-
-/* Indicador para el estado no ordenado */
-.tableInfor_container th::after {
-  content: '⇅';
-  /* Indicador para el estado inicial (no ordenado) */
-  margin-left: 5px;
-  font-size: 0.8em;
-  color: #fff;
-  /* Ajusta el color según sea necesario */
-  opacity: 0.6;
-  /* Hacerlo menos prominente que el indicador de orden */
-}
-
-/* Indicadores de ordenamiento ascendente y descendente */
-.tableInfor_container th.ascending::after {
-  content: '▲';
-  /* Flecha hacia arriba para ascendente */
-  color: #fff;
-  /* Cambia el color si es necesario */
-  opacity: 1;
-}
-
-.tableInfor_container th.descending::after {
-  content: '▼';
-  /* Flecha hacia abajo para descendente */
-  color: #fff;
-  /* Cambia el color si es necesario */
-  opacity: 1;
-}
-
-.tittleTable {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.page-btn {
-  margin: 0 5px;
-  padding: 5px 10px;
-  border: none;
-  background-color: #16233E;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  border-radius: 4px;
-  width: min-content;
-  box-shadow: 0px 1px 5px 0px #16233E;
-  color: ghostwhite !important;
-
-}
-
-.page-btn span {
-  color: ghostwhite !important;
-}
-
-.page-btn.active {
-  border: 2px solid cyan;
-  background: #387b8f;
-  box-shadow: inset 0px 1px 5px 0px #16233e;
-
-}
-
-.page-btn.active:hover {
-  background: #387b8f;
-  border-color: cyan;
-  /* box-shadow: 0 0 15px #4bbfe0; */
-}
-
-.page-btn:hover:not(.active) {
-  background: #387b8f;
-  /* box-shadow: inset 0px 1px 5px 0px #16233e; */
-
-}
-
-.page-btn:disabled {
-  background-color: #16233E;
-  cursor: not-allowed;
-}
-
-.page-btn.highlight {
-  background-color: #ffcc00;
-  /* Color de fondo amarillo */
-  color: white;
-  /* Texto blanco */
-  font-weight: bold;
-  /* Texto en negrita */
 }
 
 .search-container {
@@ -1115,219 +930,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   /* Cambia el color del ícono al color del texto al hacer hover */
 }
 
-#statisticsPages {
-  height: 100%;
-}
 
-.stats-page {
-  height: 100%;
-}
-
-.statistics {
-  display: flex;
-  /* padding: 20px; */
-  text-align: center;
-  width: 100%;
-  height: 100%;
-  /* max-width: 1200px; */
-  /* margin: 0 auto; */
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 1em;
-}
-
-.tittleStatistics {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  justify-content: space-between;
-}
-
-.subTittleStatistics {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.subTittleStatistics #paginationStatistics {
-  min-width: 190px;
-}
-
-.divStatistics {
-  display: flex;
-  flex-direction: row;
-  height: 100%;
-  gap: 1rem;
-}
-
-.subDivStatics-v1 {
-  display: flex;
-  flex-direction: column;
-  width: 50%;
-  gap: 1rem;
-}
-
-.subDivStatics-v1>div {
-  display: flex;
-  flex-direction: row;
-  height: 50%;
-  gap: 1rem;
-}
-
-.subDivStatics-v1>div>.containerStatistics {
-  width: 100%;
-}
-
-
-.subDivStatics-v2 {
-  display: flex;
-  flex-direction: column;
-  width: 50%;
-}
-
-.subDivStatics-v3 {
-  display: flex;
-  height: 50%;
-  width: 100%;
-  gap: 1rem;
-}
-
-.subDivStatics-v3>.containerStatistics {
-  width: 100%;
-}
-
-.subDivStatics-v4 {
-  display: flex;
-  height: 50%;
-  width: 100%;
-  gap: 1rem;
-}
-
-.subDivStatics-v4>.containerStatistics {
-  width: 100%;
-}
-
-.subDivStatics-v5 {
-  display: flex;
-  height: 50%;
-  width: 100%;
-  gap: 1rem;
-}
-
-.subDivStatics-v5>.containerStatistics {
-  width: 100%;
-}
-
-.subDivStatics-v6 {
-  display: flex;
-  height: 50%;
-  width: 100%;
-  gap: 1rem;
-}
-
-.subDivStatics-v6>.containerStatistics {
-  width: 100%;
-}
-
-/* From Uiverse.io by Pradeepsaranbishnoi */
-.cardTotalEstadisticas {
-  width: 100%;
-  height: 50%;
-  position: relative;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background-color: #3a425b;
-  border-radius: 10px;
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 5px 0px,
-    rgba(0, 0, 0, 0.5) 0px 2px 15px 0px;
-}
-
-.contentEstadisticas {
-  position: absolute;
-  width: 95%;
-  height: 95%;
-  background: #16233E;
-  border-radius: 10px;
-  z-index: 5;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-direction: row;
-  text-align: center;
-  color: ghostwhite;
-  overflow: hidden;
-  padding: 20px;
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.5) 0px 18px 36px -18px inset;
-  font-family: "Roboto Condensed", monospace;
-}
-
-.contentEstadisticas h3,
-.contentEstadisticas p {
-  color: ghostwhite;
-}
-
-.contentEstadisticas h3 {
-  font-size: 1.5rem;
-}
-
-.contentEstadisticas p {
-  font-size: 3rem;
-}
-
-.cardTotalEstadisticas::before {
-  content: "";
-  position: absolute;
-  width: 40%;
-  height: 150%;
-  background: #4BBFE0;
-  background: -webkit-linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
-  background: linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
-  transform-origin: center;
-  animation: glowing_401_v1 5s linear infinite;
-}
-
-.inverse::before {
-  animation: glowing_401_v2 5s linear infinite !important;
-}
-
-@keyframes glowing_401_v1 {
-  0% {
-    transform: rotate(0);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes glowing_401_v2 {
-  0% {
-    transform: rotate(0);
-  }
-
-  100% {
-    transform: rotate(-360deg);
-  }
-}
-
-.containerStatistics {
-  background-color: #f5f5f5;
-  padding: 0.5rem;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  height: 100%;
-  /* Establece que cada div ocupe un tercio del contenedor, menos el espacio del gap */
-  box-sizing: border-box;
-  /* Asegura que el padding y border estén incluidos en el tamaño del div */
-}
-
-.subDivStatics-v2>div {
-
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
 
 /* From Uiverse.io by JaydipPrajapati1910 */
 .card {
@@ -1367,23 +970,25 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 
-/* From Uiverse.io by vinodjangid07 */
 .buttonLogin {
-  width: 140px;
-  height: 40px;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  gap: 10px;
-  background: #f7ea53;
+  justify-content: space-between;
+  padding: .5rem;
+  gap: .5rem;
   border-radius: 10px;
-  color: #16233E;
+  background: #f7ea53;
   font-weight: 600;
+  color: #16233E;
   border: none;
   position: relative;
   cursor: pointer;
   transition-duration: .2s;
   box-shadow: 0px 1px 5px 0px #16233E;
+}
+
+.buttonLogin:hover {
+  background-color: #fbed73;
 }
 
 .buttonLogout {
@@ -1393,7 +998,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 }
 
 .buttonLogout:hover {
-  background: #f9857f !important;
+  background: #f9857f;
 }
 
 .bell {
@@ -1607,17 +1212,6 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   font-size: 25px !important;
 }
 
-#tablaSolicitudes {
-  font-size: 16px !important;
-  font-weight: 500;
-}
-
-
-.icon-container {
-  position: relative;
-  display: inline-block;
-}
-
 .tooltip {
   visibility: hidden;
   background-color: #555;
@@ -1663,40 +1257,6 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   font-weight: bold;
 }
 
-/* Estilo para el preview de la descripción */
-.descripcion-preview {
-  max-width: 300px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  position: relative;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.descripcion-preview::after {
-  content: '';
-  position: absolute;
-  right: 25px;
-  bottom: 0;
-  width: 75px;
-  height: 100%;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), #c9e8f4 75%);
-}
-
-.descripcion-preview:hover .material-symbols-outlined {
-  color: #E73C45;
-  transition: color 0.3s ease-in-out;
-  /* Cambia 0.3s al tiempo que prefieras */
-}
-
-.descripcion-icon {
-  margin-left: 5px;
-  color: #4BBFE0;
-}
-
 .modal-field-field {
   display: flex;
   justify-content: space-between;
@@ -1740,7 +1300,6 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
 
 .fila-marcada {
   background-color: #62ff95;
-  /* font-weight: bold; */
   box-shadow: 0 0 15px #62ff95;
   border-radius: 3px;
   padding: 1px;
@@ -1862,17 +1421,59 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   color: #4BBFE0;
 }
 
+.salidas-legend {
+  display: flex;
+  flex-direction: row;
+  padding: 5px;
+  border-radius: 5px;
+  max-width: 100%;
+  align-items: center;
+  margin-right: 10px;
+  background: #f5f5f5;
+  box-shadow: inset 0 0 5px 0.5px #16233E;
+}
 
-/* Estilo base para el contenedor de búsqueda */
-.searchContainer,
-.searchContainerEgresosAU {
+.salidas-legend span {
+  margin-right: 1rem;
+}
+
+.salidas-legend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.salidas-legend ul li {
   display: flex;
   align-items: center;
-  background-color: #e5f4fa;
-  border: solid 1px #16233e;
-  border-radius: 10px;
-  transition: border 0.3s ease-in-out;
 }
+
+.salidas-legend ul li .spanLegend {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: solid 1px #16233E;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+
+.salidas-legend ul li span.legendRespondida {
+  background-color: #17d244;
+}
+
+.salidas-legend ul li span.legendEnProceso {
+  background-color: #ed1c24;
+}
+
+.salidas-legend ul li span.legendConocimieto {
+  background-color: #ffa420;
+}
+
+/* Estilo base para el contenedor de búsqueda */
+
 
 .search-input,
 .search-input-egresosAU {
@@ -1889,15 +1490,7 @@ div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm) {
   transition: color 0.3s ease-in-out;
 }
 
-#btnToggleFilters,
-#btnToggleFiltersEgresosAU {
-  margin-top: 0px;
-  padding: 0px;
-  padding-inline: .5rem;
-  width: 100%;
-  height: auto;
-  background: #ffa5ff;
-}
+
 
 #btnResetFiltersEgresosAU,
 #btnResetFilters {

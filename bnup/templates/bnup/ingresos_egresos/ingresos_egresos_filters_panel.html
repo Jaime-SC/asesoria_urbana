@@ -1,0 +1,50 @@
+<div class="filtersRow" id="filterPanel">
+  <label>Ingreso desde:<input type="date" id="filtroIngresoDesde" /></label>
+  <label>hasta:<input type="date" id="filtroIngresoHasta" /></label>
+
+  <label>Solicitud desde:<input type="date" id="filtroSolicitudDesde" /></label>
+  <label>hasta:<input type="date" id="filtroSolicitudHasta" /></label>
+
+  <label>
+    Funcionario:<select id="filtroFuncionario">
+      <option value="">— Todos —</option>
+      {% for f in funcionarios %}
+        <option value="{{ f.nombre }}">{{ f.nombre }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label>
+    Solicitante:<select id="filtroSolicitante">
+      <option value="">— Todos —</option>
+      {% for depto in departamentos %}
+        <option value="{{ depto.nombre }}">{{ depto.nombre }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label>
+    Tipo recepción:<select id="filtroTipoRecepcion">
+      <option value="">— Todos —</option>
+      {% for t in tipos_recepcion %}
+        <option value="{{ t.id }}">{{ t.tipo }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label>
+    Tipo solicitud:<select id="filtroTipoSolicitud">
+      <option value="">— Todos —</option>
+      {% for t in tipos_solicitud %}
+        <option value="{{ t.id }}">{{ t.tipo }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <div class="filters-actions">
+    <button id="btnResetFilters" class="buttonLogin">
+      <span class="material-symbols-outlined bell">reset_settings</span>
+      <span>Borrar Filtros</span>
+    </button>
+  </div>
+</div>

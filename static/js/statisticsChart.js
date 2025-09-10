@@ -285,7 +285,7 @@
             // Reasignamos arrays
             labels = combined.map(item => item.label);
             data = combined.map(item => item.value);
-            
+
             // Forzar que se muestren todas las etiquetas en el eje Y
             options.scales = options.scales || {};
             options.scales.y = options.scales.y || {};
@@ -904,9 +904,16 @@
     function showPage(index) {
         const pages = document.querySelectorAll('#statisticsPages .stats-page');
         const pageButtons = document.querySelectorAll('.page-btn.page-num');
-        pages.forEach(p => p.style.display = 'none');
+        pages.forEach(p => {
+            p.style.display = 'none';
+            p.style.flexDirection = ''; // limpia por si acaso
+        });
+
         const currentPage = pages[index];
-        currentPage.style.display = 'block';
+        // MOSTRAR COMO FLEX, no como 'block'
+        currentPage.style.display = 'flex';
+        currentPage.style.flexDirection = 'column';
+
 
         pageButtons.forEach(btn => btn.classList.remove('active'));
         pageButtons[index].classList.add('active');

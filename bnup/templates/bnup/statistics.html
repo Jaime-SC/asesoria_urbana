@@ -58,7 +58,7 @@
 
         <!-- Página 2: Nuevos gráficos -->
         <div class="stats-page" id="statsPage2" style="display: none;">
-          <div class="divStatistics" style="flex-direction: column;">
+          <div class="divStatistics">
             <div class="subDivStatics-v3">
               <!-- Entradas por Funcionario - Semana Actual -->
               <div class="containerStatistics">
@@ -110,7 +110,7 @@
         </div>
 
         <!-- Página 3: Promedio de días entre ingreso y salida -->
-        <div class="stats-page" id="statsPage3" style="display: none;">
+        <div class="stats-page" id="statsPage3">
           <div class="divStatistics" style="flex-direction: column;">
             <div class="subDivStatics-v5">
               <div class="containerStatistics">
@@ -134,7 +134,6 @@
                 <p id="promedioDiasPorTipo" style="display: none;">{{ promedio_dias_por_tipo|safe }}</p>
                 <canvas id="promedioDiasTipoChart"></canvas>
               </div>
-              
             </div>
             <div class="subDivStatics-v6">
               <div class="containerStatistics">

@@ -1,0 +1,223 @@
+/* ========= Variables ========= */
+:root {
+    --stats-gap: 1rem;
+    --card-bg: #3a425b;
+    --panel-bg: #16233E;
+    --box-bg: #f5f5f5;
+}
+
+/* ========= Contenedores principales ========= */
+.statistics {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: var(--stats-gap);
+}
+
+#statisticsPages {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.stats-page {
+    display: none;
+    /* ocultas por defecto */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    /* scroll interno al estar activa */
+}
+
+.stats-page.is-active {
+    display: flex;
+    flex-direction: column;
+}
+
+.tittleStatistics,
+.subTittleStatistics {
+    display: flex;
+    align-items: center;
+    gap: var(--stats-gap);
+}
+
+.tittleStatistics {
+    justify-content: space-between;
+}
+
+.subTittleStatistics #paginationStatistics {
+    min-width: 190px;
+}
+
+.divStatistics {
+    display: flex;
+    flex-direction: row;
+    gap: var(--stats-gap);
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* ========= Página 1: columnas 50/50 ========= */
+.subDivStatics-v1,
+.subDivStatics-v2 {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    gap: var(--stats-gap);
+}
+
+.subDivStatics-v1>div {
+    display: flex;
+    height: 50%;
+    gap: var(--stats-gap);
+}
+
+/* Los boxes reparten ancho y heredan alto */
+.subDivStatics-v1>div>.containerStatistics {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ========= Filas con 4 boxes (v3, v4, v5, v6) ========= */
+.subDivStatics-v3,
+.subDivStatics-v4,
+.subDivStatics-v5,
+.subDivStatics-v6 {
+    display: flex;
+    width: 100%;
+    height: 50%;
+    gap: var(--stats-gap);
+}
+
+.subDivStatics-v3>.containerStatistics,
+.subDivStatics-v4>.containerStatistics,
+.subDivStatics-v5>.containerStatistics,
+.subDivStatics-v6>.containerStatistics {
+    flex: 1 1 0;
+    min-width: 0;
+    /* evita overflow horizontal en títulos largos */
+    min-height: 0;
+    /* crucial para que el canvas llene el alto */
+}
+
+/* ========= Página 2 y 3: apilar filas y que cada una ocupe el máximo alto ========= */
+#statsPage2 .divStatistics,
+#statsPage3 .divStatistics {
+    flex-direction: column;
+    gap: var(--stats-gap);
+}
+
+#statsPage2 .subDivStatics-v3,
+#statsPage2 .subDivStatics-v4,
+#statsPage3 .subDivStatics-v5,
+#statsPage3 .subDivStatics-v6 {
+    height: auto;
+    /* anula height:50% base */
+    flex: 1 1 0;
+    /* cada bloque toma ~50% del alto disponible */
+    min-height: 0;
+}
+
+/* ========= Boxes genéricos ========= */
+.containerStatistics {
+    background-color: var(--box-bg);
+    padding: 0.5rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Ajuste específico existente */
+.subDivStatics-v2>div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* ========= Tarjetas decorativas ========= */
+.cardTotalEstadisticas {
+    width: 100%;
+    height: 50%;
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow:
+        rgba(0, 0, 0, 0.4) 0 2px 5px 0,
+        rgba(0, 0, 0, 0.5) 0 2px 15px 0;
+}
+
+.contentEstadisticas {
+    position: absolute;
+    width: 95%;
+    height: 95%;
+    background: var(--panel-bg);
+    border-radius: 10px;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    text-align: center;
+    color: ghostwhite;
+    overflow: hidden;
+    padding: 20px;
+    box-shadow:
+        rgba(0, 0, 0, 0.4) 0 30px 60px -12px inset,
+        rgba(0, 0, 0, 0.5) 0 18px 36px -18px inset;
+    font-family: "Roboto Condensed", monospace;
+}
+
+.contentEstadisticas h3,
+.contentEstadisticas p {
+    color: ghostwhite;
+}
+
+.contentEstadisticas h3 {
+    font-size: 1.5rem;
+}
+
+.contentEstadisticas p {
+    font-size: 3rem;
+}
+
+.cardTotalEstadisticas::before {
+    content: "";
+    position: absolute;
+    width: 40%;
+    height: 150%;
+    background: linear-gradient(to right, #3a425b, #4BBFE0, #3a425b);
+    transform-origin: center;
+    animation: glowing_401_v1 5s linear infinite;
+}
+
+.inverse::before {
+    animation: glowing_401_v2 5s linear infinite !important;
+}
+
+@keyframes glowing_401_v1 {
+    0% {
+        transform: rotate(0)
+    }
+
+    100% {
+        transform: rotate(360deg)
+    }
+}
+
+@keyframes glowing_401_v2 {
+    0% {
+        transform: rotate(0)
+    }
+
+    100% {
+        transform: rotate(-360deg)
+    }
+}

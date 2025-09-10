@@ -29,11 +29,6 @@
   cursor: pointer;
 }
 
-#tablaEgresosAU {
-  font-size: 16px;
-  font-weight: 500;
-}
-
 .descripcion-cell div {
   display: flex;
   justify-content: space-between;
@@ -104,18 +99,6 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
 
 .modal-field.descripcion #preview_descripcion {
   margin-top: 0px !important;
-}
-
-
-
-
-#tablaEgresosAU {
-  margin-top: 10px !important;
-}
-
-#tablaEgresosAU tbody tr td {
-  border-inline: 1px #16233E dashed;
-  border-bottom: 1px #16233E dashed;
 }
 
 .celda-adjunto div,

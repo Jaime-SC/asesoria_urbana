@@ -37,7 +37,6 @@
 
         // Inicializar selección de filas y estilos de tabla
         initializeRowSelection();
-        borde_thead();
         // → Inicializo bots y checkboxes del modal de salidas
         salidaSelectAll = document.getElementById('selectAllSalidas');
         btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
@@ -3519,7 +3518,6 @@
     window.updateBNUPFields = updateBNUPFields;
     window.initializeFileModal = initializeFileModal;
     window.initializeBNUPFormModal = initializeBNUPFormModal;
-    window.borde_thead = borde_thead;
     window.initializeRowSelection = initializeRowSelection;
     window.openSalidaModal = openSalidaModal; // Exponer openSalidaModal
     window.openEditModal = openEditModal;     // Exponer openEditModal

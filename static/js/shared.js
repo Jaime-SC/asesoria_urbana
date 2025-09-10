@@ -43,22 +43,6 @@ function updateActionButtonsState() {
 }
 
 /**
- * Aplica estilos de borde redondeado a los encabezados de la tabla.
- */
-function borde_thead() {
-    const tableRow = document.querySelector('tr');
-
-    if (tableRow) {
-        const thElements = tableRow.querySelectorAll('th');
-
-        if (thElements.length > 0) {
-            thElements[0].style.borderRadius = '10px 0px 0px 0px';
-            thElements[thElements.length - 1].style.borderRadius = '0px 10px 0px 0px';
-        }
-    }
-}
-
-/**
  * Obtiene el token CSRF necesario para las solicitudes POST.
  * @returns {string|null} - Token CSRF o null si no se encuentra.
  */

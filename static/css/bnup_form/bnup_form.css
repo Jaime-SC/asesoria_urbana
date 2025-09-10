@@ -1,0 +1,136 @@
+#bnupData .card-details {
+    gap: 1rem;
+}
+
+.div-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.btnAddBNUP,
+.btnDelBNUP,
+.btnEditBNUP,
+.btnEgresosAU,
+.btnStatsBNUP {
+    justify-content: flex-start;
+    width: 150px;
+}
+
+.btnAddBNUP {
+    background-color: #4BBFE0;
+}
+
+.btnEditBNUP {
+    background-color: #F7EA53;
+}
+
+.btnDelBNUP {
+    background-color: #E73C45;
+}
+
+.btnEgresosAU {
+    background-color: #73bba1;
+}
+
+.btnStatsBNUP {
+    background-color: #bfff00;
+}
+
+.buttonPreview,
+.buttonAgregarIngreso,
+.buttonAgregarSalida,
+.buttonSubirSalida {
+    height: 1.9rem;
+    width: auto;
+    font-size: .924rem;
+    justify-content: space-between;
+}
+
+.buttonPreview {
+    background: #f7ea53;
+}
+
+.buttonSubirSalida {
+    background: #ed1c24;
+}
+
+.buttonSubirSalida:hover {
+    background: #ff7c68;
+}
+
+.buttonSubirSalida span,
+.buttonSubirSalida p {
+    color: black;
+}
+
+.iconContainerButton {
+    margin-inline: 1rem;
+}
+
+.modal-content .modal-info .modal-field.modal-field-field {
+    border-bottom: 1px dashed gray;
+}
+
+
+/* PANEL DE FILTROS INGRESOS Y EGRESOS */
+
+.search-filters-container #filterPanel {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: -25px;
+    background: white;
+    border: 1px solid rgb(204, 204, 204);
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 8px;
+    z-index: 1000;
+}
+
+#filterPanel .ingresoPanel,
+#filterPanel .solicitudPanel {
+    display: flex;
+    flex-direction: row;
+    gap: .5rem;
+}
+
+.search-filters-container label {
+    width: 100%;
+}
+
+/* TABLA */
+
+.descripcion-preview {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.descripcion-preview::after {
+    content: '';
+    position: absolute;
+    right: 25px;
+    bottom: 0;
+    width: 75px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), #c9e8f4 75%);
+}
+
+.descripcion-preview:hover .material-symbols-outlined {
+    color: #E73C45;
+    transition: color 0.3s ease-in-out;
+    /* Cambia 0.3s al tiempo que prefieras */
+}
+
+.icon-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}

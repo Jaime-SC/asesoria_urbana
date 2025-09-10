@@ -1,5 +1,8 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/bnup_form.css' %}" />
+<link rel="stylesheet" href="{% static 'css/table.css' %}" />
+<link rel="stylesheet" href="{% static 'css/bnup_form/bnup_form.css' %}" />
+<link rel="stylesheet" href="{% static 'css/bnup_form/bnup_formMediaQuery.css' %}" />
+
 
 <div id="bnupData" data-tipo-usuario="{{ tipo_usuario }}">
   <div class="cardContent" data-tipo-usuario="{{ tipo_usuario }}">
@@ -8,20 +11,20 @@
         <!-- Botones para abrir modales -->
         <div>
           {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
-            <button style="background-color: #4BBFE0; justify-content: flex-start; width: 150px;" id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span>Ingresar</button>
+            <button id="openBNUPFormModal" class="btn-stats btnAddBNUP"><span class="material-symbols-outlined">note_add</span>Ingresar</button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' %}
-            <button style="background-color: #E73C45; justify-content: flex-start; width: 150px;" id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
+            <button id="deleteSelected" class="btn-stats btnDelBNUP" disabled><span class="material-symbols-outlined">delete</span> Eliminar</button>
           {% endif %}
           {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
-            <button style="background-color: #F7EA53; justify-content: flex-start; width: 150px;" id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
+            <button id="editSelected" class="btn-stats btnEditBNUP" disabled><span class="material-symbols-outlined">edit</span> Editar</button>
           {% endif %}
         </div>
         {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
           <div>
-            <button id="egresosAUButton" style="justify-content: flex-start; width: 150px; background-color: #73bba1;" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            <button id="egresosAUButton" class="btn-stats btnEgresosAU"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
             {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'JEFE' %}
-              <button style="justify-content: flex-start; width: 150px; background-color: #bfff00;" id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
+              <button id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
             {% endif %}
 
           </div>
@@ -145,10 +148,10 @@
       {% endif %}
 
       <div class="tableInfor_container">
-        <div>
+        <div class="estructura-tabla">
           <!-- Campo de búsqueda para todas las solicitudes -->
           <div class="tittleTable">
-            <div style="display: flex;gap: 1rem;align-items: stretch;">
+            <div class="searchFilter">
 
               <div class="searchContainer">
                 <span class="material-symbols-outlined">search</span>
@@ -156,17 +159,17 @@
               </div>
               <button id="btnToggleFilters" class="buttonLogin">
                 <span class="material-symbols-outlined bell">manage_search</span> 
-                <p>Filtros</p>
+                <span>Filtros</span>
               </button>
             </div>
               
             <div class="search-filters-container" style="position: relative; display: inline-block;">
               <div id="filterPanel">
-              <div>
+              <div class="ingresoPanel">
                 <label>Ingreso desde:<input type="date" id="filtroIngresoDesde"></label>
                 <label>hasta:<input type="date" id="filtroIngresoHasta"></label>
               </div>
-              <div>
+              <div class="solicitudPanel">
                 <label>Solicitud desde:<input type="date" id="filtroSolicitudDesde"></label>
                 <label>hasta:<input type="date" id="filtroSolicitudHasta"></label>
               </div>
@@ -216,26 +219,26 @@
               <div>
                 <button id="btnResetFilters" class="buttonLogin" style="width: max-content;margin-top: .25rem;background: #ffa5ff;">
                   <span class="material-symbols-outlined bell">reset_settings</span>
-                  <p>Borrar Filtros</p>
+                  <span>Borrar Filtros</span>
                 </button>
               </div>
             </div>
           </div>
             
             <div style="display: flex; flex-direction: row;">
-              <div class="salidas-legend" style="display: flex;flex-direction: row;padding: 5px;border-radius: 5px;max-width: 100%;align-items: center;margin-right: 10px;background: #f5f5f5;box-shadow: inset 0 0 5px 0.5px #16233E;">
-                <h4 style="margin-right: 10px;">Columna Egresos:</h4>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; gap: 20px; align-items: center;">
-                  <li style="display: flex; align-items: center;">
-                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #17d244; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
+              <div class="salidas-legend">
+                <span>Columna Egresos:</span>
+                <ul>
+                  <li>
+                    <span class="legendRespondida spanLegend"></span>
                     <span>Respondida</span>
                   </li>
-                  <li style="display: flex; align-items: center;">
-                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #ed1c24; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
+                  <li>
+                    <span class="legendEnProceso spanLegend"></span>
                     <span>En Proceso</span>
                   </li>
-                  <li style="display: flex; align-items: center;">
-                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #ffa420; border: solid 1px #16233E; border-radius: 3px; margin-right: 5px;"></span>
+                  <li>
+                    <span class="legendConocimieto spanLegend"></span>
                     <span>Conocimiento y Distribución</span>
                   </li>
                 </ul>
@@ -244,7 +247,7 @@
               <div id="paginationSolicitudes" class="pagination"></div>
             </div>
           </div>
-          <table id="tablaSolicitudes" class="hidden-table" border="1" cellpadding="5" cellspacing="0" style="margin-top: 10px;">
+          <table id="tablaSolicitudes" class="hidden-table" border="1" cellpadding="5" cellspacing="0">
             <thead>
               <tr>
                 {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
@@ -296,7 +299,6 @@
                       <em>No hay funcionarios asignados</em>
                     {% endfor %}
                   </td>
-
                   <td>
                     <div class="descripcion-preview" 
                          data-fulltext="{{ solicitud.descripcion|escapejs }}"
@@ -318,8 +320,7 @@
                       {% endif %}
                     </div>
                   </td>                  
-                  
-                  <td style="display: flex; justify-content: center; border-inline: 0;">
+                  <td>
                     {% if solicitud.archivo_adjunto_ingreso %}
                       <div class="icon-container">
                         <a href="{{ solicitud.archivo_adjunto_ingreso.url }}" target="_blank" style="text-decoration: none;">
@@ -374,7 +375,6 @@
                       </a>
                     </div>
                   </td>
-                  
                 </tr>
               {% empty %}
                 <tr>

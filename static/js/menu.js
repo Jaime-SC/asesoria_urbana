@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
             updateBNUPFields();
             initializeFileModal();
             initializeBNUPFormModal();
-            borde_thead();
 
             const rowsPerPage = getRowsPerPage();
             initializeTable('tablaSolicitudes', 'paginationSolicitudes', rowsPerPage, 'searchSolicitudes');

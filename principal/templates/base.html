@@ -11,8 +11,10 @@
         Asesoría Urbana
       {% endblock %}
     </title>
-    <link rel="stylesheet" href="{% static 'css/background.css' %}" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/table.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/statistics/statistics.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/statistics/statisticsMediaQuery.css' %}" />
     <link rel="stylesheet" href="{% static 'css/mediaQueries.css' %}" />
     <link rel="stylesheet" href="{% static 'css/cursor.css' %}" />
     <link rel="icon" type="image/x-icon" href="{% static 'media/iconAU_whiteContorno.ico' %}" />
@@ -96,12 +98,12 @@
 
               {% endif %}
             ">
-              <span class="material-symbols-outlined">account_circle</span>
-              <p>{{ user.username }}</p>
+              <span class="material-symbols-outlined bell">account_circle</span>
+              <span>{{ user.username }}</span>
               <!-- Si deseas mostrar el tipo de usuario, puedes descomentar la siguiente línea -->
               <!-- <p>({{ perfil_usuario.tipo_usuario.nombre }})</p> -->
             </div>
-            <a href="{% url 'logout' %}" class="buttonLogin buttonLogout"><span class="material-symbols-outlined bell" style="color: ghostwhite;">logout</span>Cerrar Sesión</a>
+            <a href="{% url 'logout' %}" class="buttonLogin buttonLogout"><span class="material-symbols-outlined bell" style="color: ghostwhite;">logout</span><span>Cerrar Sesión</span></a>
           {% else %}
             <a class="user buttonLogin" href="{% url 'login' %}" data-content="login"><span class="material-symbols-outlined bell" style="color: #16233E;">badge</span>Iniciar Sesión</a>
           {% endif %}
@@ -196,7 +198,6 @@
     <script src="{% static 'js/shared.js' %}"></script>
     <script src="{% static 'js/egresos_au.js' %}"></script>
     <script src="{% static 'js/bnup_form.js' %}"></script>
-    <script src="{% static 'js/tableSort.js' %}"></script>
     <script src="{% static 'js/statisticsChart.js' %}"></script>
     <script src="{% static 'js/cursor.js' %}"></script>
   </body>
