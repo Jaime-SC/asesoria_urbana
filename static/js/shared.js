@@ -113,12 +113,12 @@ function truncateText(text, maxLength) {
  * Determina el número de filas por página según el ancho de la pantalla.
  */
 function getRowsPerPage() {
-    if (window.matchMedia("(min-width: 1280px) and (max-width: 1366px)").matches) {
-        return 7;
-    } else {
-        return 9;
-    }
+    if (window.matchMedia("(width: 1280px) and (height: 720px)").matches) return 8;
+    if (window.matchMedia("(width: 1366px) and (height: 607px)").matches) return 7;
+    if (window.matchMedia("(width: 1366px) and (height: 768px)").matches) return 9;
+    return 9; // por defecto
 }
+
 
 /**
  * Objeto para mantener el estado de cada tabla.
@@ -616,44 +616,6 @@ function setupFiltersEgresosAU(tableId, searchInputId) {
         }
         applyFilters();
     });
-
-    // Abrir/cerrar panel
-    // Abrir/cerrar panel anclado al botón (popover)
-    // btnFilters?.addEventListener('click', (e) => {
-    //     e.stopPropagation();
-
-    //     const isOpen = panel.style.display === 'block';
-    //     const closePanel = () => {
-    //         panel.style.display = 'none';
-    //         btnFilters.setAttribute('aria-expanded', 'false');
-    //         document.removeEventListener('click', outsideHandler);
-    //         document.removeEventListener('keydown', escHandler);
-    //     };
-    //     const outsideHandler = (ev) => {
-    //         if (!panel.contains(ev.target) && !btnFilters.contains(ev.target)) {
-    //             closePanel();
-    //         }
-    //     };
-    //     const escHandler = (ev) => {
-    //         if (ev.key === 'Escape') closePanel();
-    //     };
-
-    //     if (isOpen) {
-    //         // cerrar si ya está abierto
-    //         closePanel();
-    //         return;
-    //     }
-
-    //     // abrir
-    //     panel.style.display = 'block';
-    //     btnFilters.setAttribute('aria-expanded', 'true');
-
-    //     // listeners para cerrar
-    //     setTimeout(() => {
-    //         document.addEventListener('click', outsideHandler);
-    //         document.addEventListener('keydown', escHandler);
-    //     }, 0);
-    // });
 
 }
 
