@@ -1,5 +1,7 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/egresos_au.css' %}" />
+<link rel="stylesheet" href="{% static 'css/egresos_au/egresos_au.css' %}" />
+<link rel="stylesheet" href="{% static 'css/egresos_au/egresos_auMediaQuery.css' %}" />
+
 
 <div style="display: flex; justify-content: space-between;">
   <div class="egresos-toolbar" style="display: flex;gap: 1rem;align-items: stretch;">
@@ -74,7 +76,9 @@
               {{ e.descripcion|default:'—'|truncatechars:60 }}
               {% if e.descripcion|length > 60 %} {% endif %}
             </span>
-            <span class="material-symbols-outlined preview-btn">preview</span>
+            <div class="icon-container">
+              <span class="material-symbols-outlined preview-btn">preview</span>
+            </div>
           </div>
         </td>
         <td class="celda-adjunto">

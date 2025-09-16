@@ -1,0 +1,13 @@
+#egresoModalOverlay .modal-content {
+    max-width: 400px;
+    width: 75%;
+}
+
+.selected-item {
+    padding: 2px 4px;
+    font-size: 12px;
+}
+
+.selected-item span {
+    margin-left: 3px;
+}

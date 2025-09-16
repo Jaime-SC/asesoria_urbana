@@ -10,6 +10,11 @@
         padding-inline: .5rem;
     }
 
+    .logoAU,
+    .logoMuniValpo {
+        height: 5.5rem;
+    }
+
     .user .material-symbols-outlined {
         font-size: 18px;
     }
@@ -29,16 +34,32 @@
 
     .buttonLogin,
     .buttonLogout {
-        padding: .5rem;
-        gap: .5rem;
+        padding: .25rem;
+        gap: .25rem;
     }
 
     .contenido {
         padding: .5rem;
     }
-    
+
     .cardContent {
         padding: .5rem;
+    }
+
+    .contentMenu {
+        font-size: 11px;
+    }
+
+    .cardContent .card-details .div-container div {
+        display: flex;
+        gap: .25rem;
+    }
+
+    .searchContainer input,
+    .searchContainerEgresosAU input {
+        font-size: 11px;
+        padding: 4px;
+        height: 25px;
     }
 
     h1 {
@@ -60,222 +81,29 @@
 
     .ulMenu li a {
         font-size: 14px;
-    }
-}
-
-/* Pantallas grandes (desktops) */
-@media (min-width: 1272px) and (max-width: 1591px) {
-
-    
-
-    .containerStatistics {
-        width: -webkit-fill-available;
-    }
-
-    /* .cardTotalEstadisticas {
-        height: 12.5rem;
-    } */
-
-    .contentEstadisticas h3 {
-        font-size: 1.2rem;
-    }
-
-    .contentEstadisticas p {
-        font-size: 7rem;
-    }
-
-    .logoAU {
-        height: 5.5rem;
-    }
-
-    .logoMuniValpo {
-        height: 5.5rem;
-    }
-
-    .separador {
-        height: 40px;
-        margin-bottom: 25px;
-        margin-inline: 5px;
-    }
-
-    .logoSecpla {
-        height: 69px;
-        margin-bottom: 20px;
-        width: 45px;
-    }
-
-    .logoIlustreMunicipalidad {
-        position: absolute;
-        top: 69px;
-        width: 190px;
-    }
-
-    .user {
-        font-size: smaller;
-    }
-
-    .material-symbols-outlined {
-        font-size: 20px;
-    }
-
-    .contentMenu {
-        font-size: 11px;
-    }
-
-    .menu a {
-
-        font-size: medium;
         padding: 5px 7.5px;
         width: auto;
-
-
     }
 
-}
-
-
-/* PAGINA DE BNUP */
-
-/* Pantallas grandes (desktops) */
-@media (min-width: 1272px) and (max-width: 1366px) {
-
-    #tablaSolicitudes,
-    #tablaEgresosAU {
-        font-size: 13px !important;
-        margin-top: 10px;
-    }
-
-    .tableInfor_container {
-        padding: 10px;
-    }
-
-    .btnAddBNUP,
-    .btnDelBNUP,
-    .btnEditBNUP,
-    .btnStatsBNUP,
-    .btn-back,
-    .btnAddEgreso,
-    .btnDelEgresoAU,
-    .btnEditEgresoAU {
-        width: 110px !important;
-        height: 25px;
-        font-size: 13px;
-    }
-
-    .search-filters-container #filterPanel {
-        padding: .5rem;
-        top: 13px;
-        right: -130px;
-    }
-
-    #btnToggleFilters,
-    #btnResetFilters,
-    #btnToggleFiltersEgresosAU,
-    #btnResetFiltersEgresosAU {
-        height: 25px;
-    }
-
-    #btnToggleFilters span,
-    #btnResetFilters span,
-    #btnToggleFiltersEgresosAU span,
-    #btnResetFiltersEgresosAU span {
-        font-size: 20px;
-    }
-
-    #btnToggleFilters p,
-    #btnResetFilters p,
-    #btnToggleFiltersEgresosAU p,
-    #btnResetFiltersEgresosAU p {
-        font-size: 13px;
-    }
-
-    .btn-back,
-    .btnAddEgreso {
-        width: auto !important;
-    }
-
-    .divStatistics {
-        gap: .5rem;
-    }
-
-    .subDivStatics-v1 {
-        gap: .5rem;
-    }
-
-    .subDivStatics-v1>div {
-        gap: .5rem;
-    }
-
-    .subDivStatics-v2 {
-        height: auto;
-        width: 50rem;
-    }
-
-    .subDivStatics-v3 {
-        gap: .5rem;
-    }
-
-    .subDivStatics-v3>.containerStatistics {
-        width: 312px;
-    }
-
-
-    .subDivStatics-v4 {
-        gap: .5rem;
-    }
-
-    .subDivStatics-v4>.containerStatistics {
-        width: 312px;
-    }
-
-    .subDivStatics-v5 {
-        gap: .5rem;
-    }
-
-    .subDivStatics-v5>.containerStatistics {
-        width: 312px;
-    }
-
-    .contentEstadisticas h3 {
-        font-size: 1rem;
-    }
-
-    .contentEstadisticas p {
-        font-size: 3rem;
+    .btn {
+        padding: 5px 10px;
+        font-size: 14px;
     }
 
     .btn-stats span {
         font-size: 20px;
     }
 
-    .searchContainer span,
-    .searchContainerEgresosAU span {
-        font-size: 18px;
-    }
-
-    .searchContainer input,
-    .searchContainerEgresosAU input {
-        font-size: 11px;
+    .modal-content input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
         padding: 4px;
-        height: 25px;
-    }
-
-    .page-btn {
-        padding: 2.5px 5px;
-    }
-
-    .page-btn span {
-        font-size: 18px;
-
-    }
-
-    .page-btn.active {
-        font-size: 15px;
-    }
-
-    .tableInfor_container th {
-        padding: 5px;
-
+        font-size: 12px;
+        height: min-content;
     }
 
     #selectAll,
@@ -284,474 +112,43 @@
         width: 10px;
     }
 
-    #tablaSolicitudes span,
-    #tablaEgresosAU .preview-btn,
-    .celda-adjunto span,
-    .celda-respuesta span {
-        font-size: 20px;
+    /* modal */
+
+    
+
+    /* tabla */
+
+    .page-btn {
+        padding: 2.5px 5px !important;
     }
 
-    .modal-content {
-        font-size: 12px;
-        margin: 3.45% auto
-    }
-
-    .modal-content .modal-info {
+    .page-btn span {
         font-size: 16px;
     }
 
-    #salidaModal .modal-content {
-        /* font-size: 12px; */
-        margin: 2.45% auto;
-        padding: 15px;
+    .tableInfor_container th {
+        padding: .25rem !important;
     }
 
-    /* .modal-content select {
-        font-size: 12px;
-        padding: 4px;
-    } */
-
-    .modal-content .form-group {
-        margin-bottom: 7.5px;
+    thead,
+    thead {
+        font-size: 13px;
     }
 
-    .modal-content label {
-        margin-bottom: 2.5px;
-        font-size: .9rem;
-    }
-
-    .modal-content input[type="text"],
-    input[type="date"],
-    input[type="number"],
-    input[type="email"],
-    input[type="password"],
-    textarea,
-    select {
-        padding: 4px;
-        font-size: 12px;
-        height: min-content;
-    }
-
-    .modal-content .btn-container .btn {
-        font-size: 12px;
-        padding: 2.5px;
-    }
-
-    .modal-content h2 {
-        font-size: 1.2;
-    }
-
-    .tableInfor_container td {
-        padding: 4px;
-    }
-
-    #tablaSolicitudes tbody,
-    #tablaEgresosAU tbody {
-        font-size: 14.2px;
-    }
-
-    .file-caption-name:not(.file-caption-disabled) {
-        height: 1.55rem;
-        font-size: .75rem;
-    }
-
-    .hidden-xs span {
-        font-size: 20px;
-    }
-
-    .modal-content .close span {
-        font-size: 2rem !important;
-    }
-
-    .btn {
+    tbody,
+    tbody {
         font-size: 14px;
     }
 
-    .selected-item {
-        padding: 2px 4px;
-        font-size: 12px;
-    }
-}
-
-
-/* Pantallas grandes (desktops) */
-@media (min-width: 1367px) and (max-width: 1591px) {
-    #tablaSolicitudes {
-        font-size: 13px !important;
-        margin-top: 10px;
+    tbody tr td,
+    tbody tr td {
+        padding: 0.25rem !important;
     }
 
-    .tableInfor_container {
-        padding: 10px;
-    }
-
-    .btnAddBNUP,
-    .btnDelBNUP,
-    .btnEditBNUP,
-    .btnStatsBNUP,
-    .btn-back {
-        width: 110px !important;
-        height: 25px;
-        font-size: 13px;
-    }
-
-    .btn-back {
-        width: 8rem !important;
-    }
-
-    .subDivStatics-v1>div {
-        height: 12rem;
-    }
-
-    .subDivStatics-v2 {
-        height: auto;
-        width: 50rem;
-    }
-
-    .cardTotalEstadisticas {
-        height: -webkit-fill-available;
-
-    }
-
-    .contentEstadisticas h3 {
-        font-size: 1rem;
-    }
-
-    .contentEstadisticas p {
-        font-size: 3rem;
-    }
-
-    .btn-stats span {
-        font-size: 20px;
-    }
-
-    .searchContainer span {
+    table button.preview-btn span,
+    table button.buttonSubirSalida span,
+    table button.buttonPreview span,
+    table .icon-container span {
         font-size: 18px;
     }
-
-    .searchContainer input {
-        font-size: 11px;
-        padding: 4px;
-        height: 25px;
-    }
-
-    .page-btn {
-        padding: 2.5px 5px;
-    }
-
-    .page-btn span {
-        font-size: 18px;
-
-    }
-
-    .page-btn.active {
-        font-size: 15px;
-    }
-
-    .tableInfor_container th {
-        padding: 5px;
-
-    }
-
-    #selectAll,
-    .rowCheckbox {
-        width: 10px;
-    }
-
-    #tablaSolicitudes span {
-        font-size: 20px;
-    }
-
-    .modal-content {
-        font-size: 12px;
-        margin: 3.45% auto
-    }
-
-    .modal-content .modal-info {
-        font-size: 16px;
-    }
-
-    #salidaModal .modal-content {
-        /* font-size: 12px; */
-        margin: 2.45% auto;
-        padding: 15px;
-    }
-
-    /* .modal-content select {
-        font-size: 12px;
-        padding: 4px;
-    } */
-
-    .modal-content .form-group {
-        margin-bottom: 7.5px;
-    }
-
-    .modal-content label {
-        margin-bottom: 2.5px;
-    }
-
-    .modal-content input[type="text"],
-    input[type="date"],
-    input[type="number"],
-    input[type="email"],
-    input[type="password"],
-    textarea,
-    select {
-        padding: 4px;
-        font-size: 12px;
-        height: min-content;
-    }
-
-    .modal-content .btn-container .btn {
-        font-size: 12px;
-        padding: 2.5px;
-    }
-
-    .modal-content h2 {
-        font-size: 20px;
-    }
-
-    .tableInfor_container td {
-        padding: 4px;
-    }
-
-    #tablaSolicitudes tbody {
-        font-size: 14.2px;
-    }
 }
-
-/* ------------------------ */
-
-/* Pantallas grandes (desktops) */
-@media (min-width: 1592px) and (max-width: 1911px) {
-
-    .cardContent {
-        padding: .75rem;
-    }
-
-    .contentMenu>div {
-        margin-bottom: .9rem;
-        margin-inline: .9rem;
-    }
-
-    .logo {
-        padding-block: .2rem;
-        padding-left: .65rem;
-    }
-
-    .logoAU {
-        height: 6rem;
-    }
-
-    .logoMuniValpo {
-        height: 6rem;
-    }
-
-
-    .separador {
-        height: 40px;
-        margin-bottom: 25px;
-        margin-inline: 5px;
-    }
-
-    .logoSecpla {
-        height: 69px;
-        margin-bottom: 20px;
-        width: 45px;
-    }
-
-    .logoIlustreMunicipalidad {
-        position: absolute;
-        top: 85px;
-        width: 230px;
-    }
-
-    .buttonLogin {
-        width: 120px;
-        height: 40px;
-    }
-
-    .material-symbols-outlined {
-        font-size: 20px;
-    }
-
-    h1 {
-        font-size: x-large;
-    }
-
-    .contentMenu {
-        font-size: 13px;
-    }
-
-    .menu a {
-
-        font-size: medium;
-        padding: 5px 7.5px;
-        width: auto;
-
-
-    }
-
-    .menu ul {
-        margin-left: 15px;
-    }
-}
-
-
-/* PAGINA DE BNUP */
-
-/* Pantallas grandes (desktops) */
-@media (min-width: 1592px) and (max-width: 1911px) {
-    #tablaSolicitudes {
-        font-size: 13px !important;
-        margin-top: 10px;
-    }
-
-    .tableInfor_container {
-        padding: 10px;
-    }
-
-    .btnAddBNUP,
-    .btnDelBNUP,
-    .btnEditBNUP,
-    .btnStatsBNUP,
-    .btn-back {
-        width: 110px !important;
-        height: 25px;
-        font-size: 13px;
-    }
-
-    .btn-back {
-        width: 8rem !important;
-
-
-    }
-
-    .user-menu {
-        right: 10rem;
-        top: 6.25rem;
-    }
-
-
-    .btn-stats span {
-        font-size: 20px;
-    }
-
-    .searchContainer span {
-        font-size: 18px;
-    }
-
-    .searchContainer input {
-        font-size: 11px;
-        padding: 4px;
-        height: 25px;
-    }
-
-    .page-btn {
-        padding: 2.5px 5px;
-    }
-
-    .page-btn span {
-        font-size: 18px;
-
-    }
-
-    .page-btn.active {
-        font-size: 15px;
-    }
-
-    .tableInfor_container th {
-        padding: 5px;
-
-    }
-
-    #selectAll,
-    .rowCheckbox {
-        width: 10px;
-    }
-
-    #tablaSolicitudes span {
-        font-size: 20px;
-    }
-
-    .modal-content {
-        font-size: 12px;
-        margin: 3.45% auto
-    }
-
-    .modal-content .modal-info {
-        font-size: 16px;
-    }
-
-    #salidaModal .modal-content {
-        /* font-size: 12px; */
-        margin: 2.45% auto;
-        padding: 15px;
-    }
-
-    /* .modal-content select {
-        font-size: 12px;
-        padding: 4px;
-    } */
-
-    .modal-content .form-group {
-        margin-bottom: 7.5px;
-    }
-
-    .modal-content label {
-        margin-bottom: 2.5px;
-    }
-
-    .modal-content input[type="text"],
-    input[type="date"],
-    input[type="number"],
-    input[type="email"],
-    input[type="password"],
-    textarea,
-    select {
-        padding: 4px;
-        font-size: 12px;
-        height: min-content;
-    }
-
-    .search-filters-container #filterPanel {
-        padding: .5rem;
-        top: 13px;
-        right: -47px;
-    }
-
-    #btnToggleFilters,
-    #btnResetFilters {
-        width: 100%;
-        height: 25px;
-    }
-
-    #btnToggleFilters span,
-    #btnResetFilters span {
-        font-size: 20px;
-    }
-
-    #btnToggleFilters p,
-    #btnResetFilters p {
-        font-size: 13px;
-    }
-
-    .modal-content .btn-container .btn {
-        font-size: 12px;
-        padding: 2.5px;
-    }
-
-    .modal-content h2 {
-        font-size: 20px;
-    }
-
-    .tableInfor_container td {
-        padding: 4px;
-    }
-
-    #tablaSolicitudes tbody {
-        font-size: 14.2px;
-    }
-}
-
-/* PAGINA DE ESTADISTICAS */

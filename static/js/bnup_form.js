@@ -894,8 +894,8 @@
             showRemove: true,          // ⟵ sin botón “Eliminar” (trash)
             showPreview: true,
             showCaption: false,
-            browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-            removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+            browseLabel: '<span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo',
+            removeLabel: '<span class="material-symbols-outlined bell">delete</span> Eliminar',
             mainClass: 'input-group-sm',
             dropZoneTitle: 'Arrastra y suelta los archivos aquí',
 
@@ -1034,8 +1034,8 @@
             showRemove: true,
             showPreview: true,
             showCaption: false,
-            browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-            removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+            browseLabel: '<span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo',
+            removeLabel: '<span class="material-symbols-outlined bell">delete</span> Eliminar',
             mainClass: 'input-group-sm',
             dropZoneTitle: 'Arrastra y suelta los archivos aquí',
             fileActionSettings: {
@@ -1065,8 +1065,8 @@
                 showRemove: true,
                 showPreview: true,
                 showCaption: false,
-                browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-                removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                browseLabel: '<span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo',
+                removeLabel: '<span class="material-symbols-outlined bell">delete</span> Eliminar',
                 mainClass: 'input-group-sm',
                 dropZoneTitle: 'Arrastra y suelta los archivos aquí',
                 fileActionSettings: {
@@ -2358,8 +2358,8 @@
                         showRemove: true,
                         showPreview: true,
                         showCaption: false,
-                        browseLabel: '<span class="material-symbols-outlined">upload_file</span> Seleccionar archivo',
-                        removeLabel: '<span class="material-symbols-outlined">delete</span> Eliminar',
+                        browseLabel: '<span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo',
+                        removeLabel: '<span class="material-symbols-outlined bell">delete</span> Eliminar',
                         mainClass: 'input-group-sm',
                         dropZoneTitle: 'Arrastra y suelta los archivos aquí',
                         fileActionSettings: {
@@ -3195,7 +3195,7 @@
                                 '${sol.fecha_solicitud || ""}',
                                 'tablaSolicitues')">
                                 ${truncateText(sol.descripcion, 20)}
-                                ${sol.descripcion.length > 1 ? '<span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>' : ''}
+                                ${sol.descripcion.length > 1 ? '<div class="icon-container"><span class="material-symbols-outlined">preview</span></div>' : ''}
                             </div>
                         `;
 
@@ -3409,9 +3409,9 @@
         descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
         if (solicitud.descripcion.length > 1) {
             descripcionDiv.innerHTML += `
-                <span class="descripcion-icon">
+                <div class="icon-container">
                     <span class="material-symbols-outlined">preview</span>
-                </span>
+                </div>
             `;
         }
         descripcionCell.appendChild(descripcionDiv);

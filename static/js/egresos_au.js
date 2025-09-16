@@ -85,7 +85,7 @@
                     if (puedeGestionar) {
                         btnIngresar.outerHTML = `
                         <button id="openEgresoFormModal" class="btn-stats btnAddEgreso"
-                                style="background-color:#4BBFE0;justify-content:flex-start;width:150px;">
+                                style="background-color:#4BBFE0;justify-content:flex-start;">
                             <span class="material-symbols-outlined">note_add</span>
                             Crear Egreso
                         </button>`;
@@ -101,7 +101,7 @@
                         btnDeleteBNUP.outerHTML = `
                         <button id="deleteSelectedEgresos"
                                 class="btn-stats btnDelEgresoAU"
-                                style="background-color:#E73C45;justify-content:flex-start;width:150px;"
+                                style="background-color:#E73C45;justify-content:flex-start;"
                                 disabled>
                             <span class="material-symbols-outlined">delete</span> Eliminar
                         </button>`;
@@ -117,7 +117,7 @@
                         btnEditBNUP.outerHTML = `
                         <button id="editSelectedEgresos"
                                 class="btn-stats btnEditEgresoAU"
-                                style="justify-content:flex-start;width:150px;"
+                                style="justify-content:flex-start;"
                                 disabled>
                             <span class="material-symbols-outlined">edit</span> Editar
                         </button>`;
@@ -389,7 +389,9 @@
                         <span class="span-descripcion-cell" style="cursor:pointer;">
                             ${descripcion ? descripcion.slice(0, 40) : '—'}
                         </span>
-                        <span class="material-symbols-outlined preview-btn">preview</span>
+                        <div class="icon-container">
+                            <span class="material-symbols-outlined preview-btn">preview</span>
+                        </div>
                     </div>
                 </td>
                 <td class="celda-adjunto">

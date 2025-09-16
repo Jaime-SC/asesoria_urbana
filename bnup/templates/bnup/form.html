@@ -1,7 +1,7 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/table.css' %}" />
 <link rel="stylesheet" href="{% static 'css/bnup_form/bnup_form.css' %}" />
 <link rel="stylesheet" href="{% static 'css/bnup_form/bnup_formMediaQuery.css' %}" />
+<link rel="stylesheet" href="{% static 'css/table.css' %}" /> 
 
 
 <div id="bnupData" data-tipo-usuario="{{ tipo_usuario }}">
@@ -22,7 +22,10 @@
         </div>
         {% comment %} {% if tipo_usuario == 'ADMIN' %} {% endcomment %}
           <div>
-            <button id="egresosAUButton" class="btn-stats btnEgresosAU"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            {% if tipo_usuario == 'ADMIN'%}
+              <button id="egresosAUButton" class="btn-stats btnEgresosAU"><span class="material-symbols-outlined">export_notes</span> Egresos AU</button>
+            {% endif %}
+            
             {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'JEFE' %}
               <button id="statisticsButton" class="btn-stats btnStatsBNUP"><span class="material-symbols-outlined">query_stats</span> Estadísticas</button>
             {% endif %}
@@ -39,10 +42,10 @@
               {% csrf_token %}
               <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                 <h2>Ingresos</h2>
-                <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+                <span class="material-symbols-outlined close" style="color: #E73C45; font-size: 40px;">close</span>
               </div>
               <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between;">
-                <div style="width: 33%">
+                <div>
                   <label for="tipo_recepcion">Tipo de Recepción</label>
                   <select name="tipo_recepcion" id="tipo_recepcion" required>
                     <option value="" disabled selected>Seleccione</option>
@@ -51,7 +54,7 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div id="memoFields" class="form-group" style="display: block; margin-bottom: 0px; flex-direction: column; width: 20%;">
+                <div id="memoFields" class="form-group" style="width: 20%;">
                   <label for="num_memo">N° Doc:</label>
                   <input type="number" name="num_memo" id="num_memo" />
                 </div>
@@ -67,16 +70,16 @@
               </div>
 
               <div class="form-group" style="display: flex; justify-content: space-between;">
-                <div style="width: 20%;">
+                <div >
                   <label for="numeroIngreso">N° de Ingreso</label>
                   <input type="number" name="numero_ingreso" id="numeroIngreso" required />
                 </div>
-                <div class="form-group" style="width: 27%;">
+                <div class="form-group" >
                   <label for="fecha_ingreso_au">Fecha de Ingreso</label>
                   <input type="date" name="fecha_ingreso_au" id="fecha_ingreso_au" required />
                 </div>
                 <!-- Nuevo Campo: Tipo de Solicitud -->
-                <div class="form-group" style="width: 27%;">
+                <div class="form-group" >
                   <label for="tipo_solicitud">Tipo de Solicitud</label>
                   <select name="tipo_solicitud" id="tipo_solicitud" required>
                     <option value="" disabled selected>Seleccione</option>
@@ -276,13 +279,13 @@
                       <input type="checkbox" class="rowCheckbox" data-id="{{ solicitud.id }}" />
                     </td>
                   {% endif %}
-                  <td>{{ solicitud.numero_ingreso }}</td>
-                  <td class="fechaTable">{{ solicitud.fecha_ingreso_au|date:'d/m/Y' }}</td>
-                  <td class="fechaTable">{{ solicitud.fecha_solicitud|date:'d/m/Y' }}</td>
+                  <td><div class="icon-container">{{ solicitud.numero_ingreso }}</div></td>
+                  <td class="fechaTable"><div class="icon-container">{{ solicitud.fecha_ingreso_au|date:'d/m/Y' }}</div></td>
+                  <td class="fechaTable"><div class="icon-container">{{ solicitud.fecha_solicitud|date:'d/m/Y' }}</div></td>
                   <td>{{ solicitud.depto_solicitante.nombre }}</td>
                   <td>
                     {% if solicitud.numero_memo %}
-                      {{ solicitud.numero_memo }}
+                      <div class="icon-container">{{ solicitud.numero_memo }}</div>
                     {% else %}
                       <div class="icon-container">
                         <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
@@ -316,7 +319,7 @@
                            'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
-                        <span class="descripcion-icon"><span class="material-symbols-outlined">preview</span></span>
+                        <div class="icon-container"><span class="material-symbols-outlined">preview</span></div>
                       {% endif %}
                     </div>
                   </td>                  
@@ -398,9 +401,7 @@
   <div class="modal-content animate__animated">
     <div style="display: flex; align-items: center; justify-content: space-between;">
       <h2>Vista Previa</h2>
-      <span class="close">
-        <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-      </span>
+      <span class="close material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
     </div>
     <div class="modal-info" style="font-family: 'Space Mono';">
       <div class="modal-field modal-field-field">
@@ -430,7 +431,7 @@
       <div class="modal-field modal-field-field">
         <strong>Funcionarios Asignados:</strong> <span id="funcionarios_asignados"></span>
       </div>
-      <div class="modal-field">
+      <div class="modal-field descripcionSalida">
         <strong>Descripción:</strong>
         <br />
         <div id="descripcionCompleta" style="text-align: justify;"></div>
@@ -446,10 +447,8 @@
   <div class="modal-content">
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <label for="archivo_adjunto">Adjuntar archivo</label>
-        <span class="close">
-          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-        </span>
+        <h3 for="archivo_adjunto">Adjuntar archivo</h3>
+        <span class="close material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
       </div>
       <input type="file" id="fileModalInput" class="file">
       <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
@@ -472,25 +471,23 @@
         {% else %}
           <h2>Egresos Registradas</h2>
         {% endif %}
-        <span class="close">
-          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-        </span>
+        <span class="material-symbols-outlined close">close</span>
       </div>
 
       <div style="display: flex; justify-content: space-between; gap: 50px;">
         {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' %}
 
           <!-- Formulario para crear la salida -->
-          <form id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data" style="width: -webkit-fill-available;">
+          <form id="salidaForm" method="post" action="{% url 'create_salida' %}" enctype="multipart/form-data">
             {% csrf_token %}
-            <div id="salidaFields" style="margin-top: 10px; width: 500px;">
+            <div id="salidaFields">
               <!-- Fila de Nº Salida y Fecha -->
               <div style="display: flex; justify-content: space-between; gap: 10px;">
-                <div class="form-group" style="width: 48%;">
+                <div class="form-group">
                   <label for="numero_salida">Nº de Egreso</label>
                   <input type="number" name="numero_salida" id="numero_salida" class="form-control" required />
                 </div>
-                <div class="form-group" style="width: 48%;">
+                <div class="form-group">
                   <label for="fecha_salida">Fecha de Egreso</label>
                   <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
                 </div>
@@ -549,7 +546,7 @@
                 <input style="margin: 0px;" type="text" id="searchSalidas" placeholder="Buscar..." />
               </div> {% endcomment %}
               {% if tipo_usuario == 'ADMIN' %}
-                <button style="background-color: #E73C45;justify-content: flex-start;width: 150px;" id="btnEliminarSalidas" class="btn-stats btnDelBNUP" disabled>
+                <button style="background-color: #E73C45;justify-content: flex-start;" id="btnEliminarSalidas" class="btn-stats btnDelBNUP" disabled>
                   <span class="material-symbols-outlined">delete</span> Eliminar
                 </button>
               {% endif %}
@@ -557,7 +554,7 @@
                 <button
                     id="btnEditarSalidas"
                     class="btn-stats"
-                    style="background:#f7ea53;justify-content:flex-start;width:150px;"
+                    style="background:#f7ea53;justify-content:flex-start;"
                     disabled>
                     <span class="material-symbols-outlined">edit</span> Editar
                 </button>
@@ -595,9 +592,7 @@
     <div class="modal-content animate__animated">
       <div style="display: flex; align-items: center; justify-content: space-between;">
         <h2>Detalle de Egreso</h2>
-        <span class="close" onclick="closeSalidaDescripcionModal()">
-          <span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-        </span>
+        <span class="close material-symbols-outlined" onclick="closeSalidaDescripcionModal()" style="color: #E73C45; font-size: 40px;">close</span>
       </div>
       <div class="modal-info" style="font-family: 'Space Mono';">
         <div class="modal-field">
@@ -607,12 +602,12 @@
           <strong>Fecha de Egreso:</strong> <span id="salida_fecha"></span>
         </div>
         <div class="modal-field">
-          <strong>Descripción:</strong>
-          <div id="salida_descripcion" style="text-align: justify;"></div>      
-        </div>
-        <div class="modal-field">
           <strong>Funcionarios:</strong>
           <div id="salida_funcionarios" style="text-align: justify;"></div>
+        </div>
+        <div class="modal-field descripcionSalida">
+          <strong>Descripción:</strong>
+          <div id="salida_descripcion" style="text-align: justify;"></div>      
         </div>
       </div>
     </div>
@@ -622,8 +617,7 @@
     <div class="modal-content animate__animated" style="max-width:max-content;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <h2>Editar Egreso</h2>
-        <span class="close"><span class="material-symbols-outlined"
-              style="color:#E73C45;font-size:40px;">close</span></span>
+        <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
       </div>
 
       <form id="editSalidaForm" enctype="multipart/form-data" style="width:450px;">
@@ -689,9 +683,8 @@
     <div id="editSalidaFileModal" class="modal" style="display:none;">
       <div class="modal-content animate__animated animate__bounceIn">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <label>Adjuntar archivo</label>
-          <span class="close"><span class="material-symbols-outlined"
-                style="color:#E73C45;font-size:40px;">close</span></span>
+          <h3>Adjuntar archivo</h3>
+          <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
         </div>
 
         <input type="file" id="editSalidaFileModalInput" class="file">
@@ -714,7 +707,7 @@
       {% csrf_token %}
       <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
         <h2>Editar Ingreso</h2>
-        <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>
+        <span class="close material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
       </div>
 
       <!-- Campo oculto para el ID de la solicitud -->
@@ -871,8 +864,8 @@
 <div id="editFileModal" class="modal" style="display:none; margin-inline: 0;">
   <div class="modal-content animate__animated animate__bounceIn">
     <div style="display:flex;justify-content:space-between;align-items:center;">
-      <label>Adjuntar archivo</label>
-      <span class="close"><span class="material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span></span>
+      <h3>Adjuntar archivo</h3>
+      <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
     </div>
 
     <!-- aquí vive el plugin fileinput -->

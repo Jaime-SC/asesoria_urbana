@@ -187,9 +187,6 @@ a:active {
   /* Centra verticalmente todos los hijos dentro de .head */
   position: relative;
   padding-inline: 1.5rem;
-
-
-
 }
 
 .logo {
@@ -322,88 +319,6 @@ a:active {
 .bg-visualizador ul li:hover {
   background-color: #669391;
 }
-
-/* Estilos para el modal */
-.modal {
-  display: none;
-  /* Oculto por defecto */
-  position: fixed;
-  z-index: 1001;
-  /* Por encima del menú */
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4);
-  /* Fondo semitransparente */
-}
-
-.modal-content {
-  background-color: #fefefe;
-  margin: 10% auto;
-  /* Centrar verticalmente */
-  padding: 20px;
-  border: 1px solid #888;
-  width: 400px;
-  /* Ancho del modal */
-  border-radius: 5px;
-  position: relative;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h2 {
-  margin: 0;
-}
-
-.modal-header .close {
-  cursor: pointer;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.modal-body {
-  margin-top: 20px;
-}
-
-.modal-footer {
-  margin-top: 20px;
-  text-align: right;
-}
-
-.modal .form-group {
-  margin-bottom: 15px;
-}
-
-.modal .form-group label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.modal .form-group input[type="password"] {
-  width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-.modal .btn {
-  padding: 8px 16px;
-  background-color: #1E90FF;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.modal .btn:hover {
-  background-color: #0b7dda;
-}
-
 
 .separador {
   height: 45px;
@@ -542,8 +457,6 @@ a:active {
 .cardContent:hover {
   border-color: cyan;
   box-shadow: inset 0 0 10px 2px #247777;
-
-
 }
 
 .cardContent:hover .card-button {
@@ -555,12 +468,12 @@ a:active {
 
 .krajee-default .file-caption-info,
 .krajee-default .file-size-info {
-  width: min-content !important;
-  height: auto !important;
-  font-size: 20px;
   font-family: 'HelveticaNeue';
 }
 
+.file-drop-zone-title {
+  font-size: 1.4em !important;
+}
 
 .form-container {
   background-color: #C9E8F4;
@@ -582,15 +495,6 @@ h2 {
   /* margin-bottom: 20px; */
   font-family: 'HelveticaNeue';
   font-size: larger;
-}
-
-.tittleStatistics h2 {
-  margin-bottom: 0px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-  gap: 5px;
 }
 
 label {
@@ -1005,6 +909,11 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   width: auto;
 }
 
+div.btn:hover .bell,
+button.btn:hover .bell {
+  animation: bellRing 0.9s both;
+}
+
 .bell path {
   fill: rgb(255, 255, 255);
 }
@@ -1051,131 +960,7 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   }
 }
 
-/* Personaliza el botón de selección de archivo */
-.fileinput .btn {
-  background-color: #007bff;
-  /* Color de fondo personalizado */
-  color: #fff;
-  /* Color del texto */
-}
 
-/* Personaliza el área de vista previa */
-.file-preview-frame {
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px;
-  margin-top: 10px;
-}
-
-/* Ocultar el botón de carga dentro de la vista previa */
-.kv-upload-progress {
-  display: none;
-}
-
-
-/* Estilos para el modal */
-.modal {
-  display: none;
-  /* Oculto por defecto */
-  position: fixed;
-  /* Fijo en la pantalla */
-  z-index: 1000;
-  /* Asegura que esté sobre otros elementos */
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  /* Permite el desplazamiento si el contenido es largo */
-  background-color: rgba(0, 0, 0, 0.5);
-  /* Fondo semi-transparente */
-}
-
-.krajee-default .file-footer-buttons {
-  display: flex;
-  gap: 1rem;
-  float: right;
-}
-
-.file-drop-zone {
-  min-height: 286px !important;
-}
-
-.file-footer-buttons button {
-  height: min-content;
-  padding: .25rem !important;
-}
-
-.modal-dialog.modal-lg {
-  max-width: none !important;
-  height: 100vh;
-  margin: 0;
-  padding-inline: 25vw;
-  padding-block: 2.5vh;
-}
-
-.modal-dialog.modal-lg .modal-content {
-  margin: 0;
-  max-width: none;
-  width: 100%;
-  height: 100%;
-}
-
-.modal-dialog.modal-lg .modal-content .kv-zoom-body.file-zoom-content.krajee-default.kv-zoom-body.file-zoom-content.krajee-default {
-  height: 95% !important;
-}
-
-.modal-content {
-  background-color: #fefefe;
-  margin: 5% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-  max-width: 500px;
-  border-radius: 10px;
-}
-
-#salidaModalContent.modal-content {
-  margin: 3% auto;
-}
-
-#descripcionModal .modal-content {
-  width: 80%;
-  max-width: 700px !important;
-}
-
-.fileinput-remove:not(.fileinput-remove-button) {
-  display: none !important;
-}
-
-
-
-.krajee-default .file-footer-caption {
-  margin-bottom: 0px !important;
-}
-
-.krajee-default.file-preview-frame {
-  width: -webkit-fill-available !important;
-}
-
-.krajee-default.file-preview-frame .kv-file-content {
-  width: -webkit-fill-available !important;
-}
-
-.krajee-default.file-preview-frame .file-thumbnail-footer {
-  height: max-content !important;
-}
-
-.input-group-sm {
-  display: flex;
-  justify-content: space-between;
-  flex-direction: row-reverse;
-  gap: 10px;
-}
-
-.input-group-sm .btn {
-  width: -webkit-fill-available;
-}
 
 .btn-container {
   display: flex;
@@ -1193,23 +978,6 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   width: 60%;
   height: 2.2rem;
   margin-top: 0px;
-}
-
-/* #correoFields #correoSolicitante {
-  width: 150px !important;
-} */
-
-/* .form-group #numeroIngreso {
-  width: 150px;
-} */
-
-.input-group-sm span {
-  color: ghostwhite;
-}
-
-.file-drop-zone-title {
-  font-family: 'HelveticaNeue';
-  font-size: 25px !important;
 }
 
 .tooltip {
@@ -1257,16 +1025,12 @@ input[type="text"]:not(:placeholder-shown)+.clear-btn {
   font-weight: bold;
 }
 
-.modal-field-field {
-  display: flex;
-  justify-content: space-between;
 
-}
 
 .close {
-  color: #aaa;
+  color: #E73C45;
   float: right;
-  font-size: 28px;
+  font-size: 30px !important;
   font-weight: bold;
 }
 
