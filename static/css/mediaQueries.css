@@ -164,15 +164,15 @@
 
     .logoAU,
     .logoMuniValpo {
-        height: 5.5rem;
+        height: 6.25rem;
     }
 
     .user .material-symbols-outlined {
-        font-size: 18px;
+        font-size: 22px;
     }
 
     .user span {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .user-menu {
@@ -186,36 +186,32 @@
 
     .buttonLogin,
     .buttonLogout {
-        padding: .25rem;
-        gap: .25rem;
+        padding: .35rem;
+        gap: .35rem;
     }
 
     .contenido {
-        padding: .5rem;
-    }
-
-    .cardContent {
-        padding: .5rem;
+        padding: .75rem;
     }
 
     .contentMenu {
-        font-size: 11px;
+        font-size: 14px;
     }
 
     .cardContent .card-details .div-container div {
         display: flex;
-        gap: .25rem;
+        gap: .5rem;
     }
 
     .searchContainer input,
     .searchContainerEgresosAU input {
         font-size: 11px;
         padding: 4px;
-        height: 25px;
+        height: 30px;
     }
 
     h1 {
-        font-size: 18px;
+        font-size: 22px;
         margin-block: .5rem
     }
 
@@ -224,16 +220,16 @@
     }
 
     h1.tittle {
-        font-size: 22px;
+        font-size: 26px;
     }
 
     h3 {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .ulMenu li a {
-        font-size: 14px;
-        padding: 5px 7.5px;
+        font-size: 16px;
+        padding: 7px 9.5px;
         width: auto;
     }
 
@@ -253,15 +249,15 @@
     input[type="password"],
     textarea,
     select {
-        padding: 4px;
-        font-size: 12px;
+        padding: 6px;
+        font-size: 14px;
         height: min-content;
     }
 
     #selectAll,
     .rowCheckbox,
     #checkAllEgresos {
-        width: 10px;
+        width: 14px;
     }
 
     /* modal */
@@ -271,7 +267,7 @@
     /* tabla */
 
     .page-btn {
-        padding: 2.5px 5px !important;
+        padding: 4.5px 7px !important;
     }
 
     .page-btn span {
@@ -284,23 +280,23 @@
 
     thead,
     thead {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     tbody,
     tbody {
-        font-size: 14px;
+        font-size: 15px;
     }
 
     tbody tr td,
     tbody tr td {
-        padding: 0.25rem !important;
+        padding: 0.4rem !important;
     }
 
     table button.preview-btn span,
     table button.buttonSubirSalida span,
     table button.buttonPreview span,
     table .icon-container span {
-        font-size: 18px;
+        font-size: 20px;
     }
 }

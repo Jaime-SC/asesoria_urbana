@@ -62,6 +62,12 @@
     background: #ffa5ff;
 }
 
+#btnToggleFilters:hover,
+#btnToggleFiltersEgresosAU:hover {
+    background-color: #f7bbf7;
+    transition: background-color 0.3s;
+}
+
 /* EGRESOS AU */
 /* INGRESOS Y EGRESOS */
 

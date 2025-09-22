@@ -116,6 +116,8 @@ function getRowsPerPage() {
     if (window.matchMedia("(width: 1280px) and (height: 720px)").matches) return 8;
     if (window.matchMedia("(width: 1366px) and (height: 607px)").matches) return 7;
     if (window.matchMedia("(width: 1366px) and (height: 768px)").matches) return 9;
+    if (window.matchMedia("(width: 1600px) and (height: 900px)").matches) return 10;
+
     return 9; // por defecto
 }
 
