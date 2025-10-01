@@ -1,0 +1,25 @@
+Egreso N° {{ egreso_numero }} (respuesta de Ingreso N° {{ ingreso_numero }})
+
+Tipo de solicitud: {{ ingreso_tipo|default_if_none:"" }}
+Tipo de recepción: {{ ingreso_recepcion|default_if_none:"" }}
+Solicitante: {{ ingreso_solicitante|default_if_none:"" }}
+Fecha de Ingreso AU: {% if ingreso_fecha %}{{ ingreso_fecha|date:"d-m-Y" }}{% else %}—{% endif %}
+{% if egreso_funcionarios %}
+Funcionarios responsables del egreso:
+{% for f in egreso_funcionarios %}- {{ f.nombre }}{% if f.email %} <{{ f.email }}>{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if fecha_responder_hasta %}Plazo máximo (15° hábil): {{ fecha_responder_hasta|date:"d-m-Y" }}{% endif %}
+{% if dias_anticipacion is not None %}
+Respondido con {{ dias_anticipacion }} {% if dias_anticipacion == 1 %}día hábil{% else %}días hábiles{% endif %} de anticipación.
+{% elif dias_atraso is not None %}
+Respondido con {{ dias_atraso }} {% if dias_atraso == 1 %}día hábil{% else %}días hábiles{% endif %} de atraso.
+{% endif %}
+
+Fecha de egreso: {% if egreso_fecha %}{{ egreso_fecha|date:"d-m-Y" }}{% else %}—{% endif %}
+{% if egreso_descripcion %}Descripción: {{ egreso_descripcion }}{% endif %}
+
+{% if absolute_url %}Ver detalle: {{ absolute_url }}{% endif %}
+
+— Este mensaje se envió automáticamente. No responder a este correo.

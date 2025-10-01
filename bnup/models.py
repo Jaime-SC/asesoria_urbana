@@ -1,5 +1,6 @@
 # bnup/models.py
 from django.db import models
+from django.conf import settings
 from django.db.models import Q
 
 class Departamento(models.Model):
@@ -10,9 +11,23 @@ class Departamento(models.Model):
 
 class Funcionario(models.Model):
     nombre = models.CharField(max_length=255)
+    # NUEVO: vínculo 1-1 con el usuario de Django
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='funcionario_bnup',
+        unique=True,
+        help_text="Usuario Django vinculado a este funcionario (fuente de email)."
+    )
 
     def __str__(self):
-        return self.nombre
+        # Si hay user, muestralo; si no, deja el nombre legacy.
+        return self.user.get_full_name() if self.user and self.user.get_full_name() else self.nombre
+
+    @property
+    def email(self):
+        return self.user.email if (self.user and self.user.email) else None
 
 class TipoRecepcion(models.Model):
     tipo = models.CharField(max_length=50, unique=True)

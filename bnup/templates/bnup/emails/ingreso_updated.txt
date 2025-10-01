@@ -1,0 +1,22 @@
+Ingreso ACTUALIZADO · N° {{ numero_ingreso }}
+
+Tipo de recepción: {{ tipo_recepcion }}
+Tipo de solicitud: {{ tipo_solicitud }}
+Solicitante: {{ depto_solicitante }}
+Fecha de Ingreso AU: {{ fecha_ingreso|date:'d-m-Y' }}{% if fecha_responder_hasta %}
+Responder hasta: {{ fecha_responder_hasta|date:'d-m-Y' }}{% endif %}
+
+{% if funcionarios_added or funcionarios_removed %}
+[Actualización de responsables]
+{% if funcionarios_added %}- Ingresan:
+{% for f in funcionarios_added %}  • {{ f.nombre }}{% if f.email %} <{{ f.email }}>{% endif %}
+{% endfor %}{% endif %}
+{% if funcionarios_removed %}- Dejan la solicitud:
+{% for f in funcionarios_removed %}  • {{ f.nombre }}{% if f.email %} <{{ f.email }}>{% endif %}
+{% endfor %}{% endif %}
+{% endif %}
+
+{% if field_changes %}[Otros cambios]{% for label,old,new in field_changes %}
+- {{ label }}: {{ old|default:"—" }} -> {{ new|default:"—" }}{% endfor %}{% endif %}
+
+{% if absolute_url %}Ver detalle: {{ absolute_url }}{% endif %}

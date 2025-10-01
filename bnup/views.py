@@ -1,4 +1,5 @@
 import json, re, os
+import threading
 import calendar
 import logging
 from .models import (
@@ -18,20 +19,38 @@ from django.db.models import OuterRef, Subquery, IntegerField, F
 from django.db.models.functions import TruncWeek, TruncMonth
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponseRedirect
+from .services.notifications import notify_ingreso_created
+from bnup.services.notifications import notify_egreso_created
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from dateutil.relativedelta import relativedelta
 from principal.models import PerfilUsuario
 from django.db.models import Prefetch
+from django.db import IntegrityError
+from datetime import datetime, date
 from django.contrib import messages
-from bnup.models import Funcionario  # asegúrate de tenerlo importado
+# from bnup.models import Funcionario
 from collections import defaultdict
 from django.db.models import Count
-from datetime import datetime, date
-from django.urls import reverse
-from django.db import IntegrityError
 from django.db import transaction
+from django.urls import reverse
 
+
+def _send_ingreso_async(ingreso_id, absolute_url):
+    from bnup.models import IngresoSOLICITUD
+    from bnup.services.notifications import notify_ingreso_created
+
+    try:
+        ingreso = IngresoSOLICITUD.objects.get(id=ingreso_id)
+        notify_ingreso_created(
+            ingreso,
+            absolute_url=absolute_url,
+            include_solicitante=False,
+            bcc=None,
+            attach_file=False,   # ← sin adjunto
+        )
+    except Exception:
+        pass
 
 def bnup_form(request):
     """
@@ -169,6 +188,16 @@ def bnup_form(request):
             # Asignar múltiples funcionarios
             ingreso_solicitud.funcionarios_asignados.set(
                 funcionarios_asignados)
+            
+            # URL (si aún no tienes vista de detalle, puedes linkear al listado)
+            absolute_url = "http://asesoriaurbana.munivalpo.cl/"
+
+            # Programa envío asíncrono tras el commit de DB
+            transaction.on_commit(lambda: threading.Thread(
+                target=_send_ingreso_async,
+                args=(ingreso_solicitud.id, absolute_url),
+                daemon=True
+            ).start())
 
             # Construir datos de la solicitud para devolver en la respuesta
             solicitud_data = {
@@ -270,6 +299,11 @@ def edit_bnup_record(request):
 
             solicitud_id = request.POST.get("solicitud_id")
             solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
+            
+            prev = {
+                "descripcion": solicitud.descripcion,
+                "correo_solicitante": solicitud.correo_solicitante,
+            }
 
             nueva_descripcion = request.POST.get("descripcion", "").strip()
             nuevo_correo     = request.POST.get("correo_solicitante", "").strip()
@@ -290,6 +324,35 @@ def edit_bnup_record(request):
 
             solicitud.save(update_fields=campos_a_grabar)
 
+            # --- Notificar edición hecha por FUNCIONARIO ---
+            from bnup.services.notifications import notify_ingreso_updated
+            from threading import Thread
+            from django.db import transaction
+
+            changes = []
+            if (prev["descripcion"] or "") != (solicitud.descripcion or ""):
+                changes.append(("Descripción",
+                                (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"])>80 else ""),
+                                (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion)>80 else "")))
+            if (prev["correo_solicitante"] or "") != (solicitud.correo_solicitante or ""):
+                changes.append(("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
+
+            absolute_url = "http://asesoriaurbana.munivalpo.cl/"
+            def _send_update():
+                try:
+                    notify_ingreso_updated(
+                        solicitud,
+                        absolute_url=absolute_url,
+                        added=[],          # un funcionario no puede cambiar responsables aquí
+                        removed=[],
+                        field_changes=changes,
+                        bcc=None,
+                    )
+                except Exception:
+                    pass
+
+            transaction.on_commit(lambda: Thread(target=_send_update, daemon=True).start())
+
             return JsonResponse({
                 "success": True,
                 "data": {
@@ -303,6 +366,20 @@ def edit_bnup_record(request):
 
         solicitud_id = request.POST.get("solicitud_id")
         solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
+
+        prev = {
+            "tipo_recepcion_id": solicitud.tipo_recepcion_id,
+            "tipo_solicitud_id": solicitud.tipo_solicitud_id,
+            "numero_memo": solicitud.numero_memo,
+            "correo_solicitante": solicitud.correo_solicitante,
+            "depto_solicitante_id": solicitud.depto_solicitante_id,
+            "numero_ingreso": solicitud.numero_ingreso,
+            "fecha_ingreso_au": solicitud.fecha_ingreso_au,
+            "fecha_solicitud": solicitud.fecha_solicitud,
+            "descripcion": solicitud.descripcion,
+            "func_ids": set(solicitud.funcionarios_asignados.values_list("id", flat=True)),
+            "archivo_prev_name": getattr(solicitud.archivo_adjunto_ingreso, "name", None),  # ← NUEVO
+        }
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
@@ -420,6 +497,103 @@ def edit_bnup_record(request):
 
             solicitud.save()
 
+            # --- construir deltas y notificar ---
+            # (1) diferencia de funcionarios
+            new_func_qs = solicitud.funcionarios_asignados.select_related("user").all()
+            new_func_ids = set(new_func_qs.values_list("id", flat=True))
+            added_ids = new_func_ids - prev["func_ids"]
+            removed_ids = prev["func_ids"] - new_func_ids
+
+            def _func_info(qs):
+                out = []
+                for f in qs:
+                    email = getattr(getattr(f, "user", None), "email", None)
+                    out.append({"id": f.id, "nombre": f.nombre, "email": email})
+                return out
+
+            added_info = _func_info(Funcionario.objects.filter(id__in=added_ids))
+            removed_info = _func_info(Funcionario.objects.filter(id__in=removed_ids))
+
+            # (2) cambios de otros campos (opcional pero útil en el correo)
+            def _fmt_date(d):
+                return d.strftime("%d-%m-%Y") if d else ""
+
+            changes = []
+
+            # ==== ARCHIVO ADJUNTO: agregado / reemplazado / eliminado ====
+            new_file_name = getattr(solicitud.archivo_adjunto_ingreso, "name", None)
+            old_file_name = prev.get("archivo_prev_name")
+            if (old_file_name or new_file_name) and (old_file_name != new_file_name):
+                old_lbl = os.path.basename(old_file_name) if old_file_name else "—"
+                new_lbl = os.path.basename(new_file_name) if new_file_name else "—"
+                changes.append(("Archivo adjunto", old_lbl, new_lbl))
+            # =============================================================
+            
+            if prev["tipo_recepcion_id"] != solicitud.tipo_recepcion_id:
+                try:
+                    old_tr = TipoRecepcion.objects.get(id=prev["tipo_recepcion_id"]).tipo if prev["tipo_recepcion_id"] else ""
+                except Exception:
+                    old_tr = ""
+                new_tr = solicitud.tipo_recepcion.tipo if solicitud.tipo_recepcion else ""
+                changes.append(("Tipo de recepción", old_tr, new_tr))
+
+            if prev["tipo_solicitud_id"] != solicitud.tipo_solicitud_id:
+                # aquí mostramos viejo->nuevo legible
+                try:
+                    old_ts = TipoSolicitud.objects.get(id=prev["tipo_solicitud_id"]).tipo if prev["tipo_solicitud_id"] else ""
+                except Exception:
+                    old_ts = ""
+                changes.append(("Tipo de solicitud", old_ts, solicitud.tipo_solicitud.tipo if solicitud.tipo_solicitud else ""))
+
+            if prev["numero_memo"] != solicitud.numero_memo:
+                changes.append(("N° documento", prev["numero_memo"], solicitud.numero_memo))
+            def _norm_ing(v):
+                # Normaliza para comparar: string, sin espacios.
+                return (str(v).strip() if v is not None else "")
+
+            old_ing = _norm_ing(prev.get("numero_ingreso"))
+            new_ing = _norm_ing(numero_ingreso)   # ← usa la variable del POST
+
+            if old_ing != new_ing:
+                changes.append(("N° ingreso", old_ing or "—", new_ing or "—"))
+
+            if prev["fecha_solicitud"] != solicitud.fecha_solicitud:
+                changes.append(("Fecha de solicitud", _fmt_date(prev["fecha_solicitud"]), _fmt_date(solicitud.fecha_solicitud)))
+            if prev["fecha_ingreso_au"] != solicitud.fecha_ingreso_au:
+                changes.append(("Fecha ingreso AU", _fmt_date(prev["fecha_ingreso_au"]), _fmt_date(solicitud.fecha_ingreso_au)))
+            if prev["depto_solicitante_id"] != solicitud.depto_solicitante_id:
+                try:
+                    old_dep = Departamento.objects.get(id=prev["depto_solicitante_id"]).nombre if prev["depto_solicitante_id"] else ""
+                except Exception:
+                    old_dep = ""
+                changes.append(("Solicitante", old_dep, solicitud.depto_solicitante.nombre if solicitud.depto_solicitante else ""))
+            if (prev["correo_solicitante"] or "") != (solicitud.correo_solicitante or ""):
+                changes.append(("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
+            if (prev["descripcion"] or "") != (solicitud.descripcion or ""):
+                changes.append(("Descripción", (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"])>80 else ""), (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion)>80 else "")))
+
+            # (3) disparar email (asincrónico post-commit)
+            absolute_url = "http://asesoriaurbana.munivalpo.cl/"
+            from django.db import transaction
+            from threading import Thread
+            from bnup.services.notifications import notify_ingreso_updated
+
+            def _send_update():
+                try:
+                    notify_ingreso_updated(
+                        solicitud,
+                        absolute_url=absolute_url,
+                        added=added_info,
+                        removed=removed_info,
+                        field_changes=changes,
+                        bcc=None,
+                    )
+                except Exception:
+                    pass
+
+            transaction.on_commit(lambda: Thread(target=_send_update, daemon=True).start())
+
+
             # Construir datos de la solicitud para devolver en la respuesta
             solicitud_data = {
                 "id": solicitud.id,
@@ -489,87 +663,6 @@ def edit_bnup_record(request):
         return JsonResponse({"success": True, "data": data})
 
 # views.py
-@login_required
-@require_http_methods(["GET", "POST"])
-def edit_salida(request):
-    # ───────────────────────────────────────────────────────── permisos ──
-    perfil = PerfilUsuario.objects.filter(user=request.user).first()
-    tipo   = perfil.tipo_usuario.nombre if perfil else None
-    if tipo not in ["ADMIN", "SECRETARIA", "FUNCIONARIO", "JEFE"]:
-        return JsonResponse({"success": False, "error": "Sin permiso."})
-
-    # ────────────────────────────────────────────────────────── GET ▸ datos
-    if request.method == "GET":
-        salida_id = request.GET.get("salida_id")
-        salida = get_object_or_404(SalidaSOLICITUD, id=salida_id, is_active=True)
-
-        data = {
-            "id":            salida.id,
-            "solicitud_id":  salida.ingreso_solicitud.id,
-            "numero_salida": salida.numero_salida,
-            "fecha_salida":  salida.fecha_salida.strftime("%Y-%m-%d"),
-            "descripcion":   salida.descripcion or "",
-            "archivo_url":   salida.archivo_adjunto_salida.url      # ★ NUEVO
-                            if salida.archivo_adjunto_salida else "",
-            "funcionarios": [
-                {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
-            ],
-        }
-        return JsonResponse({"success": True, "data": data})
-
-    # ───────────────────────────────────────────────────────── POST ▸ save
-    salida_id = request.POST.get("salida_id")
-    salida = get_object_or_404(SalidaSOLICITUD, id=salida_id, is_active=True)
-
-    # ❶ Actualiza Nº y Fecha sólo si llegan en la petición
-    num = request.POST.get("numero_salida")
-    if num:                         # ⇐ evita sobrescribir con None
-        salida.numero_salida = num
-
-    fecha_txt = request.POST.get("fecha_salida")
-    if fecha_txt:
-        salida.fecha_salida = datetime.strptime(fecha_txt, "%Y-%m-%d").date()
-
-    # ❷ Descripción (puede ser vacía)
-    salida.descripcion = request.POST.get("descripcion_salida", "").strip()
-
-    # ❸ Archivo adjunto (opcional)
-    delete_flag = request.POST.get("delete_archivo_salida") == "1"
-
-    if delete_flag and salida.archivo_adjunto_salida:
-        salida.archivo_adjunto_salida.delete(save=False)
-        salida.archivo_adjunto_salida = None
-
-    if request.FILES.get("archivo_adjunto_salida"):
-        salida.archivo_adjunto_salida = request.FILES["archivo_adjunto_salida"]
-        # (si sube uno nuevo, ignoramos delete_flag)
-
-    # --------------------------------------------------------
-
-
-    # ❹ Funcionarios (sólo ADMIN / SECRETARIA / JEFE)
-    if tipo in ["ADMIN", "SECRETARIA", "JEFE"]:
-        ids = request.POST.getlist("funcionarios_salidas")
-        salida.funcionarios.set(Funcionario.objects.filter(id__in=ids))
-
-    salida.save()
-
-    # ─────────────────────────────────────────────── respuesta JSON final ─
-    return JsonResponse({
-    "success": True,
-    "data": {
-            "id":            salida.id,
-            "solicitud_id":  salida.ingreso_solicitud.id,
-            "numero_salida": salida.numero_salida,
-            "fecha_salida":  salida.fecha_salida.strftime("%d/%m/%Y"),
-            "descripcion":   salida.descripcion or "",
-            "archivo_url":   salida.archivo_adjunto_salida.url     # ★ NUEVO
-                            if salida.archivo_adjunto_salida else "",
-            "funcionarios": [
-                {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
-            ],
-        }
-    })
 
 def delete_bnup_records(request):
     """
@@ -1312,6 +1405,8 @@ def report_view(request):
 
     return render(request, "bnup/report.html", context)
 
+# ------------------------ EGRESOS ---------------------------------- #
+
 @login_required
 def get_salidas(request, solicitud_id):
     if request.method == "GET":
@@ -1389,10 +1484,26 @@ def create_salida(request):
             )
             salida.save()
 
-            # Asignar funcionarios (si se han enviado)
+            # Asignar funcionarios si llegan
             if funcionarios_ids:
                 funcionarios = Funcionario.objects.filter(id__in=funcionarios_ids)
                 salida.funcionarios.set(funcionarios)
+
+            # Enviar notificación (post-commit)
+            absolute_url = "http://asesoriaurbana.munivalpo.cl/"  # ajusta si tienes detalle
+            def _send():
+                try:
+                    notify_egreso_created(
+                        salida,
+                        created_by_user=request.user,  # ← TO
+                        absolute_url=absolute_url,
+                        bcc=None,
+                        attach_file=False,             # adjunto desactivado (comentado en notifications)
+                    )
+                except Exception:
+                    pass
+
+            transaction.on_commit(lambda: threading.Thread(target=_send, daemon=True).start())
 
 
             # Construir datos de la salida para devolver en la respuesta
@@ -1413,6 +1524,88 @@ def create_salida(request):
             return JsonResponse({"success": False, "error": f"Error al crear la salida: {e}"})
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_salida(request):
+    # ───────────────────────────────────────────────────────── permisos ──
+    perfil = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    if tipo not in ["ADMIN", "SECRETARIA", "FUNCIONARIO", "JEFE"]:
+        return JsonResponse({"success": False, "error": "Sin permiso."})
+
+    # ────────────────────────────────────────────────────────── GET ▸ datos
+    if request.method == "GET":
+        salida_id = request.GET.get("salida_id")
+        salida = get_object_or_404(SalidaSOLICITUD, id=salida_id, is_active=True)
+
+        data = {
+            "id":            salida.id,
+            "solicitud_id":  salida.ingreso_solicitud.id,
+            "numero_salida": salida.numero_salida,
+            "fecha_salida":  salida.fecha_salida.strftime("%Y-%m-%d"),
+            "descripcion":   salida.descripcion or "",
+            "archivo_url":   salida.archivo_adjunto_salida.url      # ★ NUEVO
+                            if salida.archivo_adjunto_salida else "",
+            "funcionarios": [
+                {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
+            ],
+        }
+        return JsonResponse({"success": True, "data": data})
+
+    # ───────────────────────────────────────────────────────── POST ▸ save
+    salida_id = request.POST.get("salida_id")
+    salida = get_object_or_404(SalidaSOLICITUD, id=salida_id, is_active=True)
+
+    # ❶ Actualiza Nº y Fecha sólo si llegan en la petición
+    num = request.POST.get("numero_salida")
+    if num:                         # ⇐ evita sobrescribir con None
+        salida.numero_salida = num
+
+    fecha_txt = request.POST.get("fecha_salida")
+    if fecha_txt:
+        salida.fecha_salida = datetime.strptime(fecha_txt, "%Y-%m-%d").date()
+
+    # ❷ Descripción (puede ser vacía)
+    salida.descripcion = request.POST.get("descripcion_salida", "").strip()
+
+    # ❸ Archivo adjunto (opcional)
+    delete_flag = request.POST.get("delete_archivo_salida") == "1"
+
+    if delete_flag and salida.archivo_adjunto_salida:
+        salida.archivo_adjunto_salida.delete(save=False)
+        salida.archivo_adjunto_salida = None
+
+    if request.FILES.get("archivo_adjunto_salida"):
+        salida.archivo_adjunto_salida = request.FILES["archivo_adjunto_salida"]
+        # (si sube uno nuevo, ignoramos delete_flag)
+
+    # --------------------------------------------------------
+
+
+    # ❹ Funcionarios (sólo ADMIN / SECRETARIA / JEFE)
+    if tipo in ["ADMIN", "SECRETARIA", "JEFE"]:
+        ids = request.POST.getlist("funcionarios_salidas")
+        salida.funcionarios.set(Funcionario.objects.filter(id__in=ids))
+
+    salida.save()
+
+    # ─────────────────────────────────────────────── respuesta JSON final ─
+    return JsonResponse({
+    "success": True,
+    "data": {
+            "id":            salida.id,
+            "solicitud_id":  salida.ingreso_solicitud.id,
+            "numero_salida": salida.numero_salida,
+            "fecha_salida":  salida.fecha_salida.strftime("%d/%m/%Y"),
+            "descripcion":   salida.descripcion or "",
+            "archivo_url":   salida.archivo_adjunto_salida.url     # ★ NUEVO
+                            if salida.archivo_adjunto_salida else "",
+            "funcionarios": [
+                {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
+            ],
+        }
+    })
 
 @require_POST
 def delete_salidas(request):
@@ -1473,6 +1666,8 @@ def add_departamento(request):
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
 
+# ------------------------ EGRESOS AU ---------------------------------- #
+
 @login_required
 def egresos_au_list(request):
     egresos = (
@@ -1497,8 +1692,6 @@ def validate_egreso_numero(request):
         qs = qs.exclude(id=exclude_id)
 
     return JsonResponse({"exists": qs.exists()})
-
-
 
 @login_required
 @require_http_methods(["GET", "POST"])

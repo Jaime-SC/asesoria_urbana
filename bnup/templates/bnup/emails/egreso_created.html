@@ -1,0 +1,88 @@
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2ff;margin:0;padding:24px 0;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #c7d2fe;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+        <tr>
+          <td style="background:#1e3a8a;color:#ffffff;padding:16px 24px;text-align:center;">
+            <h1 style="margin:0;font-size:20px;line-height:24px;font-weight:700;">Egreso N° {{ egreso_numero }} · Respuesta al Ingreso N° {{ ingreso_numero }}</h1>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:20px 24px;">
+            <p style="margin:0 0 12px 0;font-size:14px;line-height:20px;">
+              <strong>Egreso</strong>
+            </p>
+            <p style="margin:0 0 12px 0;font-size:14px;line-height:20px;">
+              <strong>Fecha:</strong> {{ egreso_fecha|date:'d-m-Y' }}<br />
+            </p>
+            {% if egreso_funcionarios %}
+            <div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;">
+                <p style="margin:0 0 6px 0;font-size:14px;">
+                <strong>Funcionarios responsables del egreso</strong>
+                </p>
+                <ul style="margin:0;padding-left:18px;font-size:14px;line-height:20px;">
+                {% for f in egreso_funcionarios %}
+                    <li>{{ f.nombre }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+
+            {% if egreso_descripcion %}
+              <div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;">
+                <p style="margin:0 0 6px 0;font-size:14px;">
+                  <strong>Descripción</strong>
+                </p>
+                <p style="margin:0;font-size:14px;line-height:20px;">{{ egreso_descripcion|linebreaksbr }}</p>
+              </div>
+            {% endif %}
+            <p style="margin:8px 0 8px 0;font-size:14px;line-height:20px;">
+              <strong>Ingreso</strong>
+            </p>
+            <p style="margin:0 0 12px 0;font-size:14px;line-height:20px;">
+                <strong>Tipo de solicitud:</strong> {{ ingreso_tipo }}<br />
+                <strong>Tipo de recepción:</strong> {{ ingreso_recepcion }}<br />
+                <strong>Solicitante:</strong> {{ ingreso_solicitante }}<br />
+                <strong>Fecha de Ingreso AU:</strong> {{ ingreso_fecha|date:'d-m-Y' }}<br />
+
+                {% if dias_anticipacion is not None %}
+                    <span style="display:inline-block;margin-top:8px;padding:6px 10px;background:#ecfdf5;border:1px solid #34d399;border-radius:6px;">
+                    Respondido con <strong>{{ dias_anticipacion }}</strong>
+                    {% if dias_anticipacion == 1 %}día hábil{% else %}días hábiles{% endif %} de anticipación.
+                    </span>
+                {% elif dias_atraso is not None %}
+                    <span style="display:inline-block;margin-top:8px;padding:6px 10px;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;">
+                    Respondido con <strong>{{ dias_atraso }}</strong>
+                    {% if dias_atraso == 1 %}día hábil{% else %}días hábiles{% endif %} de atraso.
+                    </span>
+                {% endif %}
+            </p>
+
+
+            
+
+            {% if absolute_url %}
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                <tr>
+                  <td>
+                    <a href="{{ absolute_url }}" style="display:inline-block;background:#1e3a8a;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:4px;font-size:14px;font-weight:700;">Ver detalle</a>
+                  </td>
+                </tr>
+              </table>
+            {% endif %}
+
+            <p style="margin:16px 0 0 0;font-size:12px;line-height:18px;color:#6b7280;">Este mensaje se envió automáticamente. Por favor, no responda a este correo.</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#f3f4f6;padding:12px 24px;text-align:center;">
+            <p style="margin:0;font-size:12px;line-height:18px;color:#6b7280;">SIE · Asesoría Urbana · Municipalidad de Valparaíso</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

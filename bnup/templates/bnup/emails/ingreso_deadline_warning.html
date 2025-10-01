@@ -1,0 +1,58 @@
+<!-- Email HTML "bulletproof" -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;margin:0;padding:24px 0;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #fdba74;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,'Trebuchet MS',sans-serif;color:#16233e;">
+        <!-- header -->
+        <tr>
+          <td style="background:#c2410c;color:#ffffff;padding:16px 24px;text-align:center;">
+            <h1 style="margin:0;font-size:20px;line-height:24px;font-weight:700;">AVISO · Quedan {{ dias_restantes }} días · Ingreso N° {{ numero_ingreso }}</h1>
+          </td>
+        </tr>
+
+        <!-- body -->
+        <tr>
+          <td style="padding:24px;">
+            <p style="margin:0 0 12px 0;font-size:14px;line-height:20px;">
+              <strong>Tipo de recepción:</strong> {{ tipo_recepcion }}<br />
+              <strong>Tipo de solicitud:</strong> {{ tipo_solicitud }}<br />
+              <strong>Solicitante:</strong> {{ depto_solicitante }}<br />
+              <strong>Fecha de Ingreso AU:</strong> {{ fecha_ingreso|date:'d-m-Y' }}<br />
+              {% if fecha_responder_hasta %}
+                <span style="display:inline-block;margin-top:8px;padding:8px 12px;background:#fff7ed;border:1px solid #f59e0b;border-radius:6px;"><strong>Plazo máximo:</strong> {{ fecha_responder_hasta|date:'d-m-Y' }}</span>
+              {% endif %}
+            </p>
+
+            {% if descripcion %}
+              <div style="margin:16px 0;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#f8fafc;">
+                <p style="margin:0 0 6px 0;font-size:14px;line-height:20px;">
+                  <strong>Descripción</strong>
+                </p>
+                <p style="margin:0;font-size:14px;line-height:20px;">{{ descripcion|linebreaksbr }}</p>
+              </div>
+            {% endif %}
+
+            {% if absolute_url %}
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                <tr>
+                  <td>
+                    <a href="{{ absolute_url }}" style="display:inline-block;background:#c2410c;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:4px;font-size:14px;line-height:16px;font-weight:700;">Revisar solicitud</a>
+                  </td>
+                </tr>
+              </table>
+            {% endif %}
+
+            <p style="margin:16px 0 0 0;font-size:12px;line-height:18px;color:#6b7280;">Este mensaje se envió automáticamente porque la solicitud sigue pendiente de respuesta y el plazo vence en {{ dias_restantes }} días hábiles.</p>
+          </td>
+        </tr>
+
+        <!-- footer -->
+        <tr>
+          <td style="background:#f1f5f9;padding:12px 24px;text-align:center;">
+            <p style="margin:0;font-size:12px;line-height:18px;color:#6b7280;">SIE · Asesoría Urbana · Municipalidad de Valparaíso</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

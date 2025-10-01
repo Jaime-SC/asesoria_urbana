@@ -1,0 +1,16 @@
+Nuevo Ingreso N° {{ numero_ingreso }}
+
+Tipo de recepción: {{ tipo_recepcion }}
+Tipo de solicitud: {{ tipo_solicitud }}
+Solicitante: {{ depto_solicitante }}
+Fecha de ingreso AU: {{ fecha_ingreso|date:'d-m-Y' }}{% if fecha_documento %}
+Fecha del documento: {{ fecha_documento|date:'d-m-Y' }}{% endif %}
+
+{% if descripcion %}
+Descripción:
+{{ descripcion }}
+{% endif %}
+
+{% if absolute_url %}
+Ver detalle: {{ absolute_url }}
+{% endif %}

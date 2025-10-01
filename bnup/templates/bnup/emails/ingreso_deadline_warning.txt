@@ -1,0 +1,14 @@
+AVISO: Quedan {{ dias_restantes }} días hábiles · Ingreso N° {{ numero_ingreso }}
+
+Tipo de recepción: {{ tipo_recepcion }}
+Tipo de solicitud: {{ tipo_solicitud }}
+Solicitante: {{ depto_solicitante }}
+Fecha de Ingreso AU: {{ fecha_ingreso|date:'d-m-Y' }}
+{% if fecha_responder_hasta %}Plazo máximo: {{ fecha_responder_hasta|date:'d-m-Y' }}{% endif %}
+
+{% if descripcion %}Descripción:
+{{ descripcion }}{% endif %}
+
+{% if absolute_url %}Ver detalle: {{ absolute_url }}{% endif %}
+
+Este mensaje se envió automáticamente porque la solicitud sigue pendiente de respuesta y el plazo vence en {{ dias_restantes }} días hábiles.

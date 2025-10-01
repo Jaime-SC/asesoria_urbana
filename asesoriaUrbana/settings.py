@@ -171,3 +171,18 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000
 
 # Tamaño máximo de archivo individual (en bytes)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000
+
+EMAIL_BACKEND = "bnup.backends.SMTPNoKeyfileBackend"
+# Gmail (recomendado con TLS en 587)
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
+EMAIL_HOST_USER = "ingresos.egresos.au@gmail.com"
+
+EMAIL_HOST_PASSWORD = "sqcs gwje usrx loxo"  # contraseña de aplicación de Google
+DEFAULT_FROM_EMAIL = "Asesoría Urbana <ingresos.egresos.au@gmail.com>"
+
+EMAIL_SUBJECT_PREFIX = "[AU] "
+SERVER_EMAIL = DEFAULT_FROM_EMAIL

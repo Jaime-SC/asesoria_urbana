@@ -1,0 +1,93 @@
+<!-- Email HTML "bulletproof" -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e6f4fa;margin:0;padding:24px 0;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #c3c6ce;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,'Trebuchet MS',sans-serif;color:#16233e;">
+        <!-- header -->
+        <tr>
+          <td style="background:#16233e;color:#ffffff;padding:16px 24px;text-align:center;">
+            <h1 style="margin:0;font-size:20px;line-height:24px;font-weight:700;">Ingreso ACTUALIZADO · N° {{ numero_ingreso }}</h1>
+          </td>
+        </tr>
+
+        <!-- body -->
+        <tr>
+          <td style="padding:24px;">
+            <p style="margin:0 0 12px 0;font-size:14px;line-height:20px;">
+              <strong>Tipo de recepción:</strong> {{ tipo_recepcion }}<br />
+              <strong>Tipo de solicitud:</strong> {{ tipo_solicitud }}<br />
+              <strong>Solicitante:</strong> {{ depto_solicitante }}<br />
+              <strong>Fecha de Ingreso AU:</strong> {{ fecha_ingreso|date:'d-m-Y' }}<br />
+              {% if fecha_responder_hasta %}
+                <span style="display:inline-block;margin-top:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fdba74;border-radius:6px;"><strong>Responder hasta:</strong> {{ fecha_responder_hasta|date:'d-m-Y' }}</span>
+              {% endif %}
+            </p>
+
+            <!-- Cambios de funcionarios -->
+            {% if funcionarios_added or funcionarios_removed %}
+            <div style="margin:16px 0;padding:12px;border:1px solid #60a5fa;border-radius:6px;background:#eff6ff;">
+              <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><strong>Actualización de responsables</strong></p>
+
+              {% if funcionarios_added %}
+                <p style="margin:0 0 4px 0;font-size:14px;"><strong>Ingresan:</strong></p>
+                <ul style="margin:0 0 8px 18px;padding:0;">
+                  {% for f in funcionarios_added %}
+                    <li style="font-size:14px;line-height:20px;">{{ f.nombre }}{% if f.email %} &lt;{{ f.email }}&gt;{% endif %}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+
+              {% if funcionarios_removed %}
+                <p style="margin:0 0 4px 0;font-size:14px;"><strong>Dejan la solicitud:</strong></p>
+                <ul style="margin:0 0 0 18px;padding:0;">
+                  {% for f in funcionarios_removed %}
+                    <li style="font-size:14px;line-height:20px;">{{ f.nombre }}{% if f.email %} &lt;{{ f.email }}&gt;{% endif %}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+
+              <p style="margin:8px 0 0 0;font-size:12px;line-height:18px;color:#374151;">
+                Si se agregó un nuevo responsable, por favor coordinar el traspaso y trabajo conjunto.
+              </p>
+            </div>
+            {% endif %}
+
+            <!-- Otros cambios de campos -->
+            {% if field_changes %}
+            <div style="margin:16px 0;padding:12px;border:1px solid #c3c6ce;border-radius:6px;background:#f8fafc;">
+              <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><strong>Otros cambios en la solicitud</strong></p>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                {% for label,old,new in field_changes %}
+                <tr>
+                  <td style="font-size:13px;line-height:18px;padding:6px 8px;border-bottom:1px solid #e5e7eb;"><strong>{{ label }}:</strong></td>
+                  <td style="font-size:13px;line-height:18px;padding:6px 8px;border-bottom:1px solid #e5e7eb;">{{ old|default:"—" }}</td>
+                  <td style="font-size:13px;line-height:18px;padding:6px 8px;border-bottom:1px solid #e5e7eb;">→</td>
+                  <td style="font-size:13px;line-height:18px;padding:6px 8px;border-bottom:1px solid #e5e7eb;">{{ new|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+            {% endif %}
+            {% if absolute_url %}
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                <tr>
+                  <td>
+                    <a href="{{ absolute_url }}" style="display:inline-block;background:#4BBFE0;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:4px;font-size:14px;line-height:16px;font-weight:700;">Ver detalle</a>
+                  </td>
+                </tr>
+              </table>
+            {% endif %}
+            <p style="margin:16px 0 0 0;font-size:12px;line-height:18px;color:#6b7280;">Este mensaje se envió automáticamente. Por favor, no responda a este correo.</p>
+          </td>
+        </tr>
+
+        <!-- footer -->
+        <tr>
+          <td style="background:#f1f5f9;padding:12px 24px;text-align:center;">
+            <p style="margin:0;font-size:12px;line-height:18px;color:#6b7280;">SIE · Asesoría Urbana · Municipalidad de Valparaíso</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
