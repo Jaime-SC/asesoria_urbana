@@ -37,39 +37,49 @@
             {% endif %}
 
             <!-- Aviso breve y checklist -->
-            <div style="margin:16px 0;padding:12px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;">
-              <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
-                Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted. 
-                El plazo para responder es de <strong>{{ plazo_total|default:15 }} días hábiles</strong>
-                {% if fecha_responder_hasta %}
-                  (máximo: {{ fecha_responder_hasta|date:'d-m-Y' }})
-                {% endif %}.
-              </p>
+            {% if es_conocimiento %}
+              <div style="margin:16px 0;padding:12px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;">
+                <p style="margin:0;font-size:14px;line-height:20px;">
+                  Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) con tipo
+                  <strong>CONOCIMIENTO Y DISTRIBUCIÓN</strong>. Este ingreso es solo para conocimiento; <strong>no requiere respuesta ni tiene plazo de respuesta</strong>.
+                </p>
+              </div>
+            {% else %}
+              <div style="margin:16px 0;padding:12px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;">
+                <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
+                  Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted.
+                  El plazo para responder es de <strong>{{ plazo_total|default:15 }} días hábiles</strong>
+                  {% if fecha_responder_hasta %}
+                    (máximo: {{ fecha_responder_hasta|date:'d-m-Y' }})
+                  {% endif %}.
+                </p>
 
-              <p style="margin:0 0 6px 0;font-size:14px;line-height:20px;">
-                <strong>Al cargar la respuesta, verifique:</strong>
-              </p>
-              <ul style="margin:0;padding-left:18px;font-size:14px;line-height:20px;">
-                <li>
-                  <strong>Resumen de la materia tratada:</strong>
-                  incluir <em>palabras clave</em>, Cerro, Población, U.V., <em>ROL</em> de propiedad y siglas relevantes.
-                </li>
-                <li>
-                  <strong>Información ingresada:</strong>
-                  que sea coherente con el requerimiento original; campos completos, fechas correctas y referencias a anexos si corresponde.
-                </li>
-                <li>
-                  <strong>Números de documento:</strong>
-                  verificar concordancia entre <strong>N° de ingreso</strong> y <strong>N° de salida</strong>.
-                </li>
-                <li>
-                  <strong>Documentos escaneados:</strong>
-                  legibles, completos (todas las páginas), orientación correcta, buen contraste; idealmente un solo PDF y con anexos citados.
-                </li>
-              </ul>
+                <p style="margin:0 0 6px 0;font-size:14px;line-height:20px;">
+                  <strong>Al cargar la respuesta, verifique:</strong>
+                </p>
+                <ul style="margin:0;padding-left:18px;font-size:14px;line-height:20px;">
+                  <li>
+                    <strong>Resumen de la materia tratada:</strong>
+                    incluir <em>palabras clave</em>, Cerro, Población, U.V., <em>ROL</em> de propiedad y siglas relevantes.
+                  </li>
+                  <li>
+                    <strong>Información ingresada:</strong>
+                    que sea coherente con el requerimiento original; campos completos, fechas correctas y referencias a anexos si corresponde.
+                  </li>
+                  <li>
+                    <strong>Números de documento:</strong>
+                    verificar concordancia entre <strong>N° de ingreso</strong> y <strong>N° de salida</strong>.
+                  </li>
+                  <li>
+                    <strong>Documentos escaneados:</strong>
+                    legibles, completos (todas las páginas), orientación correcta, buen contraste; idealmente un solo PDF y con anexos citados.
+                  </li>
+                </ul>
 
-              <p style="margin:8px 0 0 0;font-size:14px;line-height:20px;">Muchas gracias.</p>
-            </div>
+                <p style="margin:8px 0 0 0;font-size:14px;line-height:20px;">Muchas gracias.</p>
+              </div>
+            {% endif %}
+
 
             {% if absolute_url %}
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">

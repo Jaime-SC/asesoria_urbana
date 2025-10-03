@@ -47,13 +47,17 @@ def recipients_for_ingreso(ingreso, include_solicitante=False):
 def subject_ingreso(ingreso):
     return f"[SIE] · [{ingreso.tipo_solicitud.tipo}] · Ingreso N° {ingreso.numero_ingreso}"
 
-# en context_ingreso(...)
 def context_ingreso(ingreso, absolute_url=None):
+    # flag tipo conocimiento
+    es_conocimiento = getattr(ingreso, "tipo_solicitud_id", None) == TIPO_CONOC_Y_DIST_ID
+
     fecha_responder_hasta = None
-    plazo_total = 15  # fallback
-    if ingreso.fecha_ingreso_au:
+    plazo_total = None  # por defecto sin plazo
+
+    if not es_conocimiento and ingreso.fecha_ingreso_au:
         try:
-            plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)   # ← 5 para Alcohol, 15 resto
+            plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)  # 5 Alcohol, 15 resto
+            # inclusivo: último día = total-1
             fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, plazo_total - 1)
         except Exception:
             pass
@@ -68,8 +72,10 @@ def context_ingreso(ingreso, absolute_url=None):
         "descripcion": ingreso.descripcion or "",
         "absolute_url": absolute_url or "",
         "fecha_responder_hasta": fecha_responder_hasta,
-        "plazo_total": plazo_total,   # ← NUEVO
+        "plazo_total": plazo_total,          # None si es conocimiento
+        "es_conocimiento": es_conocimiento,  # ← NUEVO
     }
+
 
 
 

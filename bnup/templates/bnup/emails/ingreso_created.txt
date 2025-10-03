@@ -6,7 +6,12 @@ Solicitante: {{ depto_solicitante }}
 Fecha de ingreso AU: {{ fecha_ingreso|date:'d-m-Y' }}{% if fecha_documento %}
 Fecha del documento: {{ fecha_documento|date:'d-m-Y' }}{% endif %}
 
+{% if not es_conocimiento %}
 Plazo para responder: {{ plazo_total|default:15 }} días hábiles{% if fecha_responder_hasta %} (máximo: {{ fecha_responder_hasta|date:'d-m-Y' }}){% endif %}
+{% else %}
+Tipo de solicitud para conocimiento y distribución. No requiere respuesta ni plazo máximo.
+{% endif %}
+
 
 {% if descripcion %}
 Descripción:
