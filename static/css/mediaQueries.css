@@ -151,6 +151,20 @@
     table .icon-container span {
         font-size: 18px;
     }
+
+    #egresoModalOverlay .modal-content {
+        max-width: 400px;
+        width: 75%;
+    }
+
+    .selected-item {
+        padding: 2px 4px;
+        font-size: 12px;
+    }
+
+    .selected-item span {
+        margin-left: 3px;
+    }
 }
 
 @media screen and (min-width:1367px) and (max-width:1600px) and (min-height:769px) and (max-height:900px) {
@@ -298,5 +312,19 @@
     table button.buttonPreview span,
     table .icon-container span {
         font-size: 20px;
+    }
+
+    #egresoModalOverlay .modal-content {
+        max-width: 400px;
+        width: 75%;
+    }
+
+    .selected-item {
+        padding: 2px 4px;
+        font-size: 12px;
+    }
+
+    .selected-item span {
+        margin-left: 3px;
     }
 }

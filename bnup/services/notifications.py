@@ -6,11 +6,23 @@ from datetime import timedelta
 import holidays
 
 # Correos fijos
-# SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
-# COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
+SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
+COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
 
-SECRETARIA_EMAIL   = "dpalacios@munivalpo.cl"
-COORDINADORA_EMAIL = "joanna.bastias@munivalpo.cl"
+# SECRETARIA_EMAIL   = "dpalacios@munivalpo.cl"
+# COORDINADORA_EMAIL = "joanna.bastias@munivalpo.cl"
+
+# Políticas de plazo según tipo de solicitud
+TIPO_CONOC_Y_DIST_ID = 12
+TIPO_ALCOHOL_ID      = 10
+
+def get_deadline_policy_for_ingreso(ingreso):
+    """
+    Devuelve (total_dias_habiles, buckets) para el ingreso dado.
+    """
+    if getattr(ingreso, "tipo_solicitud_id", None) == TIPO_ALCOHOL_ID:
+        return (5, (3, 1))
+    return (15, (5, 3, 1))
 
 
 def _uniq(seq):
@@ -33,18 +45,17 @@ def recipients_for_ingreso(ingreso, include_solicitante=False):
     return _uniq(emails)
 
 def subject_ingreso(ingreso):
-    return f"[SIE] - [{ingreso.tipo_solicitud.tipo}] - Ingreso N° {ingreso.numero_ingreso}"
+    return f"[SIE] · [{ingreso.tipo_solicitud.tipo}] · Ingreso N° {ingreso.numero_ingreso}"
 
+# en context_ingreso(...)
 def context_ingreso(ingreso, absolute_url=None):
-    # calcula fecha límite: 15 días hábiles posteriores a fecha_ingreso_au
     fecha_responder_hasta = None
+    plazo_total = 15  # fallback
     if ingreso.fecha_ingreso_au:
         try:
-            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, 14)
+            plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)   # ← 5 para Alcohol, 15 resto
+            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, plazo_total - 1)
         except Exception:
-            # si algo falla, deja None o usa fallback sin feriados
-            # from bnup.services.fecha_utils import add_business_days_no_holidays
-            # fecha_responder_hasta = add_business_days_no_holidays(ingreso.fecha_ingreso_au, 15)
             pass
 
     return {
@@ -57,7 +68,10 @@ def context_ingreso(ingreso, absolute_url=None):
         "descripcion": ingreso.descripcion or "",
         "absolute_url": absolute_url or "",
         "fecha_responder_hasta": fecha_responder_hasta,
+        "plazo_total": plazo_total,   # ← NUEVO
     }
+
+
 
 def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=False, include_solicitante=False):
     """
@@ -102,19 +116,14 @@ def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=
 
 
 def subject_ingreso_updated(ingreso):
-    return f"[SIE] - ACTUALIZADO - Ingreso N° {ingreso.numero_ingreso}"
+    return f"[SIE] · ACTUALIZADO · Ingreso N° {ingreso.numero_ingreso}"
 
 def context_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=None, field_changes=None):
-    """
-    Contexto para email de actualización.
-    - added: lista de dicts [{"id":..,"nombre":..,"email":..}, ...] de nuevos funcionarios
-    - removed: lista de dicts [{"id":..,"nombre":..,"email":..}, ...] de funcionarios que ya no están
-    - field_changes: lista de tuplas (label, old, new) para mostrar cambios relevantes
-    """
     fecha_responder_hasta = None
     if ingreso.fecha_ingreso_au:
         try:
-            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, 14)
+            total_dias, _ = get_deadline_policy_for_ingreso(ingreso)
+            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, total_dias - 1)
         except Exception:
             pass
 
@@ -132,6 +141,7 @@ def context_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=N
         "funcionarios_removed": removed or [],
         "field_changes": field_changes or [],
     }
+
 
 def notify_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=None, field_changes=None, bcc=None):
     """
@@ -183,13 +193,16 @@ def notify_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=No
 # ─────────────────────────────────────────────────────────────────────────────
 
 def subject_ingreso_deadline_warning(ingreso, dias_restantes):
-    return f"[SIE] - AVISO ({dias_restantes} días hábiles) - Ingreso N° {ingreso.numero_ingreso}"
+    return f"[SIE] · AVISO ({dias_restantes} días hábiles) · Ingreso N° {ingreso.numero_ingreso}"
 
 def context_ingreso_deadline_warning(ingreso, dias_restantes, absolute_url=None):
+    # plazo por tipo
+    total_dias, _ = get_deadline_policy_for_ingreso(ingreso)
+    # inclusivo: último día = offset total-1
     fecha_responder_hasta = None
     if ingreso.fecha_ingreso_au:
         try:
-            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, 14)
+            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, total_dias - 1)
         except Exception:
             pass
 
@@ -205,6 +218,7 @@ def context_ingreso_deadline_warning(ingreso, dias_restantes, absolute_url=None)
         "absolute_url": absolute_url or "",
         "fecha_responder_hasta": fecha_responder_hasta,
     }
+
 
 def notify_ingreso_deadline_warning(ingreso, *, dias_restantes, absolute_url=None, bcc=None):
     # destinatarios: funcionarios vigentes
@@ -253,11 +267,12 @@ def subject_egreso_created(salida):
 def context_egreso_created(salida, *, absolute_url=None):
     ing = salida.ingreso_solicitud
 
-    # fecha límite = 14 días hábiles posteriores (15° hábil inclusivo)
+    # fecha límite según política por tipo (inclusivo: total_dias - 1)
     fecha_limite = None
     if ing and ing.fecha_ingreso_au:
         try:
-            fecha_limite = add_business_days_cl(ing.fecha_ingreso_au, 14)
+            total_dias, _ = get_deadline_policy_for_ingreso(ing)
+            fecha_limite = add_business_days_cl(ing.fecha_ingreso_au, total_dias - 1)
         except Exception:
             pass
 
@@ -267,7 +282,7 @@ def context_egreso_created(salida, *, absolute_url=None):
         email = getattr(getattr(f, "user", None), "email", "") or ""
         func_list.append({"id": f.id, "nombre": f.nombre, "email": email})
 
-    # días hábiles de anticipación / atraso
+    # días hábiles de anticipación / atraso (respecto a la fecha límite calculada)
     dias_anticipacion = None
     dias_atraso = None
     if fecha_limite and salida.fecha_salida:
@@ -290,13 +305,14 @@ def context_egreso_created(salida, *, absolute_url=None):
         "egreso_descripcion":  salida.descripcion or "",
         "egreso_funcionarios": func_list,
 
-        # Nuevo: métricas de plazo
-        "fecha_limite":        fecha_limite,       # (por si quieres mostrarla en otro lado)
-        "dias_anticipacion":   dias_anticipacion,  # int o None
-        "dias_atraso":         dias_atraso,        # int o None
+        # Métricas de plazo
+        "fecha_limite":        fecha_limite,
+        "dias_anticipacion":   dias_anticipacion,
+        "dias_atraso":         dias_atraso,
 
         "absolute_url": absolute_url or "",
     }
+
 
 
 

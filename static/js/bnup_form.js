@@ -30,9 +30,17 @@
             initializeEditSalidaFileModal();
             initializeBNUPFormModal();
             initializeStandardizeInputs();
+            initializeMultiSelect({
+                selectSelector: '#multi_funcionarios_ing',
+                containerSelector: '#funcionariosSeleccionados_ing',
+                hiddenInputSelector: '#funcionariosHidden_ing',
+                // animationIn:  'animate__fadeIn',
+                // animationOut: 'animate__fadeOut',
+            });
+
             // Inicializar la funcionalidad de múltiples funcionarios
-            initializeMultipleFuncionarios();
-            initializeMultipleFuncionariosEdit();
+            // initializeMultipleFuncionarios();
+            // initializeMultipleFuncionariosEdit();
         }
 
         // Inicializar selección de filas y estilos de tabla
@@ -520,7 +528,7 @@
                     // (Se elimina la antigua referencia a "fecha_salida_solicitante" ya que ahora usamos "fecha_solicitud")
 
                     // Cargar los funcionarios asignados en el formulario de edición
-                    loadEditFormData(data.data);
+                    // loadEditFormData(data.data);
 
                     // pasa la URL del adjunto al botón, para que el modal la use como preview
                     const btnFile = document.getElementById('openEditFileModal');
@@ -560,8 +568,27 @@
                     }
                     /* ---------------------------------------------------------------- */
 
+                    // ⬇️ PEGA AQUÍ
+                    initializeMultiSelect({
+                        selectSelector: '#multi_funcionarios_ing_edit',
+                        containerSelector: '#funcionariosSeleccionados_ing_edit',
+                        hiddenInputSelector: '#funcionariosHidden_ing_edit',
+                    });
 
+                    // Sembrar valores existentes desde la data del backend:
+                    const hid = document.querySelector('#funcionariosHidden_ing_edit');
+                    const sel = document.querySelector('#multi_funcionarios_ing_edit');
+                    if (hid && sel && Array.isArray(data.data.funcionarios_asignados)) {
+                        // set hidden con IDs
+                        hid.value = data.data.funcionarios_asignados.map(f => f.id).join(',');
 
+                        // marcar opciones del select y disparar change para que pinte los chips
+                        data.data.funcionarios_asignados.forEach(f => {
+                            const opt = sel.querySelector(`option[value="${f.id}"]`);
+                            if (opt) opt.selected = true;
+                        });
+                        sel.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
 
                     // Mostrar el modal de edición
                     editModal.style.display = 'block';
@@ -2790,104 +2817,104 @@
     }
 
 
-    function initializeEditSalidaFileModal () {
+    function initializeEditSalidaFileModal() {
 
-    /* ─────────────── refs básicas ─────────────── */
-    const btn      = document.getElementById('openEditSalidaFileModal');
-    const modal    = document.getElementById('editSalidaFileModal');
-    if (!btn || !modal) return;          // solo ADMIN
+        /* ─────────────── refs básicas ─────────────── */
+        const btn = document.getElementById('openEditSalidaFileModal');
+        const modal = document.getElementById('editSalidaFileModal');
+        if (!btn || !modal) return;          // solo ADMIN
 
-    const inputReal  = document.getElementById('edit_archivo_adjunto_salida');
-    const flagDel    = document.getElementById('edit_delete_archivo_salida');
-    const inputModal = document.getElementById('editSalidaFileModalInput');
+        const inputReal = document.getElementById('edit_archivo_adjunto_salida');
+        const flagDel = document.getElementById('edit_delete_archivo_salida');
+        const inputModal = document.getElementById('editSalidaFileModalInput');
 
-    const btnOK      = document.getElementById('editConfirmSalidaFileButton');
-    const btnClose   = modal.querySelector('.close');
-    const content    = modal.querySelector('.modal-content');
+        const btnOK = document.getElementById('editConfirmSalidaFileButton');
+        const btnClose = modal.querySelector('.close');
+        const content = modal.querySelector('.modal-content');
 
-    /* helper → destruye plugin y elimina wrapper .file-input */
-    const resetFileInput = (el) => {
-        if ($(el).data('fileinput')) { $(el).fileinput('destroy'); }
-        const wrap = el.closest('.file-input');   // contenedor que crea el plugin
-        if (wrap) {
-            wrap.parentNode.insertBefore(el, wrap); // movemos <input> 1 nivel arriba
-            wrap.remove();                          // adiós wrapper + previews viejas
-        }
-        el.value = '';                              // limpia FileList residual
-    };
-
-    /* ═══════════════════ abrir modal ═══════════════════ */
-    btn.onclick = () => {
-        const url = btn.dataset.currentFile || '';
-
-        resetFileInput(inputModal);                 //← limpieza antes de crear
-
-        $(inputModal).fileinput( buildFileInputOpts({ urlActual: url }) )
-            .on('filecleared', () => { flagDel.value = '1'; })
-            .on('fileselect', () => { flagDel.value = '0'; });
-
-        modal.style.display = 'block';
-    };
-
-    /* ═══════════════════ cerrar modal ═══════════════════ */
-    const cerrar = () => {
-        content.classList.remove('animate__bounceIn');
-        content.classList.add   ('animate__bounceOut');
-        content.addEventListener('animationend', () => {
-            modal.style.display = 'none';
-            content.classList.remove('animate__bounceOut');
-            content.classList.add   ('animate__bounceIn');
-
-            /* limpieza EXTRA para evitar duplicados en la siguiente apertura */
-            resetFileInput(inputModal);
-        }, { once:true });
-    };
-
-    btnClose.onclick = cerrar;
-    modal.onclick    = e => { if (e.target === modal) cerrar(); };
-
-    /* ═══════════════════ confirmar ═══════════════════ */
-    btnOK.onclick = () => {
-        const $real = $('#edit_archivo_adjunto_salida');
-
-        /* solo borrar */
-        if (flagDel.value === '1' && !inputModal.files.length) {
-            $real.fileinput('clear');
-            cerrar();
-            Swal.fire({ icon:'success', text:'Archivo eliminado.', heightAuto:false, scrollbarPadding:false });
-            return;
-        }
-
-        /* reemplazo */
-        if (inputModal.files.length) {
-            flagDel.value = '0';
-            const file = inputModal.files[0];
-
-            // pasa el FileList al input REAL
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            inputReal.files = dt.files;
-
-            // refrescamos vista previa del input REAL
-            if ($real.data('fileinput')) {
-                $real.fileinput('destroy');
-                const wrap = inputReal.closest('.file-input');
-                if (wrap) {
-                    wrap.parentNode.insertBefore(inputReal, wrap);
-                    wrap.remove();
-                }
+        /* helper → destruye plugin y elimina wrapper .file-input */
+        const resetFileInput = (el) => {
+            if ($(el).data('fileinput')) { $(el).fileinput('destroy'); }
+            const wrap = el.closest('.file-input');   // contenedor que crea el plugin
+            if (wrap) {
+                wrap.parentNode.insertBefore(el, wrap); // movemos <input> 1 nivel arriba
+                wrap.remove();                          // adiós wrapper + previews viejas
             }
-            $real.fileinput( buildFileInputOpts({ urlActual: URL.createObjectURL(file) }) )
-                 .on('filecleared', () => { flagDel.value = '1'; });
+            el.value = '';                              // limpia FileList residual
+        };
 
-            cerrar();
-            Swal.fire({ icon:'success', text:'Archivo reemplazado.', heightAuto:false, scrollbarPadding:false });
-            return;
-        }
+        /* ═══════════════════ abrir modal ═══════════════════ */
+        btn.onclick = () => {
+            const url = btn.dataset.currentFile || '';
 
-        Swal.fire({ icon:'error', text:'Seleccione un archivo o elimine el actual.', heightAuto:false, scrollbarPadding:false });
-    };
-}
+            resetFileInput(inputModal);                 //← limpieza antes de crear
+
+            $(inputModal).fileinput(buildFileInputOpts({ urlActual: url }))
+                .on('filecleared', () => { flagDel.value = '1'; })
+                .on('fileselect', () => { flagDel.value = '0'; });
+
+            modal.style.display = 'block';
+        };
+
+        /* ═══════════════════ cerrar modal ═══════════════════ */
+        const cerrar = () => {
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut');
+                content.classList.add('animate__bounceIn');
+
+                /* limpieza EXTRA para evitar duplicados en la siguiente apertura */
+                resetFileInput(inputModal);
+            }, { once: true });
+        };
+
+        btnClose.onclick = cerrar;
+        modal.onclick = e => { if (e.target === modal) cerrar(); };
+
+        /* ═══════════════════ confirmar ═══════════════════ */
+        btnOK.onclick = () => {
+            const $real = $('#edit_archivo_adjunto_salida');
+
+            /* solo borrar */
+            if (flagDel.value === '1' && !inputModal.files.length) {
+                $real.fileinput('clear');
+                cerrar();
+                Swal.fire({ icon: 'success', text: 'Archivo eliminado.', heightAuto: false, scrollbarPadding: false });
+                return;
+            }
+
+            /* reemplazo */
+            if (inputModal.files.length) {
+                flagDel.value = '0';
+                const file = inputModal.files[0];
+
+                // pasa el FileList al input REAL
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                inputReal.files = dt.files;
+
+                // refrescamos vista previa del input REAL
+                if ($real.data('fileinput')) {
+                    $real.fileinput('destroy');
+                    const wrap = inputReal.closest('.file-input');
+                    if (wrap) {
+                        wrap.parentNode.insertBefore(inputReal, wrap);
+                        wrap.remove();
+                    }
+                }
+                $real.fileinput(buildFileInputOpts({ urlActual: URL.createObjectURL(file) }))
+                    .on('filecleared', () => { flagDel.value = '1'; });
+
+                cerrar();
+                Swal.fire({ icon: 'success', text: 'Archivo reemplazado.', heightAuto: false, scrollbarPadding: false });
+                return;
+            }
+
+            Swal.fire({ icon: 'error', text: 'Seleccione un archivo o elimine el actual.', heightAuto: false, scrollbarPadding: false });
+        };
+    }
 
 
 

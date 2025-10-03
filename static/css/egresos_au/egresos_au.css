@@ -116,7 +116,7 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
   align-items: flex-end;
 }
 
-.multi-select-container {
+/* .multi-select-container {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -144,7 +144,7 @@ tr:nth-child(even):hover .span-descripcion-cell::after {
   cursor: pointer;
   font-weight: bold;
   color: #d32f2f;
-}
+} */
 
 .input-group {
   display: flex;

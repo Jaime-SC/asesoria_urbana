@@ -8,12 +8,24 @@ from bnup.services.fecha_utils import add_business_days_cl
 from bnup.services.notifications import notify_ingreso_deadline_warning
 
 ABSOLUTE_URL = "http://asesoriaurbana.munivalpo.cl/"
-TIPO_CONOC_Y_DIST_ID = 12  # "Conocimiento y Distribución"
 
-DAYS_BUCKETS = (5, 3, 1)  # días hábiles restantes
+TIPO_CONOC_Y_DIST_ID = 12      # Excluir
+TIPO_ALCOHOL_ID      = 10      # Informe UV P. Alcohol (5 días)
+
+# Defaults para el resto de tipos
+DEFAULT_TOTAL_DIAS   = 15
+DEFAULT_BUCKETS      = (5, 3, 1)   # días restantes
+
+def get_deadline_policy(ing):
+    """
+    Devuelve (total_dias_habiles, buckets_de_aviso) según el tipo de solicitud.
+    """
+    if ing.tipo_solicitud_id == TIPO_ALCOHOL_ID:
+        return (5, (3, 1))
+    return (DEFAULT_TOTAL_DIAS, DEFAULT_BUCKETS)
 
 class Command(BaseCommand):
-    help = "Envía avisos de plazo restante (5, 3 y 1 día hábil) para solicitudes sin respuesta."
+    help = "Envía avisos de plazo restante (según tipo de solicitud) para solicitudes sin respuesta."
 
     def add_arguments(self, parser):
         parser.add_argument("--date", type=str, help="YYYY-MM-DD a usar como 'hoy' (testing).")
@@ -22,26 +34,14 @@ class Command(BaseCommand):
         parser.add_argument(
             "--days",
             type=str,
-            help="Restringe a ciertos avisos (p.ej. '5' o '5,3'). Por defecto: 5,3,1."
+            help="Restringe a ciertos avisos (p.ej. '5' o '5,3'). Si se omite, usa la política del tipo (p.ej. 3,1 para Alcohol; 5,3,1 para el resto)."
         )
 
     def handle(self, *args, **opts):
         # 1) 'hoy' simulado o real
-        if opts.get("date"):
-            hoy = date_class.fromisoformat(opts["date"])
-        else:
-            hoy = timezone.localdate()
+        hoy = date_class.fromisoformat(opts["date"]) if opts.get("date") else timezone.localdate()
 
-        # 2) buckets de días a usar
-        if opts.get("days"):
-            try:
-                buckets = tuple(sorted({int(x.strip()) for x in opts["days"].split(",") if x.strip()} , reverse=True))
-            except Exception:
-                buckets = DAYS_BUCKETS
-        else:
-            buckets = DAYS_BUCKETS
-
-        # 3) QS base: activas, fecha_ingreso_au válida, sin respuesta, NO 'Conocimiento y Distribución'
+        # 2) QS base: activas, fecha_ingreso_au válida, sin respuesta, NO 'Conocimiento y Distribución'
         qs = (
             IngresoSOLICITUD.objects
             .filter(is_active=True, fecha_ingreso_au__isnull=False)
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             .prefetch_related("funcionarios_asignados__user")
         )
 
-        # 4) Limitar por IDs si se pasó --only
+        # 3) Limitar por IDs si se pasó --only
         only = opts.get("only")
         if only:
             ids = [int(x) for x in only.split(",") if x.strip().isdigit()]
@@ -62,23 +62,40 @@ class Command(BaseCommand):
         encontrados = 0
 
         for ing in qs:
-            # Para cada bucket (5,3,1), calculamos la fecha de aviso:
-            # Fecha límite = fecha_ingreso_au + 15 días hábiles
-            # Aviso cuando faltan D días = fecha_ingreso_au + (15 - D) días hábiles
+            total_dias, policy_buckets = get_deadline_policy(ing)
+
+            # Si el usuario forzó --days, respétalo (independiente del tipo)
+            if opts.get("days"):
+                try:
+                    buckets = tuple(sorted({int(x.strip()) for x in opts["days"].split(",") if x.strip()}, reverse=True))
+                except Exception:
+                    buckets = policy_buckets
+            else:
+                buckets = policy_buckets
+
+            # Regla inclusiva: el “último día” es el N-ésimo hábil contándose desde el día siguiente.
+            # add_business_days_cl(start, k) devuelve la fecha al sumar k días hábiles EXCLUYENDO el start.
+            # Por eso, para el “último día” usamos offset = total_dias - 1.
+            ultimo_dia_offset = total_dias - 1
+
             for d in buckets:
                 try:
-                    fecha_aviso = add_business_days_cl(ing.fecha_ingreso_au, 14 - d)
+                    # Aviso cuando faltan d días: offset = (total-1) - d
+                    fecha_aviso = add_business_days_cl(ing.fecha_ingreso_au, ultimo_dia_offset - d)
                 except Exception:
                     continue
 
                 if fecha_aviso == hoy:
                     encontrados += 1
-                    self.stdout.write(f"Match → ID {ing.id} (N° {ing.numero_ingreso}) · quedan {d} días · aviso = {fecha_aviso.isoformat()}")
+                    tipo_txt = ing.tipo_solicitud.tipo if ing.tipo_solicitud else ""
+                    self.stdout.write(
+                        f"Match → ID {ing.id} (N° {ing.numero_ingreso}) · tipo='{tipo_txt}' · total={total_dias} · quedan {d} días · aviso = {fecha_aviso.isoformat()}"
+                    )
                     if not opts.get("dry_run"):
                         try:
                             notify_ingreso_deadline_warning(
                                 ing,
-                                dias_restantes=d,              # ← clave: pasamos el bucket
+                                dias_restantes=d,
                                 absolute_url=ABSOLUTE_URL,
                                 bcc=None
                             )

@@ -126,18 +126,21 @@
               <!-- Formularios de creación y edición comparten una estructura similar para funcionarios asignados -->
               <div class="form-group">
                 <label>Funcionarios asignados</label>
-                <div id="funcionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
-                    <div class="funcionario-select-group" style="display: flex; align-items: center;">
-                        <select name="funcionarios_asignados" class="funcionarioSelect" style="max-width: 20rem;" required>
-                            <option value="" disabled selected>Seleccione</option>
-                            {% for funcionario in funcionarios %}
-                                <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
-                            {% endfor %}
-                        </select>                        
-                    </div>
-                    <!-- Aquí se agregarán dinámicamente más selects si es necesario -->
+
+                <div class="multi-select-container">
+                  <select id="multi_funcionarios_ing" class="select-multiple">
+                    <option value="" disabled selected>Seleccione...</option>
+                    {% for funcionario in funcionarios %}
+                      <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                    {% endfor %}
+                  </select>
+
+                  <div id="funcionariosSeleccionados_ing" class="selected-items"></div>
+                  <!-- IMPORTANTE: usa el nombre que espera tu backend -->
+                  <input type="hidden" name="funcionarios_asignados" id="funcionariosHidden_ing" />
                 </div>
               </div>
+
 
 
               <div class="form-group">
