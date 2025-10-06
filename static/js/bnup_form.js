@@ -232,6 +232,29 @@
         toggleRecepcionFields(recepSel, memoWrap, correoWrap, memoInput, correoInput);
     }
 
+    function resetFuncionariosIngreso() {
+        const sel = document.querySelector('#multi_funcionarios_ing');
+        const hid = document.querySelector('#funcionariosHidden_ing');
+        const cont = document.querySelector('#funcionariosSeleccionados_ing');
+        if (!sel || !hid || !cont) return;
+
+        // 1) limpiar hidden y chips
+        hid.value = '';
+        cont.innerHTML = '';
+
+        // 2) limpiar selección y re-habilitar todas las opciones
+        sel.querySelectorAll('option').forEach(o => { o.selected = false; o.disabled = false; });
+        sel.selectedIndex = 0; // vuelve al placeholder
+
+        // 3) si usas select2, sincroniza
+        if (typeof $(sel).select2 === 'function') {
+            $(sel).val(null).trigger('change.select2');
+        }
+
+        // 4) dispara un change por si tu initializeMultiSelect escucha este evento
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
     /**
      * Inicializa el modal del formulario BNUP con confirmación de guardado.
      */
@@ -251,6 +274,7 @@
 
         // Evento para abrir el modal del formulario BNUP
         btn.onclick = () => {
+            resetFuncionariosIngreso();
             modal.style.display = 'block';
             content.classList.add('animate__bounceIn');
             content.classList.remove('animate__bounceOut');
@@ -386,6 +410,7 @@
                                     bnupForm.reset();
                                     // Si usas fileinput plugin para el archivo adjunto
                                     $(archivoAdjuntoInput).fileinput('clear');
+                                    resetFuncionariosIngreso();
                                 } else {
                                     Swal.fire({
                                         heightAuto: false,
@@ -568,27 +593,36 @@
                     }
                     /* ---------------------------------------------------------------- */
 
-                    // ⬇️ PEGA AQUÍ
-                    initializeMultiSelect({
-                        selectSelector: '#multi_funcionarios_ing_edit',
-                        containerSelector: '#funcionariosSeleccionados_ing_edit',
-                        hiddenInputSelector: '#funcionariosHidden_ing_edit',
-                    });
+                    // ⬇️ PEGA AQUÍ (versión con guard)
+                    {
+                        const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
+                        if (selEdit) {
+                            initializeMultiSelect({
+                                selectSelector: '#multi_funcionarios_ing_edit',
+                                containerSelector: '#funcionariosSeleccionados_ing_edit',
+                                hiddenInputSelector: '#funcionariosHidden_ing_edit',
+                            });
 
-                    // Sembrar valores existentes desde la data del backend:
-                    const hid = document.querySelector('#funcionariosHidden_ing_edit');
-                    const sel = document.querySelector('#multi_funcionarios_ing_edit');
-                    if (hid && sel && Array.isArray(data.data.funcionarios_asignados)) {
-                        // set hidden con IDs
-                        hid.value = data.data.funcionarios_asignados.map(f => f.id).join(',');
+                            // Sembrar valores existentes (chips visibles) usando el handler 'change' una vez por funcionario
+                            const sel = document.querySelector('#multi_funcionarios_ing_edit');
+                            const hid = document.querySelector('#funcionariosHidden_ing_edit');
+                            const cont = document.querySelector('#funcionariosSeleccionados_ing_edit');
 
-                        // marcar opciones del select y disparar change para que pinte los chips
-                        data.data.funcionarios_asignados.forEach(f => {
-                            const opt = sel.querySelector(`option[value="${f.id}"]`);
-                            if (opt) opt.selected = true;
-                        });
-                        sel.dispatchEvent(new Event('change', { bubbles: true }));
+                            // 1) limpiar estado previo
+                            hid.value = '';
+                            cont.innerHTML = '';
+                            sel.querySelectorAll('option').forEach(o => { o.disabled = false; o.selected = false; });
+
+                            // 2) simular selección para que se creen los chips y se deshabiliten las opciones
+                            (data.data.funcionarios_asignados || []).forEach(f => {
+                                sel.value = String(f.id);
+                                sel.dispatchEvent(new Event('change', { bubbles: true }));
+                            });
+
+                            sel.selectedIndex = 0; // volver al placeholder
+                        }
                     }
+
 
                     // Mostrar el modal de edición
                     editModal.style.display = 'block';

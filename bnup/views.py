@@ -116,8 +116,25 @@ def bnup_form(request):
         fecha_ingreso_au_str = request.POST.get(
             "fecha_ingreso_au")  # Renombrado
         fecha_solicitud_str = request.POST.get("fecha_solicitud")  # Renombrado
-        funcionarios_asignados_ids = request.POST.getlist(
-            "funcionarios_asignados")
+        raw_funcs = request.POST.getlist("funcionarios_asignados")
+        if len(raw_funcs) == 1 and "," in (raw_funcs[0] or ""):
+            funcionarios_asignados_ids = [s.strip() for s in raw_funcs[0].split(",") if s.strip()]
+        else:
+            funcionarios_asignados_ids = [s.strip() for s in raw_funcs if s.strip()]
+
+        # (opcional) valida que sean dígitos y quita duplicados manteniendo orden:
+        funcionarios_asignados_ids = list(dict.fromkeys([s for s in funcionarios_asignados_ids if s.isdigit()]))
+
+        # … el resto igual:
+        if not funcionarios_asignados_ids:
+            return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
+
+        if len(funcionarios_asignados_ids) != len(set(funcionarios_asignados_ids)):
+            return JsonResponse({"success": False, "error": "No puede asignar el mismo funcionario más de una vez."})
+
+        funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_asignados_ids)
+        if not funcionarios_asignados.exists():
+            return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
@@ -458,8 +475,8 @@ def edit_bnup_record(request):
                 id=depto_solicitante_id)
 
             if tipo_usuario == "ADMIN":
-                funcionarios_asignados_ids = request.POST.getlist(
-                    "funcionarios_asignados")
+                raw = request.POST.get("funcionarios_asignados", "")
+                funcionarios_asignados_ids = [s for s in raw.split(",") if s.strip()]
 
                 # Validar que al menos un funcionario está asignado
                 if not funcionarios_asignados_ids:
@@ -661,8 +678,6 @@ def edit_bnup_record(request):
         }
 
         return JsonResponse({"success": True, "data": data})
-
-# views.py
 
 def delete_bnup_records(request):
     """

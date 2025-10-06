@@ -831,19 +831,18 @@
       {% if tipo_usuario == 'ADMIN' %}
         <div class="form-group">
           <label>Funcionarios asignados</label>
-          <div id="editFuncionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
-            <div class="funcionario-select-group" style="display: flex; align-items: center;">
-              <select name="funcionarios_asignados" class="funcionarioSelect" style="max-width: 20rem;" required>
-                <option value="" disabled selected>Seleccione</option>
-                {% for funcionario in funcionarios %}
-                  <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
-                {% endfor %}
-              </select>
-              <button type="button" class="addFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
-                <span class="material-symbols-outlined">add</span>
-              </button>
-            </div>
-            <!-- Aquí se agregarán dinámicamente más selects si es necesario -->
+
+          <div class="multi-select-container">
+            <select id="multi_funcionarios_ing_edit" class="select-multiple">
+              <option value="" disabled selected>Seleccione...</option>
+              {% for funcionario in funcionarios %}
+                <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+              {% endfor %}
+            </select>
+
+            <div id="funcionariosSeleccionados_ing_edit" class="selected-items"></div>
+            <!-- IMPORTANTE: el name debe ser el que lee el backend -->
+            <input type="hidden" name="funcionarios_asignados" id="funcionariosHidden_ing_edit" />
           </div>
         </div>
       {% else %}
@@ -852,6 +851,7 @@
           <p>No puede editar funcionarios asignados.</p>
         </div>
       {% endif %}
+
 
       <div class="form-group">
         <label for="edit_descripcion">Descripción</label>
