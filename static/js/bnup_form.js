@@ -242,18 +242,20 @@
         hid.value = '';
         cont.innerHTML = '';
 
-        // 2) limpiar selección y re-habilitar todas las opciones
+        // 2) limpiar selección y re-habilitar opciones
         sel.querySelectorAll('option').forEach(o => { o.selected = false; o.disabled = false; });
-        sel.selectedIndex = 0; // vuelve al placeholder
+        sel.selectedIndex = 0;
 
-        // 3) si usas select2, sincroniza
-        if (typeof $(sel).select2 === 'function') {
-            $(sel).val(null).trigger('change.select2');
-        }
+        // 3) si usas select2
+        if ($(sel).data('select2')) $(sel).val(null).trigger('change.select2');
 
-        // 4) dispara un change por si tu initializeMultiSelect escucha este evento
+        // 4) 🔹 avisa al componente que borre su estado interno
+        sel.dispatchEvent(new Event('ms:reset'));
+
+        // 5) (opcional) notifica un change por si tu UI reacciona
         sel.dispatchEvent(new Event('change', { bubbles: true }));
     }
+
 
     /**
      * Inicializa el modal del formulario BNUP con confirmación de guardado.
@@ -275,6 +277,8 @@
         // Evento para abrir el modal del formulario BNUP
         btn.onclick = () => {
             resetFuncionariosIngreso();
+            document.querySelector('#multi_funcionarios_ing')
+                ?.dispatchEvent(new Event('ms:reset'));
             modal.style.display = 'block';
             content.classList.add('animate__bounceIn');
             content.classList.remove('animate__bounceOut');
@@ -411,6 +415,8 @@
                                     // Si usas fileinput plugin para el archivo adjunto
                                     $(archivoAdjuntoInput).fileinput('clear');
                                     resetFuncionariosIngreso();
+                                    document.querySelector('#multi_funcionarios_ing')
+                                        ?.dispatchEvent(new Event('ms:reset'));
                                 } else {
                                     Swal.fire({
                                         heightAuto: false,
@@ -605,6 +611,10 @@
 
                             // Sembrar valores existentes (chips visibles) usando el handler 'change' una vez por funcionario
                             const sel = document.querySelector('#multi_funcionarios_ing_edit');
+                            if (sel) {
+                                const ids = (data.data.funcionarios_asignados || []).map(f => String(f.id));
+                                sel.dispatchEvent(new CustomEvent('ms:set', { detail: { ids } }));
+                            }
                             const hid = document.querySelector('#funcionariosHidden_ing_edit');
                             const cont = document.querySelector('#funcionariosSeleccionados_ing_edit');
 

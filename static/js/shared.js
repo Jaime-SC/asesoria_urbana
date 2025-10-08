@@ -1039,6 +1039,10 @@ function initializeFileInput(inputSelector, options = {}) {
  * Permite seleccionar varios elementos de un <select> y mostrarlos
  * como chips “cerrables”.  Devuelve un objeto con utilidades.
  *
+ * Eventos soportados en el <select>:
+ *  - ms:reset  → limpia estado interno + UI (equivalente a api.reset())
+ *  - ms:set    → siembra valores: new CustomEvent('ms:set', { detail:{ ids:[...] } })
+ *
  * @param {Object} cfg
  *  ├─ selectSelector      (string|HTMLElement)  <select>
  *  ├─ containerSelector   (string|HTMLElement)  donde se dibujan chips
@@ -1056,58 +1060,108 @@ function initializeMultiSelect(cfg) {
     const ANIM_IN = cfg.animationIn || 'animate__bounceIn';
     const ANIM_OUT = cfg.animationOut || 'animate__bounceOut';
 
-    const seleccionados = new Map();           // id → nombre
+    /** id → nombre */
+    const seleccionados = new Map();
 
-    // ─── render helper ──────────────────────────────────────────────
-    function render() {
-        // Evita re-renderizar chips que ya existen
-        const ya = new Set(Array.from($cont.children).map(el => el.dataset.id));
-
-        seleccionados.forEach((nombre, id) => {
-            if (ya.has(id)) return;
-            const chip = document.createElement('span');
-            chip.className = `selected-item animate__animated ${ANIM_IN}`;
-            chip.dataset.id = id;
-            chip.innerHTML = `${nombre}
-                <span data-id="${id}" class="material-symbols-outlined">close_small</span>`;
-            $cont.appendChild(chip);
-        });
-
-        // actualiza hidden
+    // ─── helpers ────────────────────────────────────────────────────
+    function syncHidden() {
         $hid.value = Array.from(seleccionados.keys()).join(',');
     }
 
+    function addChip(id, nombre) {
+        // Evita chips duplicados en DOM
+        if ($cont.querySelector(`.selected-item[data-id="${id}"]`)) return;
+
+        const chip = document.createElement('span');
+        chip.className = `selected-item animate__animated ${ANIM_IN}`;
+        chip.dataset.id = id;
+        chip.innerHTML = `${nombre}
+      <span data-id="${id}" class="material-symbols-outlined">close_small</span>`;
+        $cont.appendChild(chip);
+    }
+
+    function disableOption(id, disabled) {
+        const opt = $sel.querySelector(`option[value="${CSS.escape(id)}"]`);
+        if (opt) opt.disabled = !!disabled;
+    }
+
+    function select2SyncClearIfAny() {
+        // Si usas select2, mantén sincronía; es opcional y seguro
+        if (typeof window.$ === 'function' && window.$($sel).length && window.$($sel).data('select2')) {
+            window.$($sel).val(null).trigger('change.select2');
+        }
+    }
+
+    function renderNewOnes() {
+        // Renderiza sólo los chips faltantes
+        const ya = new Set(Array.from($cont.children).map(el => el.dataset.id));
+        seleccionados.forEach((nombre, id) => {
+            if (!ya.has(id)) addChip(id, nombre);
+        });
+        syncHidden();
+    }
+
+    function addSelection(id, nombre) {
+        if (!id) return;
+        if (!seleccionados.has(id)) {
+            seleccionados.set(id, (nombre || '').trim());
+            disableOption(id, true);
+            addChip(id, seleccionados.get(id));
+            syncHidden();
+        }
+        // volver al placeholder
+        $sel.selectedIndex = 0;
+        select2SyncClearIfAny();
+    }
+
+    function clearAll() {
+        seleccionados.clear();
+        $cont.innerHTML = '';
+        $hid.value = '';
+        $sel.querySelectorAll('option').forEach(o => { o.disabled = false; o.selected = false; });
+        $sel.selectedIndex = 0;
+        select2SyncClearIfAny();
+    }
+
     // ─── evento change en <select> ──────────────────────────────────
-    $sel.addEventListener('change', e => {
+    $sel.addEventListener('change', () => {
         const opt = $sel.selectedOptions[0];
         if (!opt || !opt.value) return;
-
-        if (!seleccionados.has(opt.value)) {
-            seleccionados.set(opt.value, opt.textContent.trim());
-            opt.disabled = true;
-            render();
-        }
-        $sel.selectedIndex = 0;               // reset placeholder
+        addSelection(opt.value, opt.textContent || opt.innerText || opt.value);
     });
 
     // ─── click en chips (eliminar) ──────────────────────────────────
     $cont.addEventListener('click', e => {
-        if (e.target.dataset.id) {
-            const id = e.target.dataset.id;
-            const chip = e.target.closest('.selected-item');
-            chip.classList.remove(ANIM_IN);
-            chip.classList.add('animate__animated', ANIM_OUT);
+        const id = e.target?.dataset?.id;
+        if (!id) return;
 
-            chip.addEventListener('animationend', () => {
-                chip.remove();
-                seleccionados.delete(id);
-                $hid.value = Array.from(seleccionados.keys()).join(',');
+        const chip = e.target.closest('.selected-item');
+        if (!chip) return;
 
-                // rehabilita opción en <select>
-                const opt = $sel.querySelector(`option[value="${id}"]`);
-                if (opt) opt.disabled = false;
-            }, { once: true });
-        }
+        chip.classList.remove(ANIM_IN);
+        chip.classList.add('animate__animated', ANIM_OUT);
+
+        chip.addEventListener('animationend', () => {
+            chip.remove();
+            seleccionados.delete(id);
+            syncHidden();
+            disableOption(id, false);
+        }, { once: true });
+    });
+
+    // ─── eventos custom: reset / set ────────────────────────────────
+    $sel.addEventListener('ms:reset', clearAll);
+
+    $sel.addEventListener('ms:set', (ev) => {
+        const ids = (ev.detail && Array.isArray(ev.detail.ids)) ? ev.detail.ids : [];
+        // Limpia antes de sembrar
+        clearAll();
+        ids.forEach(id => {
+            const opt = $sel.querySelector(`option[value="${CSS.escape(String(id))}"]`);
+            const nombre = opt ? (opt.textContent || opt.innerText || String(id)) : String(id);
+            addSelection(String(id), nombre);
+        });
+        renderNewOnes();
     });
 
     // ─── API pública ────────────────────────────────────────────────
@@ -1115,14 +1169,15 @@ function initializeMultiSelect(cfg) {
         /** Devuelve array de IDs actualmente seleccionados */
         getSelectedIds: () => Array.from(seleccionados.keys()),
         /** Limpia selección y restablece UI */
-        reset() {
-            seleccionados.clear();
-            $cont.innerHTML = '';
-            $hid.value = '';
-            $sel.querySelectorAll('option').forEach(o => o.disabled = false);
+        reset: clearAll,
+        /** Siembra valores programáticamente */
+        setSelected(ids = []) {
+            const evt = new CustomEvent('ms:set', { detail: { ids } });
+            $sel.dispatchEvent(evt);
         }
     };
 }
+
 
 /* ------------------------------------------------------------------ */
 /*   STANDARDIZE INPUT                                                */
