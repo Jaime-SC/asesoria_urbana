@@ -6,11 +6,11 @@ from datetime import timedelta
 import holidays
 
 # Correos fijos
-# SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
+SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
 # COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
-
-SECRETARIA_EMAIL   = "dpalacios@munivalpo.cl"
 COORDINADORA_EMAIL = None
+
+# SECRETARIA_EMAIL   = "dpalacios@munivalpo.cl"
 # COORDINADORA_EMAIL = "joanna.bastias@munivalpo.cl"
 
 # Políticas de plazo según tipo de solicitud
@@ -76,8 +76,6 @@ def context_ingreso(ingreso, absolute_url=None):
         "plazo_total": plazo_total,          # None si es conocimiento
         "es_conocimiento": es_conocimiento,  # ← NUEVO
     }
-
-
 
 
 def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=False, include_solicitante=False):

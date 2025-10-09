@@ -1010,206 +1010,237 @@
     }
 
     /**
-     * Inicializa el modal para la selección y confirmación de archivos.
-     */
+ * Inicializa el modal para la selección y confirmación de archivos.
+ * - Mantiene IDs existentes: #openFileModal, #fileModal, #fileModalInput, #confirmButton, #archivo_adjunto
+ * - Vista: cards con nombre + [👁 abrir PDF] + [✕ quitar]
+ * - Por ahora 1 archivo; estructura lista para múltiples (DataTransfer soporta ambos casos)
+ */
     function initializeFileModal() {
         const modalButton = document.getElementById('openFileModal');
-        const fileModal = document.getElementById('fileModal'); // Asegúrate de tener un modal definido para archivos
-        const closeModalButton = fileModal ? fileModal.querySelector('.close') : null;
-        const confirmButton = document.getElementById('confirmButton');
-        const fileModalInput = document.getElementById('fileModalInput');
-        // El input del formulario lo dejamos en el modal o lo vinculamos a este
-        const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
-        const content = fileModal.querySelector('.modal-content');
+        const fileModal = document.getElementById('fileModal');
+        const content = fileModal ? fileModal.querySelector('.modal-content') : null;
+        const closeBtn = fileModal ? fileModal.querySelector('.close') : null;
 
+        const selectBtn = document.getElementById('selectFileButton');
+        const clearBtn = document.getElementById('clearSelectionButton');
+        const confirmBtn = document.getElementById('confirmButton');
 
-        // Verificar que existan todos los elementos necesarios
-        if (!modalButton || !fileModal || !closeModalButton || !confirmButton || !fileModalInput || !archivoAdjuntoInput) {
+        const fileModalInput = document.getElementById('fileModalInput');   // input oculto del modal
+        const archivoAdjuntoInput = document.getElementById('archivo_adjunto');  // input REAL del formulario
+        const fileListContainer = document.getElementById('fileListContainer');
+
+        if (!modalButton || !fileModal || !content || !closeBtn || !selectBtn || !clearBtn || !confirmBtn || !fileModalInput || !archivoAdjuntoInput || !fileListContainer) {
+            // Si algo falta, no rompemos la página.
             return;
         }
 
-        // Cuando se hace clic en el botón de adjuntar, se muestra el modal para archivos
+        // ---- Helpers ----
+        // Dibuja las cards en base a fileModalInput.files
+        function renderSelectedFiles() {
+            fileListContainer.innerHTML = '';
+            const { files } = fileModalInput;
+            if (!files || files.length === 0) {
+                // Nada seleccionado => mostramos estado vacío (opcional)
+                const empty = document.createElement('div');
+                empty.textContent = 'No hay archivos seleccionados.';
+                empty.style.opacity = '0.75';
+                empty.style.fontStyle = 'italic';
+                fileListContainer.appendChild(empty);
+                return;
+            }
+
+            // Recorremos archivos (aunque hoy sea 1, esto escala a múltiples)
+            Array.from(files).forEach((file, idx) => {
+                const card = document.createElement('div');
+                card.className = 'file-card';                
+
+                // Izquierda: icono + nombre
+                const left = document.createElement('div');
+                left.className = 'file-left'; // en vez de estilos inline
+
+                const icon = document.createElement('span');
+                icon.className = 'material-symbols-outlined';
+                icon.textContent = 'description';
+
+                const name = document.createElement('span');
+                name.className = 'file-name'; // en vez de maxWidth: '32rem' + nowrap
+                name.textContent = file.name;
+                name.title = file.name;
+                name.style.fontFamily = 'Space Mono, monospace';
+                name.style.maxWidth = '32rem';
+                name.style.whiteSpace = 'nowrap';
+                name.style.overflow = 'hidden';
+                name.style.textOverflow = 'ellipsis';
+
+                left.appendChild(icon);
+                left.appendChild(name);
+
+                // Derecha: acciones (👁 abrir | ✕ quitar)
+                const actions = document.createElement('div');
+                actions.className = 'file-actions';
+
+                // Botón ojo
+                const openBtn = document.createElement('button');
+                openBtn.type = 'button';
+                openBtn.className = 'buttonLogin buttonPreview';
+                openBtn.title = 'Abrir en nueva pestaña';
+
+                const eyeIcon = document.createElement('span');
+                eyeIcon.className = 'material-symbols-outlined bell';
+                eyeIcon.textContent = 'visibility';
+                eyeIcon.style.color = '#16233E';
+
+
+                openBtn.appendChild(eyeIcon);
+                openBtn.onclick = () => {
+                    // Abrimos el PDF desde la memoria (Blob URL)
+                    try {
+                        const url = URL.createObjectURL(file);
+                        // Consejo: algunos navegadores bloquean window.open por políticas; este se dispara por evento user-gesture
+                        window.open(url, '_blank');
+                        // Liberamos el objeto después de un tiempo
+                        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                    } catch (e) {
+                        console.error(e);
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'No se pudo abrir el archivo',
+                            text: 'Verifica que sea un PDF válido.'
+                        });
+                    }
+                };
+
+                // Botón quitar
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'buttonLogin buttonPreview removeBtn';
+                // removeBtn.style.background = '#E73C45';
+                removeBtn.title = 'Quitar este archivo';
+
+                const xIcon = document.createElement('span');
+                xIcon.className = 'material-symbols-outlined bell';
+                xIcon.textContent = 'close';
+
+                removeBtn.appendChild(xIcon);
+                removeBtn.onclick = () => {
+                    // Quitamos el archivo idx desde la FileList usando DataTransfer
+                    const dt = new DataTransfer();
+                    Array.from(fileModalInput.files).forEach((f, i) => {
+                        if (i !== idx) dt.items.add(f);
+                    });
+                    fileModalInput.files = dt.files;
+                    renderSelectedFiles();
+                };
+
+                actions.appendChild(openBtn);
+                actions.appendChild(removeBtn);
+
+                card.appendChild(left);
+                card.appendChild(actions);
+
+                fileListContainer.appendChild(card);
+            });
+        }
+
+        // Copia lo seleccionado en el modal al input REAL del formulario
+        function syncToRealFormInput() {
+            const dt = new DataTransfer();
+            Array.from(fileModalInput.files).forEach(f => dt.items.add(f));
+            archivoAdjuntoInput.files = dt.files;
+        }
+
+        // ---- Eventos UI del modal ----
         modalButton.onclick = () => {
             fileModal.style.display = 'block';
-            content.classList.add('animate__bounceIn');
             content.classList.remove('animate__bounceOut');
+            content.classList.add('animate__bounceIn');
+            renderSelectedFiles(); // estado limpio al abrir
         };
 
-        // Cerrar el modal al hacer clic en el botón de cerrar
-        closeModalButton.onclick = () => {
-            // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+        closeBtn.onclick = () => {
             content.classList.remove('animate__bounceIn');
             content.classList.add('animate__bounceOut');
-            // fileModal.style.display = 'none';
-
-            // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
-            content.addEventListener('animationend', function handleAnimationEnd() {
+            content.addEventListener('animationend', function handle() {
                 fileModal.style.display = 'none';
-                // Limpia la clase de salida para que la próxima vez se use la de entrada
                 content.classList.remove('animate__bounceOut');
-                content.classList.add('animate__bounceIn');
-                // Remover el listener para no duplicar eventos
-                content.removeEventListener('animationend', handleAnimationEnd);
+                content.removeEventListener('animationend', handle);
             });
         };
 
-        // Cerrar el modal al hacer clic fuera de él
-        fileModal.addEventListener('click', (event) => {
-            if (event.target === fileModal) {
-                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+        // Cerrar clic fuera
+        fileModal.addEventListener('click', (ev) => {
+            if (ev.target === fileModal) {
                 content.classList.remove('animate__bounceIn');
                 content.classList.add('animate__bounceOut');
-                // fileModal.style.display = 'none';
-
-                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
-                content.addEventListener('animationend', function handleAnimationEnd() {
+                content.addEventListener('animationend', function handle() {
                     fileModal.style.display = 'none';
-                    // Limpia la clase de salida para que la próxima vez se use la de entrada
                     content.classList.remove('animate__bounceOut');
-                    content.classList.add('animate__bounceIn');
-                    // Remover el listener para no duplicar eventos
-                    content.removeEventListener('animationend', handleAnimationEnd);
+                    content.removeEventListener('animationend', handle);
                 });
             }
         });
 
-        // Confirmar la selección del archivo
-        confirmButton.onclick = () => {
-            if (fileModalInput.files.length > 0) {
-                // Asignar los archivos seleccionados al input del formulario
-                archivoAdjuntoInput.files = fileModalInput.files;
-                fileModal.style.display = 'none';
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    title: 'Archivo adjuntado',
-                    text: 'El archivo se ha adjuntado correctamente.',
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar',
-                });
-            } else {
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    title: 'Error',
-                    text: 'Debe seleccionar un archivo antes de confirmar.',
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar',
-                });
-            }
-        };
+        // Botón "Seleccionar archivo" => dispara el input oculto
+        selectBtn.onclick = () => fileModalInput.click();
 
-        // Inicializar el plugin fileinput (si usas uno)
-        $(fileModalInput).fileinput({
-            showUpload: false,
-            showRemove: true,
-            showPreview: true,
-            showCaption: false,
-            browseLabel: '<span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo',
-            removeLabel: '<span class="material-symbols-outlined bell">delete</span> Eliminar',
-            mainClass: 'input-group-sm',
-            dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-            fileActionSettings: {
-                showRemove: true,
-                showUpload: false,
-                showZoom: false,
-                showDrag: false,
-                showDelete: false,
-            },
-            layoutTemplates: {
-                close: '',
-                indicator: '',
-                actionCancel: ''
-            }
-        });
-
-        // Sincronizar la selección de archivos entre los inputs
+        // Cuando el usuario elige archivo(s)
         fileModalInput.onchange = () => {
-            archivoAdjuntoInput.files = fileModalInput.files;
+            // Validación simple (solo pdf)
+            const validFiles = Array.from(fileModalInput.files).filter(f => f.type === 'application/pdf');
+            if (validFiles.length !== fileModalInput.files.length) {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'warning',
+                    title: 'Formato no permitido',
+                    text: 'Solo se admiten archivos PDF.'
+                });
+                const dt = new DataTransfer();
+                validFiles.forEach(f => dt.items.add(f));
+                fileModalInput.files = dt.files;
+            }
+            renderSelectedFiles();
         };
 
-        $(document).ready(function () {
-            $("#archivo_adjunto_salida").fileinput({
-                uploadUrl: "/bnup/upload_salida/",
-                deleteUrl: '/bnup/delete_file/',
-                showUpload: false,
-                showRemove: true,
-                showPreview: true,
-                showCaption: false,
-                browseLabel: '<span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo',
-                removeLabel: '<span class="material-symbols-outlined bell">delete</span> Eliminar',
-                mainClass: 'input-group-sm',
-                dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-                fileActionSettings: {
-                    showRemove: false,
-                    showUpload: false,
-                    showZoom: false,
-                    showDrag: false,
-                    showDelete: false,
-                    zoomIcon: '<span class="material-symbols-outlined" style="color: white;">zoom_in</span>',
-                    showZoom: function (config) {
-                        return (config.type === 'pdf' || config.type === 'image');
-                    }
-                },
-                layoutTemplates: {
-                    close: '',
-                    indicator: '',
-                    actionCancel: '',
-                    modal: '<div class="modal-dialog modal-lg{rtl}" role="document">\n' +
-                        '  <div class="modal-content animate__animated animate__bounceIn">\n' +
-                        '    <div class="modal-header kv-zoom-header">\n' +
-                        '      <h6 class="modal-title kv-zoom-title" id="kvFileinputModalLabel"><span class="kv-zoom-caption"></span> <span class="kv-zoom-size"></span></h6>\n' +
-                        '      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>' +
-                        '    </div>\n' +
-                        '    <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
-                        '    <div class="kv-zoom-description"></div>\n' +
-                        '  </div>\n' +
-                        '</div>\n'
-                },
-                previewZoomButtonIcons: {
-                    prev: '',
-                    next: '',
-                    rotate: '',
-                    toggleheader: '',
-                    fullscreen: '',
-                    borderless: '',
-                    close: ''
-                }
-            });
+        // Botón limpiar (solo UI del modal)
+        clearBtn.onclick = () => {
+            fileModalInput.value = '';
+            renderSelectedFiles();
+        };
 
-            // SOLUCIÓN: Sincronizar el archivo arrastrado con el input real del formulario
-            $('#archivo_adjunto_salida').on('fileloaded', function (event, file) {
-                // Forzar que el archivo cargado se asigne al campo real del formulario
-                const fileInput = document.getElementById('archivo_adjunto_salida');
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                fileInput.files = dataTransfer.files;
-            });
-
-            $(document).on('click', '#kvFileinputModal .kv-zoom-header .close', function (e) {
-                e.preventDefault();
-                var $modal = $('#kvFileinputModal');
-                var $content = $modal.find('.modal-content');
-                $content.removeClass('animate__bounceIn').addClass('animate__bounceOut');
-                $content.one('animationend', function () {
-                    $modal.remove();
+        // Confirmar => sincroniza al input REAL del formulario y cierra
+        confirmBtn.onclick = () => {
+            if (!fileModalInput.files || fileModalInput.files.length === 0) {
+                return Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'error',
+                    title: 'Sin archivo',
+                    text: 'Debes seleccionar un archivo antes de confirmar.'
                 });
+            }
+            syncToRealFormInput();
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', function handle() {
+                fileModal.style.display = 'none';
+                content.classList.remove('animate__bounceOut');
+                content.removeEventListener('animationend', handle);
             });
 
-            $(document).on('click', '#kvFileinputModal', function (e) {
-                if ($(e.target).closest('.modal-content').length === 0) {
-                    var $modal = $('#kvFileinputModal');
-                    var $content = $modal.find('.modal-content');
-                    $content.removeClass('animate__bounceIn').addClass('animate__bounceOut');
-                    $content.one('animationend', function () {
-                        $modal.remove();
-                    });
-                }
+            Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
+                title: 'Archivo adjuntado',
+                text: 'El archivo se ha adjuntado correctamente.',
+                icon: 'success',
+                confirmButtonText: 'Aceptar',
             });
-        });
-
-
+        };
     }
+
 
     /**
      * Inicializa la selección de filas en la tabla, manejando botones de acción según el tipo de usuario.

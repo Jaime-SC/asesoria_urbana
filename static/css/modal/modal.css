@@ -21,7 +21,6 @@
     border: 1px solid #888;
     max-width: 30rem;
     min-width: 20rem;
-    width: max-content;
     border-radius: 5px;
     position: relative;
 }
@@ -67,6 +66,49 @@
     box-sizing: border-box;
 }
 
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.file-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid rgb(224, 224, 224);
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 6px;
+    background: rgb(255, 255, 255);
+    gap: 10px;
+    width: 100%;
+}
+
+
+/* por si el padre es flex/auto */
+.file-left {
+    display: flex;
+    gap: .5rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+/* <— CLAVE */
+.file-actions {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 6px;
+}
+
+/* El nombre trunca con elipsis en una línea */
+.file-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .modal .btn {
     padding: 8px 16px;
     background-color: #0b7dda;
@@ -104,26 +146,66 @@
 }
 
 /* Rojo */
-.input-group-sm .btn.btn-default.btn-outline-secondary {
+#clearSelectionButton {
     background-color: #dc3545;
     border-color: #dc3545;
     color: ghostwhite;
 }
 
-.input-group-sm .btn.btn-default.btn-outline-secondary:hover {
+#clearSelectionButton:hover {
     background-color: #ff7c68;
 }
 
 /* Amarillo */
-.input-group-sm .btn.btn-primary.btn-file {
+#selectFileButton {
     background-color: #f7ea53;
     border-color: #cabf47;
     color: #16233e;
     font-size: .88rem;
 }
 
-.input-group-sm .btn.btn-primary.btn-file:hover {
-    background-color: #fbed73;
+#selectFileButton:hover {
+    background-color: #fef191;
+}
+
+
+/* Cards de archivos en el modal de adjuntos */
+.file-list .file-card .material-symbols-outlined {
+    color: #16233E;
+}
+
+.file-list .buttonPreview .material-symbols-outlined {
+    color: white;
+    /* tu botón ya trae fondo */
+}
+
+.modal-content-file-input {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    align-items: center;
+    margin: 10px 0 14px;
+}
+
+.file-input-buttons {
+    display: flex;
+    gap: .5rem;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.file-input-buttons button div {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.removeBtn {
+    background-color: #E73C45;
+}
+
+.removeBtn:hover {
+    background-color: #ff7c68;
 }
 
 .input-group-sm {

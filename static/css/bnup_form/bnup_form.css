@@ -47,9 +47,9 @@
     justify-content: space-between;
 }
 
-.buttonPreview {
+/* .buttonPreview {
     background: #f7ea53;
-}
+} */
 
 .buttonSubirSalida {
     background: #ed1c24;
@@ -67,8 +67,6 @@
 .iconContainerButton {
     margin-inline: 1rem;
 }
-
-
 
 
 /* PANEL DE FILTROS INGRESOS Y EGRESOS */

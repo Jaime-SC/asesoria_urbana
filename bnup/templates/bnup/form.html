@@ -447,17 +447,49 @@
 
 <!-- Modal para adjuntar archivo (fuera del formulario principal) -->
 <div id="fileModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 for="archivo_adjunto">Adjuntar archivo</h3>
-        <span class="close material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span>
-      </div>
-      <input type="file" id="fileModalInput" class="file">
-      <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
-        <button id="confirmButton" class="btn">Confirmar</button>
-      </div>
+  <div class="modal-content animate__animated">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3>Adjuntar archivo</h3>
+      <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
     </div>
+    
+    <!-- Lista (cards) de archivos seleccionados en el modal -->
+    <div id="fileListContainer" class="file-list">
+      <!-- Aquí se dibuja la/las cards -->
+    </div>
+    
+    <!-- Barra de acciones del modal -->
+    <div class="modal-content-file-input" style="display:flex;gap:.5rem;align-items:center;margin:10px 0 14px;">
+      <!-- Botón seleccionar (dispara el input oculto) -->
+      <div class="file-input-buttons">
+        <button type="button" id="selectFileButton" class="btn">
+          <div>
+            <span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo
+          </div>
+        </button>
+        
+        <!-- Botón limpiar selección (solo UI dentro del modal) -->
+        <button type="button" id="clearSelectionButton" class="btn">
+          <div>
+            <span class="material-symbols-outlined bell">close</span> Cancelar
+          </div>
+        </button>
+      </div>
+        
+      <!-- Confirma y traspasa la selección al input real del formulario -->
+      <button type="button" id="confirmButton" class="btn" style="margin-left:auto;">
+        Confirmar
+      </button>
+    </div>
+
+    <!-- Input de archivos oculto (mantenemos el ID original) -->
+    <input
+      type="file"
+      id="fileModalInput"
+      class="file"
+      accept="application/pdf"
+      style="display:none;"
+    >
   </div>
 </div>
 
