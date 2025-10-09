@@ -10,7 +10,8 @@ import holidays
 # COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
 
 SECRETARIA_EMAIL   = "dpalacios@munivalpo.cl"
-COORDINADORA_EMAIL = "joanna.bastias@munivalpo.cl"
+COORDINADORA_EMAIL = None
+# COORDINADORA_EMAIL = "joanna.bastias@munivalpo.cl"
 
 # Políticas de plazo según tipo de solicitud
 TIPO_CONOC_Y_DIST_ID = 12
