@@ -5,13 +5,17 @@ from bnup.services.fecha_utils import add_business_days_cl
 from datetime import timedelta
 import holidays
 
-# Correos fijos
+# Correos para pruebas
 SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
-# COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
-COORDINADORA_EMAIL = None
+COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
+JEFE_EMAIL         = "jaimeqsanchezc@gmail.com"
 
-# SECRETARIA_EMAIL   = "dpalacios@munivalpo.cl"
-# COORDINADORA_EMAIL = "joanna.bastias@munivalpo.cl"
+
+# # Correos fijos (producción)
+# SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
+# COORDINADORA_EMAIL  = "joanna.bastias@munivalpo.cl"
+# JEFE_EMAIL          = "ptapia@munivalpo.cl"
+
 
 # Políticas de plazo según tipo de solicitud
 TIPO_CONOC_Y_DIST_ID = 12
@@ -324,30 +328,35 @@ def context_egreso_created(salida, *, absolute_url=None):
 def notify_egreso_created(salida, *, created_by_user=None, absolute_url=None, bcc=None, attach_file=False):
     """
     Envía correo cuando se registra un EGRESO (respuesta).
-    - TO: funcionario que creó la respuesta (request.user.email)
-    - CC: secretaria y coordinadora (si no están ya en TO)
+
+    - TO: Secretaría (si existe correo configurado)
+    - CC (en este orden): Jefe, Coordinadora (evitando duplicados)
     - (Adjunto desactivado por defecto; queda bloque comentado)
     """
-    # TO: el creador de la respuesta
+    # TO: Secretaría
     to_list = []
-    if created_by_user and getattr(created_by_user, "email", None):
-        to_list.append(created_by_user.email)
+    if SECRETARIA_EMAIL:
+        to_list.append(SECRETARIA_EMAIL)
 
-    # Fallback opcional: si no hay email del creador, puedes incluir al primer funcionario de la salida
+    # Si por alguna razón no hay correo de Secretaría, cae en fallback
+    # al creador del egreso o a algún funcionario de la salida.
     if not to_list:
-        first_f = salida.funcionarios.select_related("user").first()
-        if first_f and getattr(getattr(first_f, "user", None), "email", None):
-            to_list.append(first_f.user.email)
+        if created_by_user and getattr(created_by_user, "email", None):
+            to_list.append(created_by_user.email)
+        else:
+            first_f = salida.funcionarios.select_related("user").first()
+            if first_f and getattr(getattr(first_f, "user", None), "email", None):
+                to_list.append(first_f.user.email)
 
-    # si aún no hay destinatarios, no enviamos
+    # Si aún no hay destinatarios, no enviamos
     if not to_list:
         return 0
 
-    # CC: secretaria y coordinadora (sin duplicar)
+    # CC: Jefe y luego Coordinadora (en ese orden), sin duplicar
     cc_list = []
-    for fixed in (SECRETARIA_EMAIL, COORDINADORA_EMAIL):
-        if fixed and fixed not in to_list:
-            cc_list.append(fixed)
+    for extra in (JEFE_EMAIL, COORDINADORA_EMAIL):
+        if extra and extra not in to_list and extra not in cc_list:
+            cc_list.append(extra)
 
     ctx = context_egreso_created(salida, absolute_url=absolute_url)
     subject = subject_egreso_created(salida)
@@ -376,6 +385,7 @@ def notify_egreso_created(salida, *, created_by_user=None, absolute_url=None, bc
     # ─────────────────────────────────────────────────────────────
 
     return msg.send(fail_silently=False)
+
 
 def _business_days_between_cl(start, end):
     """
