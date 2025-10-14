@@ -465,6 +465,10 @@
 
         // Evento para cerrar el modal al hacer clic en el botón de cerrar
         closeModalButton.onclick = () => {
+            // limpia el multi-select (si existe)
+            const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
+            if (selEdit) selEdit.dispatchEvent(new Event('ms:reset'));
+
             // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
             content.classList.remove('animate__bounceIn');
             content.classList.add('animate__bounceOut');
@@ -484,6 +488,8 @@
         // Evento para cerrar el modal al hacer clic fuera de él
         document.addEventListener('click', (event) => {
             if (event.target === editModal) {
+                const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
+                if (selEdit) selEdit.dispatchEvent(new Event('ms:reset'));
                 // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
                 content.classList.remove('animate__bounceIn');
                 content.classList.add('animate__bounceOut');
@@ -600,38 +606,32 @@
                     /* ---------------------------------------------------------------- */
 
                     // ⬇️ PEGA AQUÍ (versión con guard)
+                    // === Funcionarios asignados (EDIT) ===
                     {
-                        const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
-                        if (selEdit) {
-                            initializeMultiSelect({
-                                selectSelector: '#multi_funcionarios_ing_edit',
-                                containerSelector: '#funcionariosSeleccionados_ing_edit',
-                                hiddenInputSelector: '#funcionariosHidden_ing_edit',
-                            });
+                        const sel = document.querySelector('#multi_funcionarios_ing_edit');
+                        const cont = document.querySelector('#funcionariosSeleccionados_ing_edit');
+                        const hid = document.querySelector('#funcionariosHidden_ing_edit');
 
-                            // Sembrar valores existentes (chips visibles) usando el handler 'change' una vez por funcionario
-                            const sel = document.querySelector('#multi_funcionarios_ing_edit');
-                            if (sel) {
-                                const ids = (data.data.funcionarios_asignados || []).map(f => String(f.id));
-                                sel.dispatchEvent(new CustomEvent('ms:set', { detail: { ids } }));
+                        if (sel && cont && hid) {
+                            // Inicializa una sola vez
+                            if (!sel.dataset.msInited) {
+                                initializeMultiSelect({
+                                    selectSelector: sel,
+                                    containerSelector: cont,
+                                    hiddenInputSelector: hid,
+                                });
+                                sel.dataset.msInited = '1';
                             }
-                            const hid = document.querySelector('#funcionariosHidden_ing_edit');
-                            const cont = document.querySelector('#funcionariosSeleccionados_ing_edit');
 
-                            // 1) limpiar estado previo
-                            hid.value = '';
-                            cont.innerHTML = '';
-                            sel.querySelectorAll('option').forEach(o => { o.disabled = false; o.selected = false; });
+                            // OJO: aquí es data.data (no data)
+                            const ids = (data.data.funcionarios_asignados || []).map(f => String(f.id));
 
-                            // 2) simular selección para que se creen los chips y se deshabiliten las opciones
-                            (data.data.funcionarios_asignados || []).forEach(f => {
-                                sel.value = String(f.id);
-                                sel.dispatchEvent(new Event('change', { bubbles: true }));
-                            });
-
-                            sel.selectedIndex = 0; // volver al placeholder
+                            // Limpia selección anterior y siembra chips nuevos
+                            sel.dispatchEvent(new Event('ms:reset'));
+                            sel.dispatchEvent(new CustomEvent('ms:set', { detail: { ids } }));
                         }
                     }
+
 
 
                     // Mostrar el modal de edición
@@ -712,6 +712,8 @@
                                         timer: 2000,
                                     });
                                     updateTableRow(solicitudId);
+                                    const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
+                                    if (selEdit) selEdit.dispatchEvent(new Event('ms:reset'));
                                     editModal.style.display = 'none';
                                 } else {
                                     Swal.fire({
@@ -1052,7 +1054,7 @@
             // Recorremos archivos (aunque hoy sea 1, esto escala a múltiples)
             Array.from(files).forEach((file, idx) => {
                 const card = document.createElement('div');
-                card.className = 'file-card';                
+                card.className = 'file-card';
 
                 // Izquierda: icono + nombre
                 const left = document.createElement('div');

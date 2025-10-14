@@ -5,21 +5,91 @@ from bnup.services.fecha_utils import add_business_days_cl
 from datetime import timedelta
 import holidays
 
+
+import logging
+import unicodedata
+
+LOG = logging.getLogger(__name__)
+
 # Correos para pruebas
-SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
-COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
-JEFE_EMAIL         = "jaimeqsanchezc@gmail.com"
+# SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
+# COORDINADORA_EMAIL = "jaimeqsanchezc@gmail.com"
+# JEFE_EMAIL         = "jaimeqsanchezc@gmail.com"
 
 
 # # Correos fijos (producción)
-# SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
-# COORDINADORA_EMAIL  = "joanna.bastias@munivalpo.cl"
-# JEFE_EMAIL          = "ptapia@munivalpo.cl"
+JEFE_EMAIL          = "ptapia@munivalpo.cl"
+SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
+COORDINADORA_EMAIL  = "joanna.bastias@munivalpo.cl"
 
 
 # Políticas de plazo según tipo de solicitud
 TIPO_CONOC_Y_DIST_ID = 12
 TIPO_ALCOHOL_ID      = 10
+
+
+def _norm_text(s: str) -> str:
+    if not s:
+        return ""
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
+    s = "".join(ch if ch.isalnum() else " " for ch in s)
+    return " ".join(s.lower().split())
+
+# nombres de campo backend que sabemos son el adjunto del ingreso
+_ATTACHMENT_FIELD_KEYS = {
+    "archivo_adjunto_ingreso",
+    "documento_entrada",
+    "documento_de_entrada",
+    "archivo_ingreso",
+    "archivo_entrada",
+}
+
+def _is_allowed_update_label(label: str) -> bool:
+    # número de ingreso o claves backend de adjunto
+    if not label:
+        return False
+    if label in {"numero_ingreso"} or label in _ATTACHMENT_FIELD_KEYS:
+        return True
+
+    n = _norm_text(label)
+    tokens = set(n.split())
+
+    # “número ingreso/entrada” con variantes
+    if any(t in tokens for t in {"numero", "num", "nro", "no", "n"}) and (("ingreso" in tokens) or ("entrada" in tokens)):
+        return True
+
+    # Archivo/Adjunto/Documento (+ opcional ingreso/entrada)
+    if ({"archivo", "adjunto", "documento", "doc", "pdf"} & tokens) and (("ingreso" in tokens) or ("entrada" in tokens)):
+        return True
+
+    # “documento de entrada”
+    if "documento" in tokens and "entrada" in tokens:
+        return True
+
+    # ÚLTIMA RED (por si el label llega como “Archivo” a secas):
+    if {"archivo", "adjunto", "documento", "doc", "pdf"} & tokens:
+        return True
+
+    return False
+
+def _is_fileish(v) -> bool:
+    # Detecta objetos FileField/File, rutas o nombres con extensión
+    if v is None:
+        return False
+    name = getattr(v, "name", None) or str(v)
+    name = name.lower()
+    return any(ext in name for ext in (".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".zip", ".rar"))
+
+def _looks_like_attachment_change(label, old, new) -> bool:
+    # Si el label ya calza con nuestra whitelist, listo
+    if _is_allowed_update_label(label):
+        return True
+    # Si cualquiera de los lados “parece archivo”, también lo tratamos como adjunto
+    if _is_fileish(old) or _is_fileish(new):
+        return True
+    return False
+
+
 
 def get_deadline_policy_for_ingreso(ingreso):
     """
@@ -154,10 +224,41 @@ def context_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=N
 
 def notify_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=None, field_changes=None, bcc=None):
     """
-    Notifica por correo que el Ingreso fue ACTUALIZADO.
-    Envia a los funcionarios actuales; CC a secretaria; sin adjuntos.
+    Notifica por correo que el Ingreso fue ACTUALIZADO **solo** si:
+      - cambia el número de ingreso, o
+      - se agregan/eliminen funcionarios, o
+      - cambia el archivo adjunto del ingreso.
+
+    Envía a los funcionarios actuales; CC a secretaria; sin adjuntos.
     """
-    # destinatarios: funcionarios vigentes
+    # 1) Filtrar cambios permitidos por etiqueta/nombre de campo + heurística de archivo
+    field_changes = field_changes or []
+    allowed_field_changes = []
+    skipped = []
+
+    for (lbl, old, new) in field_changes:
+        if _is_allowed_update_label(lbl) or _looks_like_attachment_change(lbl, old, new):
+            allowed_field_changes.append((lbl, old, new))
+        else:
+            skipped.append(lbl)
+
+    # 2) Detectar cambios de funcionarios
+    added = added or []
+    removed = removed or []
+    funcionarios_changed = bool(added or removed)
+
+    # 3) Cortar notificación si no hay nada relevante
+    if not allowed_field_changes and not funcionarios_changed:
+        # (Opcional) Log para diagnosticar por qué no se envió
+        if skipped:
+            LOG.info(
+                "notify_ingreso_updated: sin envio (labels filtrados): %s",
+                ", ".join(map(str, skipped))
+            )
+        return 0
+
+
+    # 4) Destinatarios: funcionarios vigentes
     to_list = [
         f.user.email
         for f in ingreso.funcionarios_asignados.select_related('user').all()
@@ -172,12 +273,13 @@ def notify_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=No
     if SECRETARIA_EMAIL and SECRETARIA_EMAIL not in to_list:
         cc_list.append(SECRETARIA_EMAIL)
 
+    # 5) Contexto con SOLO lo permitido
     ctx = context_ingreso_updated(
         ingreso,
         absolute_url=absolute_url,
         added=added,
         removed=removed,
-        field_changes=field_changes,
+        field_changes=allowed_field_changes,   # ← sólo cambios permitidos
     )
 
     subject = subject_ingreso_updated(ingreso)
