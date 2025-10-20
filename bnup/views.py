@@ -35,6 +35,7 @@ from django.db.models import Count
 from django.db import transaction
 from django.urls import reverse
 
+EXCLUDED_TIPO_IDS = (11, 12)
 
 def _send_ingreso_async(ingreso_id, absolute_url):
     from bnup.models import IngresoSOLICITUD
@@ -734,7 +735,7 @@ def statistics_view(request):
     active_solicitudes = IngresoSOLICITUD.objects.filter(
         is_active=True, 
         fecha_ingreso_au__year=current_year
-    ).exclude(tipo_solicitud__id=12)
+    ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS)
 
     
     # Solicitudes por Solicitante
@@ -759,7 +760,10 @@ def statistics_view(request):
     salidas_activas = SalidaSOLICITUD.objects.filter(
         ingreso_solicitud__is_active=True,
         fecha_salida__year=current_year
+    ).exclude(
+        ingreso_solicitud__tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
     ).prefetch_related("funcionarios")
+
     
     # Salidas por Semana (global)
     salidas_por_semana = defaultdict(int)
@@ -815,7 +819,8 @@ def statistics_view(request):
         is_active=True,
         salidas__isnull=False,
         fecha_ingreso_au__year=current_year
-    ).distinct()
+    ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
+
 
     for ingreso in ingresos_with_salidas:
         # Se toma la primera salida (ordenada por fecha)
@@ -832,7 +837,9 @@ def statistics_view(request):
 
     # Calcular el promedio de días entre ingreso y la primera salida por funcionario
     promedio_dias_por_funcionario = {}
-    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(is_active=True, salidas__isnull=False).distinct()
+    ingresos_with_salidas = IngresoSOLICITUD.objects.filter(
+        is_active=True, salidas__isnull=False
+    ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
     for ingreso in ingresos_with_salidas:
         # Tomar la primera salida activa, ordenada por fecha
         salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
@@ -846,25 +853,32 @@ def statistics_view(request):
 
     # Calcular solicitudes pendientes (sin salida) agrupadas por tipo de solicitud,
     # excluyendo aquellas con tipo_solicitud con id 12 (CONOCIMIENTO Y DISTRIBUCION)
-    pendientes_por_tipo = IngresoSOLICITUD.objects.filter(
+    pendientes_por_tipo_qs = IngresoSOLICITUD.objects.filter(
         is_active=True,
         salidas__isnull=True
     ).exclude(
-        tipo_solicitud__id=12
+        tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
     ).values("tipo_solicitud__tipo").annotate(total=Count("id"))
-    pendientes_por_tipo = { item["tipo_solicitud__tipo"]: item["total"] for item in pendientes_por_tipo }
 
-    pendientes_por_funcionario = IngresoSOLICITUD.objects.filter(
+    pendientes_por_tipo = {item["tipo_solicitud__tipo"]: item["total"] for item in pendientes_por_tipo_qs}
+
+    pendientes_por_funcionario_qs = IngresoSOLICITUD.objects.filter(
         is_active=True,
         salidas__isnull=True
-    ).exclude(tipo_solicitud__id=12).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
-    pendientes_por_funcionario = { item["funcionarios_asignados__nombre"]: item["total"] for item in pendientes_por_funcionario }
+    ).exclude(
+        tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
+    ).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
 
-    pendientes_por_solicitante = IngresoSOLICITUD.objects.filter(
+    pendientes_por_funcionario = {item["funcionarios_asignados__nombre"]: item["total"] for item in pendientes_por_funcionario_qs}
+
+    pendientes_por_solicitante_qs = IngresoSOLICITUD.objects.filter(
         is_active=True,
         salidas__isnull=True
-    ).exclude(tipo_solicitud__id=12).values("depto_solicitante__nombre").annotate(total=Count("id"))
-    pendientes_por_solicitante = { item["depto_solicitante__nombre"]: item["total"] for item in pendientes_por_solicitante }
+    ).exclude(
+        tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
+    ).values("depto_solicitante__nombre").annotate(total=Count("id"))
+
+    pendientes_por_solicitante = {item["depto_solicitante__nombre"]: item["total"] for item in pendientes_por_solicitante_qs}
 
     # Calcular el promedio de días entre ingreso y la primera salida por solicitante
     promedio_dias_por_solicitante = {}
@@ -872,7 +886,8 @@ def statistics_view(request):
         is_active=True,
         salidas__isnull=False,
         fecha_ingreso_au__year=current_year
-    ).distinct()
+    ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
+
 
     # Calcular el promedio de días entre ingreso y la primera salida por tipo de solicitud
     promedio_dias_por_tipo = {}
@@ -880,7 +895,7 @@ def statistics_view(request):
         is_active=True,
         salidas__isnull=False,
         fecha_ingreso_au__year=current_year
-    ).distinct()
+    ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
     for ingreso in ingresos_with_salidas:
         salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
         if salida:
@@ -955,8 +970,9 @@ def get_week_range(year, week):
 def report_view(request):
     current_year = datetime.now().year
     active_solicitudes = IngresoSOLICITUD.objects.filter(
-        is_active=True, fecha_ingreso_au__year=current_year
-    ).exclude(tipo_solicitud__id=12)
+        is_active=True, 
+        fecha_ingreso_au__year=current_year
+    ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS)
     total_solicitudes = active_solicitudes.count()
 
     total_salidas = SalidaSOLICITUD.objects.filter(

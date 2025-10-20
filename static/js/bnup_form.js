@@ -3548,7 +3548,7 @@
                         // Salidas
                         const salidasCell = cells[cellIndex++];
                         if (sol.salidas && sol.salidas.length > 0) {
-                            if (sol.tipo_solicitud == 12) {
+                            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
                                 salidasCell.innerHTML = `
                                     <div class="icon-container">
                                         <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
@@ -3576,7 +3576,7 @@
                                 `;
                             }
                         } else {
-                            if (sol.tipo_solicitud == 12) {
+                            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
                                 salidasCell.innerHTML = `
                                     <div class="icon-container">
                                         <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
@@ -3767,7 +3767,7 @@
         // Salidas
         const salidasCell = document.createElement('td');
         if (solicitud.salidas && solicitud.salidas.length > 0) {
-            if (solicitud.tipo_solicitud == 12) {
+            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
                 salidasCell.innerHTML = `
                     <div class="icon-container">
                         <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
@@ -3795,7 +3795,7 @@
                 `;
             }
         } else {
-            if (solicitud.tipo_solicitud == 12) {
+            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
                 salidasCell.innerHTML = `
                     <div class="icon-container">
                         <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">

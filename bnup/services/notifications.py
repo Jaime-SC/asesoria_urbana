@@ -19,12 +19,13 @@ LOG = logging.getLogger(__name__)
 
 # # Correos fijos (producción)
 JEFE_EMAIL          = "ptapia@munivalpo.cl"
-SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
 COORDINADORA_EMAIL  = "joanna.bastias@munivalpo.cl"
+SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
 
 
 # Políticas de plazo según tipo de solicitud
 TIPO_CONOC_Y_DIST_ID = 12
+TIPO_DECRET_ALCALDICIO_ID = 11
 TIPO_ALCOHOL_ID      = 10
 
 
@@ -34,6 +35,15 @@ def _norm_text(s: str) -> str:
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
     s = "".join(ch if ch.isalnum() else " " for ch in s)
     return " ".join(s.lower().split())
+
+def _es_decreto_alcaldicio(obj):
+    """
+    True si el objeto es un Ingreso tipo 11 (Decreto Alcaldicio) o
+    si es una Salida cuyo ingreso asociado es tipo 11.
+    """
+    ing = obj if hasattr(obj, "tipo_solicitud_id") else getattr(obj, "ingreso_solicitud", None)
+    return getattr(ing, "tipo_solicitud_id", None) == TIPO_DECRETO_ALCALDICIO_ID
+
 
 # nombres de campo backend que sabemos son el adjunto del ingreso
 _ATTACHMENT_FIELD_KEYS = {
@@ -157,6 +167,10 @@ def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=
     - include_solicitante: si True, copia al solicitante.
     - attach_file: False por defecto (no adjuntar para incentivar uso del sistema).
     """
+    if _es_decreto_alcaldicio(ingreso):
+        LOG.info("notify_ingreso_created: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
+        return 0
+    
     to_list = recipients_for_ingreso(ingreso, include_solicitante=include_solicitante)
     if not to_list:
         return 0
@@ -230,6 +244,11 @@ def notify_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=No
 
     Envía a los funcionarios actuales; CC a secretaria; sin adjuntos.
     """
+
+    if _es_decreto_alcaldicio(ingreso):
+        LOG.info("notify_ingreso_updated: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
+        return 0
+
     # 1) Filtrar cambios permitidos por etiqueta/nombre de campo + heurística de archivo
     field_changes = field_changes or []
     allowed_field_changes = []
@@ -332,6 +351,11 @@ def context_ingreso_deadline_warning(ingreso, dias_restantes, absolute_url=None)
 
 def notify_ingreso_deadline_warning(ingreso, *, dias_restantes, absolute_url=None, bcc=None):
     # destinatarios: funcionarios vigentes
+
+    if _es_decreto_alcaldicio(ingreso):
+        LOG.info("notify_ingreso_deadline_warning: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
+        return 0
+
     to_list = [
         f.user.email
         for f in ingreso.funcionarios_asignados.select_related('user').all()
@@ -433,6 +457,11 @@ def notify_egreso_created(salida, *, created_by_user=None, absolute_url=None, bc
     - CC (en este orden): Jefe, Coordinadora, Secretaría (evitando duplicados)
     - (Adjunto desactivado por defecto; queda bloque comentado)
     """
+
+    if _es_decreto_alcaldicio(salida):
+        LOG.info("notify_egreso_created: skip (Decreto Alcaldicio) salida_id=%s", getattr(salida, "id", None))
+        return 0
+
     # TO: funcionarios encargados del egreso
     to_list = [
         getattr(getattr(f, "user", None), "email", None)
