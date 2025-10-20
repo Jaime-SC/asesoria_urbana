@@ -404,7 +404,7 @@
                                     });
 
                                     // Agregar el nuevo registro a la tabla
-                                    addTableRow(data.solicitud);
+                                    addTableRow(data.solicitud || data);
 
                                     // Cerrar el modal
                                     modal.style.display = 'none';
@@ -440,7 +440,6 @@
                 });
             };
         }
-
     }
 
     /**
@@ -3618,6 +3617,7 @@
      * @param {Object} solicitud - Objeto que contiene los datos de la solicitud.
      */
     function addTableRow(solicitud) {
+        const sol = solicitud || {};
         const tablaSolicitudesBody = document.querySelector('#tablaSolicitudes tbody');
         if (!tablaSolicitudesBody) {
             console.error('No se encontró la tabla de solicitudes.');
