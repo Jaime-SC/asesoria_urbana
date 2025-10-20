@@ -85,13 +85,23 @@
     width: 100%;
 }
 
-
 /* por si el padre es flex/auto */
 .file-left {
     display: flex;
     gap: .5rem;
     min-width: 0;
     flex: 1 1 auto;
+}
+
+#editSalidaFileModal .file-left,
+#editFileModal .file-left {
+    flex-direction: column;
+}
+
+.file-meta {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
 }
 
 /* <— CLAVE */
@@ -146,25 +156,33 @@
 }
 
 /* Rojo */
-#clearSelectionButton {
+#clearSelectionButton,
+#clearEditSelectionButton,
+#clearEditSalidaSelectionButton {
     background-color: #dc3545;
     border-color: #dc3545;
     color: ghostwhite;
 }
 
-#clearSelectionButton:hover {
+#clearSelectionButton:hover,
+#clearEditSelectionButton:hover,
+#clearEditSalidaSelectionButton:hover {
     background-color: #ff7c68;
 }
 
 /* Amarillo */
-#selectFileButton {
+#selectFileButton,
+#selectEditFileButton,
+#selectEditSalidaFileButton {
     background-color: #f7ea53;
     border-color: #cabf47;
     color: #16233e;
     font-size: .88rem;
 }
 
-#selectFileButton:hover {
+#selectFileButton:hover,
+#selectEditFileButton:hover,
+#selectEditSalidaFileButton:hover {
     background-color: #fef191;
 }
 

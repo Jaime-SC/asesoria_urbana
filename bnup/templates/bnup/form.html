@@ -494,8 +494,8 @@
 </div>
 
 
+<!-- Modal para gestionar la salida -->
 {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' or tipo_usuario == 'VISUALIZADOR' or tipo_usuario == 'JEFE'%}
-  <!-- Modal para gestionar la salida -->
   <div id="salidaModal" class="modal" style="margin-inline: 0;">
     <div id="salidaModalContent" class="modal-content animate__animated" style="max-width: max-content;">
       <!-- Encabezado del modal -->
@@ -722,13 +722,35 @@
           <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
         </div>
 
-        <input type="file" id="editSalidaFileModalInput" class="file">
+        <!-- Lista (cards) de archivos -->
+        <div id="editSalidaFileListContainer" class="file-list"></div>
 
-        <div style="margin-top:15px;display:flex;justify-content:flex-end;">
-          <button id="editConfirmSalidaFileButton" class="btn">Confirmar</button>
+        <!-- Barra de acciones -->
+        <div class="modal-content-file-input" style="display:flex;gap:.5rem;align-items:center;margin:10px 0 14px;">
+          <div class="file-input-buttons" style="display:flex;gap:.5rem;justify-content:space-between;width:100%;">
+            <button type="button" id="selectEditSalidaFileButton" class="btn">
+              <div style="display:flex;align-items:center;justify-content:space-around;">
+                <span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo
+              </div>
+            </button>
+
+            <button type="button" id="clearEditSalidaSelectionButton" class="btn">
+              <div style="display:flex;align-items:center;justify-content:space-around;">
+                <span class="material-symbols-outlined bell">close</span> Cancelar
+              </div>
+            </button>
+          </div>
+
+          <button type="button" id="editConfirmSalidaFileButton" class="btn" style="margin-left:auto;">
+            Confirmar
+          </button>
         </div>
+
+        <!-- input oculto del modal (solo selección), PDF -->
+        <input type="file" id="editSalidaFileModalInput" class="file" accept="application/pdf" style="display:none;">
       </div>
     </div>
+
   {% endif %}
 
 
@@ -821,7 +843,6 @@
         
       </div>
 
-
       <div class="form-group">
         <label for="edit_depto_solicitante">Solicitante</label>
         <select name="depto_solicitante" id="edit_depto_solicitante" required>
@@ -831,33 +852,6 @@
           {% endfor %}
         </select>
       </div>
-
-      {% comment %} {% if tipo_usuario == 'ADMIN' %}
-        <div class="form-group">
-            <label for="openEditFileModal">Adjuntar</label>
-
-            <!-- botón que abre el modal -->
-            <button type="button"
-                    id="openEditFileModal"
-                    class="btn"
-                    style="margin-top:5px;height:2.2rem;padding:5px 0;">
-                <span class="material-symbols-outlined" style="color:ghostwhite;">attach_file</span>
-            </button>
-
-            <!-- input REAL que se envía al servidor (oculto) -->
-            <div id="hiddenEditFileInput" style="display:none;">
-                <input type="file"
-                      name="archivo_adjunto_ingreso"
-                      id="edit_archivo_adjunto"
-                      class="file">
-            </div>
-
-            <!-- flag para indicar borrado (0 = mantener, 1 = borrar) -->
-            <input type="hidden" name="delete_archivo" id="edit_delete_archivo" value="0">
-        </div>
-      {% endif %} {% endcomment %}
-
-
 
       <!-- Funcionarios asignados en el formulario de edición -->
       {% if tipo_usuario == 'ADMIN' %}
@@ -896,22 +890,43 @@
 </div>
 
 {% if tipo_usuario == 'ADMIN' %}
-<div id="editFileModal" class="modal" style="display:none; margin-inline: 0;">
-  <div class="modal-content animate__animated animate__bounceIn">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h3>Adjuntar archivo</h3>
-      <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
-    </div>
+  <div id="editFileModal" class="modal" style="display:none; margin-inline: 0;">
+    <div class="modal-content animate__animated animate__bounceIn">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>Adjuntar archivo</h3>
+        <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
+      </div>
 
-    <!-- aquí vive el plugin fileinput -->
-    <input type="file" id="editFileModalInput" class="file">
+      <!-- Lista (cards) de archivos -->
+      <div id="editFileListContainer" class="file-list"></div>
 
-    <div style="margin-top:15px;display:flex;justify-content:flex-end;">
-      <button id="editConfirmFileButton" class="btn">Confirmar</button>
+      <!-- Barra de acciones -->
+      <div class="modal-content-file-input" style="display:flex;gap:.5rem;align-items:center;margin:10px 0 14px;">
+        <div class="file-input-buttons" style="display:flex;gap:.5rem;justify-content:space-between;width:100%;">
+          <button type="button" id="selectEditFileButton" class="btn">
+            <div style="display:flex;align-items:center;justify-content:space-around;">
+              <span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo
+            </div>
+          </button>
+
+          <button type="button" id="clearEditSelectionButton" class="btn">
+            <div style="display:flex;align-items:center;justify-content:space-around;">
+              <span class="material-symbols-outlined bell">close</span> Cancelar
+            </div>
+          </button>
+        </div>
+
+        <button type="button" id="editConfirmFileButton" class="btn" style="margin-left:auto;">
+          Confirmar
+        </button>
+      </div>
+
+      <!-- Input oculto del modal (solo selección), PDF -->
+      <input type="file" id="editFileModalInput" class="file" accept="application/pdf" style="display:none;">
     </div>
   </div>
-</div>
 {% endif %}
+
 
 
 <!-- Fuente Oculta de Opciones de Funcionarios -->
