@@ -1526,13 +1526,15 @@ def create_salida(request):
                 try:
                     notify_egreso_created(
                         salida,
-                        created_by_user=request.user,  # ← TO
+                        created_by_user=request.user,
                         absolute_url=absolute_url,
                         bcc=None,
-                        attach_file=False,             # adjunto desactivado (comentado en notifications)
+                        attach_file=False,
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).exception("notify_egreso_created falló")
+
 
             transaction.on_commit(lambda: threading.Thread(target=_send, daemon=True).start())
 

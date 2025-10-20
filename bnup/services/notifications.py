@@ -25,7 +25,7 @@ SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
 
 # Políticas de plazo según tipo de solicitud
 TIPO_CONOC_Y_DIST_ID = 12
-TIPO_DECRET_ALCALDICIO_ID = 11
+TIPO_DECRETO_ALCALDICIO_ID = 11
 TIPO_ALCOHOL_ID      = 10
 
 
