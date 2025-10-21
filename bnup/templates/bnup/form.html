@@ -565,7 +565,7 @@
               {% comment %} <input type="hidden" name="solicitud_id" id="solicitud_id" /> {% endcomment %}
 
               <!-- Botón para guardar la salida -->
-              <button id="guardarSalida" type="submit" class="btn btn-primary" style="margin: 0px;">Guardar</button>
+              <button id="guardarSalida" type="button" class="btn btn-primary" style="margin: 0px;">Guardar</button>
             </div>
           </form>
         {% endif %}
@@ -700,13 +700,26 @@
         </div>
 
         {% if tipo_usuario == 'ADMIN' %}
-          <!-- Solo ADMIN puede editar funcionarios -->
-          <div id="salidaFuncionariosContainerEdit" data-total-funcionarios="{{ total_funcionarios }}">
-            <!-- los selects se generan vía JS -->
+          <!-- Solo ADMIN puede editar funcionarios (chips) -->
+          <div class="form-group">
+            <label>Funcionarios del egreso</label>
+
+            <div class="multi-select-container">
+              <select id="multi_funcionarios_salida_edit" class="select-multiple">
+                <option value="" disabled selected>Seleccione...</option>
+                {% for funcionario in funcionarios %}
+                  <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                {% endfor %}
+              </select>
+
+              <div id="funcionariosSeleccionados_salida_edit" class="selected-items"></div>
+              <!-- IMPORTANTE: el name coincide con lo que espera el backend -->
+              <input type="hidden" name="funcionarios_salidas" id="funcionariosHidden_salida_edit" />
+            </div>
           </div>
         {% endif %}
 
-        <button id="guardarEdicionSalida" class="btn btn-primary">Guardar</button>
+        <button id="guardarEdicionSalida" type="button" class="btn btn-primary">Guardar</button>
       </form>
     </div>
   </div>
@@ -882,7 +895,7 @@
         <textarea name="descripcion" id="edit_descripcion" placeholder="Ingrese la descripción" rows="4" class="standardize-input"></textarea>
       </div>
 
-      <button id="guardarEdicionBNUP" type="submit" class="btn btn-primary">Guardar Cambios</button>
+      <button id="guardarEdicionBNUP" type="button" class="btn btn-primary">Guardar Cambios</button>
     </form>
   </div>
 </div>

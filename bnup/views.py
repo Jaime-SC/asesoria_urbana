@@ -1656,8 +1656,27 @@ def edit_salida(request):
 
     # ❹ Funcionarios (sólo ADMIN / SECRETARIA / JEFE)
     if tipo in ["ADMIN", "SECRETARIA", "JEFE"]:
-        ids = request.POST.getlist("funcionarios_salidas")
-        salida.funcionarios.set(Funcionario.objects.filter(id__in=ids))
+        raw_list = request.POST.getlist("funcionarios_salidas")  # puede venir ["3","7"] o ["3,7"]
+        ids = []
+        for item in raw_list:
+            if not item:
+                continue
+            # admite "3" o "3,7,12"
+            parts = [p.strip() for p in item.split(",") if p.strip()]
+            for p in parts:
+                if p not in ids:
+                    ids.append(p)
+
+        # opcional: validar que no esté vacío si quieres forzarlo
+        # if not ids:
+        #     return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
+
+        qs_func = Funcionario.objects.filter(id__in=ids)
+        if ids and qs_func.count() != len(ids):
+            return JsonResponse({"success": False, "error": "Uno o más funcionarios no existen."})
+
+        salida.funcionarios.set(qs_func)
+
 
     salida.save()
 

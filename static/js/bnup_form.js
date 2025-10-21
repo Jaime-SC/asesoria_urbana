@@ -34,13 +34,7 @@
                 selectSelector: '#multi_funcionarios_ing',
                 containerSelector: '#funcionariosSeleccionados_ing',
                 hiddenInputSelector: '#funcionariosHidden_ing',
-                // animationIn:  'animate__fadeIn',
-                // animationOut: 'animate__fadeOut',
             });
-
-            // Inicializar la funcionalidad de múltiples funcionarios
-            // initializeMultipleFuncionarios();
-            // initializeMultipleFuncionariosEdit();
         }
 
         // Inicializar selección de filas y estilos de tabla
@@ -49,9 +43,8 @@
         salidaSelectAll = document.getElementById('selectAllSalidas');
         btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
         btnEditarSalidas = document.getElementById('btnEditarSalidas');
-
-
     }
+
     /**
      * Función específica para abrir el modal de descripción en BNUP.
      * @param {string} descripcion - Descripción de la solicitud.
@@ -451,7 +444,6 @@
         const content = editModal.querySelector('.modal-content');
         const closeModalButton = editModal ? editModal.querySelector('.close') : null;
         const editForm = document.getElementById('editBNUPForm');
-
 
         if (!editModal || !closeModalButton || !editForm) {
             console.error('Elementos del modal de edición no encontrados.');
@@ -1969,8 +1961,6 @@
                 }
             });
         }
-
-
     }
 
 
@@ -2586,17 +2576,28 @@
 
 
     function openEditSalidaModal(salidaId) {
-
         /* ─────────────────────────── refs básicas ────────────────────────── */
         const modal = document.getElementById('editSalidaModal');
         const content = modal.querySelector('.modal-content');
         const form = document.getElementById('editSalidaForm');
         const closeX = modal.querySelector('.close');
 
-        /* ─────────── limpiar formulario y contenedor de funcionarios ─────── */
+        /* ─────────── limpiar formulario y chips de funcionarios ──────────── */
         form.reset();
-        const contEdit = document.getElementById('salidaFuncionariosContainerEdit');
-        if (contEdit) contEdit.innerHTML = '';
+        const selMS = document.querySelector('#multi_funcionarios_salida_edit');
+        const contMS = document.querySelector('#funcionariosSeleccionados_salida_edit');
+        const hidMS = document.querySelector('#funcionariosHidden_salida_edit');
+        if (selMS && contMS && hidMS) {
+            // Si ya estaba inicializado, dispara reset; si no, se inicializa más abajo
+            if (selMS.dataset.msInited === '1') {
+                selMS.dispatchEvent(new Event('ms:reset'));
+            } else {
+                contMS.innerHTML = '';
+                hidMS.value = '';
+                selMS.querySelectorAll('option').forEach(o => { o.disabled = false; o.selected = false; });
+                selMS.selectedIndex = 0;
+            }
+        }
 
         /* ───────────────────── overlay-click para cerrar ─────────────────── */
         let downOnOverlay = false;
@@ -2611,6 +2612,11 @@
             content.addEventListener('animationend', () => {
                 modal.style.display = 'none';
                 content.classList.remove('animate__bounceOut');
+
+                // Limpia chips al cerrar
+                const sel = document.querySelector('#multi_funcionarios_salida_edit');
+                if (sel) sel.dispatchEvent(new Event('ms:reset'));
+
                 modal.removeEventListener('mousedown', onMouseDown);
                 modal.removeEventListener('mouseup', onMouseUp);
             }, { once: true });
@@ -2623,8 +2629,7 @@
         fetch(`/bnup/edit_salida/?salida_id=${salidaId}`)
             .then(r => r.json())
             .then(json => {
-
-                if (!json.success) { Swal.fire({ icon: 'error', text: json.error }); return; }
+                if (!json.success) { Swal.fire({ icon: 'error', text: json.error, heightAuto: false, scrollbarPadding: false }); return; }
                 const s = json.data;
 
                 /* ---------- campos básicos ---------- */
@@ -2638,37 +2643,59 @@
                 document.getElementById('edit_descripcion_salida').value = s.descripcion || '';
 
                 /* ─────────────―― FILE – NUEVO BLOQUE ――───────────── */
-
-                /* botón 📎 ⇒ dataset con URL actual */
+                /* botón 📎 ⇒ dataset con URL actual (si existe en la vista) */
                 const btnFile = document.getElementById('openEditSalidaFileModal');
-                if (btnFile) {
-                    btnFile.dataset.currentFile = s.archivo_url || '';
-                }
+                if (btnFile) { btnFile.dataset.currentFile = s.archivo_url || ''; }
 
-                /* input REAL con preview inmediato */
+                /* inputs reales de archivo y flag de borrado (solo existen para ADMIN) */
                 const $fileReal = $('#edit_archivo_adjunto_salida');
                 const flagDel = document.getElementById('edit_delete_archivo_salida');
 
-                if ($fileReal.data('fileinput')) { $fileReal.fileinput('destroy'); }
+                /* Solo inicializamos el plugin si AMBOS existen (vista ADMIN) */
+                if ($fileReal.length && flagDel) {
+                    // Si ya estaba inicializado, destrúyelo antes de re-inicializar
+                    if ($fileReal.data('fileinput')) { $fileReal.fileinput('destroy'); }
 
-                $fileReal.fileinput(
-                    buildFileInputOpts({ urlActual: s.archivo_url || '' })
-                )
-                    .on('filecleared', () => { flagDel.value = '1'; })   // marcar borrado
-                    .on('fileselect', () => { flagDel.value = '0'; });   // se sube nuevo
+                    $fileReal.fileinput(
+                        buildFileInputOpts({ urlActual: s.archivo_url || '' })
+                    )
+                        .on('filecleared', () => { flagDel.value = '1'; }) // marcar borrado
+                        .on('fileselect', () => { flagDel.value = '0'; }); // hay archivo nuevo
 
+                    // Asegura el flag en 0 si hay preview inicial
+                    flagDel.value = '0';
+                }
                 /* ─────────────────────────────────────────────────── */
 
+
+                /* ---------- chips de funcionarios (ADMIN) ---------- */
+                if (selMS && contMS && hidMS) {
+                    if (selMS.dataset.msInited !== '1') {
+                        initializeMultiSelect({
+                            selectSelector: selMS,
+                            containerSelector: contMS,
+                            hiddenInputSelector: hidMS,
+                        });
+                        selMS.dataset.msInited = '1';
+                    }
+
+                    // Limpia y siembra desde el backend
+                    selMS.dispatchEvent(new Event('ms:reset'));
+                    const ids = (s.funcionarios || []).map(f => String(f.id));
+                    selMS.dispatchEvent(new CustomEvent('ms:set', { detail: { ids } }));
+                }
 
                 /* ---------- guardar ---------- */
                 document.getElementById('guardarEdicionSalida').onclick = e => {
                     e.preventDefault();
-
-                    /* normalizar texto */
                     const desc = form.querySelector('#edit_descripcion_salida');
                     if (desc) standardizeInput(desc);
 
+                    // 🔹 Asegura que el flag vaya en "conservar" salvo que el usuario haya pulsado "quitar"
+                    if (flagDel && flagDel.value !== '1') flagDel.value = '0';
+
                     const fd = new FormData(form);
+                    // (el hidden 'funcionarios_salidas' ya queda sincronizado por el módulo)
 
                     Swal.fire({
                         title: '¿Guardar cambios?',
@@ -2697,49 +2724,16 @@
                                         heightAuto: false,
                                         scrollbarPadding: false
                                     });
-                                    updateSalidaRow(json.data);          // modal
-                                    updateTableRow(json.data.solicitud_id); // tabla principal
+                                    updateSalidaRow(json.data);            // actualiza tabla de salidas en modal
+                                    updateTableRow(json.data.solicitud_id); // actualiza fila de la tabla principal
                                     cerrar();
                                 } else {
-                                    Swal.fire({ icon: 'error', text: json.error });
+                                    Swal.fire({ icon: 'error', text: json.error, heightAuto: false, scrollbarPadding: false });
                                 }
                             });
                     });
                 };
-
-                /* ---------- select(s) de funcionarios ---------- */
-                if (contEdit) {
-                    if (s.funcionarios.length) {
-                        s.funcionarios.forEach((f, i) => {
-                            const grp = window.createSalidaFuncionarioSelectGroup(
-                                i === s.funcionarios.length - 1
-                            );
-                            grp.querySelector('select').value = f.id;
-                            contEdit.appendChild(grp);
-                        });
-                    } else {
-                        contEdit.appendChild(
-                            window.createSalidaFuncionarioSelectGroup(true)
-                        );
-                    }
-
-                    const max = parseInt(contEdit.dataset.totalFuncionarios, 10) || 12;
-                    contEdit.addEventListener('click', e => {
-                        const addBtn = e.target.closest('.addSalidaFuncionarioBtn');
-                        const delBtn = e.target.closest('.removeSalidaFuncionarioBtn');
-                        if (addBtn) {
-                            const g = addBtn.closest('.funcionario-select-group');
-                            if (g) addSalidaFuncionarioSelect(g, contEdit, max);
-                        }
-                        if (delBtn) {
-                            const g = delBtn.closest('.funcionario-select-group');
-                            if (g) removeSalidaFuncionarioSelect(g);
-                        }
-                    });
-                }
-
             });
-
         /* ─────────────────────────── mostrar modal ───────────────────────── */
         content.classList.add('animate__bounceIn');
         modal.style.display = 'block';
