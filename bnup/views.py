@@ -1475,6 +1475,11 @@ def get_salidas(request, solicitud_id):
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
 
+from django.http import JsonResponse
+from django.db import transaction, IntegrityError
+from datetime import datetime
+import threading
+
 def create_salida(request):
     """
     Crea una nueva salida asociada a una solicitud de BNUP y devuelve una respuesta JSON.
@@ -1488,24 +1493,64 @@ def create_salida(request):
     if tipo_usuario not in ["ADMIN", "SECRETARIA", "FUNCIONARIO", "JEFE"]:
         return JsonResponse({"success": False, "error": "No tiene permiso para crear salidas."})
 
-    if request.method == "POST":
-        solicitud_id = request.POST.get("solicitud_id")
-        numero_salida = request.POST.get("numero_salida")
-        fecha_salida_str = request.POST.get("fecha_salida")
-        archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
-        # Nuevo campo: descripción (opcional)
-        descripcion = request.POST.get("descripcion_salida", "").strip()
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método no permitido."})
 
-        # Nuevo campo: funcionarios asignados a la salida (lista de IDs)
-        funcionarios_ids = request.POST.getlist("funcionarios_salidas")
+    solicitud_id = request.POST.get("solicitud_id")
+    numero_salida_raw = (request.POST.get("numero_salida") or "").strip()
+    fecha_salida_str = (request.POST.get("fecha_salida") or "").strip()
+    archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
+    descripcion = (request.POST.get("descripcion_salida") or "").strip()
 
-        try:
-            solicitud = IngresoSOLICITUD.objects.get(
-                id=solicitud_id, is_active=True
-            )
+    # Lista (multi-select) de funcionarios asignados a la salida
+    funcionarios_ids_raw = request.POST.getlist("funcionarios_salidas")  # p.ej. ["3","7","7","12"]
+    # normaliza / dedup
+    funcionarios_ids = []
+    for x in funcionarios_ids_raw:
+        x = (x or "").strip()
+        if x and x not in funcionarios_ids:
+            funcionarios_ids.append(x)
 
-            fecha_salida = datetime.strptime(fecha_salida_str, "%Y-%m-%d").date()
+    # --- Validaciones básicas ---
+    if not solicitud_id:
+        return JsonResponse({"success": False, "error": "Falta el ID de la solicitud."})
 
+    # numero_salida numérico
+    try:
+        numero_salida = int(numero_salida_raw)
+    except ValueError:
+        return JsonResponse({"success": False, "error": "El N° de egreso debe ser numérico."})
+
+    if not fecha_salida_str:
+        return JsonResponse({"success": False, "error": "Debe indicar la fecha del egreso."})
+
+    try:
+        fecha_salida = datetime.strptime(fecha_salida_str, "%Y-%m-%d").date()
+    except ValueError as ve:
+        return JsonResponse({"success": False, "error": f"Fecha inválida: {ve}"})
+
+    if not archivo_adjunto_salida:
+        return JsonResponse({"success": False, "error": "Debe adjuntar el archivo del egreso."})
+
+    if not funcionarios_ids:
+        return JsonResponse({"success": False, "error": "Debe seleccionar al menos un funcionario."})
+
+    try:
+        solicitud = IngresoSOLICITUD.objects.get(id=solicitud_id, is_active=True)
+    except IngresoSOLICITUD.DoesNotExist:
+        return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
+
+    # (opcional) evitar números de egreso duplicados
+    if SalidaSOLICITUD.objects.filter(numero_salida=numero_salida).exists():
+        return JsonResponse({"success": False, "error": "El N° de egreso ya existe."})
+
+    # Validar que los funcionarios existan y coincidan en cantidad
+    qs_func = Funcionario.objects.filter(id__in=funcionarios_ids)
+    if qs_func.count() != len(funcionarios_ids):
+        return JsonResponse({"success": False, "error": "Uno o más funcionarios seleccionados no existen."})
+
+    try:
+        with transaction.atomic():
             salida = SalidaSOLICITUD(
                 ingreso_solicitud=solicitud,
                 numero_salida=numero_salida,
@@ -1515,13 +1560,11 @@ def create_salida(request):
             )
             salida.save()
 
-            # Asignar funcionarios si llegan
-            if funcionarios_ids:
-                funcionarios = Funcionario.objects.filter(id__in=funcionarios_ids)
-                salida.funcionarios.set(funcionarios)
+            # Asignar funcionarios
+            salida.funcionarios.set(qs_func)
 
-            # Enviar notificación (post-commit)
-            absolute_url = "http://asesoriaurbana.munivalpo.cl/"  # ajusta si tienes detalle
+            # Notificación post-commit
+            absolute_url = "http://asesoriaurbana.munivalpo.cl/"
             def _send():
                 try:
                     notify_egreso_created(
@@ -1531,32 +1574,27 @@ def create_salida(request):
                         bcc=None,
                         attach_file=False,
                     )
-                except Exception as e:
+                except Exception:
                     import logging
                     logging.getLogger(__name__).exception("notify_egreso_created falló")
 
-
             transaction.on_commit(lambda: threading.Thread(target=_send, daemon=True).start())
 
+        # Respuesta para el frontend (incluye ID que usa tu JS)
+        salida_data = {
+            "id": salida.id,
+            "numero_salida": salida.numero_salida,
+            "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
+            "archivo_url": salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else "",
+            "descripcion": salida.descripcion,
+            "funcionarios": [{"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()],
+        }
+        return JsonResponse({"success": True, "salida": salida_data})
 
-            # Construir datos de la salida para devolver en la respuesta
-            salida_data = {
-                "numero_salida": salida.numero_salida,
-                "fecha_salida": salida.fecha_salida.strftime("%d/%m/%Y"),
-                "archivo_url": salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else "",
-                "descripcion": salida.descripcion,
-                "funcionarios": [{"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()],
-            }
-
-            return JsonResponse({"success": True, "salida": salida_data})
-        except IngresoSOLICITUD.DoesNotExist:
-            return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
-        except ValueError as ve:
-            return JsonResponse({"success": False, "error": f"Fecha inválida: {ve}"})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": f"Error al crear la salida: {e}"})
-    else:
-        return JsonResponse({"success": False, "error": "Método no permitido."})
+    except IntegrityError as ie:
+        return JsonResponse({"success": False, "error": f"Integridad de datos: {ie}"})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": f"Error al crear la salida: {e}"})
 
 @login_required
 @require_http_methods(["GET", "POST"])

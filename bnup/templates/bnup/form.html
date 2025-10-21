@@ -538,22 +538,20 @@
 
               
 
-              <!-- Nuevo campo: Selección de funcionarios para la salida -->
+              <!-- Nuevo campo: Funcionarios (chips) -->
               <div class="form-group">
                 <label>Funcionarios que realizaron el egreso</label>
-                <div id="salidaFuncionariosContainer" data-total-funcionarios="{{ total_funcionarios }}">
-                  <!-- Primer grupo de selección -->
-                  <div class="funcionario-select-group" style="display: flex; align-items: center;">
-                    <select name="funcionarios_salidas" class="salidaFuncionarioSelect" style="max-width: 20rem;" required>
-                      <option value="" disabled>Seleccione</option>
-                      {% for funcionario in funcionarios %}
-                        <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
-                      {% endfor %}
-                    </select>
-                    <button type="button" class="addSalidaFuncionarioBtn btn btn-icon" style="margin-left: 10px; padding: 0;">
-                      <span class="material-symbols-outlined">add</span>
-                    </button>
-                  </div>
+                <div class="multi-select-container">
+                  <select id="multi_funcionarios_salida" class="select-multiple">
+                    <option value="" disabled selected>Seleccione...</option>
+                    {% for funcionario in funcionarios %}
+                      <option value="{{ funcionario.id }}">{{ funcionario.nombre }}</option>
+                    {% endfor %}
+                  </select>
+
+                  <div id="funcionariosSeleccionados_salida" class="selected-items"></div>
+                  <!-- IMPORTANTE: el name debe ser el que lee el backend -->
+                  <input type="hidden" name="funcionarios_salidas" id="funcionariosHidden_salida" />
                 </div>
               </div>
 
