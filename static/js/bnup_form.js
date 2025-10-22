@@ -2326,49 +2326,11 @@
             const salidaForm = document.getElementById('salidaForm');
             if (salidaForm) salidaForm.reset();
 
-            // Inicializar o reinicializar el fileinput para el adjunto
-            if (document.getElementById('archivo_adjunto_salida')) {
-                if ($('#archivo_adjunto_salida').data('fileinput') === undefined) {
-                    $("#archivo_adjunto_salida").fileinput({
-                        uploadUrl: "/bnup/upload_salida/",
-                        deleteUrl: '/bnup/delete_file/',
-                        showUpload: false,
-                        showRemove: true,
-                        showPreview: true,
-                        showCaption: false,
-                        browseLabel: '<span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo',
-                        removeLabel: '<span class="material-symbols-outlined bell">delete</span> Eliminar',
-                        mainClass: 'input-group-sm',
-                        dropZoneTitle: 'Arrastra y suelta los archivos aquí',
-                        fileActionSettings: {
-                            showRemove: false, showUpload: false, showZoom: false, showDrag: false, showDelete: false,
-                            zoomIcon: '<span class="material-symbols-outlined" style="color: white;">zoom_in</span>',
-                            showZoom: function (config) { return (config.type === 'pdf' || config.type === 'image'); }
-                        },
-                        layoutTemplates: {
-                            close: '', indicator: '', actionCancel: '',
-                            modal: '<div class="modal-dialog modal-lg{rtl}" role="document">\n' +
-                                '  <div class="modal-content animate__animated animate__bounceIn">\n' +
-                                '    <div class="modal-header kv-zoom-header">\n' +
-                                '      <h6 class="modal-title kv-zoom-title" id="kvFileinputModalLabel">\n' +
-                                '        <span class="kv-zoom-caption"></span> <span class="kv-zoom-size"></span>\n' +
-                                '      </h6>\n' +
-                                '      <span class="close"><span class="material-symbols-outlined" style="color: #E73C45; font-size: 40px;">close</span></span>' +
-                                '    </div>\n' +
-                                '    <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
-                                '    <div class="kv-zoom-description"></div>\n' +
-                                '  </div>\n' +
-                                '</div>\n'
-                        },
-                        previewZoomButtonIcons: {
-                            prev: '', next: '', rotate: '', toggleheader: '',
-                            fullscreen: '', borderless: '', close: ''
-                        }
-                    });
-                } else {
-                    $("#archivo_adjunto_salida").fileinput('clear');
-                }
-            }
+            // Cablear (una sola vez) el modal de archivo para EGRESOS (crear)
+            wireSalidaFileModalOnce();
+
+            // Limpiar selección anterior (si la había)
+            resetSalidaFileSelection();
 
             // Configurar el botón para guardar la salida
             const saveButton = document.getElementById('guardarSalida');
@@ -2533,8 +2495,8 @@
                                 document.querySelector('#multi_funcionarios_salida')
                                     ?.dispatchEvent(new Event('ms:reset'));
 
-                                // limpiar fileinput
-                                $(archivoAdjuntoInput).fileinput('clear');
+                                // limpiar adjunto (nuevo flujo con modal)
+                                resetSalidaFileSelection();
 
                                 // 1) Actualizar la fila de la tabla principal:
                                 updateTableRow(solicitudId);
@@ -2573,6 +2535,222 @@
             }
         }
     }
+
+    let _salidaFileModalInited = false;
+
+    function wireSalidaFileModalOnce() {
+        if (_salidaFileModalInited) return;
+        _salidaFileModalInited = true;
+
+        const modal = document.getElementById('salidaFileModal');
+        const modalContent = modal?.querySelector('.modal-content');
+        const btnOpen = document.getElementById('openSalidaFileModal');
+        const btnSelect = document.getElementById('salidaSelectFileButton');
+        const btnClear = document.getElementById('salidaClearSelectionButton');
+        const btnConfirm = document.getElementById('salidaConfirmFileButton');
+        const fileList = document.getElementById('salidaFileListContainer');
+        // DESPUÉS
+        let modalInput = document.getElementById('salidaFileModalInput'); // se reasigna
+
+        const closeX = modal?.querySelector('.close');
+
+        const realWrap = document.getElementById('hiddenSalidaFileInput'); // contenedor del input real
+        const realId = 'archivo_adjunto_salida';                         // id + name que viaja al backend
+
+        // -- UI: abrir/cerrar modal
+        function open() {
+            modalContent.classList.remove('animate__bounceOut');
+            modalContent.classList.add('animate__animated', 'animate__bounceIn');
+            modal.style.display = 'block';
+            render();
+        }
+        function close() {
+            modalContent.classList.remove('animate__bounceIn');
+            modalContent.classList.add('animate__bounceOut');
+            modalContent.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                modalContent.classList.remove('animate__bounceOut', 'animate__animated');
+                modalContent.classList.add('animate__bounceIn');
+            }, { once: true });
+        }
+
+        function clearModalInput() {
+            const fresh = document.createElement('input');
+            fresh.type = 'file';
+            fresh.id = 'salidaFileModalInput';
+            fresh.className = 'file';
+            fresh.accept = 'application/pdf';
+            fresh.style.display = 'none';
+
+            modalInput.replaceWith(fresh);
+
+            // actualizar referencia + volver a enganchar eventos
+            modalInput = document.getElementById('salidaFileModalInput');
+            modalInput.addEventListener('change', render);
+        }
+
+        // -- Render del “card” (con el pequeño cambio de estructura que pediste)
+        function render() {
+            if (!fileList) return;
+            fileList.innerHTML = '';
+
+            const hasNew = modalInput.files && modalInput.files.length > 0;
+            if (!hasNew) {
+                const empty = document.createElement('div');
+                empty.textContent = 'No hay archivos seleccionados.';
+                empty.style.opacity = '.75';
+                empty.style.fontStyle = 'italic';
+                fileList.appendChild(empty);
+                return;
+            }
+
+            const file = modalInput.files[0];
+
+            const card = document.createElement('div');
+            card.className = 'file-card';
+
+            const left = document.createElement('div');
+            left.className = 'file-left';
+
+            // Etiqueta (small) + wrapper para icono+nombre
+            // const tag = document.createElement('small');
+            // tag.textContent = 'Archivo nuevo';
+            // tag.style.opacity = '.7';
+            // tag.style.marginRight = '.5rem';
+
+            const iconNameWrap = document.createElement('div');
+            iconNameWrap.className = 'file-meta';
+            const icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined';
+            icon.textContent = 'description';
+
+            const name = document.createElement('span');
+            const short = smartTruncate(file.name, 64);
+            name.className = 'file-name';
+            name.title = file.name;
+            name.textContent = short;
+
+            iconNameWrap.appendChild(icon);
+            iconNameWrap.appendChild(name);
+
+            // left.appendChild(tag);
+            left.appendChild(iconNameWrap);
+
+            const actions = document.createElement('div');
+            actions.className = 'file-actions';
+
+            const openBtn = document.createElement('button');
+            openBtn.type = 'button';
+            openBtn.className = 'buttonLogin buttonPreview';
+            openBtn.title = 'Abrir en nueva pestaña';
+            const eye = document.createElement('span');
+            eye.className = 'material-symbols-outlined bell';
+            eye.textContent = 'visibility';
+            eye.style.color = '#16233E';
+            openBtn.appendChild(eye);
+            openBtn.onclick = () => {
+                const url = URL.createObjectURL(file);
+                window.open(url, '_blank');
+                setTimeout(() => URL.revokeObjectURL(url), 60_000);
+            };
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'buttonLogin buttonPreview removeBtn';
+            removeBtn.title = 'Quitar';
+            const x = document.createElement('span');
+            x.className = 'material-symbols-outlined bell';
+            x.textContent = 'close';
+            removeBtn.appendChild(x);
+            removeBtn.onclick = () => {
+                clearModalInput();
+                render();
+            };
+
+            actions.appendChild(openBtn);
+            actions.appendChild(removeBtn);
+
+            card.appendChild(left);
+            card.appendChild(actions);
+            fileList.appendChild(card);
+        }
+
+        // ——— eventos ———
+        btnOpen?.addEventListener('click', open);
+        closeX?.addEventListener('click', close);
+        modal?.addEventListener('click', e => { if (e.target === modal) close(); });
+        btnSelect?.addEventListener('click', () => modalInput.click());
+        btnClear?.addEventListener('click', () => { clearModalInput(); render(); });
+
+        modalInput?.addEventListener('change', render);
+
+        // Confirmar: mover el input del modal como “real” (para que viaje en el form)
+        btnConfirm?.addEventListener('click', () => {
+            if (!(modalInput.files && modalInput.files.length)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin archivo',
+                    text: 'Seleccione un archivo primero.',
+                    heightAuto: false,
+                    scrollbarPadding: false
+                });
+                return;
+            }
+
+            // 1) eliminar cualquier input real previo
+            realWrap.querySelector(`#${realId}`)?.remove();
+
+            // 2) “trasladar” el input del modal como real (cambiando id/name)
+            modalInput.id = realId;
+            modalInput.name = realId;
+            realWrap.appendChild(modalInput);
+
+            // 3) recrear un input NUEVO para el modal (limpio) y re-cablearlo
+            const fresh = document.createElement('input');
+            fresh.type = 'file';
+            fresh.id = 'salidaFileModalInput';
+            fresh.className = 'file';
+            fresh.accept = 'application/pdf';
+            fresh.style.display = 'none';
+            realWrap.parentElement.appendChild(fresh);
+
+            // actualizar referencia + evento
+            modalInput = document.getElementById('salidaFileModalInput');
+            modalInput.addEventListener('change', render);
+
+            // cerrar modal
+            close();
+
+            // ✅ Confirmación visual
+            Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
+                icon: 'success',
+                title: 'Archivo adjuntado',
+                text: 'El archivo se ha adjuntado correctamente.',
+                confirmButtonText: 'Aceptar'
+            });
+        });
+    }
+
+    // Para limpiar por completo la selección (post-guardar, por ejemplo)
+    function resetSalidaFileSelection() {
+        const realWrap = document.getElementById('hiddenSalidaFileInput');
+        const realId = 'archivo_adjunto_salida';
+        // reset del input REAL
+        realWrap.querySelector(`#${realId}`)?.remove();
+        const newReal = document.createElement('input');
+        newReal.type = 'file';
+        newReal.id = realId;
+        newReal.name = realId;
+        newReal.className = 'file';
+        realWrap.appendChild(newReal);
+
+        // limpiar la UI del modal
+        const list = document.getElementById('salidaFileListContainer');
+        if (list) list.innerHTML = '';
+    }
+
 
 
     function openEditSalidaModal(salidaId) {

@@ -526,17 +526,27 @@
                   <label for="fecha_salida">Fecha de Egreso</label>
                   <input type="date" name="fecha_salida" id="fecha_salida" class="form-control" required />
                 </div>
-              </div>
-
-              <!-- File input usando Bootstrap File Input -->
-              <div class="form-group">
-                <label for="archivo_adjunto_salida">Adjuntar archivo</label>
-                <div class="file-loading">
-                  <input id="archivo_adjunto_salida" name="archivo_adjunto_salida" type="file">
+                <!-- Adjunto (con modal y card) -->
+                <div class="form-group">
+                  <label for="openSalidaFileModal">Adjuntar</label>
+  
+                  <button type="button"
+                          id="openSalidaFileModal"
+                          class="btn"
+                          style="margin-top:5px;height:2.2rem;padding:5px 0;">
+                    <span class="material-symbols-outlined bell">attach_file</span>
+                  </button>
+  
+                  <!-- input REAL que viaja al backend (oculto) -->
+                  <div id="hiddenSalidaFileInput" style="display:none;">
+                    <input type="file"
+                          id="archivo_adjunto_salida"
+                          name="archivo_adjunto_salida"
+                          class="file">
+                  </div>
                 </div>
               </div>
 
-              
 
               <!-- Nuevo campo: Funcionarios (chips) -->
               <div class="form-group">
@@ -766,6 +776,46 @@
 
 
 {% endif %}
+
+<!-- Modal de archivos para EGRESOS (crear) -->
+<div id="salidaFileModal" class="modal" style="display:none;">
+  <div class="modal-content animate__animated">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3>Adjuntar archivo</h3>
+      <span class="close material-symbols-outlined" style="color:#E73C45;font-size:40px;">close</span>
+    </div>
+
+    <!-- Lista (cards) con el diseño pedido -->
+    <div id="salidaFileListContainer" class="file-list"></div>
+
+    <!-- Barra de acciones -->
+    <div class="modal-content-file-input" style="display:flex;gap:.5rem;align-items:center;margin:10px 0 14px;">
+      <div class="file-input-buttons" style="display:flex;gap:.5rem;justify-content:space-between;width:100%;">
+        <button type="button" id="salidaSelectFileButton" class="btn">
+          <div style="display:flex;align-items:center;justify-content:space-around;">
+            <span class="material-symbols-outlined bell">upload_file</span> Seleccionar archivo
+          </div>
+        </button>
+
+        <button type="button" id="salidaClearSelectionButton" class="btn">
+          <div style="display:flex;align-items:center;justify-content:space-around;">
+            <span class="material-symbols-outlined bell">close</span> Cancelar
+          </div>
+        </button>
+      </div>
+
+      <button type="button" id="salidaConfirmFileButton" class="btn" style="margin-left:auto;">Confirmar</button>
+    </div>
+
+    <!-- input del MODAL (solo selección), PDF -->
+    <input type="file"
+           id="salidaFileModalInput"
+           class="file"
+           accept="application/pdf"
+           style="display:none;">
+  </div>
+</div>
+
 
 <!-- Modal para editar una solicitud (Formulario de edición) -->
 <div id="editBNUPFormModal" class="modal" style="margin-inline: 0;">

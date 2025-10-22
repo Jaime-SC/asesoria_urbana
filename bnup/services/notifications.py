@@ -22,7 +22,6 @@ JEFE_EMAIL          = "ptapia@munivalpo.cl"
 COORDINADORA_EMAIL  = "joanna.bastias@munivalpo.cl"
 SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
 
-
 # Políticas de plazo según tipo de solicitud
 TIPO_CONOC_Y_DIST_ID = 12
 TIPO_DECRETO_ALCALDICIO_ID = 11

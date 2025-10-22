@@ -158,7 +158,8 @@
 /* Rojo */
 #clearSelectionButton,
 #clearEditSelectionButton,
-#clearEditSalidaSelectionButton {
+#clearEditSalidaSelectionButton,
+#salidaClearSelectionButton {
     background-color: #dc3545;
     border-color: #dc3545;
     color: ghostwhite;
@@ -166,14 +167,16 @@
 
 #clearSelectionButton:hover,
 #clearEditSelectionButton:hover,
-#clearEditSalidaSelectionButton:hover {
+#clearEditSalidaSelectionButton:hover,
+#salidaClearSelectionButton:hover {
     background-color: #ff7c68;
 }
 
 /* Amarillo */
 #selectFileButton,
 #selectEditFileButton,
-#selectEditSalidaFileButton {
+#selectEditSalidaFileButton,
+#salidaSelectFileButton {
     background-color: #f7ea53;
     border-color: #cabf47;
     color: #16233e;
@@ -182,7 +185,8 @@
 
 #selectFileButton:hover,
 #selectEditFileButton:hover,
-#selectEditSalidaFileButton:hover {
+#selectEditSalidaFileButton:hover,
+#salidaSelectFileButton:hover {
     background-color: #fef191;
 }
 
