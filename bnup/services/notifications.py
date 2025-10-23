@@ -16,7 +16,6 @@ LOG = logging.getLogger(__name__)
 # COORDINADORA_EMAIL = "darumairui@gmail.com"
 # SECRETARIA_EMAIL   = "jaimeqsanchezc@gmail.com"
 
-
 # # Correos fijos (producción)
 JEFE_EMAIL          = "ptapia@munivalpo.cl"
 COORDINADORA_EMAIL  = "joanna.bastias@munivalpo.cl"
@@ -26,6 +25,17 @@ SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
 TIPO_CONOC_Y_DIST_ID = 12
 TIPO_DECRETO_ALCALDICIO_ID = 11
 TIPO_ALCOHOL_ID      = 10
+
+INFORMATIVE_TIPO_IDS = {TIPO_CONOC_Y_DIST_ID, TIPO_DECRETO_ALCALDICIO_ID}
+
+def _es_informativo(obj) -> bool:
+    """
+    True si: (Ingreso.tipo_solicitud_id in {11,12}) o
+             (Salida.ingreso_solicitud.tipo_solicitud_id in {11,12})
+    """
+    ing = obj if hasattr(obj, "tipo_solicitud_id") else getattr(obj, "ingreso_solicitud", None)
+    return getattr(ing, "tipo_solicitud_id", None) in INFORMATIVE_TIPO_IDS
+
 
 
 def _norm_text(s: str) -> str:
@@ -131,16 +141,14 @@ def subject_ingreso(ingreso):
     return f"[SIE] · [{ingreso.tipo_solicitud.tipo}] · Ingreso N° {ingreso.numero_ingreso}"
 
 def context_ingreso(ingreso, absolute_url=None):
-    # flag tipo conocimiento
-    es_conocimiento = getattr(ingreso, "tipo_solicitud_id", None) == TIPO_CONOC_Y_DIST_ID
+    es_informativo = _es_informativo(ingreso)
 
     fecha_responder_hasta = None
-    plazo_total = None  # por defecto sin plazo
+    plazo_total = None
 
-    if not es_conocimiento and ingreso.fecha_ingreso_au:
+    if not es_informativo and ingreso.fecha_ingreso_au:
         try:
-            plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)  # 5 Alcohol, 15 resto
-            # inclusivo: último día = total-1
+            plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)
             fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, plazo_total - 1)
         except Exception:
             pass
@@ -155,8 +163,8 @@ def context_ingreso(ingreso, absolute_url=None):
         "descripcion": ingreso.descripcion or "",
         "absolute_url": absolute_url or "",
         "fecha_responder_hasta": fecha_responder_hasta,
-        "plazo_total": plazo_total,          # None si es conocimiento
-        "es_conocimiento": es_conocimiento,  # ← NUEVO
+        "plazo_total": plazo_total,         # None si informativo
+        "es_informativo": es_informativo,   # ← NUEVO (reemplaza es_conocimiento)
     }
 
 
@@ -166,9 +174,9 @@ def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=
     - include_solicitante: si True, copia al solicitante.
     - attach_file: False por defecto (no adjuntar para incentivar uso del sistema).
     """
-    if _es_decreto_alcaldicio(ingreso):
-        LOG.info("notify_ingreso_created: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
-        return 0
+    # if _es_decreto_alcaldicio(ingreso):
+    #     LOG.info("notify_ingreso_created: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
+    #     return 0
     
     to_list = recipients_for_ingreso(ingreso, include_solicitante=include_solicitante)
     if not to_list:
@@ -244,9 +252,9 @@ def notify_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=No
     Envía a los funcionarios actuales; CC a secretaria; sin adjuntos.
     """
 
-    if _es_decreto_alcaldicio(ingreso):
-        LOG.info("notify_ingreso_updated: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
-        return 0
+    # if _es_decreto_alcaldicio(ingreso):
+    #     LOG.info("notify_ingreso_updated: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
+    #     return 0
 
     # 1) Filtrar cambios permitidos por etiqueta/nombre de campo + heurística de archivo
     field_changes = field_changes or []
@@ -351,8 +359,8 @@ def context_ingreso_deadline_warning(ingreso, dias_restantes, absolute_url=None)
 def notify_ingreso_deadline_warning(ingreso, *, dias_restantes, absolute_url=None, bcc=None):
     # destinatarios: funcionarios vigentes
 
-    if _es_decreto_alcaldicio(ingreso):
-        LOG.info("notify_ingreso_deadline_warning: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
+    if _es_informativo(ingreso):
+        LOG.info("notify_ingreso_deadline_warning: skip (informativo 11/12) ingreso_id=%s", getattr(ingreso, "id", None))
         return 0
 
     to_list = [

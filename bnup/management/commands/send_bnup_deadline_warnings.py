@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from bnup.models import IngresoSOLICITUD
 from bnup.services.fecha_utils import add_business_days_cl
-from bnup.services.notifications import notify_ingreso_deadline_warning
+from bnup.services.notifications import notify_ingreso_deadline_warning, INFORMATIVE_TIPO_IDS
 
 ABSOLUTE_URL = "http://asesoriaurbana.munivalpo.cl/"
 
@@ -45,7 +45,7 @@ class Command(BaseCommand):
         qs = (
             IngresoSOLICITUD.objects
             .filter(is_active=True, fecha_ingreso_au__isnull=False)
-            .exclude(tipo_solicitud_id=TIPO_CONOC_Y_DIST_ID)
+            .exclude(tipo_solicitud_id__in=INFORMATIVE_TIPO_IDS)   # ← antes: exclude(...=TIPO_CONOC_Y_DIST_ID)
             .annotate(salidas_activas=Count("salidas", filter=Q(salidas__is_active=True)))
             .filter(salidas_activas=0)
             .select_related("tipo_recepcion", "tipo_solicitud", "depto_solicitante")
