@@ -23,17 +23,17 @@ from .services.notifications import notify_ingreso_created
 from bnup.services.notifications import notify_egreso_created
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction, IntegrityError
 from dateutil.relativedelta import relativedelta
 from principal.models import PerfilUsuario
 from django.db.models import Prefetch
-from django.db import IntegrityError
 from datetime import datetime, date
 from django.contrib import messages
 # from bnup.models import Funcionario
 from collections import defaultdict
 from django.db.models import Count
-from django.db import transaction
 from django.urls import reverse
+
 
 EXCLUDED_TIPO_IDS = (11, 12)
 
@@ -1475,11 +1475,6 @@ def get_salidas(request, solicitud_id):
     else:
         return JsonResponse({"success": False, "error": "Método no permitido."})
 
-from django.http import JsonResponse
-from django.db import transaction, IntegrityError
-from datetime import datetime
-import threading
-
 def create_salida(request):
     """
     Crea una nueva salida asociada a una solicitud de BNUP y devuelve una respuesta JSON.
@@ -1540,9 +1535,13 @@ def create_salida(request):
     except IngresoSOLICITUD.DoesNotExist:
         return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
 
-    # (opcional) evitar números de egreso duplicados
-    if SalidaSOLICITUD.objects.filter(numero_salida=numero_salida).exists():
-        return JsonResponse({"success": False, "error": "El N° de egreso ya existe."})
+    # Evita duplicar el número solo dentro del mismo ingreso y si está activo
+    if SalidaSOLICITUD.objects.filter(
+        numero_salida=numero_salida,
+        ingreso_solicitud=solicitud,
+        is_active=True
+    ).exists():
+        return JsonResponse({"success": False, "error": "Ya existe una salida activa con este número para este ingreso."})
 
     # Validar que los funcionarios existan y coincidan en cantidad
     qs_func = Funcionario.objects.filter(id__in=funcionarios_ids)
