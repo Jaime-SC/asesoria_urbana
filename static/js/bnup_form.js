@@ -30,6 +30,16 @@
             initializeEditSalidaFileModalCards();
             initializeBNUPFormModal();
             initializeStandardizeInputs();
+            // Aplica el SweetAlert + límite 150 a todos los campos de descripción
+            if (typeof window.setupDescriptionTips === 'function') {
+                window.setupDescriptionTips(document);
+            }
+            if (typeof window.setupDescriptionTips === 'function') {
+                window.setupDescriptionTips(document);
+            }
+            if (typeof window.bindDescriptionTipButtons === 'function') {
+                window.bindDescriptionTipButtons(document);
+            }
             initializeMultiSelect({
                 selectSelector: '#multi_funcionarios_ing',
                 containerSelector: '#funcionariosSeleccionados_ing',
@@ -269,6 +279,8 @@
         // Evento para abrir el modal del formulario BNUP
         btn.onclick = () => {
             resetFuncionariosIngreso();
+            if (window.resetDescriptionTips) window.resetDescriptionTips(modal, ['#descripcion']);
+            if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(modal);
             document.querySelector('#multi_funcionarios_ing')
                 ?.dispatchEvent(new Event('ms:reset'));
             modal.style.display = 'block';
@@ -625,6 +637,8 @@
 
 
                     // Mostrar el modal de edición
+                    if (window.resetDescriptionTips) window.resetDescriptionTips(editModal, ['#edit_descripcion']);
+                    if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(editModal);
                     editModal.style.display = 'block';
                 } else {
                     Swal.fire({
@@ -2048,6 +2062,8 @@
         window._salidaModalAbierto = true;
         salidaContent.classList.remove('animate__bounceOut');
         salidaContent.classList.add('animate__animated', 'animate__bounceIn');
+        if (window.resetDescriptionTips) window.resetDescriptionTips(salidaModal, ['#descripcion_salida']);
+        if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(salidaModal);
         salidaModal.style.display = 'block';
 
         // 1) Que el propio fondo del modal no propague clics hacia document
@@ -2914,6 +2930,8 @@
             });
         /* ─────────────────────────── mostrar modal ───────────────────────── */
         content.classList.add('animate__bounceIn');
+        if (window.resetDescriptionTips) window.resetDescriptionTips(modal, ['#edit_descripcion_salida']);
+        if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(modal);
         modal.style.display = 'block';
     }
 

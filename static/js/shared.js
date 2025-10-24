@@ -1293,3 +1293,137 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
         }
     });
 })();
+
+
+/* ------------------------------------------------------------------ */
+/*  TIP PARA DESCRIPCIÓN (SweetAlert, una sola vez por instancia)     */
+/*  + límite de caracteres (configurable)                             */
+/*  + botón/ícono "info" para ver el tip bajo demanda                 */
+/* ------------------------------------------------------------------ */
+(function () {
+    const MAX_DESC_CHARS = 200; // <-- si quieres 150, cámbialo aquí
+
+    function buildTipHTML(maxChars = MAX_DESC_CHARS) {
+        return `
+      <div style="text-align:left">
+        <p><strong>Tips para la descripción</strong></p>
+        <ul style="margin-left:1em">
+          <li>Máximo <b>${maxChars}</b> caracteres.</li>
+          <li>Incluye <b>palabras clave</b> para búsquedas (ej.: <i>calle</i>, <i>poblacion</i>, <i>cerro</i>, <i>U.V</i>).</li>
+        </ul>
+      </div>`;
+    }
+
+    // Muestra el SweetAlert y, opcionalmente, devuelve el foco a targetEl
+    function showDescriptionTip(targetEl, html) {
+        return Swal.fire({
+            title: 'Sugerencias para la descripción',
+            html: html,
+            icon: 'info',
+            confirmButtonText: 'Entendido',
+            heightAuto: false,
+            scrollbarPadding: false,
+            returnFocus: false,    // <— importante: SweetAlert no devuelve el foco por su cuenta
+            didClose: () => {
+                // Espera un frame para asegurar que aria-hidden ya se removió
+                if (targetEl && typeof targetEl.focus === 'function') {
+                    requestAnimationFrame(() => targetEl.focus());
+                }
+            }
+        });
+    }
+
+
+    function setupDescriptionTips(root = document, opts = {}) {
+        const selectors = opts.selectors || [
+            '#descripcion',
+            '#descripcion_salida',
+            '#edit_descripcion',
+            '#edit_descripcion_salida'
+        ];
+        const tipHTML = opts.html || buildTipHTML(MAX_DESC_CHARS);
+
+        selectors.forEach(sel => {
+            const el = root.querySelector(sel);
+            if (!el) return;
+
+            // Límite de caracteres (HTML + respaldo JS)
+            el.setAttribute('maxlength', String(MAX_DESC_CHARS));
+            el.addEventListener('input', () => {
+                if (el.value.length > MAX_DESC_CHARS) {
+                    el.value = el.value.slice(0, MAX_DESC_CHARS);
+                }
+            }, { passive: true });
+
+            // Handler de foco (solo una vez por apertura)
+            const handler = () => {
+                if (el.dataset.tipShown === '1') return; // ya mostrado en esta instancia
+                el.dataset.tipShown = '1';
+                showDescriptionTip(el, tipHTML);
+            };
+
+            el._descTipHandler = handler;
+            el.addEventListener('focus', handler, { once: true });
+        });
+    }
+
+    /**
+     * Enlaza el click en el ícono/botón "info" para mostrar el tip bajo demanda,
+     * sin tocar el flag tipShown (no interfiere con el comportamiento de foco).
+     *
+     * Estructura esperada:
+     * <div class="label-descripcion">
+     *   <label for="ID_DEL_TEXTAREA">...</label>
+     *   <div class="icon-label-descripcion"><span class="material-symbols-outlined bell">info</span></div>
+     * </div>
+     */
+    function bindDescriptionTipButtons(root = document, opts = {}) {
+        const tipHTML = opts.html || buildTipHTML(MAX_DESC_CHARS);
+        const containers = root.querySelectorAll('.label-descripcion');
+
+        containers.forEach(container => {
+            const btn = container.querySelector('.icon-label-descripcion, .icon-label-descripcion .bell');
+            const lbl = container.querySelector('label[for]');
+            if (!btn || !lbl) return;
+
+            // No marcamos tipShown aquí: el botón es "siempre disponible".
+            btn.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                const targetEl = root.getElementById ? root.getElementById(lbl.getAttribute('for')) : document.getElementById(lbl.getAttribute('for'));
+                showDescriptionTip(targetEl, tipHTML);
+            }, { passive: false });
+        });
+    }
+
+    /**
+     * Reinicia el tip “por instancia” (al abrir un modal/form).
+     * Limpia el flag y re-arma el listener de foco. El botón no necesita reset.
+     */
+    function resetDescriptionTips(root = document, selectors = [
+        '#descripcion',
+        '#descripcion_salida',
+        '#edit_descripcion',
+        '#edit_descripcion_salida'
+    ]) {
+        selectors.forEach(sel => {
+            const el = root.querySelector(sel);
+            if (!el) return;
+            el.dataset.tipShown = ''; // borra estado para la nueva instancia
+            // El listener de foco era once:true; si se consumió, volvemos a armarlo:
+            if (el._descTipHandler) {
+                el.addEventListener('focus', el._descTipHandler, { once: true });
+            }
+        });
+
+        // Nos aseguramos de que los inputs recién agregados (si los hubiera) queden configurados:
+        setupDescriptionTips(root, { selectors });
+        // El botón de info se puede re-enlazar sin problema (idempotente).
+        bindDescriptionTipButtons(root);
+    }
+
+    // Exponer global
+    window.setupDescriptionTips = setupDescriptionTips;
+    window.resetDescriptionTips = resetDescriptionTips;
+    window.bindDescriptionTipButtons = bindDescriptionTipButtons;
+})();

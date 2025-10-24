@@ -346,3 +346,23 @@
 .krajee-default.file-preview-frame .file-thumbnail-footer {
     height: max-content !important;
 }
+
+.label-descripcion {
+    display: flex;
+    justify-content: space-between;
+}
+
+.label-descripcion .icon-label-descripcion {
+    display: flex;
+    align-items: center;
+    background: #0b7dda;
+    border: 1px #1b67b2 outset;
+    color: ghostwhite;
+    border-radius: 5px;
+    padding: .15rem;
+    cursor: pointer;
+}
+
+.label-descripcion .icon-label-descripcion:hover {
+    background: #5991e1;
+}
