@@ -25,9 +25,11 @@
             updateBNUPFields();
             updateEditBNUPFields();
             initializeNewDeptoFeature();
-            initializeFileModal();
-            initializeEditFileModalCards();
-            initializeEditSalidaFileModalCards();
+
+            initIngresoFileCard();
+            initEditIngresoFileCard();
+            initEditSalidaFileCard();
+
             initializeBNUPFormModal();
             initializeStandardizeInputs();
             // Aplica el SweetAlert + límite 150 a todos los campos de descripción
@@ -908,237 +910,26 @@
         };
     }
 
-    /**
- * Inicializa el modal para la selección y confirmación de archivos.
- * - Mantiene IDs existentes: #openFileModal, #fileModal, #fileModalInput, #confirmButton, #archivo_adjunto
- * - Vista: cards con nombre + [👁 abrir PDF] + [✕ quitar]
- * - Por ahora 1 archivo; estructura lista para múltiples (DataTransfer soporta ambos casos)
- */
-    function initializeFileModal() {
-        const modalButton = document.getElementById('openFileModal');
-        const fileModal = document.getElementById('fileModal');
-        const content = fileModal ? fileModal.querySelector('.modal-content') : null;
-        const closeBtn = fileModal ? fileModal.querySelector('.close') : null;
-
-        const selectBtn = document.getElementById('selectFileButton');
-        const clearBtn = document.getElementById('clearSelectionButton');
-        const confirmBtn = document.getElementById('confirmButton');
-
-        const fileModalInput = document.getElementById('fileModalInput');   // input oculto del modal
-        const archivoAdjuntoInput = document.getElementById('archivo_adjunto');  // input REAL del formulario
-        const fileListContainer = document.getElementById('fileListContainer');
-
-        if (!modalButton || !fileModal || !content || !closeBtn || !selectBtn || !clearBtn || !confirmBtn || !fileModalInput || !archivoAdjuntoInput || !fileListContainer) {
-            // Si algo falta, no rompemos la página.
-            return;
-        }
-
-        // ---- Helpers ----
-        // Dibuja las cards en base a fileModalInput.files
-        function renderSelectedFiles() {
-            fileListContainer.innerHTML = '';
-            const { files } = fileModalInput;
-            if (!files || files.length === 0) {
-                // Nada seleccionado => mostramos estado vacío (opcional)
-                const empty = document.createElement('div');
-                empty.textContent = 'No hay archivos seleccionados.';
-                empty.style.opacity = '0.75';
-                empty.style.fontStyle = 'italic';
-                fileListContainer.appendChild(empty);
-                return;
-            }
-
-            // Recorremos archivos (aunque hoy sea 1, esto escala a múltiples)
-            Array.from(files).forEach((file, idx) => {
-                const card = document.createElement('div');
-                card.className = 'file-card';
-
-                // Izquierda: icono + nombre
-                const left = document.createElement('div');
-                left.className = 'file-left'; // en vez de estilos inline
-
-                const icon = document.createElement('span');
-                icon.className = 'material-symbols-outlined';
-                icon.textContent = 'description';
-
-                const name = document.createElement('span');
-                name.className = 'file-name'; // en vez de maxWidth: '32rem' + nowrap
-                name.textContent = file.name;
-                name.title = file.name;
-                name.style.fontFamily = 'Space Mono, monospace';
-                name.style.maxWidth = '32rem';
-                name.style.whiteSpace = 'nowrap';
-                name.style.overflow = 'hidden';
-                name.style.textOverflow = 'ellipsis';
-
-                left.appendChild(icon);
-                left.appendChild(name);
-
-                // Derecha: acciones (👁 abrir | ✕ quitar)
-                const actions = document.createElement('div');
-                actions.className = 'file-actions';
-
-                // Botón ojo
-                const openBtn = document.createElement('button');
-                openBtn.type = 'button';
-                openBtn.className = 'buttonLogin buttonPreview';
-                openBtn.title = 'Abrir en nueva pestaña';
-
-                const eyeIcon = document.createElement('span');
-                eyeIcon.className = 'material-symbols-outlined bell';
-                eyeIcon.textContent = 'visibility';
-                eyeIcon.style.color = '#16233E';
-
-
-                openBtn.appendChild(eyeIcon);
-                openBtn.onclick = () => {
-                    // Abrimos el PDF desde la memoria (Blob URL)
-                    try {
-                        const url = URL.createObjectURL(file);
-                        // Consejo: algunos navegadores bloquean window.open por políticas; este se dispara por evento user-gesture
-                        window.open(url, '_blank');
-                        // Liberamos el objeto después de un tiempo
-                        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-                    } catch (e) {
-                        console.error(e);
-                        Swal.fire({
-                            heightAuto: false,
-                            scrollbarPadding: false,
-                            icon: 'error',
-                            title: 'No se pudo abrir el archivo',
-                            text: 'Verifica que sea un PDF válido.'
-                        });
-                    }
-                };
-
-                // Botón quitar
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'buttonLogin buttonPreview removeBtn';
-                // removeBtn.style.background = '#E73C45';
-                removeBtn.title = 'Quitar este archivo';
-
-                const xIcon = document.createElement('span');
-                xIcon.className = 'material-symbols-outlined bell';
-                xIcon.textContent = 'close';
-
-                removeBtn.appendChild(xIcon);
-                removeBtn.onclick = () => {
-                    // Quitamos el archivo idx desde la FileList usando DataTransfer
-                    const dt = new DataTransfer();
-                    Array.from(fileModalInput.files).forEach((f, i) => {
-                        if (i !== idx) dt.items.add(f);
-                    });
-                    fileModalInput.files = dt.files;
-                    renderSelectedFiles();
-                };
-
-                actions.appendChild(openBtn);
-                actions.appendChild(removeBtn);
-
-                card.appendChild(left);
-                card.appendChild(actions);
-
-                fileListContainer.appendChild(card);
-            });
-        }
-
-        // Copia lo seleccionado en el modal al input REAL del formulario
-        function syncToRealFormInput() {
-            const dt = new DataTransfer();
-            Array.from(fileModalInput.files).forEach(f => dt.items.add(f));
-            archivoAdjuntoInput.files = dt.files;
-        }
-
-        // ---- Eventos UI del modal ----
-        modalButton.onclick = () => {
-            fileModal.style.display = 'block';
-            content.classList.remove('animate__bounceOut');
-            content.classList.add('animate__bounceIn');
-            renderSelectedFiles(); // estado limpio al abrir
-        };
-
-        closeBtn.onclick = () => {
-            content.classList.remove('animate__bounceIn');
-            content.classList.add('animate__bounceOut');
-            content.addEventListener('animationend', function handle() {
-                fileModal.style.display = 'none';
-                content.classList.remove('animate__bounceOut');
-                content.removeEventListener('animationend', handle);
-            });
-        };
-
-        // Cerrar clic fuera
-        fileModal.addEventListener('click', (ev) => {
-            if (ev.target === fileModal) {
-                content.classList.remove('animate__bounceIn');
-                content.classList.add('animate__bounceOut');
-                content.addEventListener('animationend', function handle() {
-                    fileModal.style.display = 'none';
-                    content.classList.remove('animate__bounceOut');
-                    content.removeEventListener('animationend', handle);
-                });
+    function initIngresoFileCard() {
+        window.setupFileCardModal({
+            openBtn: '#openFileModal',
+            modal: '#fileModal',
+            list: '#fileListContainer',
+            selectBtn: '#selectFileButton',
+            clearBtn: '#clearSelectionButton',
+            confirmBtn: '#confirmButton',
+            modalInput: '#fileModalInput',
+            accept: 'application/pdf',
+            mode: 'assign',
+            real: { input: '#archivo_adjunto' },
+            messages: {
+                attached: 'Archivo adjuntado correctamente.',
+                replaced: 'Archivo reemplazado.',
+                removed: 'Archivo eliminado.'
             }
         });
-
-        // Botón "Seleccionar archivo" => dispara el input oculto
-        selectBtn.onclick = () => fileModalInput.click();
-
-        // Cuando el usuario elige archivo(s)
-        fileModalInput.onchange = () => {
-            // Validación simple (solo pdf)
-            const validFiles = Array.from(fileModalInput.files).filter(f => f.type === 'application/pdf');
-            if (validFiles.length !== fileModalInput.files.length) {
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    icon: 'warning',
-                    title: 'Formato no permitido',
-                    text: 'Solo se admiten archivos PDF.'
-                });
-                const dt = new DataTransfer();
-                validFiles.forEach(f => dt.items.add(f));
-                fileModalInput.files = dt.files;
-            }
-            renderSelectedFiles();
-        };
-
-        // Botón limpiar (solo UI del modal)
-        clearBtn.onclick = () => {
-            fileModalInput.value = '';
-            renderSelectedFiles();
-        };
-
-        // Confirmar => sincroniza al input REAL del formulario y cierra
-        confirmBtn.onclick = () => {
-            if (!fileModalInput.files || fileModalInput.files.length === 0) {
-                return Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    icon: 'error',
-                    title: 'Sin archivo',
-                    text: 'Debes seleccionar un archivo antes de confirmar.'
-                });
-            }
-            syncToRealFormInput();
-            content.classList.remove('animate__bounceIn');
-            content.classList.add('animate__bounceOut');
-            content.addEventListener('animationend', function handle() {
-                fileModal.style.display = 'none';
-                content.classList.remove('animate__bounceOut');
-                content.removeEventListener('animationend', handle);
-            });
-
-            Swal.fire({
-                heightAuto: false,
-                scrollbarPadding: false,
-                title: 'Archivo adjuntado',
-                text: 'El archivo se ha adjuntado correctamente.',
-                icon: 'success',
-                confirmButtonText: 'Aceptar',
-            });
-        };
     }
+
 
     /**
      * Inicializa la selección de filas en la tabla, manejando botones de acción según el tipo de usuario.
@@ -2553,201 +2344,27 @@
     }
 
     let _salidaFileModalInited = false;
-
-    function wireSalidaFileModalOnce() {
+    function initSalidaFileCardOnce() {
         if (_salidaFileModalInited) return;
-        _salidaFileModalInited = true;
-
-        const modal = document.getElementById('salidaFileModal');
-        const modalContent = modal?.querySelector('.modal-content');
-        const btnOpen = document.getElementById('openSalidaFileModal');
-        const btnSelect = document.getElementById('salidaSelectFileButton');
-        const btnClear = document.getElementById('salidaClearSelectionButton');
-        const btnConfirm = document.getElementById('salidaConfirmFileButton');
-        const fileList = document.getElementById('salidaFileListContainer');
-        // DESPUÉS
-        let modalInput = document.getElementById('salidaFileModalInput'); // se reasigna
-
-        const closeX = modal?.querySelector('.close');
-
-        const realWrap = document.getElementById('hiddenSalidaFileInput'); // contenedor del input real
-        const realId = 'archivo_adjunto_salida';                         // id + name que viaja al backend
-
-        // -- UI: abrir/cerrar modal
-        function open() {
-            modalContent.classList.remove('animate__bounceOut');
-            modalContent.classList.add('animate__animated', 'animate__bounceIn');
-            modal.style.display = 'block';
-            render();
-        }
-        function close() {
-            modalContent.classList.remove('animate__bounceIn');
-            modalContent.classList.add('animate__bounceOut');
-            modalContent.addEventListener('animationend', () => {
-                modal.style.display = 'none';
-                modalContent.classList.remove('animate__bounceOut', 'animate__animated');
-                modalContent.classList.add('animate__bounceIn');
-            }, { once: true });
-        }
-
-        function clearModalInput() {
-            const fresh = document.createElement('input');
-            fresh.type = 'file';
-            fresh.id = 'salidaFileModalInput';
-            fresh.className = 'file';
-            fresh.accept = 'application/pdf';
-            fresh.style.display = 'none';
-
-            modalInput.replaceWith(fresh);
-
-            // actualizar referencia + volver a enganchar eventos
-            modalInput = document.getElementById('salidaFileModalInput');
-            modalInput.addEventListener('change', render);
-        }
-
-        // -- Render del “card” (con el pequeño cambio de estructura que pediste)
-        function render() {
-            if (!fileList) return;
-            fileList.innerHTML = '';
-
-            const hasNew = modalInput.files && modalInput.files.length > 0;
-            if (!hasNew) {
-                const empty = document.createElement('div');
-                empty.textContent = 'No hay archivos seleccionados.';
-                empty.style.opacity = '.75';
-                empty.style.fontStyle = 'italic';
-                fileList.appendChild(empty);
-                return;
+        const api = window.setupFileCardModal({
+            openBtn: '#openSalidaFileModal',
+            modal: '#salidaFileModal',
+            list: '#salidaFileListContainer',
+            selectBtn: '#salidaSelectFileButton',
+            clearBtn: '#salidaClearSelectionButton',
+            confirmBtn: '#salidaConfirmFileButton',
+            modalInput: '#salidaFileModalInput',
+            accept: 'application/pdf',
+            mode: 'move',
+            real: { wrap: '#hiddenSalidaFileInput', idName: 'archivo_adjunto_salida' },
+            messages: {
+                attached: 'Archivo adjuntado correctamente.'
             }
-
-            const file = modalInput.files[0];
-
-            const card = document.createElement('div');
-            card.className = 'file-card';
-
-            const left = document.createElement('div');
-            left.className = 'file-left';
-
-            // Etiqueta (small) + wrapper para icono+nombre
-            // const tag = document.createElement('small');
-            // tag.textContent = 'Archivo nuevo';
-            // tag.style.opacity = '.7';
-            // tag.style.marginRight = '.5rem';
-
-            const iconNameWrap = document.createElement('div');
-            iconNameWrap.className = 'file-meta';
-            const icon = document.createElement('span');
-            icon.className = 'material-symbols-outlined';
-            icon.textContent = 'description';
-
-            const name = document.createElement('span');
-            const short = smartTruncate(file.name, 64);
-            name.className = 'file-name';
-            name.title = file.name;
-            name.textContent = short;
-
-            iconNameWrap.appendChild(icon);
-            iconNameWrap.appendChild(name);
-
-            // left.appendChild(tag);
-            left.appendChild(iconNameWrap);
-
-            const actions = document.createElement('div');
-            actions.className = 'file-actions';
-
-            const openBtn = document.createElement('button');
-            openBtn.type = 'button';
-            openBtn.className = 'buttonLogin buttonPreview';
-            openBtn.title = 'Abrir en nueva pestaña';
-            const eye = document.createElement('span');
-            eye.className = 'material-symbols-outlined bell';
-            eye.textContent = 'visibility';
-            eye.style.color = '#16233E';
-            openBtn.appendChild(eye);
-            openBtn.onclick = () => {
-                const url = URL.createObjectURL(file);
-                window.open(url, '_blank');
-                setTimeout(() => URL.revokeObjectURL(url), 60_000);
-            };
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'buttonLogin buttonPreview removeBtn';
-            removeBtn.title = 'Quitar';
-            const x = document.createElement('span');
-            x.className = 'material-symbols-outlined bell';
-            x.textContent = 'close';
-            removeBtn.appendChild(x);
-            removeBtn.onclick = () => {
-                clearModalInput();
-                render();
-            };
-
-            actions.appendChild(openBtn);
-            actions.appendChild(removeBtn);
-
-            card.appendChild(left);
-            card.appendChild(actions);
-            fileList.appendChild(card);
-        }
-
-        // ——— eventos ———
-        btnOpen?.addEventListener('click', open);
-        closeX?.addEventListener('click', close);
-        modal?.addEventListener('click', e => { if (e.target === modal) close(); });
-        btnSelect?.addEventListener('click', () => modalInput.click());
-        btnClear?.addEventListener('click', () => { clearModalInput(); render(); });
-
-        modalInput?.addEventListener('change', render);
-
-        // Confirmar: mover el input del modal como “real” (para que viaje en el form)
-        btnConfirm?.addEventListener('click', () => {
-            if (!(modalInput.files && modalInput.files.length)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Sin archivo',
-                    text: 'Seleccione un archivo primero.',
-                    heightAuto: false,
-                    scrollbarPadding: false
-                });
-                return;
-            }
-
-            // 1) eliminar cualquier input real previo
-            realWrap.querySelector(`#${realId}`)?.remove();
-
-            // 2) “trasladar” el input del modal como real (cambiando id/name)
-            modalInput.id = realId;
-            modalInput.name = realId;
-            realWrap.appendChild(modalInput);
-
-            // 3) recrear un input NUEVO para el modal (limpio) y re-cablearlo
-            const fresh = document.createElement('input');
-            fresh.type = 'file';
-            fresh.id = 'salidaFileModalInput';
-            fresh.className = 'file';
-            fresh.accept = 'application/pdf';
-            fresh.style.display = 'none';
-            realWrap.parentElement.appendChild(fresh);
-
-            // actualizar referencia + evento
-            modalInput = document.getElementById('salidaFileModalInput');
-            modalInput.addEventListener('change', render);
-
-            // cerrar modal
-            close();
-
-            // ✅ Confirmación visual
-            Swal.fire({
-                heightAuto: false,
-                scrollbarPadding: false,
-                icon: 'success',
-                title: 'Archivo adjuntado',
-                text: 'El archivo se ha adjuntado correctamente.',
-                confirmButtonText: 'Aceptar'
-            });
         });
+        window.resetSalidaFileSelection = api.reset; // lo sigues usando tras guardar
+        _salidaFileModalInited = true;
     }
+
 
     // Para limpiar por completo la selección (post-guardar, por ejemplo)
     function resetSalidaFileSelection() {
@@ -2951,420 +2568,51 @@
         return `${base.slice(0, front)}…${base.slice(-back)}${ext}`;
     }
 
-    /* ==========  EDICIÓN DE INGRESO: modal con cards  ========== */
-    function initializeEditFileModalCards() {
-        const btnOpen = document.getElementById('openEditFileModal');
-        const modal = document.getElementById('editFileModal');
-        if (!btnOpen || !modal) return;               // solo ADMIN ve esto
-
-        const content = modal.querySelector('.modal-content');
-        const btnClose = modal.querySelector('.close');
-
-        const list = document.getElementById('editFileListContainer');
-        const btnSelect = document.getElementById('selectEditFileButton');
-        const btnClear = document.getElementById('clearEditSelectionButton');
-        const btnConfirm = document.getElementById('editConfirmFileButton');
-
-        const inputModal = document.getElementById('editFileModalInput');      // selección temporal
-        const inputReal = document.getElementById('edit_archivo_adjunto');     // input real del form
-        const flagDelete = document.getElementById('edit_delete_archivo');      // 0/1
-
-        if (!content || !btnClose || !list || !btnSelect || !btnClear || !btnConfirm || !inputModal || !inputReal || !flagDelete) return;
-
-        /* Renderiza: si hay archivo nuevo ⇒ card del nuevo.
-           Si no hay nuevo y hay actual (dataset.currentFile && flagDelete != 1) ⇒ card del actual.
-           Si no hay nada ⇒ vacío. */
-        function render() {
-            list.innerHTML = '';
-
-            const hasNew = inputModal.files && inputModal.files.length > 0;
-            const currentUrl = btnOpen.dataset.currentFile || '';
-            const hasCurrent = !!currentUrl && flagDelete.value !== '1';
-
-            if (!hasNew && !hasCurrent) {
-                const empty = document.createElement('div');
-                empty.textContent = 'No hay archivos seleccionados.';
-                empty.style.opacity = '0.75';
-                empty.style.fontStyle = 'italic';
-                list.appendChild(empty);
-                return;
+    function initEditIngresoFileCard() {
+        window.setupFileCardModal({
+            openBtn: '#openEditFileModal',
+            modal: '#editFileModal',
+            list: '#editFileListContainer',
+            selectBtn: '#selectEditFileButton',
+            clearBtn: '#clearEditSelectionButton',
+            confirmBtn: '#editConfirmFileButton',
+            modalInput: '#editFileModalInput',
+            accept: 'application/pdf',
+            mode: 'assign',
+            real: { input: '#edit_archivo_adjunto' },
+            getCurrentUrl: () => (document.getElementById('openEditFileModal')?.dataset.currentFile || ''),
+            deleteFlag: '#edit_delete_archivo',
+            messages: {
+                attached: 'Archivo adjuntado correctamente.',
+                replaced: 'Archivo reemplazado.',
+                removed: 'Archivo eliminado.'
             }
-
-            // helper para construir una card
-            const makeCard = ({ label, nameText, onOpen, onRemove }) => {
-                const card = document.createElement('div');
-                card.className = 'file-card';
-
-                // Columna izquierda
-                const left = document.createElement('div');
-                left.className = 'file-left';
-
-                // 1) Label (encima / aparte)
-                if (label) {
-                    const tag = document.createElement('small');
-                    tag.textContent = label;
-                    // estilos inline para replicar tu ejemplo
-                    tag.style.opacity = '0.7';
-                    tag.style.marginRight = '0.5rem';
-                    left.appendChild(tag);
-                }
-
-                // 2) Bloque meta con icono + nombre
-                const meta = document.createElement('div');
-                meta.className = 'file-meta'; // (tú haces el CSS)
-
-                const icon = document.createElement('span');
-                icon.className = 'material-symbols-outlined';
-                icon.textContent = 'description';
-
-                const name = document.createElement('span');
-                name.className = 'file-name';
-                name.textContent = nameText;
-                name.title = nameText;
-
-                meta.appendChild(icon);
-                meta.appendChild(name);
-                left.appendChild(meta);
-
-                // Columna derecha (acciones)
-                const actions = document.createElement('div');
-                actions.className = 'file-actions';
-
-                const openBtn = document.createElement('button');
-                openBtn.type = 'button';
-                openBtn.className = 'buttonLogin buttonPreview';
-                openBtn.title = 'Abrir en nueva pestaña';
-                const eye = document.createElement('span');
-                eye.className = 'material-symbols-outlined bell';
-                eye.textContent = 'visibility';
-                eye.style.color = '#16233E';
-                openBtn.appendChild(eye);
-                openBtn.onclick = onOpen;
-
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'buttonLogin buttonPreview removeBtn';
-                removeBtn.title = 'Quitar';
-                const x = document.createElement('span');
-                x.className = 'material-symbols-outlined bell';
-                x.textContent = 'close';
-                removeBtn.appendChild(x);
-                removeBtn.onclick = onRemove;
-
-                actions.appendChild(openBtn);
-                actions.appendChild(removeBtn);
-
-                // Armar card
-                card.appendChild(left);
-                card.appendChild(actions);
-                list.appendChild(card);
-            };
-
-
-            if (hasNew) {
-                const file = inputModal.files[0];
-                makeCard({
-                    label: 'Archivo nuevo',
-                    nameText: smartTruncate(file.name, 64),
-                    onOpen: () => {
-                        const url = URL.createObjectURL(file);
-                        window.open(url, '_blank');
-                        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-                    },
-                    onRemove: () => {
-                        inputModal.value = '';
-                        render();
-                    }
-                });
-                return;
-            }
-
-            if (hasCurrent) {
-                // nombre visible a partir de la URL
-                const nameGuess = decodeURIComponent(currentUrl.split('/').pop() || 'archivo.pdf');
-                makeCard({
-                    label: 'Archivo actual',
-                    nameText: smartTruncate(nameGuess, 64),
-                    onOpen: () => window.open(currentUrl, '_blank'),
-                    onRemove: () => {
-                        flagDelete.value = '1';   // marcar borrado
-                        render();
-                    }
-                });
-            }
-        }
-
-        /* abrir modal */
-        btnOpen.onclick = () => {
-            content.classList.remove('animate__bounceOut');
-            content.classList.add('animate__bounceIn');
-            modal.style.display = 'block';
-            // Al abrir, por defecto NO borrar
-            if (flagDelete.value !== '0') flagDelete.value = '0';
-            render();
-        };
-
-        /* cerrar modal */
-        const close = () => {
-            content.classList.remove('animate__bounceIn');
-            content.classList.add('animate__bounceOut');
-            content.addEventListener('animationend', function h() {
-                modal.style.display = 'none';
-                content.classList.remove('animate__bounceOut');
-                content.removeEventListener('animationend', h);
-            });
-        };
-        btnClose.onclick = close;
-        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-
-        /* seleccionar archivo (dispara input oculto) */
-        btnSelect.onclick = () => inputModal.click();
-
-        /* cambio de archivo: validar PDF y re-render */
-        inputModal.onchange = () => {
-            const f = inputModal.files[0];
-            if (f && f.type !== 'application/pdf') {
-                Swal.fire({ icon: 'warning', title: 'Formato no permitido', text: 'Solo se admiten archivos PDF.', heightAuto: false, scrollbarPadding: false });
-                inputModal.value = '';
-                return render();
-            }
-            // si selecciona nuevo, anulamos flag de borrado
-            flagDelete.value = '0';
-            render();
-        };
-
-        /* limpiar selección (solo UI del modal) */
-        btnClear.onclick = () => {
-            inputModal.value = '';
-            render();
-        };
-
-        /* confirmar */
-        btnConfirm.onclick = () => {
-            const hasNew = inputModal.files && inputModal.files.length > 0;
-
-            // 1) sólo borrar (no hay nuevo y flag=1)
-            if (!hasNew && flagDelete.value === '1') {
-                // limpiar input real
-                inputReal.value = '';
-                close();
-                Swal.fire({ icon: 'success', text: 'Archivo eliminado.', heightAuto: false, scrollbarPadding: false });
-                return;
-            }
-
-            // 2) reemplazar por nuevo
-            if (hasNew) {
-                const dt = new DataTransfer();
-                dt.items.add(inputModal.files[0]);
-                inputReal.files = dt.files;
-                flagDelete.value = '0';
-                close();
-                Swal.fire({ icon: 'success', text: 'Archivo reemplazado.', heightAuto: false, scrollbarPadding: false });
-                return;
-            }
-
-            // 3) no hizo nada
-            Swal.fire({ icon: 'error', text: 'Seleccione un archivo o elimine el actual.', heightAuto: false, scrollbarPadding: false });
-        };
+        });
     }
 
-    /* ==========  EDICIÓN DE EGRESO/RESPUESTA: modal con cards  ========== */
-    function initializeEditSalidaFileModalCards() {
-        const btnOpen = document.getElementById('openEditSalidaFileModal');
-        const modal = document.getElementById('editSalidaFileModal');
-        if (!btnOpen || !modal) return;               // solo ADMIN ve esto
 
-        const content = modal.querySelector('.modal-content');
-        const btnClose = modal.querySelector('.close');
-
-        const list = document.getElementById('editSalidaFileListContainer');
-        const btnSelect = document.getElementById('selectEditSalidaFileButton');
-        const btnClear = document.getElementById('clearEditSalidaSelectionButton');
-        const btnConfirm = document.getElementById('editConfirmSalidaFileButton');
-
-        const inputModal = document.getElementById('editSalidaFileModalInput');        // selección temporal
-        const inputReal = document.getElementById('edit_archivo_adjunto_salida');     // input real del form
-        const flagDelete = document.getElementById('edit_delete_archivo_salida');      // 0/1
-
-        if (!content || !btnClose || !list || !btnSelect || !btnClear || !btnConfirm || !inputModal || !inputReal || !flagDelete) return;
-
-        function render() {
-            list.innerHTML = '';
-
-            const hasNew = inputModal.files && inputModal.files.length > 0;
-            const currentUrl = btnOpen.dataset.currentFile || '';
-            const hasCurrent = !!currentUrl && flagDelete.value !== '1';
-
-            if (!hasNew && !hasCurrent) {
-                const empty = document.createElement('div');
-                empty.textContent = 'No hay archivos seleccionados.';
-                empty.style.opacity = '0.75';
-                empty.style.fontStyle = 'italic';
-                list.appendChild(empty);
-                return;
+    function initEditSalidaFileCard() {
+        window.setupFileCardModal({
+            openBtn: '#openEditSalidaFileModal',
+            modal: '#editSalidaFileModal',
+            list: '#editSalidaFileListContainer',
+            selectBtn: '#selectEditSalidaFileButton',
+            clearBtn: '#clearEditSalidaSelectionButton',
+            confirmBtn: '#editConfirmSalidaFileButton',
+            modalInput: '#editSalidaFileModalInput',
+            accept: 'application/pdf',
+            mode: 'assign',
+            real: { input: '#edit_archivo_adjunto_salida' },
+            getCurrentUrl: () => (document.getElementById('openEditSalidaFileModal')?.dataset.currentFile || ''),
+            deleteFlag: '#edit_delete_archivo_salida',
+            messages: {
+                attached: 'Archivo adjuntado correctamente.',
+                replaced: 'Archivo reemplazado.',
+                removed: 'Archivo eliminado.'
             }
-
-            // helper para construir una card
-            const makeCard = ({ label, nameText, onOpen, onRemove }) => {
-                const card = document.createElement('div');
-                card.className = 'file-card';
-
-                // Columna izquierda
-                const left = document.createElement('div');
-                left.className = 'file-left';
-
-                // 1) Label (encima / aparte)
-                if (label) {
-                    const tag = document.createElement('small');
-                    tag.textContent = label;
-                    // estilos inline para replicar tu ejemplo
-                    tag.style.opacity = '0.7';
-                    tag.style.marginRight = '0.5rem';
-                    left.appendChild(tag);
-                }
-
-                // 2) Bloque meta con icono + nombre
-                const meta = document.createElement('div');
-                meta.className = 'file-meta'; // (tú haces el CSS)
-
-                const icon = document.createElement('span');
-                icon.className = 'material-symbols-outlined';
-                icon.textContent = 'description';
-
-                const name = document.createElement('span');
-                name.className = 'file-name';
-                name.textContent = nameText;
-                name.title = nameText;
-
-                meta.appendChild(icon);
-                meta.appendChild(name);
-                left.appendChild(meta);
-
-                // Columna derecha (acciones)
-                const actions = document.createElement('div');
-                actions.className = 'file-actions';
-
-                const openBtn = document.createElement('button');
-                openBtn.type = 'button';
-                openBtn.className = 'buttonLogin buttonPreview';
-                openBtn.title = 'Abrir en nueva pestaña';
-                const eye = document.createElement('span');
-                eye.className = 'material-symbols-outlined bell';
-                eye.textContent = 'visibility';
-                eye.style.color = '#16233E';
-                openBtn.appendChild(eye);
-                openBtn.onclick = onOpen;
-
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'buttonLogin buttonPreview removeBtn';
-                removeBtn.title = 'Quitar';
-                const x = document.createElement('span');
-                x.className = 'material-symbols-outlined bell';
-                x.textContent = 'close';
-                removeBtn.appendChild(x);
-                removeBtn.onclick = onRemove;
-
-                actions.appendChild(openBtn);
-                actions.appendChild(removeBtn);
-
-                // Armar card
-                card.appendChild(left);
-                card.appendChild(actions);
-                list.appendChild(card);
-            };
-
-
-            if (hasNew) {
-                const file = inputModal.files[0];
-                makeCard({
-                    label: 'Archivo nuevo',
-                    nameText: smartTruncate(file.name, 64),
-                    onOpen: () => {
-                        const url = URL.createObjectURL(file);
-                        window.open(url, '_blank');
-                        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-                    },
-                    onRemove: () => {
-                        inputModal.value = '';
-                        render();
-                    }
-                });
-                return;
-            }
-
-            if (hasCurrent) {
-                const nameGuess = decodeURIComponent(currentUrl.split('/').pop() || 'archivo.pdf');
-                makeCard({
-                    label: 'Archivo actual',
-                    nameText: smartTruncate(nameGuess, 64),
-                    onOpen: () => window.open(currentUrl, '_blank'),
-                    onRemove: () => { flagDelete.value = '1'; render(); }
-                });
-            }
-        }
-
-        btnOpen.onclick = () => {
-            content.classList.remove('animate__bounceOut');
-            content.classList.add('animate__bounceIn');
-            modal.style.display = 'block';
-            if (flagDelete.value !== '0') flagDelete.value = '0';
-            render();
-        };
-
-        const close = () => {
-            content.classList.remove('animate__bounceIn');
-            content.classList.add('animate__bounceOut');
-            content.addEventListener('animationend', function h() {
-                modal.style.display = 'none';
-                content.classList.remove('animate__bounceOut');
-                content.removeEventListener('animationend', h);
-            });
-        };
-        btnClose.onclick = close;
-        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-
-        btnSelect.onclick = () => inputModal.click();
-
-        inputModal.onchange = () => {
-            const f = inputModal.files[0];
-            if (f && f.type !== 'application/pdf') {
-                Swal.fire({ icon: 'warning', title: 'Formato no permitido', text: 'Solo se admiten archivos PDF.', heightAuto: false, scrollbarPadding: false });
-                inputModal.value = '';
-                return render();
-            }
-            flagDelete.value = '0';
-            render();
-        };
-
-        btnClear.onclick = () => {
-            inputModal.value = '';
-            render();
-        };
-
-        btnConfirm.onclick = () => {
-            const hasNew = inputModal.files && inputModal.files.length > 0;
-
-            if (!hasNew && flagDelete.value === '1') {
-                inputReal.value = '';
-                close();
-                Swal.fire({ icon: 'success', text: 'Archivo eliminado.', heightAuto: false, scrollbarPadding: false });
-                return;
-            }
-
-            if (hasNew) {
-                const dt = new DataTransfer();
-                dt.items.add(inputModal.files[0]);
-                inputReal.files = dt.files;
-                flagDelete.value = '0';
-                close();
-                Swal.fire({ icon: 'success', text: 'Archivo reemplazado.', heightAuto: false, scrollbarPadding: false });
-                return;
-            }
-
-            Swal.fire({ icon: 'error', text: 'Seleccione un archivo o elimine el actual.', heightAuto: false, scrollbarPadding: false });
-        };
+        });
     }
+
 
 
     /**
@@ -3993,7 +3241,7 @@
     // Exponer funciones necesarias al ámbito global para que menu.js y HTML puedan acceder a ellas
     window.initializeBNUPPage = initializeBNUPPage;
     window.updateBNUPFields = updateBNUPFields;
-    window.initializeFileModal = initializeFileModal;
+    window.initIngresoFileCard = initIngresoFileCard;
     window.initializeBNUPFormModal = initializeBNUPFormModal;
     window.initializeRowSelection = initializeRowSelection;
     window.openSalidaModal = openSalidaModal; // Exponer openSalidaModal

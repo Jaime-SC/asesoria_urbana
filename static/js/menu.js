@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
           script.onload = function () {
             initializeBNUPPage();
             updateBNUPFields();
-            initializeFileModal();
+            initIngresoFileCard();
             initializeBNUPFormModal();
 
             const rowsPerPage = getRowsPerPage();

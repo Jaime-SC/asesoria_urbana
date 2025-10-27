@@ -88,14 +88,10 @@
 /* por si el padre es flex/auto */
 .file-left {
     display: flex;
+    flex-direction: column;
     gap: .5rem;
     min-width: 0;
     flex: 1 1 auto;
-}
-
-#editSalidaFileModal .file-left,
-#editFileModal .file-left {
-    flex-direction: column;
 }
 
 .file-meta {

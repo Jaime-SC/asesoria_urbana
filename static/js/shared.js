@@ -1427,3 +1427,330 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
     window.resetDescriptionTips = resetDescriptionTips;
     window.bindDescriptionTipButtons = bindDescriptionTipButtons;
 })();
+
+// shared.js ▸ Módulo reutilizable para modales de "card de archivo"
+(function (global) {
+    /**
+     * Inicializa un modal de selección/gestión de archivo con UI de “card”.
+     *
+     * cfg:
+     *  - openBtn            : selector del botón que abre el modal
+     *  - modal              : selector del modal (wrapper)
+     *  - list               : contenedor donde se dibuja el/los cards
+     *  - selectBtn          : botón “Seleccionar archivo”
+     *  - clearBtn           : botón “Cancelar selección”
+     *  - confirmBtn         : botón “Confirmar”
+     *  - modalInput         : input[type=file] del modal (oculto)
+     *  - accept             : mime(s) permitidos (default 'application/pdf')
+     *  - messages           : { attached, replaced, removed, nothing }
+     *
+     *  MODO “assign” (crear/edición simple):
+     *  - mode: 'assign'
+     *  - real: { input: '#id_del_input_REAL' }  // se hace DataTransfer al input real
+     *
+     *  MODO “move” (cuando quieres mover el input real):
+     *  - mode: 'move'
+     *  - real: { wrap:'#contenedorHidden', idName:'archivo_adjunto_salida' }
+     *
+     *  EDICIÓN (archivo actual y flag de borrado):
+     *  - getCurrentUrl : () => string   // URL del archivo actual (si hay)
+     *  - deleteFlag    : '#id_hidden_flag'  // "0" mantener / "1" borrar
+     *
+     * Devuelve { open, close, reset }.
+     */
+    function setupFileCardModal(cfg) {
+        const $ = (sel) => (typeof sel === 'string') ? document.querySelector(sel) : sel;
+
+        const openBtn = $(cfg.openBtn);
+        const modal = $(cfg.modal);
+        const content = modal ? modal.querySelector('.modal-content') : null;
+        const closeBtn = cfg.closeBtn
+            ? (typeof cfg.closeBtn === 'string' ? document.querySelector(cfg.closeBtn) : cfg.closeBtn)
+            : (modal ? modal.querySelector('.close') : null);
+        const list = $(cfg.list);
+        const selectBtn = $(cfg.selectBtn);
+        const clearBtn = $(cfg.clearBtn);
+        const confirmBtn = $(cfg.confirmBtn);
+        let modalInput = $(cfg.modalInput);
+        const acceptMime = cfg.accept || 'application/pdf';
+
+        const mode = cfg.mode || 'assign';
+        const real = cfg.real || {};
+        const getCurrentUrl = typeof cfg.getCurrentUrl === 'function' ? cfg.getCurrentUrl : () => '';
+        const deleteFlag = cfg.deleteFlag ? $(cfg.deleteFlag) : null;
+
+        const msg = Object.assign({
+            attached: 'Archivo adjuntado correctamente.',
+            replaced: 'Archivo reemplazado.',
+            removed: 'Archivo eliminado.',
+            nothing: 'Seleccione un archivo o elimine el actual.',
+            wrongFmt: 'Solo se admiten archivos PDF.'
+        }, cfg.messages || {});
+
+        if (!openBtn || !modal || !content || !list || !selectBtn || !clearBtn || !confirmBtn || !modalInput) {
+            return { open() { }, close() { }, reset() { } };
+        }
+
+        // Animaciones abrir/cerrar
+        const open = () => {
+            content.classList.remove('animate__bounceOut');
+            content.classList.add('animate__animated', 'animate__bounceIn');
+            modal.style.display = 'block';
+            render();
+        };
+        const close = () => {
+            content.classList.remove('animate__bounceIn');
+            content.classList.add('animate__bounceOut');
+            content.addEventListener('animationend', () => {
+                modal.style.display = 'none';
+                content.classList.remove('animate__bounceOut', 'animate__animated');
+                content.classList.add('animate__bounceIn');
+            }, { once: true });
+        };
+
+        // Truncado “bonito”
+        const smartTruncate = (filename, max = 60) => {
+            if (!filename || filename.length <= max) return filename || '';
+            const dot = filename.lastIndexOf('.');
+            let base = filename, ext = '';
+            if (dot > 0 && dot < filename.length - 1) {
+                base = filename.slice(0, dot);
+                ext = filename.slice(dot);
+            }
+            const keep = Math.max(5, max - 1 - ext.length);
+            const front = Math.ceil(keep * 0.6);
+            const back = keep - front;
+            return `${base.slice(0, front)}…${base.slice(-back)}${ext}`;
+        };
+
+        // Limpia solo el input del modal (no el real)
+        function clearModalInput() {
+            const fresh = document.createElement('input');
+            fresh.type = 'file';
+            fresh.className = 'file';
+            fresh.style.display = 'none';
+            if (acceptMime) fresh.accept = acceptMime;
+
+            // conservar el mismo id que traía cfg.modalInput
+            if (typeof cfg.modalInput === 'string' && cfg.modalInput.startsWith('#')) {
+                fresh.id = cfg.modalInput.slice(1);
+            }
+            modalInput.replaceWith(fresh);
+            modalInput = fresh;
+            modalInput.addEventListener('change', onModalChange);
+        }
+
+        // UI: card
+        function makeCard({ label, nameText, onOpen, onRemove }) {
+            const card = document.createElement('div');
+            card.className = 'file-card';
+
+            // Columna izquierda exacta a tu especificación
+            const left = document.createElement('div');
+            left.className = 'file-left';
+            left.style.display = 'flex';
+
+            if (label) {
+                const tag = document.createElement('small');
+                tag.textContent = label;
+                tag.style.opacity = '.7';
+                tag.style.marginRight = '.5rem';
+                left.appendChild(tag);
+            }
+
+            const nameRow = document.createElement('div');
+            nameRow.className = 'file-meta';
+            const icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined';
+            icon.textContent = 'description';
+            const name = document.createElement('span');
+            name.className = 'file-name';
+            name.textContent = nameText;
+            name.title = nameText;
+            nameRow.appendChild(icon);
+            nameRow.appendChild(name);
+            left.appendChild(nameRow);
+
+            // Acciones
+            const actions = document.createElement('div');
+            actions.className = 'file-actions';
+
+            const openBtn = document.createElement('button');
+            openBtn.type = 'button';
+            openBtn.className = 'buttonLogin buttonPreview';
+            openBtn.id = 'selectFileButton';
+            openBtn.title = 'Abrir en nueva pestaña';
+            const eye = document.createElement('span');
+            eye.className = 'material-symbols-outlined bell';
+            eye.textContent = 'visibility';
+            eye.style.color = '#16233E';
+            openBtn.appendChild(eye);
+            openBtn.onclick = onOpen;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'buttonLogin buttonPreview';
+            removeBtn.id = 'clearSelectionButton';
+            removeBtn.title = 'Quitar';
+            const x = document.createElement('span');
+            x.className = 'material-symbols-outlined bell';
+            x.textContent = 'close';
+            removeBtn.appendChild(x);
+            removeBtn.onclick = onRemove;
+
+            actions.appendChild(openBtn);
+            actions.appendChild(removeBtn);
+
+            card.appendChild(left);
+            card.appendChild(actions);
+            list.appendChild(card);
+        }
+
+        function render() {
+            list.innerHTML = '';
+
+            const hasNew = modalInput.files && modalInput.files.length > 0;
+            const currentUrl = getCurrentUrl() || '';
+            const keepingCurrent = !!currentUrl && (!deleteFlag || deleteFlag.value !== '1');
+
+            if (!hasNew && !keepingCurrent) {
+                const empty = document.createElement('div');
+                empty.textContent = 'No hay archivos seleccionados.';
+                empty.style.opacity = '.75';
+                empty.style.fontStyle = 'italic';
+                list.appendChild(empty);
+                return;
+            }
+
+            if (hasNew) {
+                const file = modalInput.files[0];
+                makeCard({
+                    label: 'Archivo nuevo',
+                    nameText: smartTruncate(file.name, 64),
+                    onOpen: () => {
+                        const url = URL.createObjectURL(file);
+                        window.open(url, '_blank');
+                        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                    },
+                    onRemove: () => { modalInput.value = ''; render(); }
+                });
+                return; // si hay nuevo, se muestra solo ese
+            }
+
+            if (keepingCurrent) {
+                const nameGuess = decodeURIComponent(currentUrl.split('/').pop() || 'archivo.pdf');
+                makeCard({
+                    label: 'Archivo actual',
+                    nameText: smartTruncate(nameGuess, 64),
+                    onOpen: () => window.open(currentUrl, '_blank'),
+                    onRemove: () => { if (deleteFlag) { deleteFlag.value = '1'; render(); } }
+                });
+            }
+        }
+
+        function onModalChange() {
+            const f = modalInput.files && modalInput.files[0];
+            if (f && acceptMime && f.type !== acceptMime) {
+                Swal.fire({ icon: 'warning', title: 'Formato no permitido', text: msg.wrongFmt, heightAuto: false, scrollbarPadding: false });
+                modalInput.value = '';
+                return render();
+            }
+            if (deleteFlag) deleteFlag.value = '0'; // si elige nuevo, anula borrado
+            render();
+        }
+
+        // Confirmar
+        function doConfirm() {
+            const hasNew = modalInput.files && modalInput.files.length > 0;
+
+            // Edición: solo borrado
+            if (!hasNew && deleteFlag && deleteFlag.value === '1') {
+                if (mode === 'assign' && real.input) {
+                    const realInput = $(real.input);
+                    if (realInput) realInput.value = '';
+                }
+                Swal.fire({ icon: 'success', text: msg.removed, heightAuto: false, scrollbarPadding: false });
+                close();
+                return;
+            }
+
+            // Hay archivo nuevo → asignar o mover
+            if (hasNew) {
+                if (mode === 'assign' && real.input) {
+                    const realInput = $(real.input);
+                    if (realInput) {
+                        const dt = new DataTransfer();
+                        dt.items.add(modalInput.files[0]);
+                        realInput.files = dt.files;
+                    }
+                    if (deleteFlag) deleteFlag.value = '0';
+                    Swal.fire({ icon: 'success', text: (deleteFlag ? msg.replaced : msg.attached), heightAuto: false, scrollbarPadding: false });
+                } else if (mode === 'move' && real.wrap && real.idName) {
+                    // Mueve el input del modal al contenedor real con id+name definitivos
+                    const wrap = $(real.wrap);
+                    if (wrap) {
+                        // Limpia contenedor y coloca el input con id/name deseados
+                        wrap.innerHTML = '';
+                        modalInput.style.display = 'none';
+                        modalInput.id = real.idName;
+                        modalInput.name = real.idName;
+                        wrap.appendChild(modalInput);
+
+                        // Crea un nuevo input limpio para futuras selecciones en el modal
+                        clearModalInput();
+                    }
+                    Swal.fire({ icon: 'success', text: msg.attached, heightAuto: false, scrollbarPadding: false });
+                } else {
+                    Swal.fire({ icon: 'error', text: 'Configuración inválida del modal de archivos.', heightAuto: false, scrollbarPadding: false });
+                    return;
+                }
+                close();
+                return;
+            }
+
+            // Ni nuevo ni borrado
+            Swal.fire({ icon: 'error', text: msg.nothing, heightAuto: false, scrollbarPadding: false });
+        }
+
+        // Reset general (útil en formularios tras guardar o cerrar)
+        function reset() {
+            // 1) limpia selección del modal
+            clearModalInput();
+            // 2) limpia input real (assign)
+            if (mode === 'assign' && real.input) {
+                const realInput = $(real.input);
+                if (realInput) realInput.value = '';
+            }
+            // 3) reconstruye input real (move)
+            if (mode === 'move' && real.wrap && real.idName) {
+                const wrap = $(real.wrap);
+                if (wrap) {
+                    wrap.innerHTML = '';
+                    const fresh = document.createElement('input');
+                    fresh.type = 'file';
+                    fresh.id = real.idName;
+                    fresh.name = real.idName;
+                    fresh.className = 'file';
+                    fresh.style.display = 'none';
+                    wrap.appendChild(fresh);
+                }
+            }
+            if (deleteFlag) deleteFlag.value = '0';
+            render();
+        }
+
+        // Wirear eventos
+        openBtn.onclick = open;
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+        content.addEventListener('click', (e) => e.stopPropagation());
+        if (closeBtn) closeBtn.onclick = close;
+        selectBtn.onclick = () => modalInput.click();
+        clearBtn.onclick = () => { modalInput.value = ''; render(); };
+        confirmBtn.onclick = doConfirm;
+        modalInput.addEventListener('change', onModalChange);
+
+        return { open, close, reset };
+    }
+
+    global.setupFileCardModal = setupFileCardModal;
+})(window);
