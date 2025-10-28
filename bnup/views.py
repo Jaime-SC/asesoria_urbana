@@ -1,4 +1,6 @@
-import json, re, os
+import json
+import re
+import os
 import threading
 import calendar
 import logging
@@ -33,7 +35,6 @@ from django.contrib import messages
 from collections import defaultdict
 from django.db.models import Count
 from django.urls import reverse
-
 
 EXCLUDED_TIPO_IDS = (11, 12)
 
@@ -75,94 +76,65 @@ def bnup_form(request):
             )
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
-        tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
-        # Obtén el valor y quita espacios
-        num_memo_str = request.POST.get("num_memo", "").strip()
+        tipo_solicitud_id = request.POST.get("tipo_solicitud")
 
-        # Si el tipo de recepción es 2 u 8, el número de memo se ignora (se deja como None)
+        # ─── Número de documento / memo ─────────────────────────
+        num_memo_str = request.POST.get("num_memo", "").strip()
         if tipo_recepcion_id in ["2", "6", "8"]:
+            # CORREO / CONTRIBUYENTE / (otro) → ignora número de documento
             numero_memo = None
-        # Si el tipo de solicitud es 10, el número de documento es opcional:
         elif tipo_solicitud_id == "10":
-            # Si se ingresó un valor, lo convierte a entero; si no, se deja como None
+            # Alcohol: opcional
             numero_memo = int(num_memo_str) if num_memo_str != "" else None
-        # Para los demás casos, el campo es obligatorio
         else:
+            # Resto: obligatorio
             if num_memo_str == "":
                 return JsonResponse({"success": False, "error": "El campo número de documento es obligatorio."})
-            else:
-                numero_memo = int(num_memo_str)
+            numero_memo = int(num_memo_str)
 
-
-        correo_solicitante = (
-            request.POST.get("correo_solicitante") if tipo_recepcion_id in ["2", "6"] else None
-        )
+        # ─── Correo del solicitante ─────────────────────────────
         EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-
-        # ─── correo ──────────────────────────────────────────────
-        if tipo_recepcion_id in ["2", "6"]:          # CORREO o CONTRIBUYENTE
-            correo_solicitante = request.POST.get("correo_solicitante", "").strip()
+        if tipo_recepcion_id in ["2", "6"]:   # CORREO o CONTRIBUYENTE
+            correo_solicitante = (request.POST.get(
+                "correo_solicitante", "") or "").strip()
             if not correo_solicitante:
-                return JsonResponse({"success": False,
-                                    "error": "Debe ingresar un correo del solicitante."})
+                return JsonResponse({"success": False, "error": "Debe ingresar un correo del solicitante."})
             if not EMAIL_RE.match(correo_solicitante):
-                return JsonResponse({"success": False,
-                                    "error": "El correo ingresado no es válido."})
+                return JsonResponse({"success": False, "error": "El correo ingresado no es válido."})
         else:
             correo_solicitante = None
-        # ─────────────────────────────────────────────────────────
 
+        # ─── Otros campos base ──────────────────────────────────
         depto_solicitante_id = request.POST.get("depto_solicitante")
-        numero_ingreso = request.POST.get("numero_ingreso")
-        fecha_ingreso_au_str = request.POST.get(
-            "fecha_ingreso_au")  # Renombrado
-        fecha_solicitud_str = request.POST.get("fecha_solicitud")  # Renombrado
+        numero_ingreso = (request.POST.get("numero_ingreso") or "").strip()
+
+        fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")
+        fecha_solicitud_str = request.POST.get("fecha_solicitud")
+
+        # Multi-select de funcionarios (puede venir "1,2,3" en un solo ítem)
         raw_funcs = request.POST.getlist("funcionarios_asignados")
         if len(raw_funcs) == 1 and "," in (raw_funcs[0] or ""):
-            funcionarios_asignados_ids = [s.strip() for s in raw_funcs[0].split(",") if s.strip()]
+            funcionarios_asignados_ids = [
+                s.strip() for s in raw_funcs[0].split(",") if s.strip()]
         else:
             funcionarios_asignados_ids = [s.strip() for s in raw_funcs if s.strip()]
+        # Solo dígitos y sin duplicados manteniendo orden
+        funcionarios_asignados_ids = list(dict.fromkeys(
+            [s for s in funcionarios_asignados_ids if s.isdigit()]))
 
-        # (opcional) valida que sean dígitos y quita duplicados manteniendo orden:
-        funcionarios_asignados_ids = list(dict.fromkeys([s for s in funcionarios_asignados_ids if s.isdigit()]))
-
-        # … el resto igual:
         if not funcionarios_asignados_ids:
             return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
-
         if len(funcionarios_asignados_ids) != len(set(funcionarios_asignados_ids)):
             return JsonResponse({"success": False, "error": "No puede asignar el mismo funcionario más de una vez."})
 
-        funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_asignados_ids)
-        if not funcionarios_asignados.exists():
-            return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
-        # Validar que al menos un funcionario está asignado
-        if not funcionarios_asignados_ids:
-            return JsonResponse(
-                {"success": False, "error": "Debe asignar al menos un funcionario."}
-            )
-
-        # Validar duplicidad de funcionarios
-        if len(funcionarios_asignados_ids) != len(set(funcionarios_asignados_ids)):
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "No puede asignar el mismo funcionario más de una vez.",
-                }
-            )
-
-        # Convertir fechas
+        # ─── Fechas ─────────────────────────────────────────────
         try:
-            fecha_ingreso_au = datetime.strptime(
-                fecha_ingreso_au_str, "%Y-%m-%d"
-            ).date()
+            fecha_ingreso_au = datetime.strptime(fecha_ingreso_au_str, "%Y-%m-%d").date()
         except ValueError:
-            return JsonResponse(
-                {"success": False, "error": "Fecha de ingreso inválida."}
-            )
+            return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
 
         fecha_solicitud = None
         if fecha_solicitud_str:
@@ -174,50 +146,95 @@ def bnup_form(request):
             except ValueError:
                 return JsonResponse({"success": False, "error": "Fecha de solicitud inválida."})
 
+        # ─── FK y validaciones de existencia ────────────────────
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
-            tipo_solicitud = TipoSolicitud.objects.get(
-                id=tipo_solicitud_id
-            )  # Obtener el tipo de solicitud
+        except TipoRecepcion.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Tipo de recepción inválido."})
+
+        try:
+            tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)
+        except TipoSolicitud.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Tipo de solicitud inválido."})
+
+        try:
             depto_solicitante = Departamento.objects.get(
                 id=depto_solicitante_id)
-            funcionarios_asignados = Funcionario.objects.filter(
-                id__in=funcionarios_asignados_ids
-            )
-            if not funcionarios_asignados.exists():
-                return JsonResponse(
-                    {"success": False, "error": "Funcionarios asignados inválidos."}
+        except Departamento.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Departamento solicitante inválido."})
+
+        funcionarios_asignados = Funcionario.objects.filter(
+            id__in=funcionarios_asignados_ids)
+        if not funcionarios_asignados.exists():
+            return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
+
+        # ────────────────────────────────────────────────────────
+        # BLOQUE CRÍTICO: Unicidad de numero_ingreso cuando ACTIVO,
+        # permitiendo reingreso si existe INACTIVO (reactivar).
+        # ────────────────────────────────────────────────────────
+        try:
+            with transaction.atomic():
+                # Si existe ACTIVO con ese número → error
+                if IngresoSOLICITUD.objects.filter(numero_ingreso=numero_ingreso, is_active=True).exists():
+                    return JsonResponse(
+                        {"success": False, "error": "Número de ingreso ya existente."},
+                        status=400
+                    )
+
+                # Si hay INACTIVO con ese número → reactivar (lock para evitar condiciones de carrera)
+                ing_inactivo = (
+                    IngresoSOLICITUD.objects
+                    .select_for_update()
+                    .filter(numero_ingreso=numero_ingreso, is_active=False)
+                    .order_by("-id")
+                    .first()
                 )
 
-            ingreso_solicitud = IngresoSOLICITUD(
-                tipo_recepcion=tipo_recepcion,
-                tipo_solicitud=tipo_solicitud,  # Asignar el tipo de solicitud
-                numero_memo=numero_memo,
-                correo_solicitante=correo_solicitante,
-                depto_solicitante=depto_solicitante,
-                numero_ingreso=numero_ingreso,
-                fecha_ingreso_au=fecha_ingreso_au,  # Asignar la fecha de ingreso
-                fecha_solicitud=fecha_solicitud,  # Asignar la fecha de salida
-                descripcion=descripcion,
-                archivo_adjunto_ingreso=archivo_adjunto,
-            )
-            ingreso_solicitud.save()
+                if ing_inactivo:
+                    ingreso_solicitud = ing_inactivo
+                    ingreso_solicitud.tipo_recepcion = tipo_recepcion
+                    ingreso_solicitud.tipo_solicitud = tipo_solicitud
+                    ingreso_solicitud.numero_memo = numero_memo
+                    ingreso_solicitud.correo_solicitante = correo_solicitante
+                    ingreso_solicitud.depto_solicitante = depto_solicitante
+                    ingreso_solicitud.numero_ingreso = numero_ingreso
+                    ingreso_solicitud.fecha_ingreso_au = fecha_ingreso_au
+                    ingreso_solicitud.fecha_solicitud = fecha_solicitud
+                    ingreso_solicitud.descripcion = descripcion
+                    if archivo_adjunto:
+                        ingreso_solicitud.archivo_adjunto_ingreso = archivo_adjunto
+                    ingreso_solicitud.is_active = True
+                    ingreso_solicitud.save()
+                    ingreso_solicitud.funcionarios_asignados.set(
+                        funcionarios_asignados)
+                else:
+                    ingreso_solicitud = IngresoSOLICITUD.objects.create(
+                        tipo_recepcion=tipo_recepcion,
+                        tipo_solicitud=tipo_solicitud,
+                        numero_memo=numero_memo,
+                        correo_solicitante=correo_solicitante,
+                        depto_solicitante=depto_solicitante,
+                        numero_ingreso=numero_ingreso,
+                        fecha_ingreso_au=fecha_ingreso_au,
+                        fecha_solicitud=fecha_solicitud,
+                        descripcion=descripcion,
+                        archivo_adjunto_ingreso=archivo_adjunto or None,
+                        is_active=True,
+                    )
+                    ingreso_solicitud.funcionarios_asignados.set(
+                        funcionarios_asignados)
 
-            # Asignar múltiples funcionarios
-            ingreso_solicitud.funcionarios_asignados.set(
-                funcionarios_asignados)
-            
-            # URL (si aún no tienes vista de detalle, puedes linkear al listado)
-            absolute_url = "http://asesoriaurbana.munivalpo.cl/"
+                # URL (si aún no tienes vista de detalle, puedes linkear al listado)
+                absolute_url = "http://asesoriaurbana.munivalpo.cl/"
 
-            # Programa envío asíncrono tras el commit de DB
-            transaction.on_commit(lambda: threading.Thread(
-                target=_send_ingreso_async,
-                args=(ingreso_solicitud.id, absolute_url),
-                daemon=True
-            ).start())
+                # Envío asíncrono tras commit
+                transaction.on_commit(lambda: threading.Thread(
+                    target=_send_ingreso_async,
+                    args=(ingreso_solicitud.id, absolute_url),
+                    daemon=True
+                ).start())
 
-            # Construir datos de la solicitud para devolver en la respuesta
+            # ─── Respuesta JSON con payload de la solicitud ──────
             solicitud_data = {
                 "id": ingreso_solicitud.id,
                 "tipo_recepcion": ingreso_solicitud.tipo_recepcion.id,
@@ -229,48 +246,27 @@ def bnup_form(request):
                 "depto_solicitante": ingreso_solicitud.depto_solicitante.id,
                 "depto_solicitante_text": ingreso_solicitud.depto_solicitante.nombre,
                 "numero_ingreso": ingreso_solicitud.numero_ingreso,
-                "fecha_ingreso_au": ingreso_solicitud.fecha_ingreso_au.strftime(
-                    "%Y-%m-%d"
-                ),
+                "fecha_ingreso_au": ingreso_solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
                 "fecha_solicitud": ingreso_solicitud.fecha_solicitud.strftime("%Y-%m-%d") if ingreso_solicitud.fecha_solicitud else "",
                 "funcionarios_asignados": [
-                    {"id": funcionario.id, "nombre": funcionario.nombre}
-                    for funcionario in ingreso_solicitud.funcionarios_asignados.all()
+                    {"id": f.id, "nombre": f.nombre}
+                    for f in ingreso_solicitud.funcionarios_asignados.all()
                 ],
                 "descripcion": ingreso_solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": (
                     ingreso_solicitud.archivo_adjunto_ingreso.url
-                    if ingreso_solicitud.archivo_adjunto_ingreso
-                    else ""
+                    if ingreso_solicitud.archivo_adjunto_ingreso else ""
                 ),
             }
-
             return JsonResponse({"success": True, "solicitud": solicitud_data})
 
-        except TipoRecepcion.DoesNotExist:
-            return JsonResponse(
-                {"success": False, "error": "Tipo de recepción inválido."}
-            )
-        except TipoSolicitud.DoesNotExist:
-            return JsonResponse(
-                {"success": False, "error": "Tipo de solicitud inválido."}
-            )
-        except Departamento.DoesNotExist:
-            return JsonResponse(
-                {"success": False, "error": "Departamento solicitante inválido."}
-            )
-        except Funcionario.DoesNotExist:
-            return JsonResponse(
-                {"success": False, "error": "Funcionario asignado inválido."}
-            )
         except Exception as e:
-            return JsonResponse(
-                {"success": False, "error": f"Error al guardar la solicitud: {e}"}
-            )
+            return JsonResponse({"success": False, "error": f"Error al guardar la solicitud: {e}"})
 
     else:
-        solicitudes = IngresoSOLICITUD.objects.filter(is_active=True) \
-            .select_related("tipo_recepcion", "tipo_solicitud") \
+        solicitudes = (
+            IngresoSOLICITUD.objects.filter(is_active=True)
+            .select_related("tipo_recepcion", "tipo_solicitud")
             .prefetch_related(
                 Prefetch(
                     'salidas',
@@ -278,18 +274,20 @@ def bnup_form(request):
                     to_attr='salidas_activas'
                 )
             )
+        )
         departamentos = Departamento.objects.all().order_by('nombre')
         funcionarios = Funcionario.objects.all().order_by('nombre')
         tipos_recepcion = TipoRecepcion.objects.all().order_by('tipo')
         tipos_solicitud = TipoSolicitud.objects.all().order_by('tipo')
+
         context = {
             "departamentos": departamentos,
             "funcionarios": funcionarios,
             "solicitudes": solicitudes,
             "tipos_recepcion": tipos_recepcion,
-            "tipos_solicitud": tipos_solicitud,  # Incluir en el contexto
+            "tipos_solicitud": tipos_solicitud,
             "tipo_usuario": tipo_usuario,
-            "total_funcionarios": funcionarios.count(),  # Añadido
+            "total_funcionarios": funcionarios.count(),
         }
         return render(request, "bnup/form.html", context)
 
@@ -317,20 +315,21 @@ def edit_bnup_record(request):
 
             solicitud_id = request.POST.get("solicitud_id")
             solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
-            
+
             prev = {
                 "descripcion": solicitud.descripcion,
                 "correo_solicitante": solicitud.correo_solicitante,
             }
 
             nueva_descripcion = request.POST.get("descripcion", "").strip()
-            nuevo_correo     = request.POST.get("correo_solicitante", "").strip()
+            nuevo_correo = request.POST.get("correo_solicitante", "").strip()
 
             campos_a_grabar = ["descripcion"]
             solicitud.descripcion = nueva_descripcion
 
             # sólo si el tipo de recepción exige correo ────────────────
-            if solicitud.tipo_recepcion_id in (2, 6):        # 2 = CORREO, 6 = CONTRIBUYENTE
+            # 2 = CORREO, 6 = CONTRIBUYENTE
+            if solicitud.tipo_recepcion_id in (2, 6):
                 if not nuevo_correo:
                     return JsonResponse({"success": False,
                                         "error": "Debe ingresar un correo del solicitante."})
@@ -350,12 +349,15 @@ def edit_bnup_record(request):
             changes = []
             if (prev["descripcion"] or "") != (solicitud.descripcion or ""):
                 changes.append(("Descripción",
-                                (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"])>80 else ""),
-                                (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion)>80 else "")))
+                                (prev["descripcion"] or "")[
+                                    :80] + ("…" if prev["descripcion"] and len(prev["descripcion"]) > 80 else ""),
+                                (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion) > 80 else "")))
             if (prev["correo_solicitante"] or "") != (solicitud.correo_solicitante or ""):
-                changes.append(("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
+                changes.append(
+                    ("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
 
             absolute_url = "http://asesoriaurbana.munivalpo.cl/"
+
             def _send_update():
                 try:
                     notify_ingreso_updated(
@@ -369,7 +371,8 @@ def edit_bnup_record(request):
                 except Exception:
                     pass
 
-            transaction.on_commit(lambda: Thread(target=_send_update, daemon=True).start())
+            transaction.on_commit(lambda: Thread(
+                target=_send_update, daemon=True).start())
 
             return JsonResponse({
                 "success": True,
@@ -396,7 +399,8 @@ def edit_bnup_record(request):
             "fecha_solicitud": solicitud.fecha_solicitud,
             "descripcion": solicitud.descripcion,
             "func_ids": set(solicitud.funcionarios_asignados.values_list("id", flat=True)),
-            "archivo_prev_name": getattr(solicitud.archivo_adjunto_ingreso, "name", None),  # ← NUEVO
+            # ← NUEVO
+            "archivo_prev_name": getattr(solicitud.archivo_adjunto_ingreso, "name", None),
         }
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
@@ -414,9 +418,11 @@ def edit_bnup_record(request):
 
         EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
-        correo_solicitante = request.POST.get("correo_solicitante") if tipo_recepcion_id in ["2", "6"] else None
+        correo_solicitante = request.POST.get(
+            "correo_solicitante") if tipo_recepcion_id in ["2", "6"] else None
         if tipo_recepcion_id in ["2", "6"]:
-            correo_solicitante = request.POST.get("correo_solicitante", "").strip()
+            correo_solicitante = request.POST.get(
+                "correo_solicitante", "").strip()
             if not correo_solicitante:
                 return JsonResponse({"success": False,
                                     "error": "Debe ingresar un correo del solicitante."})
@@ -445,7 +451,6 @@ def edit_bnup_record(request):
         if archivo_adjunto:
             solicitud.archivo_adjunto_ingreso = archivo_adjunto
         # ————————————————————————————————————————————————
-
 
         # Convertir fecha_ingreso_au_str a objeto datetime.date
         try:
@@ -477,7 +482,8 @@ def edit_bnup_record(request):
 
             if tipo_usuario == "ADMIN":
                 raw = request.POST.get("funcionarios_asignados", "")
-                funcionarios_asignados_ids = [s for s in raw.split(",") if s.strip()]
+                funcionarios_asignados_ids = [
+                    s for s in raw.split(",") if s.strip()]
 
                 # Validar que al menos un funcionario está asignado
                 if not funcionarios_asignados_ids:
@@ -517,7 +523,8 @@ def edit_bnup_record(request):
 
             # --- construir deltas y notificar ---
             # (1) diferencia de funcionarios
-            new_func_qs = solicitud.funcionarios_asignados.select_related("user").all()
+            new_func_qs = solicitud.funcionarios_asignados.select_related(
+                "user").all()
             new_func_ids = set(new_func_qs.values_list("id", flat=True))
             added_ids = new_func_ids - prev["func_ids"]
             removed_ids = prev["func_ids"] - new_func_ids
@@ -526,11 +533,14 @@ def edit_bnup_record(request):
                 out = []
                 for f in qs:
                     email = getattr(getattr(f, "user", None), "email", None)
-                    out.append({"id": f.id, "nombre": f.nombre, "email": email})
+                    out.append(
+                        {"id": f.id, "nombre": f.nombre, "email": email})
                 return out
 
-            added_info = _func_info(Funcionario.objects.filter(id__in=added_ids))
-            removed_info = _func_info(Funcionario.objects.filter(id__in=removed_ids))
+            added_info = _func_info(
+                Funcionario.objects.filter(id__in=added_ids))
+            removed_info = _func_info(
+                Funcionario.objects.filter(id__in=removed_ids))
 
             # (2) cambios de otros campos (opcional pero útil en el correo)
             def _fmt_date(d):
@@ -539,17 +549,21 @@ def edit_bnup_record(request):
             changes = []
 
             # ==== ARCHIVO ADJUNTO: agregado / reemplazado / eliminado ====
-            new_file_name = getattr(solicitud.archivo_adjunto_ingreso, "name", None)
+            new_file_name = getattr(
+                solicitud.archivo_adjunto_ingreso, "name", None)
             old_file_name = prev.get("archivo_prev_name")
             if (old_file_name or new_file_name) and (old_file_name != new_file_name):
-                old_lbl = os.path.basename(old_file_name) if old_file_name else "—"
-                new_lbl = os.path.basename(new_file_name) if new_file_name else "—"
+                old_lbl = os.path.basename(
+                    old_file_name) if old_file_name else "—"
+                new_lbl = os.path.basename(
+                    new_file_name) if new_file_name else "—"
                 changes.append(("Archivo adjunto", old_lbl, new_lbl))
             # =============================================================
-            
+
             if prev["tipo_recepcion_id"] != solicitud.tipo_recepcion_id:
                 try:
-                    old_tr = TipoRecepcion.objects.get(id=prev["tipo_recepcion_id"]).tipo if prev["tipo_recepcion_id"] else ""
+                    old_tr = TipoRecepcion.objects.get(
+                        id=prev["tipo_recepcion_id"]).tipo if prev["tipo_recepcion_id"] else ""
                 except Exception:
                     old_tr = ""
                 new_tr = solicitud.tipo_recepcion.tipo if solicitud.tipo_recepcion else ""
@@ -558,13 +572,17 @@ def edit_bnup_record(request):
             if prev["tipo_solicitud_id"] != solicitud.tipo_solicitud_id:
                 # aquí mostramos viejo->nuevo legible
                 try:
-                    old_ts = TipoSolicitud.objects.get(id=prev["tipo_solicitud_id"]).tipo if prev["tipo_solicitud_id"] else ""
+                    old_ts = TipoSolicitud.objects.get(
+                        id=prev["tipo_solicitud_id"]).tipo if prev["tipo_solicitud_id"] else ""
                 except Exception:
                     old_ts = ""
-                changes.append(("Tipo de solicitud", old_ts, solicitud.tipo_solicitud.tipo if solicitud.tipo_solicitud else ""))
+                changes.append(("Tipo de solicitud", old_ts,
+                               solicitud.tipo_solicitud.tipo if solicitud.tipo_solicitud else ""))
 
             if prev["numero_memo"] != solicitud.numero_memo:
-                changes.append(("N° documento", prev["numero_memo"], solicitud.numero_memo))
+                changes.append(
+                    ("N° documento", prev["numero_memo"], solicitud.numero_memo))
+
             def _norm_ing(v):
                 # Normaliza para comparar: string, sin espacios.
                 return (str(v).strip() if v is not None else "")
@@ -576,19 +594,25 @@ def edit_bnup_record(request):
                 changes.append(("N° ingreso", old_ing or "—", new_ing or "—"))
 
             if prev["fecha_solicitud"] != solicitud.fecha_solicitud:
-                changes.append(("Fecha de solicitud", _fmt_date(prev["fecha_solicitud"]), _fmt_date(solicitud.fecha_solicitud)))
+                changes.append(("Fecha de solicitud", _fmt_date(
+                    prev["fecha_solicitud"]), _fmt_date(solicitud.fecha_solicitud)))
             if prev["fecha_ingreso_au"] != solicitud.fecha_ingreso_au:
-                changes.append(("Fecha ingreso AU", _fmt_date(prev["fecha_ingreso_au"]), _fmt_date(solicitud.fecha_ingreso_au)))
+                changes.append(("Fecha ingreso AU", _fmt_date(
+                    prev["fecha_ingreso_au"]), _fmt_date(solicitud.fecha_ingreso_au)))
             if prev["depto_solicitante_id"] != solicitud.depto_solicitante_id:
                 try:
-                    old_dep = Departamento.objects.get(id=prev["depto_solicitante_id"]).nombre if prev["depto_solicitante_id"] else ""
+                    old_dep = Departamento.objects.get(
+                        id=prev["depto_solicitante_id"]).nombre if prev["depto_solicitante_id"] else ""
                 except Exception:
                     old_dep = ""
-                changes.append(("Solicitante", old_dep, solicitud.depto_solicitante.nombre if solicitud.depto_solicitante else ""))
+                changes.append(
+                    ("Solicitante", old_dep, solicitud.depto_solicitante.nombre if solicitud.depto_solicitante else ""))
             if (prev["correo_solicitante"] or "") != (solicitud.correo_solicitante or ""):
-                changes.append(("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
+                changes.append(
+                    ("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
             if (prev["descripcion"] or "") != (solicitud.descripcion or ""):
-                changes.append(("Descripción", (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"])>80 else ""), (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion)>80 else "")))
+                changes.append(("Descripción", (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"]) >
+                               80 else ""), (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion) > 80 else "")))
 
             # (3) disparar email (asincrónico post-commit)
             absolute_url = "http://asesoriaurbana.munivalpo.cl/"
@@ -609,8 +633,8 @@ def edit_bnup_record(request):
                 except Exception:
                     pass
 
-            transaction.on_commit(lambda: Thread(target=_send_update, daemon=True).start())
-
+            transaction.on_commit(lambda: Thread(
+                target=_send_update, daemon=True).start())
 
             # Construir datos de la solicitud para devolver en la respuesta
             solicitud_data = {
@@ -720,42 +744,49 @@ def statistics_view(request):
     """
     if not request.user.is_authenticated:
         return redirect("login")
-    
+
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
     if tipo_usuario not in ["ADMIN", "JEFE"]:
         messages.error(request, "No tiene permiso para ver las estadísticas.")
         return redirect("bnup_form")
-    
+
     current_year = datetime.now().year
     current_week = datetime.now().isocalendar()[1]
     current_month = datetime.now().month
 
     # Entradas activas del año actual
     active_solicitudes = IngresoSOLICITUD.objects.filter(
-        is_active=True, 
+        is_active=True,
         fecha_ingreso_au__year=current_year
     ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS)
 
-    
     # Solicitudes por Solicitante
-    solicitudes_por_depto = active_solicitudes.values("depto_solicitante__nombre").annotate(total=Count("id"))
-    
+    solicitudes_por_depto = active_solicitudes.values(
+        "depto_solicitante__nombre").annotate(total=Count("id"))
+
     # Solicitudes por Funcionario
-    solicitudes_por_funcionario = active_solicitudes.values("funcionarios_asignados__nombre").annotate(total=Count("id"))
-    
+    solicitudes_por_funcionario = active_solicitudes.values(
+        "funcionarios_asignados__nombre").annotate(total=Count("id"))
+
     # Por Tipo de Recepción
-    solicitudes_por_tipo_recepcion = active_solicitudes.values("tipo_recepcion__tipo").annotate(total=Count("id"))
-    
+    solicitudes_por_tipo_recepcion = active_solicitudes.values(
+        "tipo_recepcion__tipo").annotate(total=Count("id"))
+
     # Por Tipo de Solicitud
-    solicitudes_por_tipo_solicitud = active_solicitudes.values("tipo_solicitud__tipo").annotate(total=Count("id"))
-    
+    solicitudes_por_tipo_solicitud = active_solicitudes.values(
+        "tipo_solicitud__tipo").annotate(total=Count("id"))
+
     # Entradas por Mes y Semana (del año actual)
-    solicitudes_por_mes = active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au")).values("mes").annotate(total=Count("id"))
-    entradas_por_mes = {str(item["mes"]): item["total"] for item in solicitudes_por_mes}
-    solicitudes_por_semana = active_solicitudes.annotate(semana=ExtractWeek("fecha_ingreso_au")).values("semana").annotate(total=Count("id"))
-    entradas_por_semana = {str(item["semana"]): item["total"] for item in solicitudes_por_semana}
-    
+    solicitudes_por_mes = active_solicitudes.annotate(mes=ExtractMonth(
+        "fecha_ingreso_au")).values("mes").annotate(total=Count("id"))
+    entradas_por_mes = {str(item["mes"]): item["total"]
+                        for item in solicitudes_por_mes}
+    solicitudes_por_semana = active_solicitudes.annotate(semana=ExtractWeek(
+        "fecha_ingreso_au")).values("semana").annotate(total=Count("id"))
+    entradas_por_semana = {str(item["semana"]): item["total"]
+                           for item in solicitudes_por_semana}
+
     # Salidas activas del año actual
     salidas_activas = SalidaSOLICITUD.objects.filter(
         ingreso_solicitud__is_active=True,
@@ -764,42 +795,41 @@ def statistics_view(request):
         ingreso_solicitud__tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
     ).prefetch_related("funcionarios")
 
-    
     # Salidas por Semana (global)
     salidas_por_semana = defaultdict(int)
     for salida in salidas_activas:
         semana = salida.fecha_salida.isocalendar()[1]
         salidas_por_semana[str(semana)] += 1
-    
+
     # Salidas Totales por Mes
     salidas_totales_mes = defaultdict(int)
     for salida in salidas_activas:
         mes = salida.fecha_salida.month
         salidas_totales_mes[str(mes)] += 1
-    
+
     # Salidas por Funcionario (global)
     salidas_por_funcionario = defaultdict(int)
     for salida in salidas_activas:
         for funcionario in salida.funcionarios.all():
             salidas_por_funcionario[funcionario.nombre] += 1
-    
+
     total_solicitudes = active_solicitudes.count()
     total_salidas = salidas_activas.count()
-    
+
     # Salidas por Funcionario - Semana Actual
     salidas_semana_actual = defaultdict(int)
     for salida in salidas_activas:
         if salida.fecha_salida.isocalendar()[1] == current_week:
             for funcionario in salida.funcionarios.all():
                 salidas_semana_actual[funcionario.nombre] += 1
-    
+
     # Salidas por Funcionario - Mes Actual
     salidas_mes_actual = defaultdict(int)
     for salida in salidas_activas:
         if salida.fecha_salida.month == current_month:
             for funcionario in salida.funcionarios.all():
                 salidas_mes_actual[funcionario.nombre] += 1
-    
+
     # Entradas por Funcionario - Semana y Mes Actual
     entradas_semana_actual = defaultdict(int)
     entradas_mes_actual = defaultdict(int)
@@ -821,19 +851,19 @@ def statistics_view(request):
         fecha_ingreso_au__year=current_year
     ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
 
-
     for ingreso in ingresos_with_salidas:
         # Se toma la primera salida (ordenada por fecha)
-        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        salida = ingreso.salidas.filter(
+            is_active=True).order_by('fecha_salida').first()
         if salida:
             diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
-            mes = ingreso.fecha_ingreso_au.month  # Este valor (1,2,...,12) se usará como clave
+            # Este valor (1,2,...,12) se usará como clave
+            mes = ingreso.fecha_ingreso_au.month
             promedio_dias_por_mes.setdefault(mes, []).append(diff)
 
     # Calcular el promedio para cada mes
     for mes, diffs in promedio_dias_por_mes.items():
         promedio_dias_por_mes[mes] = sum(diffs) / len(diffs)
-
 
     # Calcular el promedio de días entre ingreso y la primera salida por funcionario
     promedio_dias_por_funcionario = {}
@@ -842,11 +872,13 @@ def statistics_view(request):
     ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
     for ingreso in ingresos_with_salidas:
         # Tomar la primera salida activa, ordenada por fecha
-        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        salida = ingreso.salidas.filter(
+            is_active=True).order_by('fecha_salida').first()
         if salida:
             diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
             for funcionario in ingreso.funcionarios_asignados.all():
-                promedio_dias_por_funcionario.setdefault(funcionario.nombre, []).append(diff)
+                promedio_dias_por_funcionario.setdefault(
+                    funcionario.nombre, []).append(diff)
     # Promediar los días para cada funcionario
     for funcionario, diffs in promedio_dias_por_funcionario.items():
         promedio_dias_por_funcionario[funcionario] = sum(diffs) / len(diffs)
@@ -860,7 +892,8 @@ def statistics_view(request):
         tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
     ).values("tipo_solicitud__tipo").annotate(total=Count("id"))
 
-    pendientes_por_tipo = {item["tipo_solicitud__tipo"]: item["total"] for item in pendientes_por_tipo_qs}
+    pendientes_por_tipo = {item["tipo_solicitud__tipo"]
+        : item["total"] for item in pendientes_por_tipo_qs}
 
     pendientes_por_funcionario_qs = IngresoSOLICITUD.objects.filter(
         is_active=True,
@@ -869,7 +902,8 @@ def statistics_view(request):
         tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
     ).values("funcionarios_asignados__nombre").annotate(total=Count("id"))
 
-    pendientes_por_funcionario = {item["funcionarios_asignados__nombre"]: item["total"] for item in pendientes_por_funcionario_qs}
+    pendientes_por_funcionario = {
+        item["funcionarios_asignados__nombre"]: item["total"] for item in pendientes_por_funcionario_qs}
 
     pendientes_por_solicitante_qs = IngresoSOLICITUD.objects.filter(
         is_active=True,
@@ -878,7 +912,8 @@ def statistics_view(request):
         tipo_solicitud__id__in=EXCLUDED_TIPO_IDS
     ).values("depto_solicitante__nombre").annotate(total=Count("id"))
 
-    pendientes_por_solicitante = {item["depto_solicitante__nombre"]: item["total"] for item in pendientes_por_solicitante_qs}
+    pendientes_por_solicitante = {
+        item["depto_solicitante__nombre"]: item["total"] for item in pendientes_por_solicitante_qs}
 
     # Calcular el promedio de días entre ingreso y la primera salida por solicitante
     promedio_dias_por_solicitante = {}
@@ -888,7 +923,6 @@ def statistics_view(request):
         fecha_ingreso_au__year=current_year
     ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
 
-
     # Calcular el promedio de días entre ingreso y la primera salida por tipo de solicitud
     promedio_dias_por_tipo = {}
     ingresos_with_salidas = IngresoSOLICITUD.objects.filter(
@@ -897,28 +931,34 @@ def statistics_view(request):
         fecha_ingreso_au__year=current_year
     ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS).distinct()
     for ingreso in ingresos_with_salidas:
-        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        salida = ingreso.salidas.filter(
+            is_active=True).order_by('fecha_salida').first()
         if salida:
             diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
-            tipo = ingreso.tipo_solicitud.tipo  # Asegúrate de que 'tipo' es el campo que quieres mostrar
+            # Asegúrate de que 'tipo' es el campo que quieres mostrar
+            tipo = ingreso.tipo_solicitud.tipo
             promedio_dias_por_tipo.setdefault(tipo, []).append(diff)
     # Promediar los días para cada tipo
     for tipo, diffs in promedio_dias_por_tipo.items():
         promedio_dias_por_tipo[tipo] = sum(diffs) / len(diffs)
 
     for ingreso in ingresos_with_salidas:
-        salida = ingreso.salidas.filter(is_active=True).order_by('fecha_salida').first()
+        salida = ingreso.salidas.filter(
+            is_active=True).order_by('fecha_salida').first()
         if salida:
             diff = (salida.fecha_salida - ingreso.fecha_ingreso_au).days
-            solicitante = ingreso.depto_solicitante.nombre  # Se asume que este es el solicitante
-            promedio_dias_por_solicitante.setdefault(solicitante, []).append(diff)
+            # Se asume que este es el solicitante
+            solicitante = ingreso.depto_solicitante.nombre
+            promedio_dias_por_solicitante.setdefault(
+                solicitante, []).append(diff)
 
     for solicitante, diffs in promedio_dias_por_solicitante.items():
         promedio_dias_por_solicitante[solicitante] = sum(diffs) / len(diffs)
 
-    solicitudes_por_solicitante = active_solicitudes.values("depto_solicitante__nombre").annotate(total=Count("id"))
-    solicitudes_por_solicitante = { item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_solicitante }
-
+    solicitudes_por_solicitante = active_solicitudes.values(
+        "depto_solicitante__nombre").annotate(total=Count("id"))
+    solicitudes_por_solicitante = {
+        item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_solicitante}
 
     context = {
         "solicitudes_por_depto": json.dumps({item["depto_solicitante__nombre"]: item["total"] for item in solicitudes_por_depto}, cls=DjangoJSONEncoder),
@@ -927,7 +967,8 @@ def statistics_view(request):
         "solicitudes_por_tipo_solicitud": json.dumps({item["tipo_solicitud__tipo"]: item["total"] for item in solicitudes_por_tipo_solicitud}, cls=DjangoJSONEncoder),
         "entradas_por_mes": json.dumps(entradas_por_mes, cls=DjangoJSONEncoder),
         "entradas_por_semana": json.dumps(entradas_por_semana, cls=DjangoJSONEncoder),
-        "salidas_por_mes": json.dumps(dict(entradas_por_mes), cls=DjangoJSONEncoder),  # Ajusta si deseas otras etiquetas
+        # Ajusta si deseas otras etiquetas
+        "salidas_por_mes": json.dumps(dict(entradas_por_mes), cls=DjangoJSONEncoder),
         "salidas_por_semana": json.dumps(dict(salidas_por_semana), cls=DjangoJSONEncoder),
         "salidas_por_funcionario": json.dumps(dict(salidas_por_funcionario), cls=DjangoJSONEncoder),
         "total_solicitudes": total_solicitudes,
@@ -947,7 +988,7 @@ def statistics_view(request):
         "solicitudesPorSolicitante": json.dumps(solicitudes_por_solicitante, cls=DjangoJSONEncoder),
         "promedio_dias_por_tipo": json.dumps(promedio_dias_por_tipo, cls=DjangoJSONEncoder),
     }
-    
+
     return render(request, "bnup/statistics.html", context)
 
 def get_week_range(year, week):
@@ -970,7 +1011,7 @@ def get_week_range(year, week):
 def report_view(request):
     current_year = datetime.now().year
     active_solicitudes = IngresoSOLICITUD.objects.filter(
-        is_active=True, 
+        is_active=True,
         fecha_ingreso_au__year=current_year
     ).exclude(tipo_solicitud__id__in=EXCLUDED_TIPO_IDS)
     total_solicitudes = active_solicitudes.count()
@@ -983,18 +1024,26 @@ def report_view(request):
 
     tasa_respuesta = (total_salidas / total_solicitudes * 100) if total_solicitudes else 0
 
-    solicitudes_con_salida = active_solicitudes.filter(salidas__isnull=False).distinct().count()
-    porcentaje_solicitudes_con_salida = (solicitudes_con_salida / total_solicitudes * 100) if total_solicitudes else 0
+    solicitudes_con_salida = active_solicitudes.filter(
+        salidas__isnull=False).distinct().count()
+    porcentaje_solicitudes_con_salida = (
+        solicitudes_con_salida / total_solicitudes * 100) if total_solicitudes else 0
 
-    solicitudes_con_mas_de_una = active_solicitudes.annotate(num_salidas=Count('salidas')).filter(num_salidas__gt=1).count()
-    porcentaje_solicitudes_con_mas_de_una = (solicitudes_con_mas_de_una / total_solicitudes * 100) if total_solicitudes else 0
+    solicitudes_con_mas_de_una = active_solicitudes.annotate(
+        num_salidas=Count('salidas')).filter(num_salidas__gt=1).count()
+    porcentaje_solicitudes_con_mas_de_una = (
+        solicitudes_con_mas_de_una / total_solicitudes * 100) if total_solicitudes else 0
 
-    promedio_salidas = (total_salidas / total_solicitudes) if total_solicitudes else 0
+    promedio_salidas = (
+        total_salidas / total_solicitudes) if total_solicitudes else 0
 
     # Entradas por Mes: calcular y ordenar
-    entradas_por_mes_qs = active_solicitudes.annotate(mes=ExtractMonth("fecha_ingreso_au")).values("mes").annotate(total=Count("id"))
-    entradas_por_mes = {item["mes"]: item["total"] for item in entradas_por_mes_qs}
+    entradas_por_mes_qs = active_solicitudes.annotate(mes=ExtractMonth(
+        "fecha_ingreso_au")).values("mes").annotate(total=Count("id"))
+    entradas_por_mes = {item["mes"]: item["total"]
+                        for item in entradas_por_mes_qs}
     sorted_meses = sorted(entradas_por_mes.items(), key=lambda x: x[1], reverse=True)
+    
     # Aquí preparamos el top 3 con nombres y porcentajes
     meses_es = {
         1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
@@ -1004,7 +1053,8 @@ def report_view(request):
     if sorted_meses:
         top3_meses_sorted = sorted_meses[:3]
         top3_total_meses = sum(cantidad for mes, cantidad in top3_meses_sorted)
-        top3_porcentaje_meses = (top3_total_meses / total_solicitudes * 100) if total_solicitudes else 0
+        top3_porcentaje_meses = (
+            top3_total_meses / total_solicitudes * 100) if total_solicitudes else 0
         # Preparamos una lista detallada para los 3 meses
         top3_meses_detailed = []
         for mes, cantidad in top3_meses_sorted:
@@ -1023,13 +1073,15 @@ def report_view(request):
         top3_meses_detailed = []
 
     # Entradas por Semana (lo que ya tienes)
-    entradas_por_semana_qs = active_solicitudes.annotate(semana=ExtractWeek("fecha_ingreso_au")).values("semana").annotate(total=Count("id"))
+    entradas_por_semana_qs = active_solicitudes.annotate(semana=ExtractWeek(
+        "fecha_ingreso_au")).values("semana").annotate(total=Count("id"))
     entradas_por_semana = {item["semana"]: item["total"] for item in entradas_por_semana_qs}
     sorted_semanas = sorted(entradas_por_semana.items(), key=lambda x: x[1], reverse=True)
     if sorted_semanas:
         top3_semanas = sorted_semanas[:3]
         top3_total_semanas = sum(cantidad for semana, cantidad in top3_semanas)
-        top3_porcentaje_semanas = (top3_total_semanas / total_solicitudes * 100) if total_solicitudes else 0
+        top3_porcentaje_semanas = (
+            top3_total_semanas / total_solicitudes * 100) if total_solicitudes else 0
         top3_weeks_descriptive = []
         for semana, cantidad in top3_semanas:
             monday, friday, month_es = get_week_range(current_year, semana)
@@ -1046,28 +1098,33 @@ def report_view(request):
         top3_weeks_descriptive = []
 
     # Solicitudes agrupadas por departamento
-    solicitudes_por_depto_qs = active_solicitudes.values('depto_solicitante__nombre').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_depto_qs = active_solicitudes.values(
+        'depto_solicitante__nombre').annotate(total=Count('id')).order_by('-total')
     solicitudes_por_depto_list = list(solicitudes_por_depto_qs)
     top_10_departamentos = solicitudes_por_depto_list[:10]
-    departamentos_adicionales = len(solicitudes_por_depto_list) - len(top_10_departamentos)
+    departamentos_adicionales = len(
+        solicitudes_por_depto_list) - len(top_10_departamentos)
 
     # Solicitudes agrupadas por Funcionario Asignado
-    solicitudes_por_funcionario_qs = active_solicitudes.values('funcionarios_asignados__nombre').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_funcionario_qs = active_solicitudes.values(
+        'funcionarios_asignados__nombre').annotate(total=Count('id')).order_by('-total')
     solicitudes_por_funcionario = list(solicitudes_por_funcionario_qs)
 
     # Solicitudes agrupadas por Tipo de Recepción
-    solicitudes_por_tipo_recepcion_qs = active_solicitudes.values('tipo_recepcion__tipo').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_tipo_recepcion_qs = active_solicitudes.values(
+        'tipo_recepcion__tipo').annotate(total=Count('id')).order_by('-total')
     solicitudes_por_tipo_recepcion = list(solicitudes_por_tipo_recepcion_qs)
 
     # Solicitudes agrupadas por Tipo de Solicitud
-    solicitudes_por_tipo_solicitud_qs = active_solicitudes.values('tipo_solicitud__tipo').annotate(total=Count('id')).order_by('-total')
+    solicitudes_por_tipo_solicitud_qs = active_solicitudes.values(
+        'tipo_solicitud__tipo').annotate(total=Count('id')).order_by('-total')
     solicitudes_por_tipo_solicitud = list(solicitudes_por_tipo_solicitud_qs)
 
     # Asumimos que IngresoSOLICITUD tiene una relación many-to-many llamada "funcionarios_asignados"
     # Para cada funcionario, calculamos cuántas solicitudes están asignadas.
     top_funcionarios_qs = active_solicitudes.values('funcionarios_asignados__nombre') \
-                            .annotate(total=Count('id')) \
-                            .order_by('-total')
+        .annotate(total=Count('id')) \
+        .order_by('-total')
 
     # Convertimos a lista y calculamos el porcentaje de cada uno
     top_funcionarios = []
@@ -1087,9 +1144,11 @@ def report_view(request):
     # Para los 3 departamentos con mayor solicitudes:
     top_3_deptos = list(active_solicitudes.values('depto_solicitante__nombre').annotate(total=Count('id')).order_by('-total'))[:3]
     total_top3_deptos = sum(item['total'] for item in top_3_deptos)
-    top3_percentage_deptos = (total_top3_deptos / total_solicitudes * 100) if total_solicitudes else 0
+    top3_percentage_deptos = (
+        total_top3_deptos / total_solicitudes * 100) if total_solicitudes else 0
     rest_total_deptos = total_solicitudes - total_top3_deptos
-    rest_percentage_deptos = (rest_total_deptos / total_solicitudes * 100) if total_solicitudes else 0
+    rest_percentage_deptos = (
+        rest_total_deptos / total_solicitudes * 100) if total_solicitudes else 0
 
     # Solicitudes pendientes: aquellas sin salidas asociadas
     pendientes_qs = active_solicitudes.filter(salidas__isnull=True)
@@ -1102,14 +1161,17 @@ def report_view(request):
             if nombre not in pendientes_por_funcionario:
                 pendientes_por_funcionario[nombre] = {"total": 0, "ingresos": []}
             pendientes_por_funcionario[nombre]["total"] += 1
-            pendientes_por_funcionario[nombre]["ingresos"].append(sol.numero_ingreso)
+            pendientes_por_funcionario[nombre]["ingresos"].append(
+                sol.numero_ingreso)
 
     # Convertimos el diccionario en una lista (opcional: ordenada de mayor a menor número de solicitudes pendientes)
     pendientes_por_funcionario_list = [
-        {"nombre": nombre, "total": data["total"], "ingresos": data["ingresos"]}
+        {"nombre": nombre, "total": data["total"],
+            "ingresos": data["ingresos"]}
         for nombre, data in pendientes_por_funcionario.items()
     ]
-    pendientes_por_funcionario_list = sorted(pendientes_por_funcionario_list, key=lambda x: x["total"], reverse=True)
+    pendientes_por_funcionario_list = sorted(
+        pendientes_por_funcionario_list, key=lambda x: x["total"], reverse=True)
 
     # Solicitudes pendientes: aquellas sin salidas asociadas
     pendientes_qs = active_solicitudes.filter(salidas__isnull=True)
@@ -1126,10 +1188,12 @@ def report_view(request):
 
     # Convertir el diccionario en una lista de diccionarios ordenada (por ejemplo, de mayor a menor pendientes)
     pendientes_por_depto_list = [
-        {"nombre": nombre, "total": data["total"], "ingresos": data["ingresos"]}
+        {"nombre": nombre, "total": data["total"],
+            "ingresos": data["ingresos"]}
         for nombre, data in pendientes_por_depto.items()
     ]
-    pendientes_por_depto_list = sorted(pendientes_por_depto_list, key=lambda x: x["total"], reverse=True)
+    pendientes_por_depto_list = sorted(
+        pendientes_por_depto_list, key=lambda x: x["total"], reverse=True)
 
     # Solicitudes pendientes por Tipo de Solicitud: aquellas sin salidas asociadas
     pendientes_tipo_qs = active_solicitudes.filter(salidas__isnull=True)
@@ -1141,17 +1205,20 @@ def report_view(request):
         if tipo not in pendientes_por_tipo_solicitud:
             pendientes_por_tipo_solicitud[tipo] = {"total": 0, "ingresos": []}
         pendientes_por_tipo_solicitud[tipo]["total"] += 1
-        pendientes_por_tipo_solicitud[tipo]["ingresos"].append(sol.numero_ingreso)
+        pendientes_por_tipo_solicitud[tipo]["ingresos"].append(
+            sol.numero_ingreso)
 
     # Convertimos el diccionario en una lista para poder iterar y, opcionalmente, ordenar de mayor a menor
     pendientes_por_tipo_solicitud_list = [
         {"tipo": tipo, "total": data["total"], "ingresos": data["ingresos"]}
         for tipo, data in pendientes_por_tipo_solicitud.items()
     ]
-    pendientes_por_tipo_solicitud_list = sorted(pendientes_por_tipo_solicitud_list, key=lambda x: x["total"], reverse=True)
+    pendientes_por_tipo_solicitud_list = sorted(
+        pendientes_por_tipo_solicitud_list, key=lambda x: x["total"], reverse=True)
 
     # Solicitudes sin respuesta: aquellas sin salidas asociadas, ordenadas de manera ascendente (más antiguas primero)
-    solicitudes_sin_respuesta_qs = active_solicitudes.filter(salidas__isnull=True).order_by("fecha_ingreso_au")[:5]
+    solicitudes_sin_respuesta_qs = active_solicitudes.filter(
+        salidas__isnull=True).order_by("fecha_ingreso_au")[:5]
 
     # Preparamos una lista de las 5 solicitudes más antiguas sin respuesta
     solicitudes_mas_antiguas = []
@@ -1159,16 +1226,18 @@ def report_view(request):
         tipo_solicitud = sol.tipo_solicitud.tipo
         solicitante = sol.depto_solicitante.nombre
         # Si hay más de un funcionario, los unimos en una cadena separados por comas
-        funcionarios = ", ".join([f.nombre for f in sol.funcionarios_asignados.all()])
+        funcionarios = ", ".join(
+            [f.nombre for f in sol.funcionarios_asignados.all()])
         solicitudes_mas_antiguas.append({
             "tipo_solicitud": tipo_solicitud,
             "solicitante": solicitante,
             "funcionarios": funcionarios,
-            "numero_ingreso": sol.numero_ingreso,  # opcional, puedes mostrarlo si lo necesitas
+            # opcional, puedes mostrarlo si lo necesitas
+            "numero_ingreso": sol.numero_ingreso,
             "fecha_ingreso": sol.fecha_ingreso_au,  # opcional, si quieres mostrar la fecha
         })
 
-            # —————— SALIDAS AGRUPADAS POR CATEGORÍAS ——————
+        # —————— SALIDAS AGRUPADAS POR CATEGORÍAS ——————
     # Obtenemos las salidas de este año asociadas a las solicitudes activas
     salidas_qs = SalidaSOLICITUD.objects.filter(
         ingreso_solicitud__in=active_solicitudes,
@@ -1189,7 +1258,7 @@ def report_view(request):
     salidas_por_tipo_recepcion = list(salidas_por_tipo_recepcion_qs)
 
     # 3) Salidas por Solicitante (Departamento)
-        # Por Solicitante
+    # Por Solicitante
     salidas_por_solicitante_qs = salidas_qs.values(
         'ingreso_solicitud__depto_solicitante__nombre'
     ).annotate(total=Count('id')).order_by('-total')
@@ -1201,9 +1270,6 @@ def report_view(request):
     resto_solicitantes = full[10:]
     total_resto = sum(item['total'] for item in resto_solicitantes)
     resto_pct = (total_resto / total_salidas * 100) if total_salidas else 0
-
-    
-
 
     # 4) Salidas por Funcionario Asignado (recorremos m2m)
     salidas_por_funcionario = {}
@@ -1235,9 +1301,9 @@ def report_view(request):
     # lista ordenada cronológicamente
     entradas_por_mes_table = [
         {
-        "mes_num": mes,
-        "mes_nombre": meses_es.get(mes, str(mes)),
-        "cantidad": cantidad
+            "mes_num": mes,
+            "mes_nombre": meses_es.get(mes, str(mes)),
+            "cantidad": cantidad
         }
         for mes, cantidad in sorted(entradas_por_mes.items())
     ]
@@ -1247,18 +1313,19 @@ def report_view(request):
     # ========================================================================
     current_month = datetime.now().month
     current_month_nombre = meses_es[current_month]
-    qs_mes_actual = active_solicitudes.filter(fecha_ingreso_au__month=current_month)
+    qs_mes_actual = active_solicitudes.filter(
+        fecha_ingreso_au__month=current_month)
     total_solicitudes_mes_actual = qs_mes_actual.count()
     solicitudes_mes_actual_por_funcionario = list(
         qs_mes_actual.values('funcionarios_asignados__nombre')
-                    .annotate(total=Count('id'))
-                    .order_by('-total')
+        .annotate(total=Count('id'))
+        .order_by('-total')
     )
 
     # —————— RANGO DEL MES ACTUAL ——————
     first_day = date(current_year, current_month, 1)
     last_day_num = calendar.monthrange(current_year, current_month)[1]
-    last_day  = date(current_year, current_month, last_day_num)
+    last_day = date(current_year, current_month, last_day_num)
     dias_es = {
         'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles',
         'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado',
@@ -1309,10 +1376,11 @@ def report_view(request):
     )
     # Agrupar por funcionario asignado
     sem_act_qs = qs_semana_actual.values('funcionarios_asignados__nombre')\
-                     .annotate(total=Count('id'))\
-                     .order_by('-total')
+        .annotate(total=Count('id'))\
+        .order_by('-total')
     solicitudes_semana_actual_por_funcionario = [
-        {'nombre': item['funcionarios_asignados__nombre'], 'total': item['total']}
+        {'nombre': item['funcionarios_asignados__nombre'],
+            'total': item['total']}
         for item in sem_act_qs
     ]
 
@@ -1320,23 +1388,21 @@ def report_view(request):
     #   ingresos_by[(nombre_funcionario, tipo_solicitud)] = cantidad de ingresos
     #   salidas_by[(nombre_funcionario, tipo_solicitud)]  = cantidad de salidas asociadas
     ingresos_by = defaultdict(int)
-    salidas_by  = defaultdict(int)
+    salidas_by = defaultdict(int)
 
     # Prefetch para no golpear la BD en cada iteración
-    qs_ingresos_prefetch = active_solicitudes.prefetch_related('funcionarios_asignados', 
-                                                               'salidas')
+    qs_ingresos_prefetch = active_solicitudes.prefetch_related('funcionarios_asignados', 'salidas')
 
     for ingreso in qs_ingresos_prefetch:
         tipo = ingreso.tipo_solicitud.tipo
         # Contamos cuántas salidas activas de este ingreso cayeron en el año actual:
         # (suponemos que SalidaSOLICITUD.fe​cha_salida__year=current_year ya está filtrado en salidas_qs)
-        salidas_del_ingreso = ingreso.salidas.filter(is_active=True, 
-                                                      fecha_salida__year=current_year).count()
+        salidas_del_ingreso = ingreso.salidas.filter(is_active=True, fecha_salida__year=current_year).count()
 
         for funcionario in ingreso.funcionarios_asignados.all():
             nombre_func = funcionario.nombre
             ingresos_by[(nombre_func, tipo)] += 1
-            salidas_by[(nombre_func, tipo)]  += salidas_del_ingreso
+            salidas_by[(nombre_func, tipo)] += salidas_del_ingreso
 
     # Convertimos esos dos dicts en una lista “plana”:
     # [
@@ -1371,12 +1437,11 @@ def report_view(request):
     # Convertimos en lista de dicts:
     lista_agrupada = [
         {
-          'funcionario': nombre,
-          'tipos':       agrupado_por_funcionario_tipo[nombre]
+            'funcionario': nombre,
+            'tipos':       agrupado_por_funcionario_tipo[nombre]
         }
         for nombre in agrupado_por_funcionario_tipo
     ]
-
 
     context = {
         "total_solicitudes": total_solicitudes,
@@ -1442,12 +1507,14 @@ def report_view(request):
 def get_salidas(request, solicitud_id):
     if request.method == "GET":
         try:
-            solicitud = IngresoSOLICITUD.objects.get(id=solicitud_id, is_active=True)
+            solicitud = IngresoSOLICITUD.objects.get(
+                id=solicitud_id, is_active=True)
         except IngresoSOLICITUD.DoesNotExist:
             return JsonResponse({"success": False, "error": "La solicitud no existe o ha sido eliminada."})
 
         try:
-            salidas = SalidaSOLICITUD.objects.filter(ingreso_solicitud=solicitud, is_active=True)
+            salidas = SalidaSOLICITUD.objects.filter(
+                ingreso_solicitud=solicitud, is_active=True)
             salidas_data = []
             for salida in salidas:
                 try:
@@ -1564,6 +1631,7 @@ def create_salida(request):
 
             # Notificación post-commit
             absolute_url = "http://asesoriaurbana.munivalpo.cl/"
+
             def _send():
                 try:
                     notify_egreso_created(
@@ -1600,7 +1668,7 @@ def create_salida(request):
 def edit_salida(request):
     # ───────────────────────────────────────────────────────── permisos ──
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
-    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    tipo = perfil.tipo_usuario.nombre if perfil else None
     if tipo not in ["ADMIN", "SECRETARIA", "FUNCIONARIO", "JEFE"]:
         return JsonResponse({"success": False, "error": "Sin permiso."})
 
@@ -1616,7 +1684,7 @@ def edit_salida(request):
             "fecha_salida":  salida.fecha_salida.strftime("%Y-%m-%d"),
             "descripcion":   salida.descripcion or "",
             "archivo_url":   salida.archivo_adjunto_salida.url      # ★ NUEVO
-                            if salida.archivo_adjunto_salida else "",
+            if salida.archivo_adjunto_salida else "",
             "funcionarios": [
                 {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
             ],
@@ -1652,10 +1720,10 @@ def edit_salida(request):
 
     # --------------------------------------------------------
 
-
     # ❹ Funcionarios (sólo ADMIN / SECRETARIA / JEFE)
     if tipo in ["ADMIN", "SECRETARIA", "JEFE"]:
-        raw_list = request.POST.getlist("funcionarios_salidas")  # puede venir ["3","7"] o ["3,7"]
+        # puede venir ["3","7"] o ["3,7"]
+        raw_list = request.POST.getlist("funcionarios_salidas")
         ids = []
         for item in raw_list:
             if not item:
@@ -1676,20 +1744,19 @@ def edit_salida(request):
 
         salida.funcionarios.set(qs_func)
 
-
     salida.save()
 
     # ─────────────────────────────────────────────── respuesta JSON final ─
     return JsonResponse({
-    "success": True,
-    "data": {
+        "success": True,
+        "data": {
             "id":            salida.id,
             "solicitud_id":  salida.ingreso_solicitud.id,
             "numero_salida": salida.numero_salida,
             "fecha_salida":  salida.fecha_salida.strftime("%d/%m/%Y"),
             "descripcion":   salida.descripcion or "",
             "archivo_url":   salida.archivo_adjunto_salida.url     # ★ NUEVO
-                            if salida.archivo_adjunto_salida else "",
+            if salida.archivo_adjunto_salida else "",
             "funcionarios": [
                 {"id": f.id, "nombre": f.nombre} for f in salida.funcionarios.all()
             ],
@@ -1787,7 +1854,7 @@ def validate_egreso_numero(request):
 def egresos_au_create(request):
     # ⬇️ permiso
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
-    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    tipo = perfil.tipo_usuario.nombre if perfil else None
     if tipo not in ["ADMIN", "SECRETARIA"]:
         if request.method == "GET":
             return JsonResponse({"success": False, "error": "Sin permiso."}, status=403)
@@ -1802,12 +1869,12 @@ def egresos_au_create(request):
         })
 
     # POST
-    numero    = (request.POST.get("numero_egreso") or "").strip()
+    numero = (request.POST.get("numero_egreso") or "").strip()
     fecha_str = request.POST.get("fecha_egreso")
-    descr     = (request.POST.get("descripcion") or "").strip()
-    dest_id   = request.POST.get("destinatario")
-    archivo   = request.FILES.get("archivo_adjunto")
-    func_ids  = request.POST.get("funcionarios_seleccionados", "")
+    descr = (request.POST.get("descripcion") or "").strip()
+    dest_id = request.POST.get("destinatario")
+    archivo = request.FILES.get("archivo_adjunto")
+    func_ids = request.POST.get("funcionarios_seleccionados", "")
 
     if not numero:
         return JsonResponse({"success": False, "error": "Debe ingresar el número de egreso."}, status=400)
@@ -1842,14 +1909,15 @@ def egresos_au_create(request):
 
             if eg_inactivo:
                 eg = eg_inactivo
-                eg.fecha_egreso    = fecha
-                eg.descripcion     = descr
+                eg.fecha_egreso = fecha
+                eg.descripcion = descr
                 eg.destinatario_id = dest_id or None
                 if archivo:
                     eg.archivo_adjunto = archivo
                 eg.is_active = True
                 eg.save()
-                eg.funcionarios.set(lista_ids) if lista_ids else eg.funcionarios.clear()
+                eg.funcionarios.set(
+                    lista_ids) if lista_ids else eg.funcionarios.clear()
             else:
                 # ➌ crear normal
                 eg = EgresoAU.objects.create(
@@ -1878,12 +1946,13 @@ def egresos_au_create(request):
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 logger = logging.getLogger(__name__)
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def egresos_au_edit(request, egreso_id):
     # ⬇️ permiso
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
-    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    tipo = perfil.tipo_usuario.nombre if perfil else None
     if tipo not in ["ADMIN", "SECRETARIA"]:
         if request.method == "GET":
             return JsonResponse({"success": False, "error": "Sin permiso."}, status=403)
@@ -1918,13 +1987,13 @@ def egresos_au_edit(request, egreso_id):
 
     # POST
     try:
-        numero       = request.POST.get("numero_egreso")
-        fecha_str    = request.POST.get("fecha_egreso")
-        descr        = (request.POST.get("descripcion") or "").strip()
-        dest_id      = request.POST.get("destinatario")
-        archivo      = request.FILES.get("archivo_adjunto")
+        numero = request.POST.get("numero_egreso")
+        fecha_str = request.POST.get("fecha_egreso")
+        descr = (request.POST.get("descripcion") or "").strip()
+        dest_id = request.POST.get("destinatario")
+        archivo = request.FILES.get("archivo_adjunto")
         archivo_resp = request.FILES.get("archivo_respuesta")
-        func_ids     = request.POST.get("funcionarios_seleccionados", "")
+        func_ids = request.POST.get("funcionarios_seleccionados", "")
 
         # Duplicado de número: contra toda la tabla, excluyéndome
         if EgresoAU.objects.filter(numero_egreso=numero).exclude(id=eg.id).exists():
@@ -1933,7 +2002,6 @@ def egresos_au_edit(request, egreso_id):
                 status=400
             )
 
-
         # Fecha
         try:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
@@ -1941,9 +2009,9 @@ def egresos_au_edit(request, egreso_id):
             return JsonResponse({"success": False, "error": "Fecha de egreso inválida."}, status=400)
 
         # Asignaciones
-        eg.numero_egreso   = numero
-        eg.fecha_egreso    = fecha
-        eg.descripcion     = descr
+        eg.numero_egreso = numero
+        eg.fecha_egreso = fecha
+        eg.descripcion = descr
         eg.destinatario_id = dest_id or None
 
         # Reemplazo de archivos sólo si llegan
@@ -1962,12 +2030,14 @@ def egresos_au_edit(request, egreso_id):
         except IntegrityError:
             # por si algo se escapó, respondemos limpio (no 500)
             return JsonResponse(
-                {"success": False, "error": "Ya existe un egreso con ese número (único en base de datos)."},
+                {"success": False,
+                    "error": "Ya existe un egreso con ese número (único en base de datos)."},
                 status=400
             )
 
         # Many-to-many
-        ids = [int(fid) for fid in str(func_ids).split(',') if fid.strip().isdigit()]
+        ids = [int(fid)
+               for fid in str(func_ids).split(',') if fid.strip().isdigit()]
         eg.funcionarios.set(ids) if ids else eg.funcionarios.clear()
 
         data = {
@@ -1992,7 +2062,7 @@ def egresos_au_edit(request, egreso_id):
 @require_POST
 def delete_egresos_au(request):
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
-    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    tipo = perfil.tipo_usuario.nombre if perfil else None
     # ⬇️ permitir ADMIN y SECRETARIA (antes era solo ADMIN)
     if tipo not in ["ADMIN", "SECRETARIA"]:
         return JsonResponse({"success": False, "error": "No tiene permiso para eliminar registros."})
@@ -2014,6 +2084,7 @@ def delete_egresos_au(request):
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
 
+
 @login_required
 def egresos_au_fragment(request):
     egresos = (EgresoAU.objects.filter(is_active=True)
@@ -2022,7 +2093,7 @@ def egresos_au_fragment(request):
                .order_by('-numero_egreso')[:100])
 
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
-    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    tipo = perfil.tipo_usuario.nombre if perfil else None
 
     return render(request, 'bnup/egresos_au/egresos_au_table.html', {
         'egresos': egresos,
@@ -2034,7 +2105,7 @@ def egresos_au_fragment(request):
 def egresos_au_respuesta(request, egreso_id):
     # ⬇️ permiso (sólo ADMIN/SECRETARIA pueden subir respuesta)
     perfil = PerfilUsuario.objects.filter(user=request.user).first()
-    tipo   = perfil.tipo_usuario.nombre if perfil else None
+    tipo = perfil.tipo_usuario.nombre if perfil else None
     if tipo not in ["ADMIN", "SECRETARIA"]:
         return JsonResponse({"success": False, "error": "Sin permiso para registrar respuesta."}, status=403)
 
