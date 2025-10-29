@@ -38,9 +38,7 @@ from django.urls import reverse
 
 EXCLUDED_TIPO_IDS = (11, 12)
 
-def _send_ingreso_async(ingreso_id, absolute_url):
-    from bnup.models import IngresoSOLICITUD
-    from bnup.services.notifications import notify_ingreso_created
+def _send_ingreso_async(ingreso_id, absolute_url, fecha_responder_hasta_override=None):
 
     try:
         ingreso = IngresoSOLICITUD.objects.get(id=ingreso_id)
@@ -49,7 +47,8 @@ def _send_ingreso_async(ingreso_id, absolute_url):
             absolute_url=absolute_url,
             include_solicitante=False,
             bcc=None,
-            attach_file=False,   # ← sin adjunto
+            attach_file=False,
+            fecha_responder_hasta_override=fecha_responder_hasta_override,  # ← NUEVO
         )
     except Exception:
         pass
@@ -77,6 +76,20 @@ def bnup_form(request):
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")
+
+        # --- NUEVO: override de "Responder hasta" para Transparencia Activa (id 16) ---
+        fecha_responder_hasta_override = None
+        if tipo_solicitud_id == "16":
+            fecha_max_str = request.POST.get("fecha_maxima_respuesta", "").strip()
+            if not fecha_max_str:
+                return JsonResponse({"success": False, "error": "Debe indicar el plazo máximo (Transparencia Activa)."})
+            try:
+                fecha_tmp = datetime.strptime(fecha_max_str, "%Y-%m-%d").date()
+            except ValueError:
+                return JsonResponse({"success": False, "error": "Fecha de plazo máximo inválida."})
+            if fecha_tmp <= date.today():
+                return JsonResponse({"success": False, "error": "El plazo máximo debe ser posterior a la fecha actual."})
+            fecha_responder_hasta_override = fecha_tmp
 
         # ─── Número de documento / memo ─────────────────────────
         num_memo_str = request.POST.get("num_memo", "").strip()
@@ -230,7 +243,7 @@ def bnup_form(request):
                 # Envío asíncrono tras commit
                 transaction.on_commit(lambda: threading.Thread(
                     target=_send_ingreso_async,
-                    args=(ingreso_solicitud.id, absolute_url),
+                    args=(ingreso_solicitud.id, absolute_url, fecha_responder_hasta_override),  # ← NUEVO
                     daemon=True
                 ).start())
 

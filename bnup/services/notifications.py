@@ -1,11 +1,10 @@
+from bnup.services.fecha_utils import add_business_days_cl, business_days_between_cl, list_holidays_cl_between
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from bnup.services.fecha_utils import add_business_days_cl
-from datetime import timedelta
+from datetime import date, timedelta
 import holidays
-
-
 import logging
 import unicodedata
 
@@ -30,13 +29,10 @@ INFORMATIVE_TIPO_IDS = {TIPO_CONOC_Y_DIST_ID, TIPO_DECRETO_ALCALDICIO_ID}
 
 def _es_informativo(obj) -> bool:
     """
-    True si: (Ingreso.tipo_solicitud_id in {11,12}) o
-             (Salida.ingreso_solicitud.tipo_solicitud_id in {11,12})
+    True si: (Ingreso.tipo_solicitud_id in {11,12}) o (Salida.ingreso_solicitud.tipo_solicitud_id in {11,12})
     """
     ing = obj if hasattr(obj, "tipo_solicitud_id") else getattr(obj, "ingreso_solicitud", None)
     return getattr(ing, "tipo_solicitud_id", None) in INFORMATIVE_TIPO_IDS
-
-
 
 def _norm_text(s: str) -> str:
     if not s:
@@ -168,7 +164,7 @@ def context_ingreso(ingreso, absolute_url=None):
     }
 
 
-def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=False, include_solicitante=False):
+def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=False, include_solicitante=False, fecha_responder_hasta_override=None):
     """
     Envía correo HTML+texto cuando se crea un Ingreso.
     - include_solicitante: si True, copia al solicitante.
@@ -186,6 +182,35 @@ def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=
     cc_list = [SECRETARIA_EMAIL] if SECRETARIA_EMAIL and SECRETARIA_EMAIL not in to_list else []
 
     ctx = context_ingreso(ingreso, absolute_url=absolute_url)
+
+    # ===== Transparencia Activa (override) =====
+    start_ref = getattr(ingreso, "fecha_ingreso_au", None) or date.today()
+
+    if fecha_responder_hasta_override:
+        # Siempre usar la fecha override en el contexto
+        ctx["fecha_responder_hasta"] = fecha_responder_hasta_override
+
+        # Para TA no mostramos "X días hábiles":
+        # (si igual quisieras calcularlos para auditoría, no los metas a ctx o ponlos en otra key)
+        ctx["plazo_total"] = None
+
+        # Lista de feriados dentro del período (no cuentan como hábiles)
+        feriados = list_holidays_cl_between(start_ref, fecha_responder_hasta_override)
+        ctx["feriados_periodo"] = [
+            {"fecha": d.strftime("%d-%m-%Y"), "nombre": name}
+            for (d, name) in feriados
+        ]
+
+    else:
+        # ===== Caso general (sin override) =====
+        # si context_ingreso ya calculó fecha_responder_hasta, listamos feriados
+        end_ref = ctx.get("fecha_responder_hasta", None)
+        if start_ref and end_ref:
+            feriados = list_holidays_cl_between(start_ref, end_ref)
+            ctx["feriados_periodo"] = [
+                {"fecha": d.strftime("%d-%m-%Y"), "nombre": name}
+                for (d, name) in feriados
+            ]
     subject = subject_ingreso(ingreso)
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", settings.EMAIL_HOST_USER)
 

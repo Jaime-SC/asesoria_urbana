@@ -25,6 +25,7 @@
             updateBNUPFields();
             updateEditBNUPFields();
             initializeNewDeptoFeature();
+            initializeTransparenciaActivaDeadline();
 
             initIngresoFileCard();
             initEditIngresoFileCard();
@@ -3012,6 +3013,62 @@
             });
     }
 
+    // === Transparencia Activa (id 16): fecha límite manual (sin guardar en BD) ===
+    function initializeTransparenciaActivaDeadline() {
+        const form = document.getElementById('bnupForm');
+        const tipoSelect = document.getElementById('tipo_solicitud');
+        const wrapper = document.getElementById('transparenciaFechaWrapper');
+        const input = document.getElementById('fecha_maxima_respuesta');
+
+        if (!form || !tipoSelect || !wrapper || !input) return;
+
+        // min: siempre posterior a hoy → mañana (según hora local)
+        const today = new Date();
+        const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        const toYmd = (d) => {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        };
+        input.min = toYmd(tomorrow);
+
+        const toggle = () => {
+            const isTA = tipoSelect.value === '16';
+            wrapper.style.display = isTA ? 'block' : 'none';
+            if (!isTA) input.value = '';
+        };
+
+        tipoSelect.addEventListener('change', toggle);
+        toggle();
+
+        form.addEventListener('submit', (e) => {
+            if (tipoSelect.value === '16') {
+                if (!input.value) {
+                    e.preventDefault();
+                    Swal?.fire?.({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Falta el plazo máximo',
+                        text: 'Para Transparencia Activa, debes indicar una fecha posterior a hoy.',
+                    }) || alert('Debe seleccionar un plazo máximo para Transparencia Activa.');
+                    return;
+                }
+                const val = new Date(input.value + 'T00:00:00');
+                if (val <= today) {
+                    e.preventDefault();
+                    Swal?.fire?.({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Fecha inválida',
+                        text: 'La fecha debe ser posterior a hoy.',
+                    }) || alert('La fecha debe ser posterior a hoy.');
+                }
+            }
+        });
+    }
 
     /**
      * Agrega una nueva fila a la tabla de solicitudes con los datos proporcionados.

@@ -47,38 +47,49 @@
               </div>
             {% else %}
               <div style="margin:16px 0;padding:12px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;">
-                <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
-                  Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted. El plazo para responder es de <strong>{{ plazo_total|default:15 }} días hábiles</strong>
-                  {% if fecha_responder_hasta %}
-                    (máximo: {{ fecha_responder_hasta|date:'d-m-Y' }})
-                  {% endif %}.
-                </p>
+
+                {# Transparencia Activa (override): mostramos solo "Responder hasta" #}
+                {% if fecha_responder_hasta and not plazo_total %}
+                  <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
+                    Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted.
+                    {% if tipo_solicitud %} ({{ tipo_solicitud }}){% endif %}<br />
+                    <strong>Responder hasta: {{ fecha_responder_hasta|date:'d-m-Y' }}</strong>.
+                  </p>
+
+                {# Caso general: política de días hábiles #}
+                {% else %}
+                  <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
+                    Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted.
+                    El plazo para responder es de <strong>{{ plazo_total|default:15 }} días hábiles</strong>
+                    {% if fecha_responder_hasta %}(máximo: {{ fecha_responder_hasta|date:'d-m-Y' }}){% endif %}.
+                  </p>
+                {% endif %}
+
+                {# Aviso de feriados en el período #}
+                {% if feriados_periodo and feriados_periodo|length > 0 %}
+                  <p style="margin:8px 0 6px 0;font-size:14px;line-height:20px;">
+                    <strong>Nota:</strong> Dentro del período existen feriados que <em>no cuentan como días hábiles</em>:
+                  </p>
+                  <ul style="margin:0 0 6px 0;padding-left:18px;font-size:14px;line-height:20px;">
+                    {% for f in feriados_periodo %}
+                      <li>{{ f.fecha }} — {{ f.nombre }}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
 
                 <p style="margin:0 0 6px 0;font-size:14px;line-height:20px;">
                   <strong>Al cargar la respuesta, verifique:</strong>
                 </p>
                 <ul style="margin:0;padding-left:18px;font-size:14px;line-height:20px;">
-                  <li>
-                    <strong>Resumen de la materia tratada:</strong>
-                    incluir <em>palabras clave</em>, Cerro, Población, U.V., <em>ROL</em> de propiedad y siglas relevantes.
-                  </li>
-                  <li>
-                    <strong>Información ingresada:</strong>
-                    que sea coherente con el requerimiento original; campos completos, fechas correctas y referencias a anexos si corresponde.
-                  </li>
-                  <li>
-                    <strong>Números de documento:</strong>
-                    verificar concordancia entre <strong>N° de ingreso</strong> y <strong>N° de salida</strong>.
-                  </li>
-                  <li>
-                    <strong>Documentos escaneados:</strong>
-                    legibles, completos (todas las páginas), orientación correcta, buen contraste; idealmente un solo PDF y con anexos citados.
-                  </li>
+                  <li><strong>Resumen de la materia tratada:</strong> incluir <em>palabras clave</em>, Cerro, Población, U.V., <em>ROL</em> y siglas relevantes.</li>
+                  <li><strong>Información ingresada:</strong> coherencia con el requerimiento original; campos completos, fechas correctas y referencias a anexos.</li>
+                  <li><strong>Números de documento:</strong> concordancia entre <strong>N° de ingreso</strong> y <strong>N° de salida</strong>.</li>
+                  <li><strong>Documentos escaneados:</strong> legibles, completos, orientación correcta; idealmente un solo PDF con anexos citados.</li>
                 </ul>
-
                 <p style="margin:8px 0 0 0;font-size:14px;line-height:20px;">Muchas gracias.</p>
               </div>
             {% endif %}
+
 
             {% if absolute_url %}
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">

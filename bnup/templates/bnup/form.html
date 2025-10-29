@@ -87,6 +87,12 @@
                       <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
                     {% endfor %}
                   </select>
+                  <!-- Plazo máximo (solo para tipo 16: Transparencia Activa) -->
+                  <div id="transparenciaFechaWrapper" class="form-group" style="display:none; margin-top: .5rem;margin-bottom: 0;">
+                    <label for="fecha_maxima_respuesta">Plazo máximo</label>
+                    <input type="date" name="fecha_maxima_respuesta" id="fecha_maxima_respuesta" />
+                  </div>
+
                 </div>
                 <div class="form-group">
                   <label for="openFileModal">Adjuntar</label>
