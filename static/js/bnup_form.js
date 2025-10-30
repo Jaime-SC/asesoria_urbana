@@ -12,7 +12,6 @@
     let btnEliminarSalidas;    // botón “Eliminar seleccionadas” en el modal
     let btnEditarSalidas;      // botón de edición en modal de salidas
 
-
     /**
      * Inicializa la página BNUP, configurando variables y funciones necesarias.
      */
@@ -262,6 +261,51 @@
         sel.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
+    function resetCreateIngresoForm() {
+        const form = document.getElementById('bnupForm');
+        if (!form) return;
+
+        // 1) Reset nativo
+        form.reset();
+
+        // 2) Forzar selects a la opción "Seleccione"
+        ['#tipo_recepcion', '#tipo_solicitud', '#depto_solicitante'].forEach(sel => {
+            const el = form.querySelector(sel);
+            if (el) el.selectedIndex = 0;
+        });
+
+        // 3) Reaplicar visibilidad/estado de campos dependientes de tipo_recepcion
+        const recepSel = document.getElementById('tipo_recepcion');
+        const memoWrap = document.getElementById('memoFields');
+        const correoWrap = document.getElementById('correoFields');
+        const memoInput = document.getElementById('num_memo');
+        const correoIn = document.getElementById('correoSolicitante');
+        if (recepSel && typeof toggleRecepcionFields === 'function') {
+            toggleRecepcionFields(recepSel, memoWrap, correoWrap, memoInput, correoIn);
+        }
+
+        // 4) Ocultar/limpiar el plazo de Transparencia Activa (id 16)
+        const taWrap = document.getElementById('transparenciaFechaWrapper');
+        const taFecha = document.getElementById('fecha_maxima_respuesta');
+        if (taWrap && taFecha) {
+            taWrap.style.display = 'none';
+            taFecha.value = '';
+            // siempre posterior a HOY
+            const d = new Date(); d.setDate(d.getDate() + 1);
+            taFecha.min = d.toISOString().split('T')[0];
+        }
+
+        // 5) Multi-select de funcionarios (chips)
+        resetFuncionariosIngreso();
+
+        // 6) Limpiar archivo real y UI de cards del modal de archivo
+        const realFile = document.getElementById('archivo_adjunto');
+        if (realFile) realFile.value = '';
+        const list = document.getElementById('fileListContainer');
+        if (list) list.innerHTML = '';
+    }
+
+
     /**
      * Inicializa el modal del formulario BNUP con confirmación de guardado.
      */
@@ -281,7 +325,7 @@
 
         // Evento para abrir el modal del formulario BNUP
         btn.onclick = () => {
-            resetFuncionariosIngreso();
+            resetCreateIngresoForm(); 
             if (window.resetDescriptionTips) window.resetDescriptionTips(modal, ['#descripcion']);
             if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(modal);
             document.querySelector('#multi_funcionarios_ing')
@@ -294,6 +338,7 @@
         // Evento para cerrar el modal al hacer clic en el botón de cerrar
         closeModalButton.onclick = () => {
             // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+            resetCreateIngresoForm();
             content.classList.remove('animate__bounceIn');
             content.classList.add('animate__bounceOut');
             // modal.style.display = 'none';
@@ -324,6 +369,7 @@
                     content.classList.remove('animate__bounceOut');
                     content.classList.add('animate__bounceIn');
                     // Remover el listener para no duplicar eventos
+                    resetCreateIngresoForm();
                     content.removeEventListener('animationend', handleAnimationEnd);
                 });
             }
@@ -368,7 +414,6 @@
                     }
                 }
 
-
                 // Mostrar ventana de confirmación antes de guardar
                 Swal.fire({
                     heightAuto: false,
@@ -389,7 +434,6 @@
                         const desc = bnupForm.querySelector('#descripcion');
                         if (desc) standardizeInput(desc);
                         const formData = new FormData(bnupForm);
-
 
                         fetch('/bnup/', {
                             method: 'POST',
@@ -637,8 +681,6 @@
                         }
                     }
 
-
-
                     // Mostrar el modal de edición
                     if (window.resetDescriptionTips) window.resetDescriptionTips(editModal, ['#edit_descripcion']);
                     if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(editModal);
@@ -663,8 +705,6 @@
                     text: 'Ha ocurrido un error al cargar los datos.',
                 });
             });
-
-
 
         // Evento para manejar el guardado de cambios con confirmación previa
         const saveButton = document.getElementById('guardarEdicionBNUP');
@@ -692,7 +732,6 @@
                         if (desc) standardizeInput(desc);
 
                         const formData = new FormData(editForm);
-
 
                         fetch('/bnup/edit/', {
                             method: 'POST',
@@ -930,7 +969,6 @@
             }
         });
     }
-
 
     /**
      * Inicializa la selección de filas en la tabla, manejando botones de acción según el tipo de usuario.
@@ -1769,7 +1807,6 @@
         }
     }
 
-
     function openSalidaModal(solicitudId) {
         // Sólo ciertos roles pueden abrir el modal
         if (!['ADMIN', 'SECRETARIA', 'FUNCIONARIO', 'VISUALIZADOR', 'JEFE'].includes(tipo_usuario)) {
@@ -2385,8 +2422,6 @@
         if (list) list.innerHTML = '';
     }
 
-
-
     function openEditSalidaModal(salidaId) {
         /* ─────────────────────────── refs básicas ────────────────────────── */
         const modal = document.getElementById('editSalidaModal');
@@ -2591,7 +2626,6 @@
         });
     }
 
-
     function initEditSalidaFileCard() {
         window.setupFileCardModal({
             openBtn: '#openEditSalidaFileModal',
@@ -2613,8 +2647,6 @@
             }
         });
     }
-
-
 
     /**
  * Actualiza la fila de una salida ya mostrada en el modal.
@@ -2665,8 +2697,6 @@
         }
     }
     window.updateSalidaRow = updateSalidaRow;
-
-
 
     function openSalidaDescripcionModal(numeroSalida, fechaSalida, descripcion, funcionarios) {
         const modal = document.getElementById('descripcionSalidaModal');
@@ -2821,11 +2851,7 @@
     window.removeSalidaFuncionarioSelect = removeSalidaFuncionarioSelect;
     /* =========================================================== */
 
-
     /* ------------ el resto de tu código (initialize…, openModal…) -------- */
-
-
-
 
     function closeSalidaDescripcionModal() {
         const modal = document.getElementById('descripcionSalidaModal');
@@ -2839,8 +2865,6 @@
             }, { once: true });
         }
     }
-
-
 
     /**
      * Actualiza una fila específica de la tabla con los datos más recientes de la solicitud.
@@ -3286,7 +3310,6 @@
         // Insertar la nueva fila al inicio de la tabla
         tablaSolicitudesBody.insertBefore(row, tablaSolicitudesBody.firstChild);
     }
-
 
     /**
      * Inicializa las funcionalidades específicas cuando el DOM está completamente cargado.
