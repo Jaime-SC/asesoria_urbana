@@ -18,6 +18,8 @@
     function initializeBNUPPage() {
         const cardContent = document.querySelector('.cardContent');
         tipo_usuario = cardContent ? cardContent.getAttribute('data-tipo-usuario') : null;
+        // BNUP ▸ inicialización: dejar el tipo de usuario disponible globalmente
+        window.tipo_usuario = tipo_usuario;
 
         // Inicializar componentes si el formulario BNUP está presente
         if (document.querySelector('#bnupForm')) {
@@ -325,9 +327,16 @@
 
         // Evento para abrir el modal del formulario BNUP
         btn.onclick = () => {
-            resetCreateIngresoForm(); 
-            if (window.resetDescriptionTips) window.resetDescriptionTips(modal, ['#descripcion']);
+            resetCreateIngresoForm();
+            // Para ADMIN y SECRETARIA, en el modal de INGRESO NO mostrar tip por foco
+            if (window.resetDescriptionTips) {
+                window.resetDescriptionTips(modal, ['#descripcion'], {
+                    skipFocus: () => ['ADMIN', 'SECRETARIA'].includes(window.tipo_usuario)
+                });
+            }
+            // Botón info siempre disponible
             if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(modal);
+
             document.querySelector('#multi_funcionarios_ing')
                 ?.dispatchEvent(new Event('ms:reset'));
             modal.style.display = 'block';

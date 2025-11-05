@@ -1342,6 +1342,7 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
             '#edit_descripcion_salida'
         ];
         const tipHTML = opts.html || buildTipHTML(MAX_DESC_CHARS);
+        const skipFocus = typeof opts.skipFocus === 'function' ? opts.skipFocus : () => false;
 
         selectors.forEach(sel => {
             const el = root.querySelector(sel);
@@ -1355,17 +1356,27 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
                 }
             }, { passive: true });
 
-            // Handler de foco (solo una vez por apertura)
-            const handler = () => {
-                if (el.dataset.tipShown === '1') return; // ya mostrado en esta instancia
-                el.dataset.tipShown = '1';
-                showDescriptionTip(el, tipHTML);
-            };
+            // Guardamos handler (una sola referencia) para poder quitarlo si se pide
+            if (!el._descTipHandler) {
+                el._descTipHandler = () => {
+                    if (el.dataset.tipShown === '1') return; // ya mostrado en esta instancia
+                    el.dataset.tipShown = '1';
+                    showDescriptionTip(el, tipHTML);
+                };
+            }
 
-            el._descTipHandler = handler;
-            el.addEventListener('focus', handler, { once: true });
+            // Si se solicita saltarse el tip por foco (para esta instancia), NO bindear
+            if (skipFocus(el)) {
+                // por si traía un listener previo, lo quitamos
+                el.removeEventListener('focus', el._descTipHandler);
+                return; // no bind
+            }
+
+            // Bind de foco (solo una vez por apertura)
+            el.addEventListener('focus', el._descTipHandler, { once: true });
         });
     }
+
 
     /**
      * Enlaza el click en el ícono/botón "info" para mostrar el tip bajo demanda,
@@ -1386,15 +1397,30 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
             const lbl = container.querySelector('label[for]');
             if (!btn || !lbl) return;
 
-            // No marcamos tipShown aquí: el botón es "siempre disponible".
+            // Botón siempre disponible (no toca tipShown)
             btn.addEventListener('click', (ev) => {
                 ev.preventDefault();
                 ev.stopPropagation();
-                const targetEl = root.getElementById ? root.getElementById(lbl.getAttribute('for')) : document.getElementById(lbl.getAttribute('for'));
+
+                const targetEl = root.getElementById
+                    ? root.getElementById(lbl.getAttribute('for'))
+                    : document.getElementById(lbl.getAttribute('for'));
+                if (!targetEl) return;
+
+                // ⬇️ Evita que el foco inmediato vuelva a disparar el tip de "focus"
+                // 1) márcalo como mostrado para esta instancia
+                targetEl.dataset.tipShown = '1';
+                // 2) quita el handler de focus si estaba armado
+                if (targetEl._descTipHandler) {
+                    targetEl.removeEventListener('focus', targetEl._descTipHandler);
+                }
+
+                // Muestra el tip bajo demanda
                 showDescriptionTip(targetEl, tipHTML);
             }, { passive: false });
         });
     }
+
 
     /**
      * Reinicia el tip “por instancia” (al abrir un modal/form).
@@ -1405,22 +1431,29 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
         '#descripcion_salida',
         '#edit_descripcion',
         '#edit_descripcion_salida'
-    ]) {
+    ], opts = {}) {
+        const skipFocus = typeof opts.skipFocus === 'function' ? opts.skipFocus : () => false;
+
         selectors.forEach(sel => {
             const el = root.querySelector(sel);
             if (!el) return;
-            el.dataset.tipShown = ''; // borra estado para la nueva instancia
-            // El listener de foco era once:true; si se consumió, volvemos a armarlo:
+
+            // reinicia el flag de “ya mostrado” para la nueva instancia
+            el.dataset.tipShown = '';
+
+            // siempre quitamos cualquier listener anterior asociado a nuestro handler
             if (el._descTipHandler) {
-                el.addEventListener('focus', el._descTipHandler, { once: true });
+                el.removeEventListener('focus', el._descTipHandler);
             }
         });
 
-        // Nos aseguramos de que los inputs recién agregados (si los hubiera) queden configurados:
-        setupDescriptionTips(root, { selectors });
-        // El botón de info se puede re-enlazar sin problema (idempotente).
+        // re-armamos los handlers según skipFocus para esta instancia
+        setupDescriptionTips(root, { selectors, skipFocus });
+
+        // botón “info” es idempotente
         bindDescriptionTipButtons(root);
     }
+
 
     // Exponer global
     window.setupDescriptionTips = setupDescriptionTips;
