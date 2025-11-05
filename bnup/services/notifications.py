@@ -24,7 +24,7 @@ SECRETARIA_EMAIL    = "dpalacios@munivalpo.cl"
 TIPO_CONOC_Y_DIST_ID = 12
 TIPO_DECRETO_ALCALDICIO_ID = 11
 TIPO_ALCOHOL_ID      = 10
-
+TIPO_TRANSPARENCIA_ID = 5
 INFORMATIVE_TIPO_IDS = {TIPO_CONOC_Y_DIST_ID, TIPO_DECRETO_ALCALDICIO_ID}
 
 def _es_informativo(obj) -> bool:
@@ -104,13 +104,20 @@ def _looks_like_attachment_change(label, old, new) -> bool:
         return True
     return False
 
-
+# Política de plazos por tipo de solicitud
+# - Alcohol (id=10 p.ej.): 5 hábiles → avisos en 3 y 1
+# - Transparencia (id=5): 20 hábiles → avisos en 10, 5, 3 y 1
+# - Resto: 15 hábiles → avisos en 5, 3 y 1
 def get_deadline_policy_for_ingreso(ingreso):
-    """
-    Devuelve (total_dias_habiles, buckets) para el ingreso dado.
-    """
-    if getattr(ingreso, "tipo_solicitud_id", None) == TIPO_ALCOHOL_ID:
+    tipo = getattr(ingreso, "tipo_solicitud_id", None)
+
+    if tipo == TIPO_ALCOHOL_ID:
         return (5, (3, 1))
+
+    if tipo == TIPO_TRANSPARENCIA_ID:
+        return (20, (10, 5, 3, 1))
+
+    # Resto de tipos
     return (15, (5, 3, 1))
 
 
@@ -145,23 +152,32 @@ def context_ingreso(ingreso, absolute_url=None):
     if not es_informativo and ingreso.fecha_ingreso_au:
         try:
             plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)
+            # inclusivo: último día = offset total-1
             fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, plazo_total - 1)
         except Exception:
             pass
 
+    # NUEVO: bandera para plantilla
+    tipo_id = getattr(ingreso, "tipo_solicitud_id", None)
+    tipo_txt = getattr(getattr(ingreso, "tipo_solicitud", None), "tipo", "") or ""
+    es_transparencia = (tipo_id == TIPO_TRANSPARENCIA_ID) or (tipo_txt.strip().upper() == "TRANSPARENCIA")
+
     return {
         "numero_ingreso": ingreso.numero_ingreso,
         "tipo_recepcion": ingreso.tipo_recepcion.tipo,
-        "tipo_solicitud": ingreso.tipo_solicitud.tipo,
+        "tipo_solicitud": tipo_txt,
+        "tipo_solicitud_id": tipo_id,            # ← NUEVO
         "depto_solicitante": ingreso.depto_solicitante.nombre,
         "fecha_ingreso": ingreso.fecha_ingreso_au,
         "fecha_documento": ingreso.fecha_solicitud,
         "descripcion": ingreso.descripcion or "",
         "absolute_url": absolute_url or "",
         "fecha_responder_hasta": fecha_responder_hasta,
-        "plazo_total": plazo_total,         # None si informativo
-        "es_informativo": es_informativo,   # ← NUEVO (reemplaza es_conocimiento)
+        "plazo_total": plazo_total,               # None si informativo
+        "es_informativo": es_informativo,
+        "es_transparencia": es_transparencia,     # ← NUEVO
     }
+
 
 
 def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=False, include_solicitante=False, fecha_responder_hasta_override=None):
@@ -543,8 +559,6 @@ def notify_egreso_created(salida, *, created_by_user=None, absolute_url=None, bc
     # ─────────────────────────────────────────────────────────────
 
     return msg.send(fail_silently=False)
-
-
 
 def _business_days_between_cl(start, end):
     """

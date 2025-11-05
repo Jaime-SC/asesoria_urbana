@@ -6,7 +6,13 @@
         <!-- header -->
         <tr>
           <td style="background:#16233e;color:#ffffff;padding:16px 24px;text-align:center;">
-            <h1 style="margin:0;font-size:20px;line-height:24px;font-weight:700;">Ingreso N° {{ numero_ingreso }}</h1>
+            <h1 style="margin:0;font-size:20px;line-height:24px;font-weight:700;">
+              {% if es_transparencia or tipo_solicitud_id == 5 or tipo_solicitud|default:""|upper == "TRANSPARENCIA" %}
+                Solicitud de Transparencia – AU N° {{ numero_ingreso }}
+              {% else %}
+                Ingreso N° {{ numero_ingreso }}
+              {% endif %}
+            </h1>
           </td>
         </tr>
 
@@ -17,11 +23,10 @@
               <strong>Tipo de recepción:</strong> {{ tipo_recepcion }}<br />
               <strong>Tipo de solicitud:</strong> {{ tipo_solicitud }}<br />
               <strong>Solicitante:</strong> {{ depto_solicitante }}<br />
-              {% comment %} {% if fecha_documento %}
+              {% if fecha_documento %}
                 <strong>Fecha de Solicitud:</strong> {{ fecha_documento|date:'d-m-Y' }}<br />
-              {% endif %} {% endcomment %}
+              {% endif %}
               <strong>Fecha de Ingreso AU:</strong> {{ fecha_ingreso|date:'d-m-Y' }}<br />
-
               {% if fecha_responder_hasta %}
                 <span style="display:inline-block;margin-top:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fdba74;border-radius:6px;"><strong>Responder hasta:</strong> {{ fecha_responder_hasta|date:'d-m-Y' }}</span>
               {% endif %}
@@ -48,8 +53,16 @@
             {% else %}
               <div style="margin:16px 0;padding:12px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;">
 
+                {# Caso especial: TRANSPARENCIA (id 5) #}
+                {% if es_transparencia or tipo_solicitud_id == 5 or tipo_solicitud|default:""|upper == "TRANSPARENCIA" %}
+                  <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
+                    Estimada/o: Ha ingresado una solicitud de <strong>Transparencia</strong> al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted. <br />
+                    El plazo para responder es de <strong>{{ plazo_total }}</strong> días hábiles.
+                    {% if fecha_responder_hasta %}(máximo: {{ fecha_responder_hasta|date:'d-m-Y' }}){% endif %}.
+                  </p>
+
                 {# Transparencia Activa (override): mostramos solo "Responder hasta" #}
-                {% if fecha_responder_hasta and not plazo_total %}
+                {% elif fecha_responder_hasta and not plazo_total %}
                   <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
                     Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted.
                     {% if tipo_solicitud %} ({{ tipo_solicitud }}){% endif %}<br />
@@ -60,12 +73,12 @@
                 {% else %}
                   <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
                     Estimada/o: Ha ingresado una consulta al SIE (AU N° <strong>{{ numero_ingreso }}</strong>) y ha sido asignada a usted.
-                    El plazo para responder es de <strong>{{ plazo_total|default:15 }} días hábiles</strong>
+                    El plazo para responder es de <strong>{{ plazo_total }}</strong> días hábiles
                     {% if fecha_responder_hasta %}(máximo: {{ fecha_responder_hasta|date:'d-m-Y' }}){% endif %}.
                   </p>
                 {% endif %}
 
-                {# Aviso de feriados en el período #}
+                {# Aviso de feriados en el período (aplica para cualquier caso no informativo) #}
                 {% if feriados_periodo and feriados_periodo|length > 0 %}
                   <p style="margin:8px 0 6px 0;font-size:14px;line-height:20px;">
                     <strong>Nota:</strong> Dentro del período existen feriados que <em>no cuentan como días hábiles</em>:
@@ -89,7 +102,6 @@
                 <p style="margin:8px 0 0 0;font-size:14px;line-height:20px;">Muchas gracias.</p>
               </div>
             {% endif %}
-
 
             {% if absolute_url %}
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
