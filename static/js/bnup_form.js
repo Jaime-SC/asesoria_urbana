@@ -1902,6 +1902,17 @@
         salidaContent.classList.add('animate__animated', 'animate__bounceIn');
         if (window.resetDescriptionTips) window.resetDescriptionTips(salidaModal, ['#descripcion_salida']);
         if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(salidaModal);
+        // En crear SALIDA: para ADMIN y SECRETARIA NO dispares el tip por foco
+        if (window.resetDescriptionTips) {
+            window.resetDescriptionTips(salidaModal, ['#descripcion_salida'], {
+                skipFocus: () => ['ADMIN', 'SECRETARIA'].includes(window.tipo_usuario)
+            });
+        }
+        // Botón/ícono "info" siempre disponible
+        if (window.bindDescriptionTipButtons) {
+            window.bindDescriptionTipButtons(salidaModal);
+        }
+
         salidaModal.style.display = 'block';
 
         // 1) Que el propio fondo del modal no propague clics hacia document
