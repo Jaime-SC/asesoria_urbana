@@ -1646,14 +1646,36 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
             const currentUrl = getCurrentUrl() || '';
             const keepingCurrent = !!currentUrl && (!deleteFlag || deleteFlag.value !== '1');
 
+            // Si no hay nuevo ni 'actual' por URL, revisa si ya hay un archivo movido al input real (modo 'move')
             if (!hasNew && !keepingCurrent) {
-                const empty = document.createElement('div');
-                empty.textContent = 'No hay archivos seleccionados.';
-                empty.style.opacity = '.75';
-                empty.style.fontStyle = 'italic';
-                list.appendChild(empty);
+                let showedReal = false;
+                if (mode === 'move' && real && real.wrap && real.idName) {
+                    const realInput = document.querySelector(`${real.wrap} #${real.idName}`);
+                    if (realInput && realInput.files && realInput.files.length > 0) {
+                        const f = realInput.files[0];
+                        makeCard({
+                            label: 'Archivo seleccionado',
+                            nameText: smartTruncate(f.name, 64),
+                            onOpen: () => {
+                                const url = URL.createObjectURL(f);
+                                window.open(url, '_blank');
+                                setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                            },
+                            onRemove: () => { realInput.value = ''; render(); }
+                        });
+                        showedReal = true;
+                    }
+                }
+                if (!showedReal) {
+                    const empty = document.createElement('div');
+                    empty.textContent = 'No hay archivos seleccionados.';
+                    empty.style.opacity = '.75';
+                    empty.style.fontStyle = 'italic';
+                    list.appendChild(empty);
+                }
                 return;
             }
+
 
             if (hasNew) {
                 const file = modalInput.files[0];

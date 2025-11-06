@@ -145,7 +145,6 @@ def subject_ingreso(ingreso):
 
 def context_ingreso(ingreso, absolute_url=None):
     es_informativo = _es_informativo(ingreso)
-
     fecha_responder_hasta = None
     plazo_total = None
 

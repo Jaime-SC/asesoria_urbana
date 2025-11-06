@@ -2181,10 +2181,10 @@
             if (salidaForm) salidaForm.reset();
 
             // Cablear (una sola vez) el modal de archivo para EGRESOS (crear)
-            wireSalidaFileModalOnce();
+            initSalidaFileCardOnce();
 
             // Limpiar selección anterior (si la había)
-            resetSalidaFileSelection();
+            // resetSalidaFileSelection();
 
             // Configurar el botón para guardar la salida
             const saveButton = document.getElementById('guardarSalida');
@@ -2194,8 +2194,23 @@
 
                     const numeroSalida = document.getElementById('numero_salida').value.trim();
                     const fechaSalida = document.getElementById('fecha_salida').value.trim();
-                    const archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
-                    const archivoAdjunto = archivoAdjuntoInput.files[0];
+                    // 1) intenta encontrar el input real por id
+                    let archivoAdjuntoInput = document.getElementById('archivo_adjunto_salida');
+
+                    // 2) fallback: si no está por id, búscalo dentro del wrap del modo 'move'
+                    if (!archivoAdjuntoInput) {
+                        const wrap = document.getElementById('hiddenSalidaFileInput');
+                        if (wrap) {
+                            archivoAdjuntoInput = wrap.querySelector('input[type="file"]#archivo_adjunto_salida');
+                        }
+                    }
+
+                    // 3) toma el archivo de forma segura (a prueba de null)
+                    const archivoAdjunto = (archivoAdjuntoInput && archivoAdjuntoInput.files && archivoAdjuntoInput.files.length)
+                        ? archivoAdjuntoInput.files[0]
+                        : null;
+
+
                     const descripcionSalida = document.getElementById('descripcion_salida')
                         ? document.getElementById('descripcion_salida').value.trim()
                         : '';
@@ -2213,6 +2228,7 @@
                         });
                         return;
                     }
+
                     if (!funcionariosIds.length) {
                         Swal.fire({
                             icon: 'error',
@@ -2393,6 +2409,16 @@
     let _salidaFileModalInited = false;
     function initSalidaFileCardOnce() {
         if (_salidaFileModalInited) return;
+        // Asegurar contenedor oculto para el modo 'move'
+        if (!document.getElementById('hiddenSalidaFileInput')) {
+            const wrap = document.createElement('div');
+            wrap.id = 'hiddenSalidaFileInput';
+            wrap.style.display = 'none';
+            // lo ideal es dentro del formulario de salidas si existe
+            const host = document.getElementById('salidaForm') || document.getElementById('salidaModal') || document.body;
+            host.appendChild(wrap);
+        }
+
         const api = window.setupFileCardModal({
             openBtn: '#openSalidaFileModal',
             modal: '#salidaFileModal',
@@ -2402,12 +2428,13 @@
             confirmBtn: '#salidaConfirmFileButton',
             modalInput: '#salidaFileModalInput',
             accept: 'application/pdf',
-            mode: 'move',
-            real: { wrap: '#hiddenSalidaFileInput', idName: 'archivo_adjunto_salida' },
+            mode: 'assign',                  // <-- CAMBIO AQUI
+            real: { input: '#archivo_adjunto_salida' }, // en assign usaremos input directo
             messages: {
                 attached: 'Archivo adjuntado correctamente.'
             }
         });
+
         window.resetSalidaFileSelection = api.reset; // lo sigues usando tras guardar
         _salidaFileModalInited = true;
     }
@@ -2415,8 +2442,18 @@
 
     // Para limpiar por completo la selección (post-guardar, por ejemplo)
     function resetSalidaFileSelection() {
-        const realWrap = document.getElementById('hiddenSalidaFileInput');
         const realId = 'archivo_adjunto_salida';
+        let realWrap = document.getElementById('hiddenSalidaFileInput');
+
+        // si no existe el wrap, créalo oculto dentro del modal (por seguridad)
+        if (!realWrap) {
+            const salidaModal = document.getElementById('salidaModal') || document.body;
+            realWrap = document.createElement('div');
+            realWrap.id = 'hiddenSalidaFileInput';
+            realWrap.style.display = 'none';
+            salidaModal.appendChild(realWrap);
+        }
+
         // reset del input REAL
         realWrap.querySelector(`#${realId}`)?.remove();
         const newReal = document.createElement('input');
