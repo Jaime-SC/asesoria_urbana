@@ -29,6 +29,56 @@ class Funcionario(models.Model):
     def email(self):
         return self.user.email if (self.user and self.user.email) else None
 
+
+class SeccionFuncionario(models.Model):
+    """
+    Grupo/sección de trabajo de funcionarios.
+
+    Ejemplos:
+      - 'Departamento de Asesoría Urbana'
+      - 'Sección de Patrimonio'
+      - 'Sección de Gestión Documental'
+      - 'Sección de PRC'
+      - 'Sección de Certificaciones'
+    """
+    nombre = models.CharField(max_length=255, unique=True)
+
+    # Para el caso especial "Departamento de Asesoría Urbana":
+    # si esto está en True, la sección incluye automáticamente *a todos*
+    # los funcionarios, sin necesidad de mantener la M2M.
+    incluye_todos = models.BooleanField(
+        default=False,
+        help_text="Si está activo, esta sección incluirá automáticamente a todos los funcionarios."
+    )
+
+    # Para el resto de secciones (Patrimonio, PRC, etc.) se usan los
+    # funcionarios asociados aquí (cuando incluye_todos=False).
+    funcionarios = models.ManyToManyField(
+        Funcionario,
+        related_name="secciones",
+        blank=True,
+        help_text="Sólo se utiliza cuando 'incluye_todos' está desactivado."
+    )
+
+    class Meta:
+        verbose_name = "Sección de funcionarios"
+        verbose_name_plural = "Secciones de funcionarios"
+
+    def __str__(self):
+        return self.nombre
+
+    def get_funcionarios_queryset(self):
+        """
+        Devuelve un queryset de Funcionario para esta sección.
+
+        - Si incluye_todos=True => todos los funcionarios de la BD.
+        - Si incluye_todos=False => sólo los asociados explícitamente.
+        """
+        from .models import Funcionario as FuncModel  # para evitar import circular
+        if self.incluye_todos:
+            return FuncModel.objects.all()
+        return self.funcionarios.all()
+
 class TipoRecepcion(models.Model):
     tipo = models.CharField(max_length=50, unique=True)
 
@@ -54,11 +104,10 @@ class IngresoSOLICITUD(models.Model):  # Renombrado de SolicitudBNUP
     funcionarios_asignados = models.ManyToManyField(Funcionario, related_name='ingresos')
     descripcion = models.TextField(null=True, blank=True)
     archivo_adjunto_ingreso = models.FileField(upload_to='archivos_adjuntos/', null=True, blank=True)
-    
+
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        # return f"{self.nombre_solicitante} - {self.tipo_recepcion.tipo}"  # Línea eliminada
         return f"Solicitud {self.numero_ingreso} - {self.tipo_recepcion.tipo}"
 
 class SalidaSOLICITUD(models.Model):
@@ -119,7 +168,7 @@ class EgresoAU(models.Model):
         blank=True,
         null=True
     )
-    
+
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 

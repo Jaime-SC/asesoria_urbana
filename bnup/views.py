@@ -11,7 +11,8 @@ from .models import (
     Funcionario,
     TipoRecepcion,
     TipoSolicitud,
-    EgresoAU
+    EgresoAU,
+    SeccionFuncionario
 )
 from collections import defaultdict
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
@@ -37,6 +38,46 @@ from django.db.models import Count
 from django.urls import reverse
 
 EXCLUDED_TIPO_IDS = (11, 12)
+
+def expand_funcionarios_tokens(raw_values):
+    """
+    Recibe una lista de strings (por ejemplo, valores de un <select multiple>)
+    que pueden contener:
+      - IDs de funcionarios (ej: '8')
+      - IDs de secciones (ej: 'S1', 's2')
+      - listas separadas por coma ('3,7,12')
+
+    Devuelve una lista ordenada de IDs de Funcionario (enteros), sin duplicados.
+    """
+    # 1) Aplanar todo (soporta "1,2,3" y ["1","2","3"])
+    tokens = []
+    for value in raw_values:
+        if not value:
+            continue
+        parts = [p.strip() for p in str(value).split(",") if p.strip()]
+        tokens.extend(parts)
+
+    func_ids = set()
+    seccion_ids = set()
+
+    # 2) Separar funcionarios directos vs secciones
+    for tok in tokens:
+        if tok.isdigit():
+            func_ids.add(int(tok))
+        else:
+            t = tok.upper()
+            if t.startswith("S") and t[1:].isdigit():
+                seccion_ids.add(int(t[1:]))
+
+    # 3) Expandir secciones
+    if seccion_ids:
+        secciones = SeccionFuncionario.objects.filter(id__in=seccion_ids)
+        for sec in secciones:
+            qs = sec.get_funcionarios_queryset()
+            func_ids.update(qs.values_list("id", flat=True))
+
+    # devolvemos lista ordenada (no es obligatorio, pero es limpio)
+    return sorted(func_ids)
 
 def _send_ingreso_async(ingreso_id, absolute_url, fecha_responder_hasta_override=None):
 
@@ -124,21 +165,13 @@ def bnup_form(request):
         fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")
         fecha_solicitud_str = request.POST.get("fecha_solicitud")
 
-        # Multi-select de funcionarios (puede venir "1,2,3" en un solo ítem)
+        # Multi-select de funcionarios / secciones.
+        # Puede venir "1,2,3" o valores tipo "S1" (Sección 1).
         raw_funcs = request.POST.getlist("funcionarios_asignados")
-        if len(raw_funcs) == 1 and "," in (raw_funcs[0] or ""):
-            funcionarios_asignados_ids = [
-                s.strip() for s in raw_funcs[0].split(",") if s.strip()]
-        else:
-            funcionarios_asignados_ids = [s.strip() for s in raw_funcs if s.strip()]
-        # Solo dígitos y sin duplicados manteniendo orden
-        funcionarios_asignados_ids = list(dict.fromkeys(
-            [s for s in funcionarios_asignados_ids if s.isdigit()]))
+        funcionarios_ids = expand_funcionarios_tokens(raw_funcs)
 
-        if not funcionarios_asignados_ids:
+        if not funcionarios_ids:
             return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
-        if len(funcionarios_asignados_ids) != len(set(funcionarios_asignados_ids)):
-            return JsonResponse({"success": False, "error": "No puede asignar el mismo funcionario más de una vez."})
 
         descripcion = request.POST.get("descripcion")
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
@@ -177,7 +210,7 @@ def bnup_form(request):
             return JsonResponse({"success": False, "error": "Departamento solicitante inválido."})
 
         funcionarios_asignados = Funcionario.objects.filter(
-            id__in=funcionarios_asignados_ids)
+            id__in=funcionarios_ids)
         if not funcionarios_asignados.exists():
             return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
 
@@ -292,10 +325,12 @@ def bnup_form(request):
         funcionarios = Funcionario.objects.all().order_by('nombre')
         tipos_recepcion = TipoRecepcion.objects.all().order_by('tipo')
         tipos_solicitud = TipoSolicitud.objects.all().order_by('tipo')
+        secciones = SeccionFuncionario.objects.all().order_by('nombre')  # ⬅️ NUEVO
 
         context = {
             "departamentos": departamentos,
             "funcionarios": funcionarios,
+            "secciones_funcionarios": secciones,  # ⬅️ NUEVO
             "solicitudes": solicitudes,
             "tipos_recepcion": tipos_recepcion,
             "tipos_solicitud": tipos_solicitud,
@@ -495,20 +530,14 @@ def edit_bnup_record(request):
 
             if tipo_usuario == "ADMIN":
                 raw = request.POST.get("funcionarios_asignados", "")
-                funcionarios_asignados_ids = [
-                    s for s in raw.split(",") if s.strip()]
+                raw_values = [raw] if raw else []
+                funcionarios_ids = expand_funcionarios_tokens(raw_values)
 
-                # Validar que al menos un funcionario está asignado
-                if not funcionarios_asignados_ids:
+                if not funcionarios_ids:
                     return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
 
-                # Validar duplicidad de funcionarios
-                if len(funcionarios_asignados_ids) != len(set(funcionarios_asignados_ids)):
-                    return JsonResponse({"success": False, "error": "No puede asignar el mismo funcionario más de una vez."})
-
-                # Obtener los funcionarios asignados
                 funcionarios_asignados = Funcionario.objects.filter(
-                    id__in=funcionarios_asignados_ids)
+                    id__in=funcionarios_ids)
                 if not funcionarios_asignados.exists():
                     return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
             else:
@@ -1577,14 +1606,12 @@ def create_salida(request):
     archivo_adjunto_salida = request.FILES.get("archivo_adjunto_salida")
     descripcion = (request.POST.get("descripcion_salida") or "").strip()
 
-    # Lista (multi-select) de funcionarios asignados a la salida
-    funcionarios_ids_raw = request.POST.getlist("funcionarios_salidas")  # p.ej. ["3","7","7","12"]
-    # normaliza / dedup
-    funcionarios_ids = []
-    for x in funcionarios_ids_raw:
-        x = (x or "").strip()
-        if x and x not in funcionarios_ids:
-            funcionarios_ids.append(x)
+    # Lista (multi-select) de funcionarios / secciones asignados a la salida
+    funcionarios_ids_raw = request.POST.getlist("funcionarios_salidas")
+    funcionarios_ids = expand_funcionarios_tokens(funcionarios_ids_raw)
+    
+    if not funcionarios_ids:
+        return JsonResponse({"success": False, "error": "Debe seleccionar al menos un funcionario."})
 
     # --- Validaciones básicas ---
     if not solicitud_id:
@@ -1735,21 +1762,8 @@ def edit_salida(request):
 
     # ❹ Funcionarios (sólo ADMIN / SECRETARIA / JEFE)
     if tipo in ["ADMIN", "SECRETARIA", "JEFE"]:
-        # puede venir ["3","7"] o ["3,7"]
         raw_list = request.POST.getlist("funcionarios_salidas")
-        ids = []
-        for item in raw_list:
-            if not item:
-                continue
-            # admite "3" o "3,7,12"
-            parts = [p.strip() for p in item.split(",") if p.strip()]
-            for p in parts:
-                if p not in ids:
-                    ids.append(p)
-
-        # opcional: validar que no esté vacío si quieres forzarlo
-        # if not ids:
-        #     return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
+        ids = expand_funcionarios_tokens(raw_list)
 
         qs_func = Funcionario.objects.filter(id__in=ids)
         if ids and qs_func.count() != len(ids):
@@ -1876,9 +1890,11 @@ def egresos_au_create(request):
     if request.method == "GET":
         funcionarios = Funcionario.objects.order_by('nombre')
         departamentos = Departamento.objects.order_by('nombre')
+        secciones = SeccionFuncionario.objects.order_by('nombre')  # ⬅️ NUEVO
         return render(request, "bnup/egresos_au/egresos_au_form.html", {
             "funcionarios": funcionarios,
             "departamentos": departamentos,
+            "secciones_funcionarios": secciones,  # ⬅️ NUEVO
         })
 
     # POST
@@ -1887,7 +1903,7 @@ def egresos_au_create(request):
     descr = (request.POST.get("descripcion") or "").strip()
     dest_id = request.POST.get("destinatario")
     archivo = request.FILES.get("archivo_adjunto")
-    func_ids = request.POST.get("funcionarios_seleccionados", "")
+    func_ids_raw = request.POST.get("funcionarios_seleccionados", "")
 
     if not numero:
         return JsonResponse({"success": False, "error": "Debe ingresar el número de egreso."}, status=400)
@@ -1897,7 +1913,9 @@ def egresos_au_create(request):
     except (ValueError, TypeError):
         return JsonResponse({"success": False, "error": "Fecha de egreso inválida."}, status=400)
 
-    lista_ids = [int(fid) for fid in func_ids.split(',') if fid.strip().isdigit()]
+    # Puede venir algo como "3,7,S1"
+    raw_values = [func_ids_raw] if func_ids_raw else []
+    lista_ids = expand_funcionarios_tokens(raw_values)
 
     # helper para URLs seguras
     def safe_url(fieldfile):
@@ -1983,6 +2001,7 @@ def egresos_au_edit(request, egreso_id):
     if request.method == "GET":
         funcionarios = Funcionario.objects.order_by('nombre')
         departamentos = Departamento.objects.order_by('nombre')
+        secciones = SeccionFuncionario.objects.order_by('nombre')  # ⬅️ NUEVO
         preseleccion = list(eg.funcionarios.values_list('id', flat=True))
         archivo_nombre = os.path.basename(eg.archivo_adjunto.name) if eg.archivo_adjunto else ""
         # usar getattr por si el campo existe pero está vacío
@@ -1993,6 +2012,7 @@ def egresos_au_edit(request, egreso_id):
             "egreso": eg,
             "funcionarios": funcionarios,
             "departamentos": departamentos,
+            "secciones_funcionarios": secciones,  # ⬅️ NUEVO
             "preseleccion": preseleccion,
             "archivo_nombre": archivo_nombre,
             "archivo_respuesta_nombre": archivo_respuesta_nombre,
@@ -2048,9 +2068,9 @@ def egresos_au_edit(request, egreso_id):
                 status=400
             )
 
-        # Many-to-many
-        ids = [int(fid)
-               for fid in str(func_ids).split(',') if fid.strip().isdigit()]
+        # Many-to-many (puede incluir secciones Sx)
+        raw_values = [func_ids] if func_ids else []
+        ids = expand_funcionarios_tokens(raw_values)
         eg.funcionarios.set(ids) if ids else eg.funcionarios.clear()
 
         data = {
