@@ -12,7 +12,7 @@ from .models import (
     TipoRecepcion,
     TipoSolicitud,
     EgresoAU,
-    SeccionFuncionario
+    SeccionFuncionario,
 )
 from collections import defaultdict
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek
@@ -38,6 +38,27 @@ from django.db.models import Count
 from django.urls import reverse
 
 EXCLUDED_TIPO_IDS = (11, 12)
+
+def get_funcionarios_display_for_ingreso(ingreso):
+    """
+    Devuelve el texto que se debe mostrar en la tabla para los funcionarios de un ingreso:
+      - Si el conjunto de funcionarios coincide EXACTAMENTE con alguna sección → nombre de la sección.
+      - En caso contrario → lista de nombres de funcionarios separados por coma.
+    """
+    ids_sol = set(ingreso.funcionarios_asignados.values_list("id", flat=True))
+    if not ids_sol:
+        return ""
+
+    # Revisamos todas las secciones configuradas
+    for sec in SeccionFuncionario.objects.all():
+        ids_sec = set(sec.get_funcionarios_queryset().values_list("id", flat=True))
+        if ids_sec and ids_sec == ids_sol:
+            return sec.nombre
+
+    # Fallback: lista de nombres
+    return ", ".join(
+        ingreso.funcionarios_asignados.values_list("nombre", flat=True)
+    )
 
 def expand_funcionarios_tokens(raw_values):
     """
@@ -298,39 +319,67 @@ def bnup_form(request):
                     {"id": f.id, "nombre": f.nombre}
                     for f in ingreso_solicitud.funcionarios_asignados.all()
                 ],
+                "funcionarios_display": get_funcionarios_display_for_ingreso(ingreso_solicitud),  # ⬅️ aquí
                 "descripcion": ingreso_solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": (
                     ingreso_solicitud.archivo_adjunto_ingreso.url
                     if ingreso_solicitud.archivo_adjunto_ingreso else ""
                 ),
             }
+
             return JsonResponse({"success": True, "solicitud": solicitud_data})
+
 
         except Exception as e:
             return JsonResponse({"success": False, "error": f"Error al guardar la solicitud: {e}"})
 
     else:
-        solicitudes = (
+        # Cargamos las solicitudes con todos los datos necesarios
+        solicitudes_qs = (
             IngresoSOLICITUD.objects.filter(is_active=True)
-            .select_related("tipo_recepcion", "tipo_solicitud")
+            .select_related("tipo_recepcion", "tipo_solicitud", "depto_solicitante")
             .prefetch_related(
+                "funcionarios_asignados",
                 Prefetch(
-                    'salidas',
+                    "salidas",
                     queryset=SalidaSOLICITUD.objects.filter(is_active=True),
-                    to_attr='salidas_activas'
-                )
+                    to_attr="salidas_activas",
+                ),
             )
         )
-        departamentos = Departamento.objects.all().order_by('nombre')
-        funcionarios = Funcionario.objects.all().order_by('nombre')
-        tipos_recepcion = TipoRecepcion.objects.all().order_by('tipo')
-        tipos_solicitud = TipoSolicitud.objects.all().order_by('tipo')
-        secciones = SeccionFuncionario.objects.all().order_by('nombre')  # ⬅️ NUEVO
+        # Lo convertimos en lista para poder “anotar” atributos en memoria
+        solicitudes = list(solicitudes_qs)
+
+        # Cargamos todas las secciones una sola vez
+        secciones = list(SeccionFuncionario.objects.all())
+
+        # Para cada solicitud, calculamos si coincide exactamente con alguna sección
+        for sol in solicitudes:
+            ids_sol = set(sol.funcionarios_asignados.values_list("id", flat=True))
+            etiqueta = None
+            if ids_sol:
+                for sec in secciones:
+                    # Todos los funcionarios de esa sección
+                    ids_sec = set(
+                        sec.get_funcionarios_queryset().values_list("id", flat=True)
+                    )
+                    # Coincidencia exacta: mismos funcionarios, ni más ni menos
+                    if ids_sec and ids_sec == ids_sol:
+                        etiqueta = sec.nombre
+                        break
+            # Guardamos la etiqueta “dinámica” en el objeto
+            sol.etiqueta_seccion = etiqueta
+
+        departamentos = Departamento.objects.all().order_by("nombre")
+        funcionarios = Funcionario.objects.all().order_by("nombre")
+        tipos_recepcion = TipoRecepcion.objects.all().order_by("tipo")
+        tipos_solicitud = TipoSolicitud.objects.all().order_by("tipo")
+        secciones_funcionarios = SeccionFuncionario.objects.all().order_by("nombre")
 
         context = {
             "departamentos": departamentos,
             "funcionarios": funcionarios,
-            "secciones_funcionarios": secciones,  # ⬅️ NUEVO
+            "secciones_funcionarios": secciones_funcionarios,
             "solicitudes": solicitudes,
             "tipos_recepcion": tipos_recepcion,
             "tipos_solicitud": tipos_solicitud,
@@ -338,6 +387,7 @@ def bnup_form(request):
             "total_funcionarios": funcionarios.count(),
         }
         return render(request, "bnup/form.html", context)
+
 
 def edit_bnup_record(request):
     """
@@ -683,8 +733,8 @@ def edit_bnup_record(request):
                 "id": solicitud.id,
                 "tipo_recepcion": solicitud.tipo_recepcion.id,
                 "tipo_recepcion_text": solicitud.tipo_recepcion.tipo,
-                "tipo_solicitud": solicitud.tipo_solicitud.id,  # Nuevo campo
-                "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,  # Texto del tipo de solicitud
+                "tipo_solicitud": solicitud.tipo_solicitud.id,
+                "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,
                 "numero_memo": solicitud.numero_memo,
                 "correo_solicitante": solicitud.correo_solicitante,
                 "depto_solicitante": solicitud.depto_solicitante.id,
@@ -696,6 +746,7 @@ def edit_bnup_record(request):
                     {"id": funcionario.id, "nombre": funcionario.nombre}
                     for funcionario in solicitud.funcionarios_asignados.all()
                 ],
+                "funcionarios_display": get_funcionarios_display_for_ingreso(solicitud),  # ⬅️ aquí
                 "descripcion": solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
                 "salidas": [
@@ -703,6 +754,8 @@ def edit_bnup_record(request):
                     for salida in solicitud.salidas.all()
                 ],
             }
+
+
 
             return JsonResponse({"success": True, "data": solicitud_data})
         except TipoRecepcion.DoesNotExist:
@@ -724,8 +777,8 @@ def edit_bnup_record(request):
             "id": solicitud.id,
             "tipo_recepcion": solicitud.tipo_recepcion.id,
             "tipo_recepcion_text": solicitud.tipo_recepcion.tipo,
-            "tipo_solicitud": solicitud.tipo_solicitud.id,  # Nuevo campo
-            "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,  # Texto del tipo de solicitud
+            "tipo_solicitud": solicitud.tipo_solicitud.id,
+            "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,
             "numero_memo": solicitud.numero_memo,
             "correo_solicitante": solicitud.correo_solicitante,
             "depto_solicitante": solicitud.depto_solicitante.id,
@@ -734,8 +787,10 @@ def edit_bnup_record(request):
             "fecha_ingreso_au": solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
             "fecha_solicitud": solicitud.fecha_solicitud.strftime("%Y-%m-%d") if solicitud.fecha_solicitud else "",
             "funcionarios_asignados": [
-                {"id": f.id, "nombre": f.nombre} for f in solicitud.funcionarios_asignados.all()
+                {"id": f.id, "nombre": f.nombre}
+                for f in solicitud.funcionarios_asignados.all()
             ],
+            "funcionarios_display": get_funcionarios_display_for_ingreso(solicitud),  # ⬅️ aquí
             "descripcion": solicitud.descripcion,
             "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
             "salidas": [

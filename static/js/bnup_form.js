@@ -887,8 +887,6 @@
         }
     }
 
-
-
     function buildFileInputOpts({ urlActual = '' } = {}) {
 
         /* 1 ▸ datos del archivo (si existe) -------------------------------- */
@@ -1563,8 +1561,6 @@
             }
         });
     }
-
-
 
     /**
      * Inicializa la funcionalidad para agregar múltiples funcionarios asignados en el formulario de edición.
@@ -2981,10 +2977,14 @@
                         // Tipo Solicitud
                         cells[cellIndex++].textContent = sol.tipo_solicitud_text;
 
-                        // Funcionarios Asignados
-                        const funcionarios = sol.funcionarios_asignados;
-                        const funcionariosList = funcionarios.map(func => func.nombre).join('\n');
-                        cells[cellIndex++].textContent = funcionariosList;
+                        // Funcionarios Asignados (usa funcionarios_display si viene del backend)
+                        const funcionarios = sol.funcionarios_asignados || [];
+                        const funcionariosDisplay =
+                            sol.funcionarios_display && sol.funcionarios_display.trim()
+                                ? sol.funcionarios_display
+                                : funcionarios.map(func => func.nombre).join('\n');
+
+                        cells[cellIndex++].textContent = funcionariosDisplay;
 
                         // Descripción (con llamada al modal, incluyendo la fecha de solicitud)
                         cells[cellIndex++].innerHTML = `
@@ -2994,7 +2994,7 @@
                                 '${sol.numero_ingreso}',
                                 '${escapeHtml(sol.correo_solicitante)}',
                                 '${escapeHtml(sol.depto_solicitante_text)}',
-                                '${escapeHtml(funcionarios.map(f => f.nombre).join(','))}',
+                                '${escapeHtml(funcionariosDisplay)}',
                                 '${escapeHtml(sol.tipo_recepcion_text)}',
                                 '${escapeHtml(sol.tipo_solicitud_text)}',
                                 '${sol.numero_memo || ""}',
@@ -3243,25 +3243,35 @@
         tipoSolicitudCell.textContent = solicitud.tipo_solicitud_text;
         row.appendChild(tipoSolicitudCell);
 
-        // Funcionarios Asignados
+        // Funcionarios Asignados (usa funcionarios_display si viene del backend)
         const funcionariosCell = document.createElement('td');
-        const funcionarios = solicitud.funcionarios_asignados;
-        const funcionariosList = funcionarios.map(func => func.nombre).join('\n');
-        funcionariosCell.textContent = funcionariosList;
+        const funcionarios = solicitud.funcionarios_asignados || [];
+        const funcionariosDisplay =
+            solicitud.funcionarios_display && solicitud.funcionarios_display.trim()
+                ? solicitud.funcionarios_display
+                : funcionarios.map(func => func.nombre).join('\n');
+        funcionariosCell.textContent = funcionariosDisplay;
         row.appendChild(funcionariosCell);
 
         // Descripción (incluyendo fecha de solicitud en la llamada al modal)
         const descripcionCell = document.createElement('td');
         const descripcionDiv = document.createElement('div');
         descripcionDiv.classList.add('descripcion-preview');
+
         descripcionDiv.onclick = function () {
+            const funcionarios = solicitud.funcionarios_asignados || [];
+            const funcionariosDisplay =
+                solicitud.funcionarios_display && solicitud.funcionarios_display.trim()
+                    ? solicitud.funcionarios_display
+                    : funcionarios.map(f => f.nombre).join('\n');
+
             openBNUPDescripcionModal(
                 escapeHtml(solicitud.descripcion),
                 formatDate(solicitud.fecha_ingreso_au),
                 solicitud.numero_ingreso,
                 escapeHtml(solicitud.correo_solicitante),
                 escapeHtml(solicitud.depto_solicitante_text),
-                escapeHtml(funcionarios.map(f => f.nombre).join('\n')),
+                escapeHtml(funcionariosDisplay),
                 escapeHtml(solicitud.tipo_recepcion_text),
                 escapeHtml(solicitud.tipo_solicitud_text),
                 solicitud.numero_memo || "",
@@ -3269,6 +3279,7 @@
                 'tablaSolicitudes'
             );
         };
+
         descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
         if (solicitud.descripcion.length > 1) {
             descripcionDiv.innerHTML += `

@@ -319,11 +319,17 @@
                   <td>{{ solicitud.tipo_recepcion.tipo }}</td>
                   <td>{{ solicitud.tipo_solicitud.tipo }}</td>
                   <td>
-                    {% for funcionario in solicitud.funcionarios_asignados.all %}
-                      {{ funcionario.nombre }}{% if not forloop.last %}, {% endif %}
-                    {% empty %}
-                      <em>No hay funcionarios asignados</em>
-                    {% endfor %}
+                    {# Si la solicitud coincide exactamente con una sección, mostramos la sección #}
+                    {% if solicitud.etiqueta_seccion %}
+                      {{ solicitud.etiqueta_seccion }}
+                    {% else %}
+                      {# Si no, mostramos los funcionarios uno por uno, como siempre #}
+                      {% for funcionario in solicitud.funcionarios_asignados.all %}
+                        {{ funcionario.nombre }}{% if not forloop.last %}, {% endif %}
+                      {% empty %}
+                        <em>No hay funcionarios asignados</em>
+                      {% endfor %}
+                    {% endif %}
                   </td>
                   <td>
                     <div class="descripcion-preview" 
