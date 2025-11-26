@@ -200,7 +200,31 @@ function setupFilters(tableId, searchInputId) {
             if (filtroSol.value && cells[colIdx.solicitante].innerText.trim() !== filtroSol.value) return false;
             if (filtroTR.value && cells[colIdx.tipoRec].innerText.trim() !== filtroTR.selectedOptions[0].text) return false;
             if (filtroTS.value && cells[colIdx.tipoSol].innerText.trim() !== filtroTS.selectedOptions[0].text) return false;
-            if (filtroF.value && !cells[colIdx.funcionario].innerText.toLowerCase().includes(filtroF.value.toLowerCase())) return false;
+            // --- NUEVA LÓGICA DE FILTRO POR FUNCIONARIO / SECCIÓN ---
+            if (filtroF.value) {
+                const seleccionado = filtroF.value.trim();
+                const seleccionadoLower = seleccionado.toLowerCase();
+
+                const celdaFunc = cells[colIdx.funcionario];
+                const textoCelda = (celdaFunc ? celdaFunc.innerText : '').trim();
+                const textoCeldaLower = textoCelda.toLowerCase();
+
+                // 1) Coincidencia directa (para cuando la celda muestra el funcionario o la sección)
+                if (textoCeldaLower.includes(seleccionadoLower)) {
+                    // ok
+                } else {
+                    // 2) Si la celda es una SECCIÓN, revisamos si el funcionario pertenece a esa sección
+                    const mapaSecciones = (window.SECCION_MIEMBROS_NOMBRE || {});
+                    const miembros = mapaSecciones[textoCelda] || [];
+
+                    const pertenece = miembros.some(nombre => nombre.toLowerCase() === seleccionadoLower);
+
+                    if (!pertenece) {
+                        return false;
+                    }
+                }
+            }
+            // -------------------------------------------------------- 
             if (state.searchTerm) {
                 const term = state.searchTerm;
                 let hayMatch = row.innerText.toLowerCase().includes(term);

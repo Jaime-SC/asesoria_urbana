@@ -139,7 +139,7 @@
                     <!-- Secciones / grupos -->
                     <optgroup label="Secciones / Grupos">
                       {% for sec in secciones_funcionarios %}
-                        <option value="S{{ sec.id }}">[SECCIÓN] {{ sec.nombre }}</option>
+                        <option value="S{{ sec.id }}">{{ sec.nombre }}</option>
                       {% endfor %}
                     </optgroup>
 
@@ -203,9 +203,19 @@
                 <label>Funcionario:
                   <select id="filtroFuncionario">
                     <option value="">— Todos —</option>
-                    {% for f in funcionarios %}
-                    <option value="{{f.nombre}}">{{f.nombre}}</option>
-                    {% endfor %}
+                    
+                    <optgroup label="Secciones / Grupos">
+                      {% for seccion in secciones_funcionarios %}
+                        <option value="{{ seccion.nombre }}">{{ seccion.nombre }}</option>
+                      {% endfor %}
+                    </optgroup>
+
+                    <optgroup label="Funcionarios">
+                      {% for f in funcionarios %}
+                        <option value="{{ f.nombre }}">{{ f.nombre }}</option>
+                      {% endfor %}
+                    </optgroup>
+
                   </select>
                 </label>
               </div>
@@ -332,7 +342,7 @@
                     {% endif %}
                   </td>
                   <td>
-                    <div class="descripcion-preview" 
+                    <div class="descripcion-preview"
                          data-fulltext="{{ solicitud.descripcion|escapejs }}"
                          onclick="openBNUPDescripcionModal(
                            '{{ solicitud.descripcion|escapejs }}',
@@ -584,7 +594,7 @@
                     <!-- Secciones / grupos -->
                     <optgroup label="Secciones / Grupos">
                       {% for sec in secciones_funcionarios %}
-                        <option value="S{{ sec.id }}">[SECCIÓN] {{ sec.nombre }}</option>
+                        <option value="S{{ sec.id }}">{{ sec.nombre }}</option>
                       {% endfor %}
                     </optgroup>
 
@@ -768,7 +778,7 @@
                 <!-- Secciones / grupos -->
                 <optgroup label="Secciones / Grupos">
                   {% for sec in secciones_funcionarios %}
-                    <option value="S{{ sec.id }}">[SECCIÓN] {{ sec.nombre }}</option>
+                    <option value="S{{ sec.id }}">{{ sec.nombre }}</option>
                   {% endfor %}
                 </optgroup>
 
@@ -984,7 +994,7 @@
               <!-- Secciones / grupos -->
               <optgroup label="Secciones / Grupos">
                 {% for sec in secciones_funcionarios %}
-                  <option value="S{{ sec.id }}">[SECCIÓN] {{ sec.nombre }}</option>
+                  <option value="S{{ sec.id }}">{{ sec.nombre }}</option>
                 {% endfor %}
               </optgroup>
 
@@ -1068,7 +1078,7 @@
 <select id="allFuncionariosOptions" style="display: none;">
   <optgroup label="Secciones / Grupos">
     {% for sec in secciones_funcionarios %}
-      <option value="S{{ sec.id }}">[SECCIÓN] {{ sec.nombre }}</option>
+      <option value="S{{ sec.id }}">{{ sec.nombre }}</option>
     {% endfor %}
   </optgroup>
   <optgroup label="Funcionarios">
