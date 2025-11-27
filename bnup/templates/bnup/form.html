@@ -295,8 +295,8 @@
                 <th class="shadow" data-type="date">Fecha Ingreso</th>
                 <th class="shadow" data-type="date">Fecha Solicitud</th>
                 <th class="shadow" data-type="string">Solicitante</th>
-                <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Tipo Recepción</th>
+                <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Tipo Solicitud</th>
                 <th class="shadow" data-type="string">Descripción</th>
                 <th class="shadow" data-type="string">Funcionario</th>
@@ -316,6 +316,7 @@
                   <td class="fechaTable"><div class="icon-container">{{ solicitud.fecha_ingreso_au|date:'d/m/Y' }}</div></td>
                   <td class="fechaTable"><div class="icon-container">{{ solicitud.fecha_solicitud|date:'d/m/Y' }}</div></td>
                   <td>{{ solicitud.depto_solicitante.nombre }}</td>
+                  <td>{{ solicitud.tipo_recepcion.tipo }}</td>
                   <td>
                     {% if solicitud.numero_memo %}
                       <div class="icon-container">{{ solicitud.numero_memo }}</div>
@@ -326,7 +327,6 @@
                       </div>
                     {% endif %}
                   </td>
-                  <td>{{ solicitud.tipo_recepcion.tipo }}</td>
                   <td>{{ solicitud.tipo_solicitud.tipo }}</td>
                   <td>
                     <div class="descripcion-preview"

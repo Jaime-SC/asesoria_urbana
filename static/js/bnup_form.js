@@ -2992,6 +2992,10 @@
                 cells[cellIndex].textContent = sol.depto_solicitante_text || '';
                 cellIndex++;
 
+                /* ========== Tipo Recepción ========== */
+                cells[cellIndex].textContent = sol.tipo_recepcion_text || '';
+                cellIndex++;
+
                 /* ========== N° Doc dentro de icon-container ========== */
                 {
                     const container = document.createElement('div');
@@ -3014,10 +3018,6 @@
                     cells[cellIndex].appendChild(container);
                     cellIndex++;
                 }
-
-                /* ========== Tipo Recepción ========== */
-                cells[cellIndex].textContent = sol.tipo_recepcion_text || '';
-                cellIndex++;
 
                 /* ========== Tipo Solicitud ========== */
                 cells[cellIndex].textContent = sol.tipo_solicitud_text || '';
@@ -3339,13 +3339,13 @@
         // Adjuntamos el contenedor al td
         numDocCell.appendChild(numDocContainer);
 
-        // Finalmente agregamos el td a la fila
-        row.appendChild(numDocCell);
-
         // Tipo Recepción
         const recepcionCell = document.createElement('td');
         recepcionCell.textContent = solicitud.tipo_recepcion_text;
         row.appendChild(recepcionCell);
+        
+        // Finalmente agregamos el td a la fila
+        row.appendChild(numDocCell);
 
         // Tipo Solicitud
         const tipoSolicitudCell = document.createElement('td');
