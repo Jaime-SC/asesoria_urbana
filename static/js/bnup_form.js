@@ -2926,173 +2926,238 @@
     function updateTableRow(solicitudId) {
         const bnupData = document.getElementById('bnupData');
         const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
-        // let cellIndex = 0;
 
-        // Ajustar índice si hay checkbox en ADMIN o SECRETARIA
-        // if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA') {
-        //     cellIndex = 1;
-        // }
-
-        // ¿La fila tiene checkbox?
+        // Buscar la fila de la solicitud
         const row = document.querySelector(`tr[data-id="${solicitudId}"]`);
         const hasCheckbox = row?.querySelector('input.rowCheckbox') !== null;
-        let cellIndex = hasCheckbox ? 1 : 0;
+        let cellIndex = hasCheckbox ? 1 : 0;  // si hay checkbox, empezamos en la 2ª celda
 
         fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    const sol = data.data;
-                    const row = document.querySelector(`tr[data-id="${solicitudId}"]`);
-                    if (row) {
-                        const cells = row.getElementsByTagName('td');
+                if (!data.success) return;
 
-                        // Nº Ingreso
-                        cells[cellIndex++].textContent = sol.numero_ingreso;
+                const sol = data.data;
+                const row = document.querySelector(`tr[data-id="${solicitudId}"]`);
+                if (!row) return;
 
-                        // Fecha Ingreso
-                        cells[cellIndex++].textContent = formatDate(sol.fecha_ingreso_au);
+                const cells = row.getElementsByTagName('td');
 
-                        // NUEVA COLUMNA: Fecha Solicitud  
-                        cells[cellIndex++].textContent = sol.fecha_solicitud ? formatDate(sol.fecha_solicitud) : '';
+                /* ========== Nº Ingreso ========== */
+                {
+                    const container = document.createElement('div');
+                    container.classList.add('icon-container');
 
-                        // Solicitante (Departamento)
-                        cells[cellIndex++].textContent = sol.depto_solicitante_text;
+                    const span = document.createElement('span');
+                    span.textContent = sol.numero_ingreso ? sol.numero_ingreso : '';
 
-                        // N° Doc
-                        if (sol.numero_memo) {
-                            cells[cellIndex++].textContent = sol.numero_memo;
+                    container.appendChild(span);
+
+                    cells[cellIndex].innerHTML = '';
+                    cells[cellIndex].appendChild(container);
+                    cellIndex++;
+                }
+
+                /* ========== Fecha Ingreso ========== */
+                {
+                    const container = document.createElement('div');
+                    container.classList.add('icon-container');
+
+                    const span = document.createElement('span');
+                    span.textContent = sol.fecha_ingreso_au ? formatDate(sol.fecha_ingreso_au) : '';
+
+                    container.appendChild(span);
+
+                    cells[cellIndex].innerHTML = '';
+                    cells[cellIndex].appendChild(container);
+                    cellIndex++;
+                }
+
+                /* ========== Fecha Solicitud ========== */
+                {
+                    const container = document.createElement('div');
+                    container.classList.add('icon-container');
+
+                    const span = document.createElement('span');
+                    span.textContent = sol.fecha_solicitud ? formatDate(sol.fecha_solicitud) : '';
+
+                    container.appendChild(span);
+
+                    cells[cellIndex].innerHTML = '';
+                    cells[cellIndex].appendChild(container);
+                    cellIndex++;
+                }
+
+                /* ========== Solicitante (Departamento) ========== */
+                cells[cellIndex].textContent = sol.depto_solicitante_text || '';
+                cellIndex++;
+
+                /* ========== N° Doc dentro de icon-container ========== */
+                {
+                    const container = document.createElement('div');
+                    container.classList.add('icon-container');
+
+                    if (sol.numero_memo) {
+                        const span = document.createElement('span');
+                        span.textContent = sol.numero_memo;
+                        container.appendChild(span);
+                    } else {
+                        container.innerHTML = `
+                        <span class="material-symbols-outlined" style="color: #16233E;">
+                            do_not_disturb_on_total_silence
+                        </span>
+                        <div class="tooltip">Sin número de documento</div>
+                    `;
+                    }
+
+                    cells[cellIndex].innerHTML = '';
+                    cells[cellIndex].appendChild(container);
+                    cellIndex++;
+                }
+
+                /* ========== Tipo Recepción ========== */
+                cells[cellIndex].textContent = sol.tipo_recepcion_text || '';
+                cellIndex++;
+
+                /* ========== Tipo Solicitud ========== */
+                cells[cellIndex].textContent = sol.tipo_solicitud_text || '';
+                cellIndex++;
+
+                /* ========== Funcionarios (preparar display ANTES de usar en descripción) ========== */
+                const funcionarios = sol.funcionarios_asignados || [];
+                const funcionariosDisplay =
+                    sol.funcionarios_display && sol.funcionarios_display.trim()
+                        ? sol.funcionarios_display
+                        : funcionarios.map(func => func.nombre).join('\n');
+
+                /* ========== Descripción (con icon-container + modal) ========== */
+                {
+                    const descripcion = sol.descripcion || '';
+
+                    cells[cellIndex].innerHTML = `
+                    <div class="descripcion-preview" onclick="openBNUPDescripcionModal(
+                        '${escapeHtml(descripcion)}',
+                        '${formatDate(sol.fecha_ingreso_au)}',
+                        '${sol.numero_ingreso}',
+                        '${escapeHtml(sol.correo_solicitante || '')}',
+                        '${escapeHtml(sol.depto_solicitante_text || '')}',
+                        '${escapeHtml(funcionariosDisplay)}',
+                        '${escapeHtml(sol.tipo_recepcion_text || '')}',
+                        '${escapeHtml(sol.tipo_solicitud_text || '')}',
+                        '${sol.numero_memo || ""}',
+                        '${sol.fecha_solicitud || ""}',
+                        'tablaSolicitudes'
+                    )">
+                        ${truncateText(descripcion, 20)}
+                        ${descripcion.length > 1
+                            ? '<div class="icon-container"><span class="material-symbols-outlined">preview</span></div>'
+                            : ''}
+                    </div>
+                `;
+                    cellIndex++;
+                }
+
+                /* ========== Funcionarios (celda) ========== */
+                cells[cellIndex].textContent = funcionariosDisplay;
+                cellIndex++;
+
+                /* ========== Entradas ========== */
+                {
+                    const entradaCell = cells[cellIndex];
+
+                    if (sol.archivo_adjunto_ingreso_url) {
+                        entradaCell.innerHTML = `
+                        <div class="icon-container">                        
+                            <a href="${sol.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
+                                <button class="buttonLogin buttonPreview">
+                                    <span class="material-symbols-outlined bell">find_in_page</span>
+                                </button>
+                            </a>                        
+                            <div class="tooltip">Ver archivo de ingreso</div>
+                        </div>
+                    `;
+                    } else {
+                        entradaCell.innerHTML = `
+                        <div class="icon-container">
+                            <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                            <div class="tooltip">Sin archivo de ingreso</div>
+                        </div>
+                    `;
+                    }
+                    cellIndex++;
+                }
+
+                /* ========== Salidas: rojo / verde / naranjo según tipo y si tiene egresos ========== */
+                {
+                    const salidasCell = cells[cellIndex];
+                    const esConocimiento =
+                        sol.tipo_solicitud == 11 || sol.tipo_solicitud == 12;
+                    const tieneSalidas =
+                        sol.salidas && sol.salidas.length > 0;
+
+                    if (tieneSalidas) {
+                        // Botón verde o naranjo para VER egresos
+                        if (esConocimiento) {
+                            salidasCell.innerHTML = `
+                            <div class="icon-container">
+                                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                    <button class="buttonLogin buttonPreview" style="background: #ffa420;">
+                                        <span class="material-symbols-outlined bell">group</span>
+                                        <p>|</p>
+                                        <span class="material-symbols-outlined bell">find_in_page</span>
+                                        <div class="tooltip">Ver archivo de egreso</div>
+                                    </button>
+                                </a>
+                            </div>`;
                         } else {
-                            cells[cellIndex++].innerHTML = `
-                                <div class="icon-container">
-                                    <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
-                                    <div class="tooltip">Sin número de documento</div>
-                                </div>
-                            `;
+                            salidasCell.innerHTML = `
+                            <div class="icon-container">
+                                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                    <button class="buttonLogin buttonPreview" style="background: #17d244;">
+                                        <span class="material-symbols-outlined bell">check</span>
+                                        <p>|</p>
+                                        <span class="material-symbols-outlined bell">find_in_page</span>
+                                        <div class="tooltip">Ver archivo de egreso</div>
+                                    </button>
+                                </a>
+                            </div>`;
                         }
-
-                        // Tipo Recepción
-                        cells[cellIndex++].textContent = sol.tipo_recepcion_text;
-
-                        // Tipo Solicitud
-                        cells[cellIndex++].textContent = sol.tipo_solicitud_text;
-
-                        // Funcionarios Asignados (usa funcionarios_display si viene del backend)
-                        const funcionarios = sol.funcionarios_asignados || [];
-                        const funcionariosDisplay =
-                            sol.funcionarios_display && sol.funcionarios_display.trim()
-                                ? sol.funcionarios_display
-                                : funcionarios.map(func => func.nombre).join('\n');
-
-                        cells[cellIndex++].textContent = funcionariosDisplay;
-
-                        // Descripción (con llamada al modal, incluyendo la fecha de solicitud)
-                        cells[cellIndex++].innerHTML = `
-                            <div class="descripcion-preview" onclick="openBNUPDescripcionModal(
-                                '${escapeHtml(sol.descripcion)}',
-                                '${formatDate(sol.fecha_ingreso_au)}',
-                                '${sol.numero_ingreso}',
-                                '${escapeHtml(sol.correo_solicitante)}',
-                                '${escapeHtml(sol.depto_solicitante_text)}',
-                                '${escapeHtml(funcionariosDisplay)}',
-                                '${escapeHtml(sol.tipo_recepcion_text)}',
-                                '${escapeHtml(sol.tipo_solicitud_text)}',
-                                '${sol.numero_memo || ""}',
-                                '${sol.fecha_solicitud || ""}',
-                                'tablaSolicitues')">
-                                ${truncateText(sol.descripcion, 20)}
-                                ${sol.descripcion.length > 1 ? '<div class="icon-container"><span class="material-symbols-outlined">preview</span></div>' : ''}
-                            </div>
-                        `;
-
-                        // Entradas
-                        const entradaCell = cells[cellIndex++];
-                        if (sol.archivo_adjunto_ingreso_url) {
-                            entradaCell.innerHTML = `
-                                <div class="icon-container">                        
-                                    <a href="${sol.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
-                                        <button class="buttonLogin buttonPreview">
-                                            <span class="material-symbols-outlined bell">find_in_page</span>
-                                        </button>
-                                    </a>                        
-                                    <div class="tooltip">Ver archivo de ingreso</div>
-                                </div>
-                            `;
+                    } else {
+                        // Sin salidas: botón rojo o naranjo para SUBIR egresos
+                        if (esConocimiento) {
+                            salidasCell.innerHTML = `
+                            <div class="icon-container">
+                                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                    <button class="buttonLogin buttonSubirSalida" style="background: #ffa420;">
+                                        <span class="material-symbols-outlined bell">group</span>
+                                        <p>|</p>
+                                        <span class="material-symbols-outlined bell">upload_file</span>
+                                    </button>
+                                </a>
+                                <div class="tooltip">Subir Egresos</div>
+                            </div>`;
                         } else {
-                            entradaCell.innerHTML = `
-                                <div class="icon-container">
-                                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
-                                    <div class="tooltip">Sin archivo de ingreso</div>
-                                </div>
-                            `;
-                        }
-
-                        // Salidas
-                        const salidasCell = cells[cellIndex++];
-                        if (sol.salidas && sol.salidas.length > 0) {
-                            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
-                                salidasCell.innerHTML = `
-                                    <div class="icon-container">
-                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
-                                            <button class="buttonLogin buttonPreview" style="background: #ffa420;">
-                                                <span class="material-symbols-outlined bell">group</span>
-                                                <p>|</p>
-                                                <span class="material-symbols-outlined bell">find_in_page</span>
-                                                <div class="tooltip">Ver archivo de egreso</div>
-                                            </button>
-                                        </a>
-                                    </div>
-                                `;
-                            } else {
-                                salidasCell.innerHTML = `
-                                    <div class="icon-container">
-                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
-                                            <button class="buttonLogin buttonPreview" style="background: #17d244;">
-                                                <span class="material-symbols-outlined bell">check</span>
-                                                <p>|</p>
-                                                <span class="material-symbols-outlined bell">find_in_page</span>
-                                                <div class="tooltip">Ver archivo de egreso</div>
-                                            </button>
-                                        </a>
-                                    </div>
-                                `;
-                            }
-                        } else {
-                            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
-                                salidasCell.innerHTML = `
-                                    <div class="icon-container">
-                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
-                                            <button class="buttonLogin buttonSubirSalida" style="background: #ffa420;">
-                                                <span class="material-symbols-outlined bell">group</span>
-                                                <p>|</p>
-                                                <span class="material-symbols-outlined bell">upload_file</span>
-                                            </button>
-                                        </a>
-                                        <div class="tooltip">Subir Egresos</div>
-                                    </div>
-                                `;
-                            } else {
-                                salidasCell.innerHTML = `
-                                    <div class="icon-container">
-                                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
-                                            <button class="buttonLogin buttonSubirSalida">
-                                                <span class="material-symbols-outlined bell">schedule</span>
-                                                <p>|</p>
-                                                <span class="material-symbols-outlined bell">upload_file</span>
-                                            </button>
-                                        </a>
-                                        <div class="tooltip">Subir Egresos</div>
-                                    </div>
-                                `;
-                            }
+                            salidasCell.innerHTML = `
+                            <div class="icon-container">
+                                <a href="javascript:void(0);" onclick="openSalidaModal(${solicitudId})">
+                                    <button class="buttonLogin buttonSubirSalida" style="background: #ed1c24;">
+                                        <span class="material-symbols-outlined bell">schedule</span>
+                                        <p>|</p>
+                                        <span class="material-symbols-outlined bell">upload_file</span>
+                                    </button>
+                                </a>
+                                <div class="tooltip">Subir Egresos</div>
+                            </div>`;
                         }
                     }
+                    cellIndex++;
                 }
             })
             .catch(error => {
                 console.error('Error al actualizar la fila:', error);
             });
     }
+
 
     // === Transparencia Activa (id 16): fecha límite manual (sin guardar en BD) ===
     function initializeTransparenciaActivaDeadline() {
@@ -3199,20 +3264,46 @@
 
         // Nº Ingreso
         const numIngresoCell = document.createElement('td');
-        numIngresoCell.textContent = solicitud.numero_ingreso;
+        const numIngresoContainer = document.createElement('div');
+        numIngresoContainer.classList.add('icon-container');
+
+        const numIngresoText = document.createElement('span');
+        numIngresoText.textContent = solicitud.numero_ingreso ? solicitud.numero_ingreso : '';
+        numIngresoContainer.appendChild(numIngresoText);
+
+        numIngresoCell.appendChild(numIngresoContainer);
         row.appendChild(numIngresoCell);
 
         // Fecha Ingreso
         const fechaCell = document.createElement('td');
         fechaCell.classList.add('fechaTable');
-        fechaCell.textContent = formatDate(solicitud.fecha_ingreso_au);
+
+        const fechaIngresoContainer = document.createElement('div');
+        fechaIngresoContainer.classList.add('icon-container');
+
+        const fechaIngresoText = document.createElement('span');
+        fechaIngresoText.textContent = solicitud.fecha_ingreso_au ? formatDate(solicitud.fecha_ingreso_au) : '';
+
+        fechaIngresoContainer.appendChild(fechaIngresoText);
+        fechaCell.appendChild(fechaIngresoContainer);
+
         row.appendChild(fechaCell);
 
-        // NUEVA COLUMNA: Fecha Solicitud
+        // Fecha Solicitud
         const fechaSolicitudCell = document.createElement('td');
         fechaSolicitudCell.classList.add('fechaTable');
-        fechaSolicitudCell.textContent = solicitud.fecha_solicitud ? formatDate(solicitud.fecha_solicitud) : '';
+
+        const fechaSolicitudContainer = document.createElement('div');
+        fechaSolicitudContainer.classList.add('icon-container');
+
+        const fechaSolicitudText = document.createElement('span');
+        fechaSolicitudText.textContent = solicitud.fecha_solicitud ? formatDate(solicitud.fecha_solicitud) : '';
+
+        fechaSolicitudContainer.appendChild(fechaSolicitudText);
+        fechaSolicitudCell.appendChild(fechaSolicitudContainer);
+
         row.appendChild(fechaSolicitudCell);
+
 
         // Solicitante (Departamento)
         const deptoCell = document.createElement('td');
@@ -3221,16 +3312,34 @@
 
         // N° Doc
         const numDocCell = document.createElement('td');
+
+        // Siempre creamos un contenedor principal
+        const numDocContainer = document.createElement('div');
+        numDocContainer.classList.add('icon-container');
+
+        // Caso 1: Tiene número de documento
         if (solicitud.numero_memo) {
-            numDocCell.textContent = solicitud.numero_memo;
+            // Creamos un span o texto dentro del contenedor
+            const numDocText = document.createElement('span');
+            numDocText.textContent = solicitud.numero_memo;
+            numDocText.classList.add('num-doc-text'); // opcional para estilo
+
+            numDocContainer.appendChild(numDocText);
+
+            // Caso 2: NO tiene número de documento → mostramos icono + tooltip
         } else {
-            numDocCell.innerHTML = `
-                <div class="icon-container">
-                    <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
-                    <div class="tooltip">Sin número de documento</div>
-                </div>
+            numDocContainer.innerHTML = `
+                <span class="material-symbols-outlined" style="color: #16233E;">
+                    do_not_disturb_on_total_silence
+                </span>
+                <div class="tooltip">Sin número de documento</div>
             `;
         }
+
+        // Adjuntamos el contenedor al td
+        numDocCell.appendChild(numDocContainer);
+
+        // Finalmente agregamos el td a la fila
         row.appendChild(numDocCell);
 
         // Tipo Recepción
@@ -3242,16 +3351,6 @@
         const tipoSolicitudCell = document.createElement('td');
         tipoSolicitudCell.textContent = solicitud.tipo_solicitud_text;
         row.appendChild(tipoSolicitudCell);
-
-        // Funcionarios Asignados (usa funcionarios_display si viene del backend)
-        const funcionariosCell = document.createElement('td');
-        const funcionarios = solicitud.funcionarios_asignados || [];
-        const funcionariosDisplay =
-            solicitud.funcionarios_display && solicitud.funcionarios_display.trim()
-                ? solicitud.funcionarios_display
-                : funcionarios.map(func => func.nombre).join('\n');
-        funcionariosCell.textContent = funcionariosDisplay;
-        row.appendChild(funcionariosCell);
 
         // Descripción (incluyendo fecha de solicitud en la llamada al modal)
         const descripcionCell = document.createElement('td');
@@ -3290,6 +3389,16 @@
         }
         descripcionCell.appendChild(descripcionDiv);
         row.appendChild(descripcionCell);
+
+        // Funcionarios Asignados (usa funcionarios_display si viene del backend)
+        const funcionariosCell = document.createElement('td');
+        const funcionarios = solicitud.funcionarios_asignados || [];
+        const funcionariosDisplay =
+            solicitud.funcionarios_display && solicitud.funcionarios_display.trim()
+                ? solicitud.funcionarios_display
+                : funcionarios.map(func => func.nombre).join('\n');
+        funcionariosCell.textContent = funcionariosDisplay;
+        row.appendChild(funcionariosCell);
 
         // Entradas
         const entradaCell = document.createElement('td');
