@@ -68,12 +68,30 @@ function getCSRFToken() {
  * @returns {string} - Fecha formateada o cadena vacía si es inválida.
  */
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    if (isNaN(date)) return '';
-    const day = (`0${date.getDate()}`).slice(-2);
-    const month = (`0${date.getMonth() + 1}`).slice(-2);
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    if (!dateString) return "";
+
+    // Si viene como Date con hora → convertir a DD/MM/YYYY sin aplicar zona horaria
+    if (dateString instanceof Date) {
+        const y = dateString.getFullYear();
+        const m = String(dateString.getMonth() + 1).padStart(2, '0');
+        const d = String(dateString.getDate()).padStart(2, '0');
+        return `${d}/${m}/${y}`;
+    }
+
+    // Si viene como "YYYY-MM-DD", lo procesamos sin usar new Date()
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const [y, m, d] = dateString.split("-");
+        return `${d}/${m}/${y}`;
+    }
+
+    // Si viene "YYYY-MM-DDTHH:mm:ss" → cortar solo fecha y formatear
+    const onlyDate = dateString.split("T")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(onlyDate)) {
+        const [y, m, d] = onlyDate.split("-");
+        return `${d}/${m}/${y}`;
+    }
+
+    return dateString; // fallback
 }
 
 /**
