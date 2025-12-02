@@ -35,6 +35,7 @@ from django.contrib import messages
 # from bnup.models import Funcionario
 from collections import defaultdict
 from django.db.models import Count
+from django.utils import timezone
 from django.urls import reverse
 
 EXCLUDED_TIPO_IDS = (11, 12)
@@ -328,7 +329,6 @@ def bnup_form(request):
             }
 
             return JsonResponse({"success": True, "solicitud": solicitud_data})
-
 
         except Exception as e:
             return JsonResponse({"success": False, "error": f"Error al guardar la solicitud: {e}"})

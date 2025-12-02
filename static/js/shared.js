@@ -195,8 +195,13 @@ function setupFilters(tableId, searchInputId) {
     // 1) Poner por defecto el rango al año en curso
     const now = new Date();
     const year = now.getFullYear();
+
     if (filtroIDesde) filtroIDesde.value = `${year}-01-01`;
     if (filtroIHasta) filtroIHasta.value = `${year}-12-31`;
+
+    if (filtroSDesde) filtroSDesde.value = `${year}-01-01`;
+    if (filtroSHasta) filtroSHasta.value = `${year}-12-31`;
+
     // Función central de filtrado
     function applyFilters() {
         // Limpia mensaje
