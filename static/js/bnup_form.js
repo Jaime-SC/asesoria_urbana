@@ -21,6 +21,75 @@
         // BNUP ▸ inicialización: dejar el tipo de usuario disponible globalmente
         window.tipo_usuario = tipo_usuario;
 
+        // Referencias a inputs del formulario de ingreso
+        const fechaIngresoInput = document.getElementById("fecha_ingreso_au");
+        const numeroIngresoInput = document.getElementById("numeroIngreso");
+        const mensajeAutoSpan = document.getElementById("ingresoAutoMsg");
+
+        // ===========================================================
+        // BLOQUEAR O PERMITIR "N° DE INGRESO" SEGÚN LA FECHA ELEGIDA
+        // ===========================================================
+        function actualizarNumeroIngresoSegunFecha() {
+            const fechaInput = document.getElementById("fecha_ingreso_au");
+            const numeroInput = document.getElementById("numeroIngreso");
+            if (!fechaInput || !numeroInput) return;
+
+            const fecha = fechaInput.value;
+            if (!fecha) return;
+
+            const year = parseInt(fecha.split("-")[0]);
+
+            if (year >= 2026) {
+                // Bloquear
+                numeroInput.readOnly = true;
+                numeroInput.style.background = '#f5f5f5';
+                numeroInput.style.cursor = 'not-allowed';
+                numeroInput.value = ""; // limpiar
+                numeroInput.removeAttribute("required");
+            } else {
+                // Habilitar
+                numeroInput.readOnly = false;
+                numeroInput.style.background = 'white';
+                numeroInput.style.cursor = 'text';
+                numeroInput.setAttribute("required", "required");
+            }
+        }
+
+        // ===========================================================
+        // MENSAJE DINÁMICO DE "ASIGNADO AUTOMÁTICAMENTE"
+        // ===========================================================
+        function actualizarMensajeAuto() {
+            if (!fechaIngresoInput || !mensajeAutoSpan) return;
+
+            const fecha = fechaIngresoInput.value;
+            if (!fecha) {
+                mensajeAutoSpan.style.display = "none";
+                return;
+            }
+
+            const year = parseInt(fecha.split("-")[0], 10);
+
+            if (year >= 2026) {
+                mensajeAutoSpan.style.display = "block";
+            } else {
+                mensajeAutoSpan.style.display = "none";
+            }
+        }
+
+        // Solo enganchamos eventos si el input de fecha existe (evita el error)
+        if (fechaIngresoInput) {
+            fechaIngresoInput.addEventListener("change", function () {
+                actualizarNumeroIngresoSegunFecha();
+                actualizarMensajeAuto();
+            });
+
+            // Pequeño delay por si el modal se abre después
+            setTimeout(function () {
+                actualizarNumeroIngresoSegunFecha();
+                actualizarMensajeAuto();
+            }, 300);
+        }
+
         // Inicializar componentes si el formulario BNUP está presente
         if (document.querySelector('#bnupForm')) {
             updateBNUPFields();
@@ -34,16 +103,15 @@
 
             initializeBNUPFormModal();
             initializeStandardizeInputs();
+
             // Aplica el SweetAlert + límite 150 a todos los campos de descripción
-            if (typeof window.setupDescriptionTips === 'function') {
-                window.setupDescriptionTips(document);
-            }
             if (typeof window.setupDescriptionTips === 'function') {
                 window.setupDescriptionTips(document);
             }
             if (typeof window.bindDescriptionTipButtons === 'function') {
                 window.bindDescriptionTipButtons(document);
             }
+
             initializeMultiSelect({
                 selectSelector: '#multi_funcionarios_ing',
                 containerSelector: '#funcionariosSeleccionados_ing',
@@ -58,6 +126,7 @@
         btnEliminarSalidas = document.getElementById('btnEliminarSalidas');
         btnEditarSalidas = document.getElementById('btnEditarSalidas');
     }
+
 
     /**
      * Función específica para abrir el modal de descripción en BNUP.
@@ -313,207 +382,453 @@
      */
     function initializeBNUPFormModal() {
         const modal = document.getElementById('bnupFormModal');
-        if (!modal) {
-            // Si el modal no existe, simplemente salimos de la función.
-            return;
-        }
+        if (!modal) return;
+
+        // Evita doble inicialización (muy común si cargas contenido por AJAX/menú)
+        if (modal.dataset.bnupModalBound === '1') return;
+        modal.dataset.bnupModalBound = '1';
+
         const content = modal.querySelector('.modal-content');
-        const btn = document.getElementById('openBNUPFormModal');
-        const closeModalButton = modal ? modal.querySelector('.close') : null;
+        const btnOpen = document.getElementById('openBNUPFormModal');
+        const closeModalButton = modal.querySelector('.close');
 
-        if (!btn || !modal || !closeModalButton) {
-            return;
+        // Botón guardar dentro del modal
+        const saveButton = document.getElementById('guardarBNUP');
+        const bnupForm = document.getElementById('bnupForm');
+
+        if (!btnOpen || !closeModalButton || !saveButton || !bnupForm) return;
+
+        // ------------------------------------------------------------
+        // ✅ Bootstrap SOLO si el HTML es modal Bootstrap real
+        // (tu modal custom NO tiene .modal-dialog, por eso fallaba)
+        // ------------------------------------------------------------
+        const canUseBootstrapModal = (() => {
+            try {
+                return (
+                    !!window.bootstrap &&
+                    typeof window.bootstrap.Modal === 'function' &&
+                    !!modal.querySelector('.modal-dialog')   // clave: si no existe, NO usar bootstrap
+                );
+            } catch (e) {
+                return false;
+            }
+        })();
+
+        // ------------------------------------------------------------
+        // Limpieza por si antes quedó un backdrop/estado bootstrap colgado
+        // (esto arregla el “modal bloqueado”)
+        // ------------------------------------------------------------
+        function cleanupBootstrapArtifacts() {
+            try {
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document.body.style.removeProperty('overflow');
+
+                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            } catch (e) {
+                // no-op
+            }
         }
 
-        // Evento para abrir el modal del formulario BNUP
-        btn.onclick = () => {
-            resetCreateIngresoForm();
-            // Para ADMIN y SECRETARIA, en el modal de INGRESO NO mostrar tip por foco
-            if (window.resetDescriptionTips) {
-                window.resetDescriptionTips(modal, ['#descripcion'], {
-                    skipFocus: () => ['ADMIN', 'SECRETARIA'].includes(window.tipo_usuario)
-                });
-            }
-            // Botón info siempre disponible
-            if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(modal);
+        function isCustomVisible() {
+            // Tu modal custom se maneja con display block/none
+            return modal.style.display === 'block';
+        }
 
-            document.querySelector('#multi_funcionarios_ing')
-                ?.dispatchEvent(new Event('ms:reset'));
-            modal.style.display = 'block';
-            content.classList.add('animate__bounceIn');
-            content.classList.remove('animate__bounceOut');
-        };
+        // ------------------------------------------------------------
+        // Helper: cerrar modal de forma robusta (Bootstrap real o custom)
+        // ------------------------------------------------------------
+        function hideBNUPModal({ resetForm = true } = {}) {
+            // Siempre limpia residuos bootstrap (por si alguien lo abrió mal antes)
+            cleanupBootstrapArtifacts();
 
-        // Evento para cerrar el modal al hacer clic en el botón de cerrar
-        closeModalButton.onclick = () => {
-            // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
-            resetCreateIngresoForm();
-            content.classList.remove('animate__bounceIn');
-            content.classList.add('animate__bounceOut');
-            // modal.style.display = 'none';
-
-            // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
-            content.addEventListener('animationend', function handleAnimationEnd() {
-                modal.style.display = 'none';
-                // Limpia la clase de salida para que la próxima vez se use la de entrada
-                content.classList.remove('animate__bounceOut');
-                content.classList.add('animate__bounceIn');
-                // Remover el listener para no duplicar eventos
-                content.removeEventListener('animationend', handleAnimationEnd);
-            });
-        };
-
-        // Evento para cerrar el modal al hacer clic fuera de él
-        document.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
-                content.classList.remove('animate__bounceIn');
-                content.classList.add('animate__bounceOut');
-                // modal.style.display = 'none';
-
-                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
-                content.addEventListener('animationend', function handleAnimationEnd() {
+            // 1) Si es Bootstrap real → hide()
+            if (canUseBootstrapModal) {
+                try {
+                    const instance = window.bootstrap.Modal.getInstance(modal) || window.bootstrap.Modal.getOrCreateInstance(modal);
+                    instance.hide();
+                } catch (err) {
+                    // fallback a custom
                     modal.style.display = 'none';
-                    // Limpia la clase de salida para que la próxima vez se use la de entrada
-                    content.classList.remove('animate__bounceOut');
-                    content.classList.add('animate__bounceIn');
-                    // Remover el listener para no duplicar eventos
-                    resetCreateIngresoForm();
-                    content.removeEventListener('animationend', handleAnimationEnd);
-                });
+                }
+            } else {
+                // 2) Modal custom → animación + display none
+                if (content) {
+                    content.classList.add('animate__animated');
+                    content.classList.remove('animate__bounceIn');
+                    content.classList.add('animate__bounceOut');
+
+                    let closed = false;
+
+                    const finalize = () => {
+                        if (closed) return;
+                        closed = true;
+
+                        modal.style.display = 'none';
+                        content.classList.remove('animate__bounceOut');
+                        content.classList.add('animate__bounceIn');
+                    };
+
+                    content.addEventListener('animationend', finalize, { once: true });
+
+                    // Fallback por si no dispara animationend
+                    setTimeout(finalize, 350);
+                } else {
+                    modal.style.display = 'none';
+                }
+            }
+
+            // Reset opcional del formulario (tu comportamiento deseado)
+            if (resetForm) {
+                try {
+                    if (typeof resetCreateIngresoForm === 'function') {
+                        resetCreateIngresoForm();
+                    } else {
+                        bnupForm.reset();
+                    }
+                } catch (e) {
+                    // no-op
+                }
+
+                // Limpia multiselect (si existe tu componente)
+                try {
+                    document.querySelector('#multi_funcionarios_ing')
+                        ?.dispatchEvent(new Event('ms:reset'));
+                } catch (e) {
+                    // no-op
+                }
+            }
+        }
+
+        // ------------------------------------------------------------
+        // Helper: abrir modal (Bootstrap real o custom)
+        // ------------------------------------------------------------
+        function showBNUPModal() {
+            // Limpieza por si quedó algo bootstrap colgado
+            cleanupBootstrapArtifacts();
+
+            // Reset del formulario al abrir
+            try {
+                if (typeof resetCreateIngresoForm === 'function') resetCreateIngresoForm();
+            } catch (e) { }
+
+            // Tips/UX (si existen)
+            try {
+                if (window.resetDescriptionTips) {
+                    window.resetDescriptionTips(modal, ['#descripcion'], {
+                        skipFocus: () => ['ADMIN', 'SECRETARIA'].includes(window.tipo_usuario),
+                    });
+                }
+                if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(modal);
+            } catch (e) { }
+
+            // Limpia multiselect al abrir
+            try {
+                document.querySelector('#multi_funcionarios_ing')
+                    ?.dispatchEvent(new Event('ms:reset'));
+            } catch (e) { }
+
+            // 1) Bootstrap real → show()
+            if (canUseBootstrapModal) {
+                try {
+                    const instance = window.bootstrap.Modal.getInstance(modal) || window.bootstrap.Modal.getOrCreateInstance(modal);
+                    instance.show();
+                } catch (err) {
+                    // fallback custom
+                    modal.style.display = 'block';
+                }
+            } else {
+                // 2) Custom → display block
+                modal.style.display = 'block';
+            }
+
+            if (content) {
+                content.classList.add('animate__animated');
+                content.classList.add('animate__bounceIn');
+                content.classList.remove('animate__bounceOut');
+            }
+        }
+
+        // ------------------------------------------------------------
+        // ✅ Abrir modal
+        // ------------------------------------------------------------
+        btnOpen.onclick = (e) => {
+            e.preventDefault();
+            showBNUPModal();
+        };
+
+        // ------------------------------------------------------------
+        // ✅ Cerrar modal (X)
+        // ------------------------------------------------------------
+        closeModalButton.onclick = (e) => {
+            e.preventDefault();
+            hideBNUPModal({ resetForm: true });
+        };
+
+        // ------------------------------------------------------------
+        // ✅ Cerrar modal (click fuera) SOLO para custom
+        // (si fuera bootstrap real, el backdrop lo maneja bootstrap)
+        // ------------------------------------------------------------
+        modal.addEventListener('click', (event) => {
+            if (!canUseBootstrapModal && event.target === modal) {
+                hideBNUPModal({ resetForm: true });
             }
         });
 
-        // Evento para manejar el guardado del formulario BNUP con confirmación previa
-        const saveButton = document.getElementById('guardarBNUP');
-        if (saveButton) {
-            saveButton.onclick = (event) => {
-                event.preventDefault();
+        // ------------------------------------------------------------
+        // ✅ Cerrar modal con ESC (custom)
+        // ------------------------------------------------------------
+        document.addEventListener('keydown', (event) => {
+            if (!canUseBootstrapModal && event.key === 'Escape' && isCustomVisible()) {
+                hideBNUPModal({ resetForm: true });
+            }
+        });
 
-                const bnupForm = document.getElementById('bnupForm');
-                const numeroIngreso = document.getElementById('numeroIngreso').value.trim();
-                const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
-                const archivoAdjunto = archivoAdjuntoInput ? archivoAdjuntoInput.files.length : 0;
+        // ------------------------------------------------------------
+        // ✅ Guardar (POST Ajax + SweetAlert) + CERRAR MODAL
+        // ------------------------------------------------------------
+        saveButton.onclick = (event) => {
+            event.preventDefault();
 
-                // Validar que todos los campos requeridos estén completos
-                if (!numeroIngreso || archivoAdjunto === 0) {
+            // --------------------------
+            // CAMPOS IMPORTANTES
+            // --------------------------
+            const numeroIngresoInput = document.getElementById('numeroIngreso');
+            const numeroIngreso = numeroIngresoInput ? numeroIngresoInput.value.trim() : "";
+
+            const archivoAdjuntoInput = document.getElementById('archivo_adjunto');
+            const archivoAdjuntoCount = archivoAdjuntoInput ? archivoAdjuntoInput.files.length : 0;
+
+            const fechaIngresoInput = document.getElementById('fecha_ingreso_au');
+            const fechaIngresoValor = fechaIngresoInput ? fechaIngresoInput.value : "";
+
+            // --------------------------
+            // LÓGICA AÑO 2026 => backend genera número
+            // --------------------------
+            let requireNumeroIngreso = true;
+            if (fechaIngresoValor) {
+                const yearIngreso = parseInt(fechaIngresoValor.split('-')[0], 10);
+                if (!isNaN(yearIngreso) && yearIngreso >= 2026) {
+                    requireNumeroIngreso = false;
+                }
+            }
+
+            // --------------------------
+            // VALIDACIONES
+            // --------------------------
+            let mensajeError = "";
+
+            if (archivoAdjuntoCount === 0) {
+                mensajeError = "Debe adjuntar el archivo de ingreso (PDF).";
+            }
+
+            if (requireNumeroIngreso && !numeroIngreso) {
+                if (!mensajeError) mensajeError = "Debe ingresar el N° de ingreso.";
+            }
+
+            if (mensajeError) {
+                Swal.fire({
+                    heightAuto: false,
+                    scrollbarPadding: false,
+                    icon: 'error',
+                    title: 'Campos incompletos',
+                    text: mensajeError,
+                });
+                return;
+            }
+
+            // --------------------------
+            // VALIDACIÓN DE CORREO (si tipo recepción 2 o 6)
+            // --------------------------
+            function esEmailValido(str) {
+                return /^\S+@\S+\.\S+$/.test(str);
+            }
+
+            const tipoRecep = document.getElementById('tipo_recepcion')?.value;
+            if (['2', '6'].includes(tipoRecep)) {
+                const mail = document.getElementById('correoSolicitante')?.value?.trim() || "";
+                if (!mail) {
                     Swal.fire({
                         heightAuto: false,
                         scrollbarPadding: false,
                         icon: 'error',
-                        title: 'Campos incompletos',
-                        text: 'Complete todos los campos requeridos antes de enviar.',
+                        title: 'Correo requerido',
+                        text: 'Debe ingresar un correo.'
                     });
                     return;
                 }
-
-                function esEmailValido(str) {
-                    return /^\S+@\S+\.\S+$/.test(str);
+                if (!esEmailValido(mail)) {
+                    Swal.fire({
+                        heightAuto: false,
+                        scrollbarPadding: false,
+                        icon: 'error',
+                        title: 'Correo inválido',
+                        text: 'Ingrese un correo válido.'
+                    });
+                    return;
                 }
+            }
 
-                /* en guardar BNUP */
-                const tipoRecep = document.getElementById('tipo_recepcion').value;
-                if (['2', '6'].includes(tipoRecep)) {
-                    const mail = document.getElementById('correoSolicitante').value.trim();
-                    if (!mail) {
-                        Swal.fire({ icon: 'error', title: 'Correo requerido', text: 'Debe ingresar un correo.' }); return;
-                    }
-                    if (!esEmailValido(mail)) {
-                        Swal.fire({ icon: 'error', title: 'Correo inválido', text: 'Ingrese un correo válido.' }); return;
-                    }
-                }
+            // --------------------------
+            // CONFIRMACIÓN SWEETALERT
+            // --------------------------
+            Swal.fire({
+                heightAuto: false,
+                scrollbarPadding: false,
+                title: '¿Desea confirmar la Solicitud?',
+                text: "Se guardará la solicitud junto con el archivo adjunto.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4BBFE0',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar',
+            }).then((result) => {
+                if (!result.isConfirmed) return;
 
-                // Mostrar ventana de confirmación antes de guardar
-                Swal.fire({
-                    heightAuto: false,
-                    scrollbarPadding: false,
-                    title: '¿Desea confirmar la Solicitud?',
-                    text: "Se guardará la solicitud junto con el archivo adjunto.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#4BBFE0',
-                    cancelButtonColor: '#E73C45',
-                    confirmButtonText: 'Guardar',
-                    cancelButtonText: 'Cancelar',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Enviar el formulario BNUP vía AJAX
-                        // const formData = new FormData(bnupForm);
+                saveButton.disabled = true;
 
-                        const desc = bnupForm.querySelector('#descripcion');
-                        if (desc) standardizeInput(desc);
-                        const formData = new FormData(bnupForm);
+                const formData = new FormData(bnupForm);
 
-                        fetch('/bnup/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': getCSRFToken(),
-                            },
-                            body: formData,
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        heightAuto: false,
-                                        scrollbarPadding: false,
-                                        icon: 'success',
-                                        title: 'Solicitud creada',
-                                        text: 'La solicitud ha sido registrada correctamente.',
-                                        showConfirmButton: false,
-                                        timer: 2000,
-                                    });
-
-                                    // Agregar el nuevo registro a la tabla
-                                    addTableRow(data.solicitud || data);
-
-                                    // Cerrar el modal
-                                    modal.style.display = 'none';
-
-                                    // Limpiar el formulario
-                                    bnupForm.reset();
-                                    // Si usas fileinput plugin para el archivo adjunto
-                                    $(archivoAdjuntoInput).fileinput('clear');
-                                    resetFuncionariosIngreso();
-                                    document.querySelector('#multi_funcionarios_ing')
-                                        ?.dispatchEvent(new Event('ms:reset'));
-                                } else {
-                                    Swal.fire({
-                                        heightAuto: false,
-                                        scrollbarPadding: false,
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: data.error || 'Ha ocurrido un error al crear la solicitud.',
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error al crear la solicitud:', error);
-                                Swal.fire({
-                                    heightAuto: false,
-                                    scrollbarPadding: false,
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Ha ocurrido un error al crear la solicitud.',
-                                });
+                fetch(bnupForm.action, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCSRFToken() },
+                    body: formData,
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data || !data.success) {
+                            Swal.fire({
+                                heightAuto: false,
+                                scrollbarPadding: false,
+                                icon: 'error',
+                                title: 'Error',
+                                text: (data && data.error) ? data.error : 'Ocurrió un error al crear la solicitud.',
                             });
-                    }
-                });
-            };
+                            return;
+                        }
+
+                        // ✅ 1) Agregar fila
+                        if (data.solicitud && typeof addTableRow === 'function') {
+                            addTableRow(data.solicitud);
+                        }
+
+                        // ✅ 2) Refrescar tabla (igual que eliminación)
+                        if (typeof window.refreshTableState === 'function') {
+                            requestAnimationFrame(() => window.refreshTableState('tablaSolicitudes'));
+                        } else if (typeof window.initializeTable === 'function') {
+                            requestAnimationFrame(() => window.initializeTable('tablaSolicitudes'));
+                        }
+
+                        // ✅ 3) Cerrar modal + reset (AQUÍ queda garantizado)
+                        hideBNUPModal({ resetForm: true });
+
+                        // ✅ 4) SweetAlert éxito
+                        const num = data.solicitud?.numero_ingreso ?? '';
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'success',
+                            title: 'Solicitud creada',
+                            text: num ? `Solicitud N° ${num} registrada correctamente.` : 'La solicitud ha sido registrada correctamente.',
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            heightAuto: false,
+                            scrollbarPadding: false,
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Ocurrió un error al enviar la solicitud.',
+                        });
+                    })
+                    .finally(() => {
+                        saveButton.disabled = false;
+                    });
+            });
+        };
+    }
+
+
+    /**
+ * ================================
+ * Helpers: bloqueo N° ingreso (EDIT)
+ * ================================
+ */
+
+    // YYYY-MM-DD -> year number
+    function getYearFromISODate(isoDate) {
+        if (!isoDate || typeof isoDate !== 'string') return null;
+        const y = parseInt(isoDate.split('-')[0], 10);
+        return Number.isFinite(y) ? y : null;
+    }
+
+    // Crea/actualiza el input hidden espejo cuando el input real está disabled
+    function ensureMirrorHiddenInput(disabledInputEl) {
+        const mirrorId = `${disabledInputEl.id}_mirror`;
+        let mirror = document.getElementById(mirrorId);
+
+        if (!mirror) {
+            mirror = document.createElement('input');
+            mirror.type = 'hidden';
+            mirror.id = mirrorId;
+            mirror.name = disabledInputEl.name; // "numero_ingreso"
+            disabledInputEl.insertAdjacentElement('afterend', mirror);
+        }
+
+        mirror.value = disabledInputEl.value ?? '';
+    }
+
+    function removeMirrorHiddenInput(disabledInputEl) {
+        const mirror = document.getElementById(`${disabledInputEl.id}_mirror`);
+        if (mirror) mirror.remove();
+    }
+
+    /**
+     * Regla:
+     * - Año <= 2025  -> editable (manual)
+     * - Año >= 2026  -> NO editable (automático)
+     */
+    function applyEditNumeroIngresoRule() {
+        const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
+        const numeroIngresoField = document.getElementById('edit_numeroIngreso');
+        const msg = document.getElementById('edit_ingresoAutoMsg');
+
+        if (!fechaIngresoField || !numeroIngresoField) return;
+
+        const year = getYearFromISODate(fechaIngresoField.value);
+        const isAuto = (year !== null && year >= 2026);
+
+        if (isAuto) {
+            // Bloqueo real: disabled (para que no pueda teclear ni con flechas del number)
+            numeroIngresoField.setAttribute('disabled', 'disabled');
+
+            // Mensaje visible
+            if (msg) msg.style.display = 'block';
+
+            // Como disabled no viaja en FormData -> espejo hidden con el mismo name
+            ensureMirrorHiddenInput(numeroIngresoField);
+        } else {
+            // Editable
+            numeroIngresoField.removeAttribute('disabled');
+            if (msg) msg.style.display = 'none';
+            removeMirrorHiddenInput(numeroIngresoField);
         }
     }
 
     /**
-    * Inicializa el modal de edición de una solicitud específica.
-    * @param {string} solicitudId - ID de la solicitud a editar.
-    */
+     * ================================
+     * openEditModal (versión corregida)
+     * ================================
+     */
     function openEditModal(solicitudId) {
         const editModal = document.getElementById('editBNUPFormModal');
-        const content = editModal.querySelector('.modal-content');
+        const content = editModal ? editModal.querySelector('.modal-content') : null;
         const closeModalButton = editModal ? editModal.querySelector('.close') : null;
         const editForm = document.getElementById('editBNUPForm');
 
-        if (!editModal || !closeModalButton || !editForm) {
+        if (!editModal || !content || !closeModalButton || !editForm) {
             console.error('Elementos del modal de edición no encontrados.');
             return;
         }
@@ -521,180 +836,61 @@
         // Resetear el formulario antes de cargar nuevos datos
         editForm.reset();
 
-        // Evento para cerrar el modal al hacer clic en el botón de cerrar
+        // =========================
+        // Cierre modal (botón X)
+        // =========================
         closeModalButton.onclick = () => {
-            // limpia el multi-select (si existe)
             const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
             if (selEdit) selEdit.dispatchEvent(new Event('ms:reset'));
 
-            // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
             content.classList.remove('animate__bounceIn');
             content.classList.add('animate__bounceOut');
-            // modal.style.display = 'none';
 
-            // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
             content.addEventListener('animationend', function handleAnimationEnd() {
                 editModal.style.display = 'none';
-                // Limpia la clase de salida para que la próxima vez se use la de entrada
                 content.classList.remove('animate__bounceOut');
                 content.classList.add('animate__bounceIn');
-                // Remover el listener para no duplicar eventos
                 content.removeEventListener('animationend', handleAnimationEnd);
             });
         };
 
-        // Evento para cerrar el modal al hacer clic fuera de él
-        document.addEventListener('click', (event) => {
+        // =========================
+        // Cierre modal (click fuera)
+        // Evitar duplicar listeners: removemos el anterior si existía
+        // =========================
+        if (editModal._outsideClickHandler) {
+            document.removeEventListener('click', editModal._outsideClickHandler);
+        }
+
+        editModal._outsideClickHandler = (event) => {
             if (event.target === editModal) {
                 const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
                 if (selEdit) selEdit.dispatchEvent(new Event('ms:reset'));
-                // Cambiar la animación de entrada por la de salida (por ejemplo, bounceOut)
+
                 content.classList.remove('animate__bounceIn');
                 content.classList.add('animate__bounceOut');
-                // modal.style.display = 'none';
 
-                // Cuando la animación de salida termine, ocultamos el modal y restablecemos las clases
                 content.addEventListener('animationend', function handleAnimationEnd() {
                     editModal.style.display = 'none';
-                    // Limpia la clase de salida para que la próxima vez se use la de entrada
                     content.classList.remove('animate__bounceOut');
                     content.classList.add('animate__bounceIn');
-                    // Remover el listener para no duplicar eventos
                     content.removeEventListener('animationend', handleAnimationEnd);
                 });
             }
-        });
+        };
 
-        // Obtener los datos de la solicitud mediante una solicitud AJAX
+        document.addEventListener('click', editModal._outsideClickHandler);
+
+        // =========================
+        // Traer datos desde backend
+        // =========================
         fetch(`/bnup/edit/?solicitud_id=${solicitudId}`)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
                 return response.json();
             })
             .then(data => {
-                if (data.success) {
-                    // Rellenar el formulario con los datos obtenidos
-                    const solicitudIdField = document.getElementById('edit_solicitud_id');
-                    if (solicitudIdField) solicitudIdField.value = data.data.id;
-
-                    const numeroIngresoField = document.getElementById('edit_numeroIngreso');
-                    if (numeroIngresoField) numeroIngresoField.value = data.data.numero_ingreso;
-
-                    const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
-                    if (fechaIngresoField) fechaIngresoField.value = data.data.fecha_ingreso_au;
-
-                    // NUEVO CAMPO: Fecha de Solicitud
-                    const fechaSolicitudInput = document.getElementById('edit_fecha_solicitud');
-                    if (fechaSolicitudInput) {
-                        if (data.data.fecha_solicitud) {
-                            fechaSolicitudInput.value = data.data.fecha_solicitud;
-                        } else {
-                            fechaSolicitudInput.value = '';
-                        }
-                    }
-
-                    const descripcionField = document.getElementById('edit_descripcion');
-                    if (descripcionField) descripcionField.value = data.data.descripcion;
-
-                    const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
-                    if (tipoRecepcionSelect) {
-                        tipoRecepcionSelect.value = data.data.tipo_recepcion;
-                        updateEditBNUPFields();
-                    }
-
-                    if (['1', '3', '4', '5', '7'].includes(data.data.tipo_recepcion.toString())) { // IDs para Memo, Providencia, Oficio, Ordinario
-                        const numMemoField = document.getElementById('edit_num_memo');
-                        if (numMemoField) numMemoField.value = data.data.numero_memo || '';
-                    } else if (['2', '6'].includes(data.data.tipo_recepcion.toString())) { // ID para Correo
-                        const correoSolicitanteField = document.getElementById('edit_correoSolicitante');
-                        if (correoSolicitanteField) {
-                            correoSolicitanteField.value = data.data.correo_solicitante || '';
-                        }
-                    }
-
-                    const deptoSelect = document.getElementById('edit_depto_solicitante');
-                    if (deptoSelect) deptoSelect.value = data.data.depto_solicitante;
-
-                    const tipoSolicitudSelect = document.getElementById('edit_tipo_solicitud');
-                    if (tipoSolicitudSelect) tipoSolicitudSelect.value = data.data.tipo_solicitud;
-
-                    // (Se elimina la antigua referencia a "fecha_salida_solicitante" ya que ahora usamos "fecha_solicitud")
-
-                    // Cargar los funcionarios asignados en el formulario de edición
-                    // loadEditFormData(data.data);
-
-                    // pasa la URL del adjunto al botón, para que el modal la use como preview
-                    const btnFile = document.getElementById('openEditFileModal');
-                    if (btnFile) {
-                        btnFile.dataset.currentFile = data.data.archivo_adjunto_ingreso_url || '';
-                    }
-
-                    /* ----------  vista limitada para el perfil FUNCIONARIO ---------- */
-                    if (tipo_usuario === 'FUNCIONARIO') {
-
-                        /** helper: muestra un grupo y todos sus ancestros `.form-group`  */
-                        const showWithAncestors = (el) => {
-                            let n = el;
-                            while (n && n.id !== 'editBNUPForm') {
-                                if (n.classList && n.classList.contains('form-group')) n.style.display = '';
-                                n = n.parentElement;
-                            }
-                            el.querySelectorAll('input,textarea').forEach(i => i.disabled = false);
-                        };
-
-                        /** 1 ▸ oculta y deshabilita todo el formulario */
-                        document.querySelectorAll('#editBNUPForm .form-group').forEach(g => {
-                            g.style.display = 'none';
-                            g.querySelectorAll('input,select,textarea').forEach(el => el.disabled = true);
-                        });
-
-                        /** 2 ▸ la descripción SIEMPRE es editable */
-                        const descGrp = document.getElementById('edit_descripcion').closest('.form-group');
-                        showWithAncestors(descGrp);
-
-                        /** 3 ▸ sólo para CORREO (id 2) o CONTRIBUYENTE (id 6) mostramos el e-mail */
-                        const recepId = data.data.tipo_recepcion.toString();          // «2» ó «6»
-                        if (['2', '6'].includes(recepId)) {
-                            const correoGrp = document.getElementById('edit_correoFields');
-                            showWithAncestors(correoGrp);
-                        }
-                    }
-                    /* ---------------------------------------------------------------- */
-
-                    // ⬇️ PEGA AQUÍ (versión con guard)
-                    // === Funcionarios asignados (EDIT) ===
-                    {
-                        const sel = document.querySelector('#multi_funcionarios_ing_edit');
-                        const cont = document.querySelector('#funcionariosSeleccionados_ing_edit');
-                        const hid = document.querySelector('#funcionariosHidden_ing_edit');
-
-                        if (sel && cont && hid) {
-                            // Inicializa una sola vez
-                            if (!sel.dataset.msInited) {
-                                initializeMultiSelect({
-                                    selectSelector: sel,
-                                    containerSelector: cont,
-                                    hiddenInputSelector: hid,
-                                });
-                                sel.dataset.msInited = '1';
-                            }
-
-                            // OJO: aquí es data.data (no data)
-                            const ids = (data.data.funcionarios_asignados || []).map(f => String(f.id));
-
-                            // Limpia selección anterior y siembra chips nuevos
-                            sel.dispatchEvent(new Event('ms:reset'));
-                            sel.dispatchEvent(new CustomEvent('ms:set', { detail: { ids } }));
-                        }
-                    }
-
-                    // Mostrar el modal de edición
-                    if (window.resetDescriptionTips) window.resetDescriptionTips(editModal, ['#edit_descripcion']);
-                    if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(editModal);
-                    editModal.style.display = 'block';
-                } else {
+                if (!data.success) {
                     Swal.fire({
                         heightAuto: false,
                         scrollbarPadding: false,
@@ -702,7 +898,87 @@
                         title: 'Error',
                         text: 'No se pudieron cargar los datos para editar.',
                     });
+                    return;
                 }
+
+                // Rellenar el formulario con los datos obtenidos
+                const solicitudIdField = document.getElementById('edit_solicitud_id');
+                if (solicitudIdField) solicitudIdField.value = data.data.id;
+
+                const numeroIngresoField = document.getElementById('edit_numeroIngreso');
+                if (numeroIngresoField) numeroIngresoField.value = data.data.numero_ingreso ?? '';
+
+                const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
+                if (fechaIngresoField) fechaIngresoField.value = data.data.fecha_ingreso_au ?? '';
+
+                const fechaSolicitudInput = document.getElementById('edit_fecha_solicitud');
+                if (fechaSolicitudInput) fechaSolicitudInput.value = data.data.fecha_solicitud ?? '';
+
+                const descripcionField = document.getElementById('edit_descripcion');
+                if (descripcionField) descripcionField.value = data.data.descripcion ?? '';
+
+                const tipoRecepcionSelect = document.getElementById('edit_tipo_recepcion');
+                if (tipoRecepcionSelect) {
+                    tipoRecepcionSelect.value = data.data.tipo_recepcion;
+                    updateEditBNUPFields();
+                }
+
+                if (['1', '3', '4', '5', '7'].includes(String(data.data.tipo_recepcion))) {
+                    const numMemoField = document.getElementById('edit_num_memo');
+                    if (numMemoField) numMemoField.value = data.data.numero_memo ?? '';
+                } else if (['2', '6'].includes(String(data.data.tipo_recepcion))) {
+                    const correoSolicitanteField = document.getElementById('edit_correoSolicitante');
+                    if (correoSolicitanteField) correoSolicitanteField.value = data.data.correo_solicitante ?? '';
+                }
+
+                const deptoSelect = document.getElementById('edit_depto_solicitante');
+                if (deptoSelect) deptoSelect.value = data.data.depto_solicitante;
+
+                const tipoSolicitudSelect = document.getElementById('edit_tipo_solicitud');
+                if (tipoSolicitudSelect) tipoSolicitudSelect.value = data.data.tipo_solicitud;
+
+                // Botón preview adjunto
+                const btnFile = document.getElementById('openEditFileModal');
+                if (btnFile) btnFile.dataset.currentFile = data.data.archivo_adjunto_ingreso_url || '';
+
+                // ✅ APLICAR REGLA DE BLOQUEO 2026+ (después de precargar valores)
+                applyEditNumeroIngresoRule();
+
+                // ✅ Si el usuario cambia la fecha en el modal, recalculamos regla (una sola vez)
+                if (!fechaIngresoField.dataset.boundAutoRule) {
+                    fechaIngresoField.addEventListener('change', () => {
+                        applyEditNumeroIngresoRule();
+                    });
+                    fechaIngresoField.dataset.boundAutoRule = '1';
+                }
+
+                // Multi-select funcionarios (tu lógica)
+                {
+                    const sel = document.querySelector('#multi_funcionarios_ing_edit');
+                    const cont = document.querySelector('#funcionariosSeleccionados_ing_edit');
+                    const hid = document.querySelector('#funcionariosHidden_ing_edit');
+
+                    if (sel && cont && hid) {
+                        if (!sel.dataset.msInited) {
+                            initializeMultiSelect({
+                                selectSelector: sel,
+                                containerSelector: cont,
+                                hiddenInputSelector: hid,
+                            });
+                            sel.dataset.msInited = '1';
+                        }
+
+                        const ids = (data.data.funcionarios_asignados || []).map(f => String(f.id));
+                        sel.dispatchEvent(new Event('ms:reset'));
+                        sel.dispatchEvent(new CustomEvent('ms:set', { detail: { ids } }));
+                    }
+                }
+
+                // Mostrar modal
+                if (window.resetDescriptionTips) window.resetDescriptionTips(editModal, ['#edit_descripcion']);
+                if (window.bindDescriptionTipButtons) window.bindDescriptionTipButtons(editModal);
+
+                editModal.style.display = 'block';
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -715,7 +991,7 @@
                 });
             });
 
-        // Evento para manejar el guardado de cambios con confirmación previa
+        // Guardar edición (tu lógica actual se mantiene)
         const saveButton = document.getElementById('guardarEdicionBNUP');
         if (saveButton) {
             saveButton.onclick = (event) => {
@@ -733,68 +1009,69 @@
                     confirmButtonText: 'Guardar',
                     cancelButtonText: 'Cancelar',
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        // const formData = new FormData(editForm);
+                    if (!result.isConfirmed) return;
 
-                        // ► Normaliza la descripción antes de leer el formulario
-                        const desc = editForm.querySelector('#edit_descripcion');
-                        if (desc) standardizeInput(desc);
+                    // Normaliza la descripción antes de leer el formulario
+                    const desc = editForm.querySelector('#edit_descripcion');
+                    if (desc) standardizeInput(desc);
 
-                        const formData = new FormData(editForm);
+                    // ✅ Importante: si está disabled, applyEditNumeroIngresoRule ya creó el hidden espejo
+                    const formData = new FormData(editForm);
 
-                        fetch('/bnup/edit/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': getCSRFToken(),
-                            },
-                            body: formData
+                    fetch('/bnup/edit/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCSRFToken() },
+                        body: formData
+                    })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                            return response.json();
                         })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Error en la respuesta del servidor');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire({
-                                        heightAuto: false,
-                                        scrollbarPadding: false,
-                                        icon: 'success',
-                                        title: 'Solicitud actualizada',
-                                        text: 'Los cambios han sido guardados correctamente.',
-                                        showConfirmButton: false,
-                                        timer: 2000,
-                                    });
-                                    updateTableRow(solicitudId);
-                                    const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
-                                    if (selEdit) selEdit.dispatchEvent(new Event('ms:reset'));
-                                    editModal.style.display = 'none';
-                                } else {
-                                    Swal.fire({
-                                        heightAuto: false,
-                                        scrollbarPadding: false,
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: data.error || 'Ha ocurrido un error al actualizar la solicitud.',
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
+                        .then(data => {
+                            if (!data.success) {
                                 Swal.fire({
                                     heightAuto: false,
                                     scrollbarPadding: false,
                                     icon: 'error',
                                     title: 'Error',
-                                    text: 'Ha ocurrido un error al actualizar la solicitud.',
+                                    text: data.error || 'Ha ocurrido un error al actualizar la solicitud.',
                                 });
+                                return;
+                            }
+
+                            Swal.fire({
+                                heightAuto: false,
+                                scrollbarPadding: false,
+                                icon: 'success',
+                                title: 'Solicitud actualizada',
+                                text: 'Los cambios han sido guardados correctamente.',
+                                showConfirmButton: false,
+                                timer: 2000,
                             });
-                    }
+
+                            // refresca fila en tabla
+                            updateTableRow(solicitudId);
+
+                            const selEdit = document.querySelector('#multi_funcionarios_ing_edit');
+                            if (selEdit) selEdit.dispatchEvent(new Event('ms:reset'));
+
+                            editModal.style.display = 'none';
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                heightAuto: false,
+                                scrollbarPadding: false,
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Ha ocurrido un error al actualizar la solicitud.',
+                            });
+                        });
                 });
             };
         }
     }
+
 
     /**
          * Carga los datos de una solicitud en el formulario de edición.
@@ -3222,59 +3499,65 @@
      */
     function addTableRow(solicitud) {
         const sol = solicitud || {};
+
         const tablaSolicitudesBody = document.querySelector('#tablaSolicitudes tbody');
         if (!tablaSolicitudesBody) {
-            console.error('No se encontró la tabla de solicitudes.');
+            console.error('No se encontró el <tbody> de la tabla de solicitudes (#tablaSolicitudes).');
             return;
         }
 
+        // Si existe una fila "no-results" (placeholder), la quitamos al agregar una real.
+        const noResultsRow = tablaSolicitudesBody.querySelector('tr.no-results');
+        if (noResultsRow) noResultsRow.remove();
+
         // Crear la nueva fila
         const row = document.createElement('tr');
-        row.setAttribute('data-id', solicitud.id);
+        row.classList.add('animate__animated');
+        // Si quieres animación visual al agregar:
+        // row.classList.add('animate__fadeInDown');
 
-        let cellIndex = 0;
+        // Atributos del TR tal como tu template
+        row.setAttribute('data-id', sol.id ?? '');
+
+        // Estos data-* existen en tu template (para salidas/descripcion):
+        // En creación normalmente vienen vacíos. Los dejamos listos igual.
+        row.setAttribute('data-salidas', sol.data_salidas ?? ''); // fallback
+        row.setAttribute('data-salidas-descripciones', sol.data_salidas_descripciones ?? '');
+        row.setAttribute('data-email', sol.correo_solicitante ?? '');
+
+        // Tipo de usuario desde bnupData (igual que tu base)
         const bnupData = document.getElementById('bnupData');
         const tipo_usuario = bnupData ? bnupData.getAttribute('data-tipo-usuario') : null;
 
-        // Si el usuario es ADMIN o SECRETARIA, añadir la celda del checkbox
-        if (['ADMIN', 'SECRETARIA', 'FUNCIONARIO'].includes(tipo_usuario)) {
-            const checkboxCell = document.createElement('td');
+        // ==========================================================
+        // 1) Checkbox (solo ADMIN / SECRETARIA / FUNCIONARIO)
+        // ==========================================================
+        if (tipo_usuario === 'ADMIN' || tipo_usuario === 'SECRETARIA' || tipo_usuario === 'FUNCIONARIO') {
+            const checkCell = document.createElement('td');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.classList.add('rowCheckbox');
-            checkbox.setAttribute('data-id', solicitud.id);
-            checkboxCell.appendChild(checkbox);
-            row.appendChild(checkboxCell);
-
-            checkbox.addEventListener('change', () => {
-                const currentRow = checkbox.closest('tr');
-                toggleRowHighlight(currentRow, checkbox.checked);
-
-                const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
-                const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
-                const selectAllCheckbox = document.getElementById('selectAll');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = allChecked;
-                }
-                updateActionButtonsState();
-            });
-
-            cellIndex = 1;
+            checkbox.setAttribute('data-id', sol.id ?? '');
+            checkCell.appendChild(checkbox);
+            row.appendChild(checkCell);
         }
 
-        // Nº Ingreso
+        // ==========================================================
+        // 2) Nº Ingreso
+        // ==========================================================
         const numIngresoCell = document.createElement('td');
         const numIngresoContainer = document.createElement('div');
         numIngresoContainer.classList.add('icon-container');
 
         const numIngresoText = document.createElement('span');
-        numIngresoText.textContent = solicitud.numero_ingreso ? solicitud.numero_ingreso : '';
+        numIngresoText.textContent = (sol.numero_ingreso !== undefined && sol.numero_ingreso !== null) ? sol.numero_ingreso : '';
         numIngresoContainer.appendChild(numIngresoText);
-
         numIngresoCell.appendChild(numIngresoContainer);
         row.appendChild(numIngresoCell);
 
-        // Fecha Ingreso
+        // ==========================================================
+        // 3) Fecha Ingreso AU
+        // ==========================================================
         const fechaCell = document.createElement('td');
         fechaCell.classList.add('fechaTable');
 
@@ -3282,14 +3565,15 @@
         fechaIngresoContainer.classList.add('icon-container');
 
         const fechaIngresoText = document.createElement('span');
-        fechaIngresoText.textContent = solicitud.fecha_ingreso_au ? formatDate(solicitud.fecha_ingreso_au) : '';
-
+        // formatDate viene en shared.js y devuelve DD/MM/YYYY con "/"
+        fechaIngresoText.textContent = sol.fecha_ingreso_au ? formatDate(sol.fecha_ingreso_au) : '';
         fechaIngresoContainer.appendChild(fechaIngresoText);
         fechaCell.appendChild(fechaIngresoContainer);
-
         row.appendChild(fechaCell);
 
-        // Fecha Solicitud
+        // ==========================================================
+        // 4) Fecha Solicitud
+        // ==========================================================
         const fechaSolicitudCell = document.createElement('td');
         fechaSolicitudCell.classList.add('fechaTable');
 
@@ -3297,194 +3581,241 @@
         fechaSolicitudContainer.classList.add('icon-container');
 
         const fechaSolicitudText = document.createElement('span');
-        fechaSolicitudText.textContent = solicitud.fecha_solicitud ? formatDate(solicitud.fecha_solicitud) : '';
-
+        fechaSolicitudText.textContent = sol.fecha_solicitud ? formatDate(sol.fecha_solicitud) : '';
         fechaSolicitudContainer.appendChild(fechaSolicitudText);
         fechaSolicitudCell.appendChild(fechaSolicitudContainer);
-
         row.appendChild(fechaSolicitudCell);
 
-
-        // Solicitante (Departamento)
+        // ==========================================================
+        // 5) Solicitante (Departamento)
+        // ==========================================================
         const deptoCell = document.createElement('td');
-        deptoCell.textContent = solicitud.depto_solicitante_text;
+        deptoCell.textContent = sol.depto_solicitante_text || '';
         row.appendChild(deptoCell);
 
-        // N° Doc
-        const numDocCell = document.createElement('td');
+        // ==========================================================
+        // 6) Tipo Recepción
+        // ==========================================================
+        const recepcionCell = document.createElement('td');
+        recepcionCell.textContent = sol.tipo_recepcion_text || '';
+        row.appendChild(recepcionCell);
 
-        // Siempre creamos un contenedor principal
+        // ==========================================================
+        // 7) N° Doc (numero_memo) con icono si no existe
+        // ==========================================================
+        const numDocCell = document.createElement('td');
         const numDocContainer = document.createElement('div');
         numDocContainer.classList.add('icon-container');
 
-        // Caso 1: Tiene número de documento
-        if (solicitud.numero_memo) {
-            // Creamos un span o texto dentro del contenedor
+        const tieneNumDoc = (sol.numero_memo !== undefined && sol.numero_memo !== null && String(sol.numero_memo).trim() !== '');
+        if (tieneNumDoc) {
             const numDocText = document.createElement('span');
-            numDocText.textContent = solicitud.numero_memo;
-            numDocText.classList.add('num-doc-text'); // opcional para estilo
-
+            numDocText.textContent = sol.numero_memo;
+            numDocText.classList.add('num-doc-text');
             numDocContainer.appendChild(numDocText);
-
-            // Caso 2: NO tiene número de documento → mostramos icono + tooltip
         } else {
+            // Igual a tu template: icono + tooltip
             numDocContainer.innerHTML = `
-                <span class="material-symbols-outlined" style="color: #16233E;">
-                    do_not_disturb_on_total_silence
-                </span>
-                <div class="tooltip">Sin número de documento</div>
-            `;
+            <span class="material-symbols-outlined" style="color: #16233E;">do_not_disturb_on_total_silence</span>
+            <div class="tooltip">Sin número de documento</div>
+        `;
         }
-
-        // Adjuntamos el contenedor al td
         numDocCell.appendChild(numDocContainer);
-
-        // Tipo Recepción
-        const recepcionCell = document.createElement('td');
-        recepcionCell.textContent = solicitud.tipo_recepcion_text;
-        row.appendChild(recepcionCell);
-        
-        // Finalmente agregamos el td a la fila
         row.appendChild(numDocCell);
 
-        // Tipo Solicitud
+        // ==========================================================
+        // 8) Tipo Solicitud
+        // ==========================================================
         const tipoSolicitudCell = document.createElement('td');
-        tipoSolicitudCell.textContent = solicitud.tipo_solicitud_text;
+        tipoSolicitudCell.textContent = sol.tipo_solicitud_text || '';
         row.appendChild(tipoSolicitudCell);
 
-        // Descripción (incluyendo fecha de solicitud en la llamada al modal)
+        // ==========================================================
+        // 9) Descripción (preview + modal)
+        // ==========================================================
         const descripcionCell = document.createElement('td');
+
         const descripcionDiv = document.createElement('div');
         descripcionDiv.classList.add('descripcion-preview');
 
-        descripcionDiv.onclick = function () {
-            const funcionarios = solicitud.funcionarios_asignados || [];
-            const funcionariosDisplay =
-                solicitud.funcionarios_display && solicitud.funcionarios_display.trim()
-                    ? solicitud.funcionarios_display
-                    : funcionarios.map(f => f.nombre).join('\n');
+        const descripcionCompleta = sol.descripcion || '';
+        descripcionDiv.setAttribute('data-fulltext', descripcionCompleta);
 
-            openBNUPDescripcionModal(
-                escapeHtml(solicitud.descripcion),
-                formatDate(solicitud.fecha_ingreso_au),
-                solicitud.numero_ingreso,
-                escapeHtml(solicitud.correo_solicitante),
-                escapeHtml(solicitud.depto_solicitante_text),
-                escapeHtml(funcionariosDisplay),
-                escapeHtml(solicitud.tipo_recepcion_text),
-                escapeHtml(solicitud.tipo_solicitud_text),
-                solicitud.numero_memo || "",
-                solicitud.fecha_solicitud, // Nuevo parámetro: fecha_solicitud
-                'tablaSolicitudes'
-            );
-        };
+        // Texto truncado igual que template (truncatechars:20)
+        const truncLen = 20;
+        const textoTruncado = (descripcionCompleta.length > truncLen)
+            ? (descripcionCompleta.slice(0, truncLen) + '...')
+            : descripcionCompleta;
 
-        descripcionDiv.innerHTML = `${truncateText(solicitud.descripcion, 20)}`;
-        if (solicitud.descripcion.length > 1) {
-            descripcionDiv.innerHTML += `
-                <div class="icon-container">
-                    <span class="material-symbols-outlined">preview</span>
-                </div>
-            `;
+        // Mantener el texto visible dentro del div
+        const textoNode = document.createTextNode(textoTruncado);
+        descripcionDiv.appendChild(textoNode);
+
+        // Icono "preview" si hay descripción (igual que template: length > 1)
+        if (descripcionCompleta && descripcionCompleta.length > 1) {
+            const iconWrap = document.createElement('div');
+            iconWrap.classList.add('icon-container');
+            iconWrap.innerHTML = `<span class="material-symbols-outlined">preview</span>`;
+            descripcionDiv.appendChild(iconWrap);
         }
+
+        // Click abre el modal con los mismos parámetros que tu HTML
+        descripcionDiv.addEventListener('click', () => {
+            try {
+                const funcionariosDisplay =
+                    sol.funcionarios_display ||
+                    (Array.isArray(sol.funcionarios_asignados)
+                        ? sol.funcionarios_asignados.map(f => f.nombre).join(', ')
+                        : '');
+
+                openBNUPDescripcionModal(
+                    descripcionCompleta,
+                    sol.fecha_ingreso_au ? formatDate(sol.fecha_ingreso_au) : '',
+                    sol.numero_ingreso ?? '',
+                    sol.correo_solicitante ?? '',
+                    sol.depto_solicitante_text ?? '',
+                    funcionariosDisplay,
+                    sol.tipo_recepcion_text ?? sol.tipo_recepcion ?? '',
+                    sol.tipo_solicitud_text ?? '',
+                    (sol.numero_memo ?? ''),
+                    sol.fecha_solicitud ? formatDate(sol.fecha_solicitud) : '',
+                    'tablaSolicitudes'
+                );
+            } catch (e) {
+                console.error('Error abriendo modal de descripción:', e);
+            }
+        });
+
         descripcionCell.appendChild(descripcionDiv);
         row.appendChild(descripcionCell);
 
-        // Funcionarios Asignados (usa funcionarios_display si viene del backend)
-        const funcionariosCell = document.createElement('td');
-        const funcionarios = solicitud.funcionarios_asignados || [];
-        const funcionariosDisplay =
-            solicitud.funcionarios_display && solicitud.funcionarios_display.trim()
-                ? solicitud.funcionarios_display
-                : funcionarios.map(func => func.nombre).join('\n');
-        funcionariosCell.textContent = funcionariosDisplay;
-        row.appendChild(funcionariosCell);
+        // ==========================================================
+        // 10) Funcionario (sección o lista)
+        // ==========================================================
+        const funcionarioCell = document.createElement('td');
 
-        // Entradas
-        const entradaCell = document.createElement('td');
-        if (solicitud.archivo_adjunto_ingreso_url) {
-            entradaCell.innerHTML = `
-                <div class="icon-container">                        
-                    <a href="${solicitud.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
-                        <button class="buttonLogin buttonPreview">
-                            <span class="material-symbols-outlined bell">find_in_page</span>
-                        </button>
-                    </a>                        
-                    <div class="tooltip">Ver archivo de ingreso</div>
-                </div>
-            `;
+        // Tu backend ya manda funcionarios_display (incluye sección si corresponde)
+        if (sol.funcionarios_display && String(sol.funcionarios_display).trim() !== '') {
+            funcionarioCell.textContent = sol.funcionarios_display;
+        } else if (Array.isArray(sol.funcionarios_asignados) && sol.funcionarios_asignados.length > 0) {
+            funcionarioCell.textContent = sol.funcionarios_asignados.map(f => f.nombre).join(', ');
         } else {
-            entradaCell.innerHTML = `
-                <div class="icon-container">
-                    <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
-                    <div class="tooltip">Sin archivo de ingreso</div>
-                </div>
-            `;
+            funcionarioCell.innerHTML = '<em>No hay funcionarios asignados</em>';
         }
-        row.appendChild(entradaCell);
 
-        // Salidas
+        row.appendChild(funcionarioCell);
+
+        // ==========================================================
+        // 11) Entradas (archivo adjunto ingreso)
+        // ==========================================================
+        const archivoCell = document.createElement('td');
+
+        if (sol.archivo_adjunto_ingreso_url && String(sol.archivo_adjunto_ingreso_url).trim() !== '') {
+            archivoCell.innerHTML = `
+            <div class="icon-container">
+                <a href="${sol.archivo_adjunto_ingreso_url}" target="_blank" style="text-decoration: none;">
+                    <button class="buttonLogin buttonPreview">
+                        <span class="material-symbols-outlined bell">find_in_page</span>
+                    </button>
+                </a>
+                <div class="tooltip">Ver archivo de ingreso</div>
+            </div>
+        `;
+        } else {
+            archivoCell.innerHTML = `
+            <div class="icon-container">
+                <span style="color: #E73C45;" class="material-symbols-outlined">scan_delete</span>
+                <div class="tooltip">Sin archivo de ingreso</div>
+            </div>
+        `;
+        }
+
+        row.appendChild(archivoCell);
+
+        // ==========================================================
+        // 12) Egresos (salidas) - botón subir / ver
+        // ==========================================================
         const salidasCell = document.createElement('td');
-        if (solicitud.salidas && solicitud.salidas.length > 0) {
-            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
+
+        // Por defecto, al crear NO hay salidas.
+        // Pero dejamos compatibilidad si en el futuro el backend manda algo:
+        // - has_salidas (boolean)
+        // - salidas_count (number)
+        // - salidas (array)
+        const tipoSolicitudId = (sol.tipo_solicitud !== undefined && sol.tipo_solicitud !== null)
+            ? String(sol.tipo_solicitud)
+            : '';
+
+        const esGrupo = (tipoSolicitudId === '11' || tipoSolicitudId === '12');
+
+        const hasSalidas =
+            sol.has_salidas === true ||
+            (typeof sol.salidas_count === 'number' && sol.salidas_count > 0) ||
+            (Array.isArray(sol.salidas) && sol.salidas.length > 0);
+
+        if (hasSalidas) {
+            // Ver archivo de egreso (verde check o naranja group)
+            if (esGrupo) {
                 salidasCell.innerHTML = `
-                    <div class="icon-container">
-                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                            <button class="buttonLogin buttonPreview" style="background: #ffa420;">
-                                <span class="material-symbols-outlined bell">group</span>
-                                <p>|</p>
-                                <span class="material-symbols-outlined bell">find_in_page</span>
-                                <div class="tooltip">Ver archivo de egreso</div>
-                            </button>
-                        </a>
-                    </div>
-                `;
+                <div class="icon-container">
+                    <a href="javascript:void(0);" onclick="openSalidaModal(${sol.id})">
+                        <button class="buttonLogin buttonPreview" style="background: #ffa420;">
+                            <span class="material-symbols-outlined bell">group</span>
+                            <p>|</p>
+                            <span class="material-symbols-outlined bell">find_in_page</span>
+                            <div class="tooltip">Ver archivo de egreso</div>
+                        </button>
+                    </a>
+                </div>
+            `;
             } else {
                 salidasCell.innerHTML = `
-                    <div class="icon-container">
-                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                            <button class="buttonLogin buttonPreview" style="background: #17d244;">
-                                <span class="material-symbols-outlined bell">check</span>
-                                <p>|</p>
-                                <span class="material-symbols-outlined bell">find_in_page</span>
-                                <div class="tooltip">Ver archivo de egreso</div>
-                            </button>
-                        </a>
-                    </div>
-                `;
+                <div class="icon-container">
+                    <a href="javascript:void(0);" onclick="openSalidaModal(${sol.id})">
+                        <button class="buttonLogin buttonPreview" style="background: #17d244;">
+                            <span class="material-symbols-outlined bell">check</span>
+                            <p>|</p>
+                            <span class="material-symbols-outlined bell">find_in_page</span>
+                            <div class="tooltip">Ver archivo de egreso</div>
+                        </button>
+                    </a>
+                </div>
+            `;
             }
         } else {
-            if (sol.tipo_solicitud == 12 || sol.tipo_solicitud == 11) {
+            // Subir egresos (default)
+            if (esGrupo) {
                 salidasCell.innerHTML = `
-                    <div class="icon-container">
-                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                            <button class="buttonLogin buttonSubirSalida" style="background: #ffa420;">
-                                <span class="material-symbols-outlined bell">group</span>
-                                <p>|</p>
-                                <span class="material-symbols-outlined bell">upload_file</span>
-                            </button>
-                        </a>
-                        <div class="tooltip">Subir Egresos</div>
-                    </div>
-                `;
+                <div class="icon-container">
+                    <a href="javascript:void(0);" onclick="openSalidaModal(${sol.id})">
+                        <button class="buttonLogin buttonSubirSalida" style="background: #ffa420;">
+                            <span class="material-symbols-outlined bell">group</span>
+                            <p>|</p>
+                            <span class="material-symbols-outlined bell">upload_file</span>
+                        </button>
+                    </a>
+                    <div class="tooltip">Subir Egresos</div>
+                </div>
+            `;
             } else {
                 salidasCell.innerHTML = `
-                    <div class="icon-container">
-                        <a href="javascript:void(0);" onclick="openSalidaModal(${solicitud.id})">
-                            <button class="buttonLogin buttonSubirSalida">
-                                <span class="material-symbols-outlined bell">schedule</span>
-                                <p>|</p>
-                                <span class="material-symbols-outlined bell">upload_file</span>
-                            </button>
-                        </a>
-                        <div class="tooltip">Subir Egresos</div>
-                    </div>
-                `;
+                <div class="icon-container">
+                    <a href="javascript:void(0);" onclick="openSalidaModal(${sol.id})">
+                        <button class="buttonLogin buttonSubirSalida">
+                            <span class="material-symbols-outlined bell">schedule</span>
+                            <p>|</p>
+                            <span class="material-symbols-outlined bell">upload_file</span>
+                        </button>
+                    </a>
+                    <div class="tooltip">Subir Egresos</div>
+                </div>
+            `;
             }
         }
+
         row.appendChild(salidasCell);
 
-        // Insertar la nueva fila al inicio de la tabla
+        // Insertar la nueva fila al inicio de la tabla (igual que tu lógica actual)
         tablaSolicitudesBody.insertBefore(row, tablaSolicitudesBody.firstChild);
     }
 

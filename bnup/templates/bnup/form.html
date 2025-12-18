@@ -70,10 +70,19 @@
               </div>
 
               <div class="form-group" style="display: flex; justify-content: space-between;">
-                <div >
+                <div>
                   <label for="numeroIngreso">N° de Ingreso</label>
-                  <input type="number" name="numero_ingreso" id="numeroIngreso" required />
+                  <input
+                    type="number"
+                    name="numero_ingreso"
+                    id="numeroIngreso"
+                    required
+                  />
+                  <small id="ingresoAutoMsg" style="color:#555; display:none;">
+                    Asignado automáticamente según la fecha
+                  </small>
                 </div>
+
                 <div class="form-group" >
                   <label for="fecha_ingreso_au">Fecha de Ingreso</label>
                   <input type="date" name="fecha_ingreso_au" id="fecha_ingreso_au" required />
@@ -926,10 +935,24 @@
       </div>
 
       <div class="form-group" style="display: flex; justify-content: space-between;">
-        <div>
+        <div class="form-group">
           <label for="edit_numeroIngreso">N° de Ingreso</label>
-          <input type="number" name="numero_ingreso" id="edit_numeroIngreso" required />
+
+          <input
+            type="number"
+            id="edit_numeroIngreso"
+            name="numero_ingreso"
+            placeholder="Ingrese número de ingreso"
+            required
+          >
+
+          <!-- Mensaje que se mostrará sólo si el año >= 2026 -->
+          <small id="edit_ingresoAutoMsg" style="display:none; color:#6b7280; margin-top:6px;">
+            Este número es automático (2026+). No se puede editar.
+          </small>
         </div>
+
+        
         <!-- Nuevo Campo: Fecha de Ingreso -->
         <div class="form-group">
           <label for="edit_fecha_ingreso_au">Fecha de Ingreso</label>

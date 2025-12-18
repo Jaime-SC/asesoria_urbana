@@ -116,6 +116,54 @@ def _send_ingreso_async(ingreso_id, absolute_url, fecha_responder_hasta_override
     except Exception:
         pass
 
+def get_next_numero_ingreso_ano(anio_ingreso: int) -> int:
+    """
+    Devuelve el MENOR número de ingreso disponible (>= 1) para el año dado.
+
+    Lógica:
+    - Considera solo ingresos ACTIVOS del año (is_active=True).
+    - Toma todos los numero_ingreso ordenados: 1, 2, 3, 5, 6, 9, ...
+    - Recorre buscando el primer "hueco":
+        * Si ve [1, 2, 3, 5] => el menor faltante es 4.
+        * Si no hay huecos (1, 2, 3) => devuelve 4.
+        * Si no hay registros en el año => devuelve 1.
+    - Se ejecuta dentro de una transacción con select_for_update()
+      para evitar problemas de concurrencia.
+    """
+
+    activos_qs = (
+        IngresoSOLICITUD.objects.select_for_update()
+        .filter(
+            fecha_ingreso_au__year=anio_ingreso,
+            is_active=True,
+            numero_ingreso__isnull=False,
+        )
+        .order_by("numero_ingreso")
+        .values_list("numero_ingreso", flat=True)
+    )
+
+    siguiente = 1
+
+    for num in activos_qs:
+        if num is None:
+            continue
+
+        if num < siguiente:
+            # Dato "sucio" o duplicado más bajo que el esperado, se ignora
+            continue
+
+        if num == siguiente:
+            # Este número está ocupado → pasamos al siguiente candidato
+            siguiente += 1
+            continue
+
+        if num > siguiente:
+            # Encontramos un hueco: 'siguiente' NO está ocupado
+            break
+
+    # Si no hubo huecos, 'siguiente' será max+1 o 1 si no había nada
+    return siguiente
+
 def bnup_form(request):
     """
     Maneja la visualización y creación de solicitudes de BNUP.
@@ -131,6 +179,9 @@ def bnup_form(request):
     perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
     tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
 
+    # ------------------------------------------------------------------
+    # POST: Crear nueva solicitud de BNUP
+    # ------------------------------------------------------------------
     if request.method == "POST":
         if tipo_usuario not in ["ADMIN", "SECRETARIA"]:
             return JsonResponse(
@@ -140,24 +191,39 @@ def bnup_form(request):
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")
 
-        # --- NUEVO: override de "Responder hasta" para Transparencia Activa (id 16) ---
+        # --- Override "Responder hasta" para Transparencia Activa (id 16) ---
         fecha_responder_hasta_override = None
         if tipo_solicitud_id == "16":
-            fecha_max_str = request.POST.get("fecha_maxima_respuesta", "").strip()
+            fecha_max_str = (request.POST.get("fecha_maxima_respuesta") or "").strip()
             if not fecha_max_str:
-                return JsonResponse({"success": False, "error": "Debe indicar el plazo máximo (Transparencia Activa)."})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Debe indicar el plazo máximo (Transparencia Activa).",
+                    }
+                )
             try:
                 fecha_tmp = datetime.strptime(fecha_max_str, "%Y-%m-%d").date()
             except ValueError:
-                return JsonResponse({"success": False, "error": "Fecha de plazo máximo inválida."})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Fecha de plazo máximo inválida.",
+                    }
+                )
             if fecha_tmp <= date.today():
-                return JsonResponse({"success": False, "error": "El plazo máximo debe ser posterior a la fecha actual."})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "El plazo máximo debe ser posterior a la fecha actual.",
+                    }
+                )
             fecha_responder_hasta_override = fecha_tmp
 
         # ─── Número de documento / memo ─────────────────────────
-        num_memo_str = request.POST.get("num_memo", "").strip()
+        num_memo_str = (request.POST.get("num_memo") or "").strip()
         if tipo_recepcion_id in ["2", "6", "8"]:
-            # CORREO / CONTRIBUYENTE / (otro) → ignora número de documento
+            # CORREO / CONTRIBUYENTE / OTRO → ignora número de documento
             numero_memo = None
         elif tipo_solicitud_id == "10":
             # Alcohol: opcional
@@ -165,24 +231,46 @@ def bnup_form(request):
         else:
             # Resto: obligatorio
             if num_memo_str == "":
-                return JsonResponse({"success": False, "error": "El campo número de documento es obligatorio."})
-            numero_memo = int(num_memo_str)
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "El campo número de documento es obligatorio.",
+                    }
+                )
+            try:
+                numero_memo = int(num_memo_str)
+            except ValueError:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "El número de documento debe ser numérico.",
+                    }
+                )
 
         # ─── Correo del solicitante ─────────────────────────────
-        EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-        if tipo_recepcion_id in ["2", "6"]:   # CORREO o CONTRIBUYENTE
-            correo_solicitante = (request.POST.get(
-                "correo_solicitante", "") or "").strip()
+        EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+        if tipo_recepcion_id in ["2", "6"]:  # CORREO o CONTRIBUYENTE
+            correo_solicitante = (request.POST.get("correo_solicitante") or "").strip()
             if not correo_solicitante:
-                return JsonResponse({"success": False, "error": "Debe ingresar un correo del solicitante."})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Debe ingresar un correo del solicitante.",
+                    }
+                )
             if not EMAIL_RE.match(correo_solicitante):
-                return JsonResponse({"success": False, "error": "El correo ingresado no es válido."})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "El correo ingresado no es válido.",
+                    }
+                )
         else:
             correo_solicitante = None
 
         # ─── Otros campos base ──────────────────────────────────
         depto_solicitante_id = request.POST.get("depto_solicitante")
-        numero_ingreso = (request.POST.get("numero_ingreso") or "").strip()
+        numero_ingreso_raw = (request.POST.get("numero_ingreso") or "").strip()
 
         fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")
         fecha_solicitud_str = request.POST.get("fecha_solicitud")
@@ -193,79 +281,154 @@ def bnup_form(request):
         funcionarios_ids = expand_funcionarios_tokens(raw_funcs)
 
         if not funcionarios_ids:
-            return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Debe asignar al menos un funcionario.",
+                }
+            )
 
-        descripcion = request.POST.get("descripcion")
+        descripcion = (request.POST.get("descripcion") or "").strip()
         archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
+
+        # Archivo SIEMPRE obligatorio
+        if not archivo_adjunto:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Debe adjuntar el archivo de ingreso (PDF).",
+                }
+            )
 
         # ─── Fechas ─────────────────────────────────────────────
         try:
-            fecha_ingreso_au = datetime.strptime(fecha_ingreso_au_str, "%Y-%m-%d").date()
-        except ValueError:
-            return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
+            fecha_ingreso_au = datetime.strptime(
+                fecha_ingreso_au_str, "%Y-%m-%d"
+            ).date()
+        except (TypeError, ValueError):
+            return JsonResponse(
+                {"success": False, "error": "Fecha de ingreso inválida."}
+            )
 
+        anio_ingreso = fecha_ingreso_au.year
+
+        # ─── Número de ingreso (manual < 2026, automático >= 2026) ─────────
+        numero_ingreso_int = None
+
+        if anio_ingreso < 2026:
+            # Hasta 2025: sigue siendo manual y obligatorio
+            if numero_ingreso_raw == "":
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Debe ingresar un número de ingreso.",
+                    }
+                )
+            try:
+                numero_ingreso_int = int(numero_ingreso_raw)
+            except ValueError:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Número de ingreso inválido. Debe ser numérico.",
+                    }
+                )
+
+        # Fecha del documento (opcional, pero no puede ser posterior al ingreso)
         fecha_solicitud = None
         if fecha_solicitud_str:
             try:
                 fecha_solicitud = datetime.strptime(
-                    fecha_solicitud_str, "%Y-%m-%d").date()
+                    fecha_solicitud_str, "%Y-%m-%d"
+                ).date()
                 if fecha_ingreso_au < fecha_solicitud:
-                    return JsonResponse({"success": False, "error": "La fecha del documento recepcionado no puede ser posterior a la fecha de ingreso."})
+                    return JsonResponse(
+                        {
+                            "success": False,
+                            "error": "La fecha del documento recepcionado no puede ser posterior a la fecha de ingreso.",
+                        }
+                    )
             except ValueError:
-                return JsonResponse({"success": False, "error": "Fecha de solicitud inválida."})
+                return JsonResponse(
+                    {"success": False, "error": "Fecha de solicitud inválida."}
+                )
 
         # ─── FK y validaciones de existencia ────────────────────
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
         except TipoRecepcion.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Tipo de recepción inválido."})
+            return JsonResponse(
+                {"success": False, "error": "Tipo de recepción inválido."}
+            )
 
         try:
             tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)
         except TipoSolicitud.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Tipo de solicitud inválido."})
+            return JsonResponse(
+                {"success": False, "error": "Tipo de solicitud inválido."}
+            )
 
         try:
-            depto_solicitante = Departamento.objects.get(
-                id=depto_solicitante_id)
+            depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
         except Departamento.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Departamento solicitante inválido."})
+            return JsonResponse(
+                {"success": False, "error": "Departamento solicitante inválido."}
+            )
 
-        funcionarios_asignados = Funcionario.objects.filter(
-            id__in=funcionarios_ids)
+        funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_ids)
         if not funcionarios_asignados.exists():
-            return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
+            return JsonResponse(
+                {"success": False, "error": "Funcionarios asignados inválidos."}
+            )
 
-        # ────────────────────────────────────────────────────────
-        # BLOQUE CRÍTICO: Unicidad de numero_ingreso cuando ACTIVO,
-        # permitiendo reingreso si existe INACTIVO (reactivar).
-        # ────────────────────────────────────────────────────────
+        # ------------------------------------------------------------------
+        # BLOQUE CRÍTICO:
+        # - A partir de 2026: numeración automática reiniciada por año.
+        # - < 2026: usa el número ingresado manualmente.
+        # - En ambos casos: evita duplicados y permite reactivar ingresos inactivos.
+        # - Desde 2026: reutiliza el MENOR número faltante del año.
+        # ------------------------------------------------------------------
         try:
             with transaction.atomic():
-                # Si existe ACTIVO con ese número → error
-                if IngresoSOLICITUD.objects.filter(numero_ingreso=numero_ingreso, is_active=True).exists():
+                # A partir de 2026, calcular el menor número disponible del año
+                if anio_ingreso >= 2026:
+                    numero_ingreso_int = get_next_numero_ingreso_ano(anio_ingreso)
+
+                # Base de consulta para este número
+                qs_base = IngresoSOLICITUD.objects.filter(
+                    numero_ingreso=numero_ingreso_int
+                )
+
+                # Desde 2026 en adelante, la unicidad es por (año, número)
+                if anio_ingreso >= 2026:
+                    qs_base = qs_base.filter(fecha_ingreso_au__year=anio_ingreso)
+
+                # Si existe ACTIVO con ese número (y año si aplica) → error
+                if qs_base.filter(is_active=True).exists():
+                    if anio_ingreso >= 2026:
+                        msg_dup = "Número de ingreso ya existente para ese año."
+                    else:
+                        msg_dup = "Número de ingreso ya existente."
                     return JsonResponse(
-                        {"success": False, "error": "Número de ingreso ya existente."},
-                        status=400
+                        {"success": False, "error": msg_dup}, status=400
                     )
 
-                # Si hay INACTIVO con ese número → reactivar (lock para evitar condiciones de carrera)
-                ing_inactivo = (
-                    IngresoSOLICITUD.objects
-                    .select_for_update()
-                    .filter(numero_ingreso=numero_ingreso, is_active=False)
+                # Si hay INACTIVO con ese número (y año si aplica) → reactivar
+                ingreso_solicitud = (
+                    qs_base.select_for_update()
+                    .filter(is_active=False)
                     .order_by("-id")
                     .first()
                 )
 
-                if ing_inactivo:
-                    ingreso_solicitud = ing_inactivo
+                if ingreso_solicitud:
+                    # Reactivamos y sobreescribimos datos
                     ingreso_solicitud.tipo_recepcion = tipo_recepcion
                     ingreso_solicitud.tipo_solicitud = tipo_solicitud
                     ingreso_solicitud.numero_memo = numero_memo
                     ingreso_solicitud.correo_solicitante = correo_solicitante
                     ingreso_solicitud.depto_solicitante = depto_solicitante
-                    ingreso_solicitud.numero_ingreso = numero_ingreso
+                    ingreso_solicitud.numero_ingreso = numero_ingreso_int
                     ingreso_solicitud.fecha_ingreso_au = fecha_ingreso_au
                     ingreso_solicitud.fecha_solicitud = fecha_solicitud
                     ingreso_solicitud.descripcion = descripcion
@@ -273,34 +436,39 @@ def bnup_form(request):
                         ingreso_solicitud.archivo_adjunto_ingreso = archivo_adjunto
                     ingreso_solicitud.is_active = True
                     ingreso_solicitud.save()
-                    ingreso_solicitud.funcionarios_asignados.set(
-                        funcionarios_asignados)
+                    ingreso_solicitud.funcionarios_asignados.set(funcionarios_asignados)
                 else:
+                    # Creamos un nuevo registro
                     ingreso_solicitud = IngresoSOLICITUD.objects.create(
                         tipo_recepcion=tipo_recepcion,
                         tipo_solicitud=tipo_solicitud,
                         numero_memo=numero_memo,
                         correo_solicitante=correo_solicitante,
                         depto_solicitante=depto_solicitante,
-                        numero_ingreso=numero_ingreso,
+                        numero_ingreso=numero_ingreso_int,
                         fecha_ingreso_au=fecha_ingreso_au,
                         fecha_solicitud=fecha_solicitud,
                         descripcion=descripcion,
                         archivo_adjunto_ingreso=archivo_adjunto or None,
                         is_active=True,
                     )
-                    ingreso_solicitud.funcionarios_asignados.set(
-                        funcionarios_asignados)
+                    ingreso_solicitud.funcionarios_asignados.set(funcionarios_asignados)
 
                 # URL (si aún no tienes vista de detalle, puedes linkear al listado)
                 absolute_url = "http://asesoriaurbana.munivalpo.cl/"
 
                 # Envío asíncrono tras commit
-                transaction.on_commit(lambda: threading.Thread(
-                    target=_send_ingreso_async,
-                    args=(ingreso_solicitud.id, absolute_url, fecha_responder_hasta_override),  # ← NUEVO
-                    daemon=True
-                ).start())
+                transaction.on_commit(
+                    lambda: threading.Thread(
+                        target=_send_ingreso_async,
+                        args=(
+                            ingreso_solicitud.id,
+                            absolute_url,
+                            fecha_responder_hasta_override,
+                        ),
+                        daemon=True,
+                    ).start()
+                )
 
             # ─── Respuesta JSON con payload de la solicitud ──────
             solicitud_data = {
@@ -311,28 +479,45 @@ def bnup_form(request):
                 "tipo_solicitud_text": ingreso_solicitud.tipo_solicitud.tipo,
                 "numero_memo": ingreso_solicitud.numero_memo,
                 "correo_solicitante": ingreso_solicitud.correo_solicitante,
-                "depto_solicitante": ingreso_solicitud.depto_solicitante.id,
-                "depto_solicitante_text": ingreso_solicitud.depto_solicitante.nombre,
+                "depto_solicitante": depto_solicitante.id,
+                "depto_solicitante_text": depto_solicitante.nombre,
                 "numero_ingreso": ingreso_solicitud.numero_ingreso,
-                "fecha_ingreso_au": ingreso_solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
-                "fecha_solicitud": ingreso_solicitud.fecha_solicitud.strftime("%Y-%m-%d") if ingreso_solicitud.fecha_solicitud else "",
+                "fecha_ingreso_au": ingreso_solicitud.fecha_ingreso_au.strftime(
+                    "%Y-%m-%d"
+                ),
+                "fecha_solicitud": ingreso_solicitud.fecha_solicitud.strftime(
+                    "%Y-%m-%d"
+                )
+                if ingreso_solicitud.fecha_solicitud
+                else "",
                 "funcionarios_asignados": [
                     {"id": f.id, "nombre": f.nombre}
                     for f in ingreso_solicitud.funcionarios_asignados.all()
                 ],
-                "funcionarios_display": get_funcionarios_display_for_ingreso(ingreso_solicitud),  # ⬅️ aquí
+                "funcionarios_display": get_funcionarios_display_for_ingreso(
+                    ingreso_solicitud
+                ),
                 "descripcion": ingreso_solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": (
                     ingreso_solicitud.archivo_adjunto_ingreso.url
-                    if ingreso_solicitud.archivo_adjunto_ingreso else ""
+                    if ingreso_solicitud.archivo_adjunto_ingreso
+                    else ""
                 ),
             }
 
             return JsonResponse({"success": True, "solicitud": solicitud_data})
 
         except Exception as e:
-            return JsonResponse({"success": False, "error": f"Error al guardar la solicitud: {e}"})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": f"Error al guardar la solicitud: {e}",
+                }
+            )
 
+    # ------------------------------------------------------------------
+    # GET: Cargar formulario + listado de solicitudes
+    # ------------------------------------------------------------------
     else:
         # Cargamos las solicitudes con todos los datos necesarios
         solicitudes_qs = (
@@ -385,6 +570,7 @@ def bnup_form(request):
             "tipos_solicitud": tipos_solicitud,
             "tipo_usuario": tipo_usuario,
             "total_funcionarios": funcionarios.count(),
+            "current_year": date.today().year,
         }
         return render(request, "bnup/form.html", context)
 
@@ -406,8 +592,9 @@ def edit_bnup_record(request):
 
     if request.method == "POST":
 
-        # … dentro de edit_bnup_record, en la sección POST …
-
+        # =========================================================
+        # 1) Flujo especial: FUNCIONARIO (solo descripción + correo si aplica)
+        # =========================================================
         if tipo_usuario == "FUNCIONARIO":
             EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
@@ -425,15 +612,12 @@ def edit_bnup_record(request):
             campos_a_grabar = ["descripcion"]
             solicitud.descripcion = nueva_descripcion
 
-            # sólo si el tipo de recepción exige correo ────────────────
-            # 2 = CORREO, 6 = CONTRIBUYENTE
+            # sólo si el tipo de recepción exige correo (2 = CORREO, 6 = CONTRIBUYENTE)
             if solicitud.tipo_recepcion_id in (2, 6):
                 if not nuevo_correo:
-                    return JsonResponse({"success": False,
-                                        "error": "Debe ingresar un correo del solicitante."})
+                    return JsonResponse({"success": False, "error": "Debe ingresar un correo del solicitante."})
                 if not EMAIL_RE.match(nuevo_correo):
-                    return JsonResponse({"success": False,
-                                        "error": "El correo ingresado no es válido."})
+                    return JsonResponse({"success": False, "error": "El correo ingresado no es válido."})
                 solicitud.correo_solicitante = nuevo_correo
                 campos_a_grabar.append("correo_solicitante")
 
@@ -446,13 +630,13 @@ def edit_bnup_record(request):
 
             changes = []
             if (prev["descripcion"] or "") != (solicitud.descripcion or ""):
-                changes.append(("Descripción",
-                                (prev["descripcion"] or "")[
-                                    :80] + ("…" if prev["descripcion"] and len(prev["descripcion"]) > 80 else ""),
-                                (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion) > 80 else "")))
+                changes.append((
+                    "Descripción",
+                    (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"]) > 80 else ""),
+                    (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion) > 80 else "")
+                ))
             if (prev["correo_solicitante"] or "") != (solicitud.correo_solicitante or ""):
-                changes.append(
-                    ("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
+                changes.append(("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
 
             absolute_url = "http://asesoriaurbana.munivalpo.cl/"
 
@@ -461,7 +645,7 @@ def edit_bnup_record(request):
                     notify_ingreso_updated(
                         solicitud,
                         absolute_url=absolute_url,
-                        added=[],          # un funcionario no puede cambiar responsables aquí
+                        added=[],
                         removed=[],
                         field_changes=changes,
                         bcc=None,
@@ -469,8 +653,7 @@ def edit_bnup_record(request):
                 except Exception:
                     pass
 
-            transaction.on_commit(lambda: Thread(
-                target=_send_update, daemon=True).start())
+            transaction.on_commit(lambda: Thread(target=_send_update, daemon=True).start())
 
             return JsonResponse({
                 "success": True,
@@ -481,8 +664,9 @@ def edit_bnup_record(request):
                 },
             })
 
-    # … a partir de aquí continúa el flujo normal (valida todo) para ADMIN y SECRETARIA
-
+        # =========================================================
+        # 2) Flujo normal: ADMIN / SECRETARIA (valida todo)
+        # =========================================================
         solicitud_id = request.POST.get("solicitud_id")
         solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
 
@@ -497,73 +681,26 @@ def edit_bnup_record(request):
             "fecha_solicitud": solicitud.fecha_solicitud,
             "descripcion": solicitud.descripcion,
             "func_ids": set(solicitud.funcionarios_asignados.values_list("id", flat=True)),
-            # ← NUEVO
             "archivo_prev_name": getattr(solicitud.archivo_adjunto_ingreso, "name", None),
         }
 
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
-        tipo_solicitud_id = request.POST.get("tipo_solicitud")  # Nuevo campo
-        num_memo_str = request.POST.get("num_memo", "").strip()
-        if tipo_recepcion_id in ["2", "6", "8"]:
-            numero_memo = None
-        elif tipo_solicitud_id == "10":
-            numero_memo = int(num_memo_str) if num_memo_str != "" else None
-        else:
-            if num_memo_str == "":
-                return JsonResponse({"success": False, "error": "El campo número de documento es obligatorio."})
-            else:
-                numero_memo = int(num_memo_str)
+        tipo_solicitud_id = request.POST.get("tipo_solicitud")
 
-        EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-
-        correo_solicitante = request.POST.get(
-            "correo_solicitante") if tipo_recepcion_id in ["2", "6"] else None
-        if tipo_recepcion_id in ["2", "6"]:
-            correo_solicitante = request.POST.get(
-                "correo_solicitante", "").strip()
-            if not correo_solicitante:
-                return JsonResponse({"success": False,
-                                    "error": "Debe ingresar un correo del solicitante."})
-            if not EMAIL_RE.match(correo_solicitante):
-                return JsonResponse({"success": False,
-                                    "error": "El correo ingresado no es válido."})
-        else:
-            correo_solicitante = None
-        depto_solicitante_id = request.POST.get("depto_solicitante")
-        numero_ingreso = request.POST.get("numero_ingreso")
-        fecha_ingreso_au_str = request.POST.get(
-            "fecha_ingreso_au")  # Renombrado
+        # ---- FECHAS (parsear primero SIEMPRE) ----
+        fecha_ingreso_au_str = request.POST.get("fecha_ingreso_au")
         fecha_solicitud_str = request.POST.get("fecha_solicitud")
-        descripcion = request.POST.get("descripcion")
-        archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
 
-        # ————————— Manejo del archivo adjunto ————————————
-        delete_flag = request.POST.get("delete_archivo") == "1"
-
-        if delete_flag and solicitud.archivo_adjunto_ingreso:
-            # el usuario pidió eliminar el archivo sin subir otro
-            solicitud.archivo_adjunto_ingreso.delete(save=False)
-            solicitud.archivo_adjunto_ingreso = None
-
-        # si llega un archivo nuevo, siempre sustituye al que hubiera
-        if archivo_adjunto:
-            solicitud.archivo_adjunto_ingreso = archivo_adjunto
-        # ————————————————————————————————————————————————
-
-        # Convertir fecha_ingreso_au_str a objeto datetime.date
         try:
-            fecha_ingreso_au = datetime.strptime(
-                fecha_ingreso_au_str, "%Y-%m-%d").date()
-        except ValueError:
+            fecha_ingreso_au = datetime.strptime(fecha_ingreso_au_str, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
             return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
 
         # Convertir fecha de solicitud
         fecha_solicitud = None
         if fecha_solicitud_str:
             try:
-                fecha_solicitud = datetime.strptime(
-                    fecha_solicitud_str, "%Y-%m-%d").date()
-                # Si la fecha de solicitud es mayor (posterior) que la de ingreso, se lanza error
+                fecha_solicitud = datetime.strptime(fecha_solicitud_str, "%Y-%m-%d").date()
                 if fecha_ingreso_au < fecha_solicitud:
                     return JsonResponse({
                         "success": False,
@@ -571,12 +708,105 @@ def edit_bnup_record(request):
                     })
             except ValueError:
                 return JsonResponse({"success": False, "error": "Fecha de solicitud inválida."})
+
+        # ---- Número de documento / memo ----
+        num_memo_str = (request.POST.get("num_memo") or "").strip()
+
+        if tipo_recepcion_id in ["2", "6", "8"]:
+            numero_memo = None
+        elif tipo_solicitud_id == "10":
+            # Alcohol: opcional
+            if num_memo_str == "":
+                numero_memo = None
+            else:
+                try:
+                    numero_memo = int(num_memo_str)
+                except ValueError:
+                    return JsonResponse({"success": False, "error": "El número de documento debe ser numérico."})
+        else:
+            if num_memo_str == "":
+                return JsonResponse({"success": False, "error": "El campo número de documento es obligatorio."})
+            try:
+                numero_memo = int(num_memo_str)
+            except ValueError:
+                return JsonResponse({"success": False, "error": "El número de documento debe ser numérico."})
+
+        # ---- Correo solicitante ----
+        EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+        if tipo_recepcion_id in ["2", "6"]:
+            correo_solicitante = (request.POST.get("correo_solicitante") or "").strip()
+            if not correo_solicitante:
+                return JsonResponse({"success": False, "error": "Debe ingresar un correo del solicitante."})
+            if not EMAIL_RE.match(correo_solicitante):
+                return JsonResponse({"success": False, "error": "El correo ingresado no es válido."})
+        else:
+            correo_solicitante = None
+
+        depto_solicitante_id = request.POST.get("depto_solicitante")
+
+        # =========================================================
+        # ✅ NUMERO INGRESO (REGLA FINAL)
+        #
+        # - <= 2025: manual, editable
+        # - >= 2026: automático, NO se modifica en edición
+        #            y NO se permite cambiar de año (evita renumeración)
+        # =========================================================
+        numero_ingreso_post = (request.POST.get("numero_ingreso") or "").strip()
+
+        anio_nuevo = fecha_ingreso_au.year
+        anio_original = prev["fecha_ingreso_au"].year if prev.get("fecha_ingreso_au") else None
+
+        if anio_nuevo >= 2026 or (anio_original is not None and anio_original >= 2026):
+            # Si cualquiera de los dos cae en régimen automático, el año NO debe cambiar
+            if anio_original != anio_nuevo:
+                return JsonResponse({
+                    "success": False,
+                    "error": "No se permite cambiar el año de ingreso en solicitudes 2026+ (numeración automática)."
+                })
+
+            # Conservar SIEMPRE el número existente (ignorar POST)
+            numero_ingreso = prev.get("numero_ingreso")
+
+            if numero_ingreso is None:
+                return JsonResponse({
+                    "success": False,
+                    "error": "Solicitud 2026+ sin número de ingreso. No se puede editar hasta corregir este registro."
+                })
+        else:
+            # <= 2025: manual y editable
+            if numero_ingreso_post == "":
+                return JsonResponse({"success": False, "error": "Debe ingresar un número de ingreso."})
+
+            try:
+                numero_ingreso = int(numero_ingreso_post)
+            except ValueError:
+                return JsonResponse({"success": False, "error": "Número de ingreso inválido. Debe ser numérico."})
+
+            # Consistencia con creación histórica (<2026): duplicado GLOBAL
+            dup = (IngresoSOLICITUD.objects
+                   .filter(is_active=True, numero_ingreso=numero_ingreso)
+                   .exclude(id=solicitud.id)
+                   .exists())
+            if dup:
+                return JsonResponse({"success": False, "error": "Número de ingreso ya existente."})
+
+        # ---- Descripción y archivo ----
+        descripcion = request.POST.get("descripcion")
+        archivo_adjunto = request.FILES.get("archivo_adjunto_ingreso")
+
+        delete_flag = request.POST.get("delete_archivo") == "1"
+        if delete_flag and solicitud.archivo_adjunto_ingreso:
+            solicitud.archivo_adjunto_ingreso.delete(save=False)
+            solicitud.archivo_adjunto_ingreso = None
+
+        if archivo_adjunto:
+            solicitud.archivo_adjunto_ingreso = archivo_adjunto
+
+        # ---- FK ----
         try:
             tipo_recepcion = TipoRecepcion.objects.get(id=tipo_recepcion_id)
-            tipo_solicitud = TipoSolicitud.objects.get(
-                id=tipo_solicitud_id)  # Obtener el tipo de solicitud
-            depto_solicitante = Departamento.objects.get(
-                id=depto_solicitante_id)
+            tipo_solicitud = TipoSolicitud.objects.get(id=tipo_solicitud_id)
+            depto_solicitante = Departamento.objects.get(id=depto_solicitante_id)
 
             if tipo_usuario == "ADMIN":
                 raw = request.POST.get("funcionarios_asignados", "")
@@ -586,16 +816,15 @@ def edit_bnup_record(request):
                 if not funcionarios_ids:
                     return JsonResponse({"success": False, "error": "Debe asignar al menos un funcionario."})
 
-                funcionarios_asignados = Funcionario.objects.filter(
-                    id__in=funcionarios_ids)
+                funcionarios_asignados = Funcionario.objects.filter(id__in=funcionarios_ids)
                 if not funcionarios_asignados.exists():
                     return JsonResponse({"success": False, "error": "Funcionarios asignados inválidos."})
             else:
-                # Mantener los funcionarios existentes si el usuario no es ADMIN
                 funcionarios_asignados = solicitud.funcionarios_asignados.all()
 
+            # ---- Asignaciones finales ----
             solicitud.tipo_recepcion = tipo_recepcion
-            solicitud.tipo_solicitud = tipo_solicitud  # Asignar el tipo de solicitud
+            solicitud.tipo_solicitud = tipo_solicitud
             solicitud.numero_memo = numero_memo
             solicitud.correo_solicitante = correo_solicitante
             solicitud.depto_solicitante = depto_solicitante
@@ -606,17 +835,11 @@ def edit_bnup_record(request):
 
             if tipo_usuario == "ADMIN":
                 solicitud.funcionarios_asignados.set(funcionarios_asignados)
-            # Si otros tipos de usuarios pueden editar funcionarios, añade lógica aquí.
-
-            if archivo_adjunto:
-                solicitud.archivo_adjunto_ingreso = archivo_adjunto
 
             solicitud.save()
 
             # --- construir deltas y notificar ---
-            # (1) diferencia de funcionarios
-            new_func_qs = solicitud.funcionarios_asignados.select_related(
-                "user").all()
+            new_func_qs = solicitud.funcionarios_asignados.select_related("user").all()
             new_func_ids = set(new_func_qs.values_list("id", flat=True))
             added_ids = new_func_ids - prev["func_ids"]
             removed_ids = prev["func_ids"] - new_func_ids
@@ -625,88 +848,68 @@ def edit_bnup_record(request):
                 out = []
                 for f in qs:
                     email = getattr(getattr(f, "user", None), "email", None)
-                    out.append(
-                        {"id": f.id, "nombre": f.nombre, "email": email})
+                    out.append({"id": f.id, "nombre": f.nombre, "email": email})
                 return out
 
-            added_info = _func_info(
-                Funcionario.objects.filter(id__in=added_ids))
-            removed_info = _func_info(
-                Funcionario.objects.filter(id__in=removed_ids))
+            added_info = _func_info(Funcionario.objects.filter(id__in=added_ids))
+            removed_info = _func_info(Funcionario.objects.filter(id__in=removed_ids))
 
-            # (2) cambios de otros campos (opcional pero útil en el correo)
             def _fmt_date(d):
                 return d.strftime("%d-%m-%Y") if d else ""
 
             changes = []
 
-            # ==== ARCHIVO ADJUNTO: agregado / reemplazado / eliminado ====
-            new_file_name = getattr(
-                solicitud.archivo_adjunto_ingreso, "name", None)
+            new_file_name = getattr(solicitud.archivo_adjunto_ingreso, "name", None)
             old_file_name = prev.get("archivo_prev_name")
             if (old_file_name or new_file_name) and (old_file_name != new_file_name):
-                old_lbl = os.path.basename(
-                    old_file_name) if old_file_name else "—"
-                new_lbl = os.path.basename(
-                    new_file_name) if new_file_name else "—"
+                old_lbl = os.path.basename(old_file_name) if old_file_name else "—"
+                new_lbl = os.path.basename(new_file_name) if new_file_name else "—"
                 changes.append(("Archivo adjunto", old_lbl, new_lbl))
-            # =============================================================
 
             if prev["tipo_recepcion_id"] != solicitud.tipo_recepcion_id:
                 try:
-                    old_tr = TipoRecepcion.objects.get(
-                        id=prev["tipo_recepcion_id"]).tipo if prev["tipo_recepcion_id"] else ""
+                    old_tr = TipoRecepcion.objects.get(id=prev["tipo_recepcion_id"]).tipo if prev["tipo_recepcion_id"] else ""
                 except Exception:
                     old_tr = ""
                 new_tr = solicitud.tipo_recepcion.tipo if solicitud.tipo_recepcion else ""
                 changes.append(("Tipo de recepción", old_tr, new_tr))
 
             if prev["tipo_solicitud_id"] != solicitud.tipo_solicitud_id:
-                # aquí mostramos viejo->nuevo legible
                 try:
-                    old_ts = TipoSolicitud.objects.get(
-                        id=prev["tipo_solicitud_id"]).tipo if prev["tipo_solicitud_id"] else ""
+                    old_ts = TipoSolicitud.objects.get(id=prev["tipo_solicitud_id"]).tipo if prev["tipo_solicitud_id"] else ""
                 except Exception:
                     old_ts = ""
-                changes.append(("Tipo de solicitud", old_ts,
-                               solicitud.tipo_solicitud.tipo if solicitud.tipo_solicitud else ""))
+                changes.append(("Tipo de solicitud", old_ts, solicitud.tipo_solicitud.tipo if solicitud.tipo_solicitud else ""))
 
             if prev["numero_memo"] != solicitud.numero_memo:
-                changes.append(
-                    ("N° documento", prev["numero_memo"], solicitud.numero_memo))
+                changes.append(("N° documento", prev["numero_memo"], solicitud.numero_memo))
 
             def _norm_ing(v):
-                # Normaliza para comparar: string, sin espacios.
                 return (str(v).strip() if v is not None else "")
 
             old_ing = _norm_ing(prev.get("numero_ingreso"))
-            new_ing = _norm_ing(numero_ingreso)   # ← usa la variable del POST
+            new_ing = _norm_ing(numero_ingreso)
 
             if old_ing != new_ing:
                 changes.append(("N° ingreso", old_ing or "—", new_ing or "—"))
 
             if prev["fecha_solicitud"] != solicitud.fecha_solicitud:
-                changes.append(("Fecha de solicitud", _fmt_date(
-                    prev["fecha_solicitud"]), _fmt_date(solicitud.fecha_solicitud)))
+                changes.append(("Fecha de solicitud", _fmt_date(prev["fecha_solicitud"]), _fmt_date(solicitud.fecha_solicitud)))
             if prev["fecha_ingreso_au"] != solicitud.fecha_ingreso_au:
-                changes.append(("Fecha ingreso AU", _fmt_date(
-                    prev["fecha_ingreso_au"]), _fmt_date(solicitud.fecha_ingreso_au)))
+                changes.append(("Fecha ingreso AU", _fmt_date(prev["fecha_ingreso_au"]), _fmt_date(solicitud.fecha_ingreso_au)))
             if prev["depto_solicitante_id"] != solicitud.depto_solicitante_id:
                 try:
-                    old_dep = Departamento.objects.get(
-                        id=prev["depto_solicitante_id"]).nombre if prev["depto_solicitante_id"] else ""
+                    old_dep = Departamento.objects.get(id=prev["depto_solicitante_id"]).nombre if prev["depto_solicitante_id"] else ""
                 except Exception:
                     old_dep = ""
-                changes.append(
-                    ("Solicitante", old_dep, solicitud.depto_solicitante.nombre if solicitud.depto_solicitante else ""))
+                changes.append(("Solicitante", old_dep, solicitud.depto_solicitante.nombre if solicitud.depto_solicitante else ""))
             if (prev["correo_solicitante"] or "") != (solicitud.correo_solicitante or ""):
-                changes.append(
-                    ("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
+                changes.append(("Correo solicitante", prev["correo_solicitante"], solicitud.correo_solicitante))
             if (prev["descripcion"] or "") != (solicitud.descripcion or ""):
-                changes.append(("Descripción", (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"]) >
-                               80 else ""), (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion) > 80 else "")))
+                changes.append(("Descripción",
+                                (prev["descripcion"] or "")[:80] + ("…" if prev["descripcion"] and len(prev["descripcion"]) > 80 else ""),
+                                (solicitud.descripcion or "")[:80] + ("…" if solicitud.descripcion and len(solicitud.descripcion) > 80 else "")))
 
-            # (3) disparar email (asincrónico post-commit)
             absolute_url = "http://asesoriaurbana.munivalpo.cl/"
             from django.db import transaction
             from threading import Thread
@@ -725,10 +928,8 @@ def edit_bnup_record(request):
                 except Exception:
                     pass
 
-            transaction.on_commit(lambda: Thread(
-                target=_send_update, daemon=True).start())
+            transaction.on_commit(lambda: Thread(target=_send_update, daemon=True).start())
 
-            # Construir datos de la solicitud para devolver en la respuesta
             solicitud_data = {
                 "id": solicitud.id,
                 "tipo_recepcion": solicitud.tipo_recepcion.id,
@@ -746,7 +947,7 @@ def edit_bnup_record(request):
                     {"id": funcionario.id, "nombre": funcionario.nombre}
                     for funcionario in solicitud.funcionarios_asignados.all()
                 ],
-                "funcionarios_display": get_funcionarios_display_for_ingreso(solicitud),  # ⬅️ aquí
+                "funcionarios_display": get_funcionarios_display_for_ingreso(solicitud),
                 "descripcion": solicitud.descripcion,
                 "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
                 "salidas": [
@@ -755,51 +956,47 @@ def edit_bnup_record(request):
                 ],
             }
 
-
-
             return JsonResponse({"success": True, "data": solicitud_data})
+
         except TipoRecepcion.DoesNotExist:
             return JsonResponse({"success": False, "error": "Tipo de recepción inválido."})
         except TipoSolicitud.DoesNotExist:
             return JsonResponse({"success": False, "error": "Tipo de solicitud inválido."})
         except Departamento.DoesNotExist:
             return JsonResponse({"success": False, "error": "Departamento solicitante inválido."})
-        except Funcionario.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Funcionario asignado inválido."})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
-    else:
-        solicitud_id = request.GET.get("solicitud_id")
-        solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
+    # =========================================================
+    # GET: cargar datos para precargar el modal
+    # =========================================================
+    solicitud_id = request.GET.get("solicitud_id")
+    solicitud = get_object_or_404(IngresoSOLICITUD, id=solicitud_id)
 
-        data = {
-            "id": solicitud.id,
-            "tipo_recepcion": solicitud.tipo_recepcion.id,
-            "tipo_recepcion_text": solicitud.tipo_recepcion.tipo,
-            "tipo_solicitud": solicitud.tipo_solicitud.id,
-            "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,
-            "numero_memo": solicitud.numero_memo,
-            "correo_solicitante": solicitud.correo_solicitante,
-            "depto_solicitante": solicitud.depto_solicitante.id,
-            "depto_solicitante_text": solicitud.depto_solicitante.nombre,
-            "numero_ingreso": solicitud.numero_ingreso,
-            "fecha_ingreso_au": solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
-            "fecha_solicitud": solicitud.fecha_solicitud.strftime("%Y-%m-%d") if solicitud.fecha_solicitud else "",
-            "funcionarios_asignados": [
-                {"id": f.id, "nombre": f.nombre}
-                for f in solicitud.funcionarios_asignados.all()
-            ],
-            "funcionarios_display": get_funcionarios_display_for_ingreso(solicitud),  # ⬅️ aquí
-            "descripcion": solicitud.descripcion,
-            "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
-            "salidas": [
-                {"id": salida.id, "archivo_url": salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else ""}
-                for salida in solicitud.salidas.all()
-            ],
-        }
+    data = {
+        "id": solicitud.id,
+        "tipo_recepcion": solicitud.tipo_recepcion.id,
+        "tipo_recepcion_text": solicitud.tipo_recepcion.tipo,
+        "tipo_solicitud": solicitud.tipo_solicitud.id,
+        "tipo_solicitud_text": solicitud.tipo_solicitud.tipo,
+        "numero_memo": solicitud.numero_memo,
+        "correo_solicitante": solicitud.correo_solicitante,
+        "depto_solicitante": solicitud.depto_solicitante.id,
+        "depto_solicitante_text": solicitud.depto_solicitante.nombre,
+        "numero_ingreso": solicitud.numero_ingreso,
+        "fecha_ingreso_au": solicitud.fecha_ingreso_au.strftime("%Y-%m-%d"),
+        "fecha_solicitud": solicitud.fecha_solicitud.strftime("%Y-%m-%d") if solicitud.fecha_solicitud else "",
+        "funcionarios_asignados": [{"id": f.id, "nombre": f.nombre} for f in solicitud.funcionarios_asignados.all()],
+        "funcionarios_display": get_funcionarios_display_for_ingreso(solicitud),
+        "descripcion": solicitud.descripcion,
+        "archivo_adjunto_ingreso_url": solicitud.archivo_adjunto_ingreso.url if solicitud.archivo_adjunto_ingreso else "",
+        "salidas": [
+            {"id": salida.id, "archivo_url": salida.archivo_adjunto_salida.url if salida.archivo_adjunto_salida else ""}
+            for salida in solicitud.salidas.all()
+        ],
+    }
 
-        return JsonResponse({"success": True, "data": data})
+    return JsonResponse({"success": True, "data": data})
 
 def delete_bnup_records(request):
     """

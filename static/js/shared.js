@@ -195,13 +195,8 @@ function setupFilters(tableId, searchInputId) {
     // 1) Poner por defecto el rango al año en curso
     const now = new Date();
     const year = now.getFullYear();
-
     if (filtroIDesde) filtroIDesde.value = `${year}-01-01`;
     if (filtroIHasta) filtroIHasta.value = `${year}-12-31`;
-
-    if (filtroSDesde) filtroSDesde.value = `${year}-01-01`;
-    if (filtroSHasta) filtroSHasta.value = `${year}-12-31`;
-
     // Función central de filtrado
     function applyFilters() {
         // Limpia mensaje
@@ -881,17 +876,27 @@ function paginateTable(tableId, paginationId, rowsPerPage) {
  * @param {number} page - El número de la página actual.
  */
 function displayRows(state, page) {
-    const start = (page - 1) * state.rowsPerPage;
+    if (!state) return;
+
+    // Defensivo: asegurar arrays
+    if (!Array.isArray(state.rows)) state.rows = [];
+    if (!Array.isArray(state.filteredRows)) state.filteredRows = [...state.rows];
+
+    const perPage = Number.isFinite(state.rowsPerPage) && state.rowsPerPage > 0 ? state.rowsPerPage : 10;
+    state.rowsPerPage = perPage;
+
+    const safePage = Number.isFinite(page) && page >= 1 ? page : 1;
+    const start = (safePage - 1) * state.rowsPerPage;
     const end = start + state.rowsPerPage;
 
     // Ocultar todas las filas
     state.rows.forEach(row => {
-        row.style.display = 'none';
+        if (row && row.style) row.style.display = 'none';
     });
 
     // Mostrar las filas de la página actual
     state.filteredRows.slice(start, end).forEach(row => {
-        row.style.display = '';
+        if (row && row.style) row.style.display = '';
     });
 }
 
@@ -900,20 +905,30 @@ function displayRows(state, page) {
  * @param {Object} state - El objeto de estado de la tabla.
  */
 function setupPagination(state) {
-    const pageCount = Math.ceil(state.filteredRows.length / state.rowsPerPage);
-    const pagination = document.getElementById(state.paginationId);
-    pagination.innerHTML = ''; // Limpiar paginación existente
+    if (!state) return;
 
-    const maxVisiblePages = 3; // Máximo de botones de páginas visibles
+    if (!Array.isArray(state.filteredRows)) state.filteredRows = [];
+    const perPage = Number.isFinite(state.rowsPerPage) && state.rowsPerPage > 0 ? state.rowsPerPage : 10;
+    state.rowsPerPage = perPage;
+
+    const pageCount = Math.max(1, Math.ceil(state.filteredRows.length / state.rowsPerPage));
+
+    const pagination = document.getElementById(state.paginationId);
+    if (!pagination) return;
+
+    pagination.innerHTML = '';
+
+    if (!Number.isFinite(state.currentPage) || state.currentPage < 1) state.currentPage = 1;
+    if (state.currentPage > pageCount) state.currentPage = pageCount;
+
+    const maxVisiblePages = 3;
     let startPage = Math.max(state.currentPage - 1, 1);
     let endPage = Math.min(startPage + maxVisiblePages - 1, pageCount);
 
-    // Ajustar páginas visibles si estamos cerca del final
     if (endPage - startPage + 1 < maxVisiblePages) {
         startPage = Math.max(endPage - maxVisiblePages + 1, 1);
     }
 
-    // Botón para ir a la página anterior
     const prevButton = document.createElement('button');
     prevButton.innerHTML = '<span class="material-symbols-outlined">arrow_back_2</span>';
     prevButton.className = 'page-btn prev';
@@ -927,14 +942,12 @@ function setupPagination(state) {
     });
     pagination.appendChild(prevButton);
 
-    // Botones para los números de página visibles
     for (let i = startPage; i <= endPage; i++) {
         const pageButton = document.createElement('button');
         pageButton.textContent = i;
         pageButton.className = 'page-btn';
-        if (i === state.currentPage) {
-            pageButton.classList.add('active');
-        }
+        if (i === state.currentPage) pageButton.classList.add('active');
+
         pageButton.addEventListener('click', function () {
             state.currentPage = i;
             displayRows(state, state.currentPage);
@@ -943,7 +956,6 @@ function setupPagination(state) {
         pagination.appendChild(pageButton);
     }
 
-    // Botón para ir a la página siguiente
     const nextButton = document.createElement('button');
     nextButton.innerHTML = '<span class="material-symbols-outlined">play_arrow</span>';
     nextButton.className = 'page-btn next';
@@ -1856,3 +1868,107 @@ function setupRowSelection(tableId, { highlightClass = 'fila-marcada' } = {}) {
 
     global.setupFileCardModal = setupFileCardModal;
 })(window);
+
+// ============================================================
+// BNUP / Tablas dinámicas
+//
+// Cuando insertas/eliminás filas manualmente (por AJAX), los
+// filtros/paginación de shared.js trabajan con un estado interno:
+//   tableStates[tableId].rows
+//
+// Si agregas una fila directo al DOM, esa fila NO estará dentro
+// de tableStates[...] y al disparar un filtro/paginación la fila
+// puede “desaparecer”.
+//
+// Esta helper sincroniza el estado desde el DOM y re-dispara
+// el pipeline de filtros sin volver a bindear listeners.
+// ============================================================
+
+// No pisar si ya existe (por cache o doble carga)
+if (typeof window.refreshTableState !== 'function') {
+    /**
+     * Re-sincroniza tableStates[tableId] leyendo los <tr> actuales del DOM
+     * y vuelve a ejecutar filtros/búsqueda/paginación.
+     *
+     * @param {string} tableId
+     * @returns {boolean} true si pudo refrescar, false si no.
+     */
+    window.refreshTableState = function refreshTableState(tableId) {
+        try {
+            if (!tableId) return;
+
+            // tableStates debe existir (si no, lo creamos)
+            if (typeof window.tableStates === 'undefined') window.tableStates = {};
+            const tableStates = window.tableStates;
+
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            // Si no existe estado aún, lo inicializamos con lo mínimo
+            if (!tableStates[tableId]) {
+                const paginationId = table.getAttribute('data-pagination-id') || `${tableId}Pagination`;
+                const rowsPerPageAttr = parseInt(table.getAttribute('data-rows-per-page') || '10', 10);
+
+                tableStates[tableId] = {
+                    tableId,
+                    rows: [],
+                    filteredRows: [],
+                    currentPage: 1,
+                    rowsPerPage: Number.isFinite(rowsPerPageAttr) ? rowsPerPageAttr : 10,
+                    paginationId,
+                    searchInputId: table.getAttribute('data-search-input-id') || null,
+                    searchTerm: '',
+                };
+            }
+
+            const state = tableStates[tableId];
+
+            // 1) Recolectar filas actuales del DOM
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            state.rows = rows;
+
+            // 2) Mantener filteredRows coherente
+            if (!Array.isArray(state.filteredRows)) state.filteredRows = [];
+            state.filteredRows = [...rows];
+
+            // 3) Si hay input de búsqueda asociado, reaplicar término (si existe)
+            if (state.searchInputId) {
+                const input = document.getElementById(state.searchInputId);
+                if (input) {
+                    const term = (input.value || '').trim().toLowerCase();
+                    state.searchTerm = term;
+
+                    if (term) {
+                        state.filteredRows = rows.filter(row =>
+                            (row.innerText || '').toLowerCase().includes(term)
+                        );
+                    }
+                }
+            }
+
+            // 4) Ajustar currentPage a rango válido
+            const perPage = Number.isFinite(state.rowsPerPage) && state.rowsPerPage > 0 ? state.rowsPerPage : 10;
+            state.rowsPerPage = perPage;
+
+            const pageCount = Math.max(1, Math.ceil(state.filteredRows.length / state.rowsPerPage));
+            if (!Number.isFinite(state.currentPage) || state.currentPage < 1) state.currentPage = 1;
+            if (state.currentPage > pageCount) state.currentPage = pageCount;
+
+            // 5) Render correcto (IMPORTANTE: pasar state, no tableId)
+            if (typeof window.displayRows === 'function') {
+                window.displayRows(state, state.currentPage);
+            } else if (typeof displayRows === 'function') {
+                displayRows(state, state.currentPage);
+            }
+
+            if (typeof window.setupPagination === 'function') {
+                window.setupPagination(state);
+            } else if (typeof setupPagination === 'function') {
+                setupPagination(state);
+            }
+
+        } catch (err) {
+            console.error('[refreshTableState] Error:', err);
+        }
+    };
+}

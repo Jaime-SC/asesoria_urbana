@@ -92,19 +92,22 @@ class TipoSolicitud(models.Model):
         return self.tipo
 
 
-class IngresoSOLICITUD(models.Model):  # Renombrado de SolicitudBNUP
+class IngresoSOLICITUD(models.Model):
     tipo_recepcion = models.ForeignKey(TipoRecepcion, on_delete=models.CASCADE)
     tipo_solicitud = models.ForeignKey(TipoSolicitud, on_delete=models.CASCADE)
     numero_memo = models.IntegerField(null=True, blank=True)
     correo_solicitante = models.EmailField(null=True, blank=True)
     depto_solicitante = models.ForeignKey(Departamento, on_delete=models.CASCADE)
     numero_ingreso = models.IntegerField()
-    fecha_ingreso_au = models.DateField()  # Renombrado
+    fecha_ingreso_au = models.DateField()
     fecha_solicitud = models.DateField(null=True, blank=True)
     funcionarios_asignados = models.ManyToManyField(Funcionario, related_name='ingresos')
     descripcion = models.TextField(null=True, blank=True)
-    archivo_adjunto_ingreso = models.FileField(upload_to='archivos_adjuntos/', null=True, blank=True)
-
+    archivo_adjunto_ingreso = models.FileField(
+        upload_to='archivos_adjuntos/',
+        null=True,
+        blank=True
+    )
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
