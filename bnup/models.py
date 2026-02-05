@@ -80,7 +80,7 @@ class SeccionFuncionario(models.Model):
         return self.funcionarios.all()
 
 class TipoRecepcion(models.Model):
-    tipo = models.CharField(max_length=50, unique=True)
+    tipo = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.tipo
@@ -107,6 +107,12 @@ class IngresoSOLICITUD(models.Model):
         upload_to='archivos_adjuntos/',
         null=True,
         blank=True
+    )
+    # Fecha límite manual para tipos Transparencia (5) y Transparencia Activa (16)
+    fecha_maxima_respuesta = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Solo se usa cuando tipo de solicitud es Transparencia o Transparencia Activa."
     )
     is_active = models.BooleanField(default=True)
 

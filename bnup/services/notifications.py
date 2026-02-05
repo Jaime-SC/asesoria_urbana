@@ -25,6 +25,8 @@ TIPO_CONOC_Y_DIST_ID = 12
 TIPO_DECRETO_ALCALDICIO_ID = 11
 TIPO_ALCOHOL_ID      = 10
 TIPO_TRANSPARENCIA_ID = 5
+TIPO_TRANSPARENCIA_ACTIVA_ID = 16
+TIPOS_FECHA_LIMITE_MANUAL = {TIPO_TRANSPARENCIA_ID, TIPO_TRANSPARENCIA_ACTIVA_ID}
 INFORMATIVE_TIPO_IDS = {TIPO_CONOC_Y_DIST_ID, TIPO_DECRETO_ALCALDICIO_ID}
 
 def _es_informativo(obj) -> bool:
@@ -121,6 +123,29 @@ def get_deadline_policy_for_ingreso(ingreso):
     return (15, (5, 3, 1))
 
 
+def get_fecha_maxima_respuesta(ingreso):
+    """
+    Única fuente de verdad para la \"fecha máxima de respuesta\" en correos y contexto.
+    - Si la solicitud tiene fecha_maxima_respuesta guardada → se usa siempre.
+    - Solo para solicitudes históricas (sin ese campo definido) se calcula por política
+      de días hábiles desde fecha_ingreso_au (o None si es informativa).
+    """
+    manual = getattr(ingreso, "fecha_maxima_respuesta", None)
+    if manual:
+        return manual
+
+    # Fallback solo para registros antiguos sin fecha_maxima_respuesta persistida
+    if _es_informativo(ingreso):
+        return None
+    if not getattr(ingreso, "fecha_ingreso_au", None):
+        return None
+    try:
+        plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)
+        return add_business_days_cl(ingreso.fecha_ingreso_au, plazo_total - 1)
+    except Exception:
+        return None
+
+
 def _uniq(seq):
     seen = set()
     out = []
@@ -145,36 +170,49 @@ def subject_ingreso(ingreso):
 
 def context_ingreso(ingreso, absolute_url=None):
     es_informativo = _es_informativo(ingreso)
-    fecha_responder_hasta = None
-    plazo_total = None
-
-    if not es_informativo and ingreso.fecha_ingreso_au:
-        try:
-            plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)
-            # inclusivo: último día = offset total-1
-            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, plazo_total - 1)
-        except Exception:
-            pass
-
-    # NUEVO: bandera para plantilla
     tipo_id = getattr(ingreso, "tipo_solicitud_id", None)
     tipo_txt = getattr(getattr(ingreso, "tipo_solicitud", None), "tipo", "") or ""
     es_transparencia = (tipo_id == TIPO_TRANSPARENCIA_ID) or (tipo_txt.strip().upper() == "TRANSPARENCIA")
+
+    # Fecha máxima de respuesta: manual (5/16) o calculada
+    fecha_responder_hasta = get_fecha_maxima_respuesta(ingreso)
+    plazo_total = None
+    if not es_informativo and ingreso.fecha_ingreso_au:
+        if tipo_id in TIPOS_FECHA_LIMITE_MANUAL and getattr(ingreso, "fecha_maxima_respuesta", None):
+            plazo_total = None  # manual: no mostrar "X días hábiles"
+        else:
+            try:
+                plazo_total, _ = get_deadline_policy_for_ingreso(ingreso)
+            except Exception:
+                pass
+
+    start_ref = getattr(ingreso, "fecha_ingreso_au", None) or date.today()
+    feriados_periodo = []
+    if start_ref and fecha_responder_hasta:
+        try:
+            feriados = list_holidays_cl_between(start_ref, fecha_responder_hasta)
+            feriados_periodo = [
+                {"fecha": d.strftime("%d-%m-%Y"), "nombre": name}
+                for (d, name) in feriados
+            ]
+        except Exception:
+            pass
 
     return {
         "numero_ingreso": ingreso.numero_ingreso,
         "tipo_recepcion": ingreso.tipo_recepcion.tipo,
         "tipo_solicitud": tipo_txt,
-        "tipo_solicitud_id": tipo_id,            # ← NUEVO
+        "tipo_solicitud_id": tipo_id,
         "depto_solicitante": ingreso.depto_solicitante.nombre,
         "fecha_ingreso": ingreso.fecha_ingreso_au,
         "fecha_documento": ingreso.fecha_solicitud,
         "descripcion": ingreso.descripcion or "",
         "absolute_url": absolute_url or "",
         "fecha_responder_hasta": fecha_responder_hasta,
-        "plazo_total": plazo_total,               # None si informativo
+        "plazo_total": plazo_total,
         "es_informativo": es_informativo,
-        "es_transparencia": es_transparencia,     # ← NUEVO
+        "es_transparencia": es_transparencia,
+        "feriados_periodo": feriados_periodo,
     }
 
 
@@ -184,48 +222,16 @@ def notify_ingreso_created(ingreso, *, absolute_url=None, bcc=None, attach_file=
     Envía correo HTML+texto cuando se crea un Ingreso.
     - include_solicitante: si True, copia al solicitante.
     - attach_file: False por defecto (no adjuntar para incentivar uso del sistema).
+    - fecha_responder_hasta_override: obsoleto; la fecha se toma de ingreso.fecha_maxima_respuesta (tipos 5/16) o del cálculo en context_ingreso.
     """
-    # if _es_decreto_alcaldicio(ingreso):
-    #     LOG.info("notify_ingreso_created: skip (Decreto Alcaldicio) ingreso_id=%s", getattr(ingreso, "id", None))
-    #     return 0
-    
     to_list = recipients_for_ingreso(ingreso, include_solicitante=include_solicitante)
     if not to_list:
         return 0
 
-    # Evita duplicar la secretaria si por alguna razón ya está en TO
     cc_list = [SECRETARIA_EMAIL] if SECRETARIA_EMAIL and SECRETARIA_EMAIL not in to_list else []
 
+    # context_ingreso usa get_fecha_maxima_respuesta(ingreso): para 5/16 usa la guardada, para el resto la calculada
     ctx = context_ingreso(ingreso, absolute_url=absolute_url)
-
-    # ===== Transparencia Activa (override) =====
-    start_ref = getattr(ingreso, "fecha_ingreso_au", None) or date.today()
-
-    if fecha_responder_hasta_override:
-        # Siempre usar la fecha override en el contexto
-        ctx["fecha_responder_hasta"] = fecha_responder_hasta_override
-
-        # Para TA no mostramos "X días hábiles":
-        # (si igual quisieras calcularlos para auditoría, no los metas a ctx o ponlos en otra key)
-        ctx["plazo_total"] = None
-
-        # Lista de feriados dentro del período (no cuentan como hábiles)
-        feriados = list_holidays_cl_between(start_ref, fecha_responder_hasta_override)
-        ctx["feriados_periodo"] = [
-            {"fecha": d.strftime("%d-%m-%Y"), "nombre": name}
-            for (d, name) in feriados
-        ]
-
-    else:
-        # ===== Caso general (sin override) =====
-        # si context_ingreso ya calculó fecha_responder_hasta, listamos feriados
-        end_ref = ctx.get("fecha_responder_hasta", None)
-        if start_ref and end_ref:
-            feriados = list_holidays_cl_between(start_ref, end_ref)
-            ctx["feriados_periodo"] = [
-                {"fecha": d.strftime("%d-%m-%Y"), "nombre": name}
-                for (d, name) in feriados
-            ]
     subject = subject_ingreso(ingreso)
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", settings.EMAIL_HOST_USER)
 
@@ -258,14 +264,7 @@ def subject_ingreso_updated(ingreso):
     return f"[SIE] · ACTUALIZADO · Ingreso N° {ingreso.numero_ingreso}"
 
 def context_ingreso_updated(ingreso, *, absolute_url=None, added=None, removed=None, field_changes=None):
-    fecha_responder_hasta = None
-    if ingreso.fecha_ingreso_au:
-        try:
-            total_dias, _ = get_deadline_policy_for_ingreso(ingreso)
-            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, total_dias - 1)
-        except Exception:
-            pass
-
+    fecha_responder_hasta = get_fecha_maxima_respuesta(ingreso)
     return {
         "numero_ingreso": ingreso.numero_ingreso,
         "tipo_recepcion": ingreso.tipo_recepcion.tipo if ingreso.tipo_recepcion else "",
@@ -372,16 +371,7 @@ def subject_ingreso_deadline_warning(ingreso, dias_restantes):
     return f"[SIE] · AVISO ({dias_restantes} días hábiles) · Ingreso N° {ingreso.numero_ingreso}"
 
 def context_ingreso_deadline_warning(ingreso, dias_restantes, absolute_url=None):
-    # plazo por tipo
-    total_dias, _ = get_deadline_policy_for_ingreso(ingreso)
-    # inclusivo: último día = offset total-1
-    fecha_responder_hasta = None
-    if ingreso.fecha_ingreso_au:
-        try:
-            fecha_responder_hasta = add_business_days_cl(ingreso.fecha_ingreso_au, total_dias - 1)
-        except Exception:
-            pass
-
+    fecha_responder_hasta = get_fecha_maxima_respuesta(ingreso)
     return {
         "dias_restantes": dias_restantes,
         "numero_ingreso": ingreso.numero_ingreso,
@@ -447,15 +437,7 @@ def subject_egreso_created(salida):
 
 def context_egreso_created(salida, *, absolute_url=None):
     ing = salida.ingreso_solicitud
-
-    # fecha límite según política por tipo (inclusivo: total_dias - 1)
-    fecha_limite = None
-    if ing and ing.fecha_ingreso_au:
-        try:
-            total_dias, _ = get_deadline_policy_for_ingreso(ing)
-            fecha_limite = add_business_days_cl(ing.fecha_ingreso_au, total_dias - 1)
-        except Exception:
-            pass
+    fecha_limite = get_fecha_maxima_respuesta(ing) if ing else None
 
     # funcionarios del egreso
     func_list = []

@@ -4,6 +4,7 @@ import os
 import threading
 import calendar
 import logging
+from types import SimpleNamespace
 from .models import (
     SalidaSOLICITUD,
     IngresoSOLICITUD,
@@ -23,7 +24,8 @@ from django.db.models.functions import TruncWeek, TruncMonth
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse, HttpResponseRedirect
 from .services.notifications import notify_ingreso_created
-from bnup.services.notifications import notify_egreso_created
+from bnup.services.notifications import notify_egreso_created, get_deadline_policy_for_ingreso
+from bnup.services.fecha_utils import add_business_days_cl
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
@@ -191,15 +193,15 @@ def bnup_form(request):
         tipo_recepcion_id = request.POST.get("tipo_recepcion")
         tipo_solicitud_id = request.POST.get("tipo_solicitud")
 
-        # --- Override "Responder hasta" para Transparencia Activa (id 16) ---
+        # --- Fecha límite manual para Transparencia (5) y Transparencia Activa (16) ---
         fecha_responder_hasta_override = None
-        if tipo_solicitud_id == "16":
+        if tipo_solicitud_id in ("5", "16"):
             fecha_max_str = (request.POST.get("fecha_maxima_respuesta") or "").strip()
             if not fecha_max_str:
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "Debe indicar el plazo máximo (Transparencia Activa).",
+                        "error": "Debe indicar la fecha límite de respuesta.",
                     }
                 )
             try:
@@ -208,14 +210,14 @@ def bnup_form(request):
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "Fecha de plazo máximo inválida.",
+                        "error": "Fecha límite inválida.",
                     }
                 )
             if fecha_tmp <= date.today():
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "El plazo máximo debe ser posterior a la fecha actual.",
+                        "error": "La fecha límite debe ser posterior a la fecha actual.",
                     }
                 )
             fecha_responder_hasta_override = fecha_tmp
@@ -381,6 +383,28 @@ def bnup_form(request):
                 {"success": False, "error": "Funcionarios asignados inválidos."}
             )
 
+        # ─── Fecha máxima de respuesta (fuente única) ────────────
+        # - Tipos 5/16: ya validada como manual en fecha_responder_hasta_override.
+        # - Resto de tipos: se calcula con la política centralizada.
+        if tipo_solicitud_id in ("5", "16"):
+            fecha_maxima_respuesta_final = fecha_responder_hasta_override
+        else:
+            try:
+                dummy = SimpleNamespace(tipo_solicitud_id=int(tipo_solicitud_id))
+                total_dias, _ = get_deadline_policy_for_ingreso(dummy)
+                # Regla inclusiva: último día = (total_dias - 1) hábiles desde fecha_ingreso_au
+                fecha_maxima_respuesta_final = add_business_days_cl(
+                    fecha_ingreso_au, total_dias - 1
+                )
+            except Exception:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "No se pudo calcular la fecha máxima de respuesta.",
+                    },
+                    status=400,
+                )
+
         # ------------------------------------------------------------------
         # BLOQUE CRÍTICO:
         # - A partir de 2026: numeración automática reiniciada por año.
@@ -431,6 +455,7 @@ def bnup_form(request):
                     ingreso_solicitud.numero_ingreso = numero_ingreso_int
                     ingreso_solicitud.fecha_ingreso_au = fecha_ingreso_au
                     ingreso_solicitud.fecha_solicitud = fecha_solicitud
+                    ingreso_solicitud.fecha_maxima_respuesta = fecha_maxima_respuesta_final
                     ingreso_solicitud.descripcion = descripcion
                     if archivo_adjunto:
                         ingreso_solicitud.archivo_adjunto_ingreso = archivo_adjunto
@@ -448,6 +473,7 @@ def bnup_form(request):
                         numero_ingreso=numero_ingreso_int,
                         fecha_ingreso_au=fecha_ingreso_au,
                         fecha_solicitud=fecha_solicitud,
+                        fecha_maxima_respuesta=fecha_maxima_respuesta_final,
                         descripcion=descripcion,
                         archivo_adjunto_ingreso=archivo_adjunto or None,
                         is_active=True,

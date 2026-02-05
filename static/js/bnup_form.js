@@ -355,7 +355,7 @@
             toggleRecepcionFields(recepSel, memoWrap, correoWrap, memoInput, correoIn);
         }
 
-        // 4) Ocultar/limpiar el plazo de Transparencia Activa (id 16)
+        // 4) Ocultar/limpiar la fecha límite manual (tipos 5 y 16)
         const taWrap = document.getElementById('transparenciaFechaWrapper');
         const taFecha = document.getElementById('fecha_maxima_respuesta');
         if (taWrap && taFecha) {
@@ -3436,7 +3436,7 @@
     }
 
 
-    // === Transparencia Activa (id 16): fecha límite manual (sin guardar en BD) ===
+    // === Transparencia / Transparencia Activa (ids 5 y 16): fecha límite manual ===
     function initializeTransparenciaActivaDeadline() {
         const form = document.getElementById('bnupForm');
         const tipoSelect = document.getElementById('tipo_solicitud');
@@ -3457,25 +3457,28 @@
         input.min = toYmd(tomorrow);
 
         const toggle = () => {
-            const isTA = tipoSelect.value === '16';
-            wrapper.style.display = isTA ? 'block' : 'none';
-            if (!isTA) input.value = '';
+            const isManualDeadline =
+                tipoSelect.value === '16' || tipoSelect.value === '5';
+            wrapper.style.display = isManualDeadline ? 'block' : 'none';
+            if (!isManualDeadline) {
+                input.value = '';
+            }
         };
 
         tipoSelect.addEventListener('change', toggle);
         toggle();
 
         form.addEventListener('submit', (e) => {
-            if (tipoSelect.value === '16') {
+            if (tipoSelect.value === '16' || tipoSelect.value === '5') {
                 if (!input.value) {
                     e.preventDefault();
                     Swal?.fire?.({
                         heightAuto: false,
                         scrollbarPadding: false,
                         icon: 'error',
-                        title: 'Falta el plazo máximo',
-                        text: 'Para Transparencia Activa, debes indicar una fecha posterior a hoy.',
-                    }) || alert('Debe seleccionar un plazo máximo para Transparencia Activa.');
+                        title: 'Falta la fecha límite',
+                        text: 'Para este tipo de solicitud debes indicar una fecha límite posterior a hoy.',
+                    }) || alert('Debe seleccionar una fecha límite de respuesta.');
                     return;
                 }
                 const val = new Date(input.value + 'T00:00:00');
