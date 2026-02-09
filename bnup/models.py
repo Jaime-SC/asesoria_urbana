@@ -119,6 +119,55 @@ class IngresoSOLICITUD(models.Model):
     def __str__(self):
         return f"Solicitud {self.numero_ingreso} - {self.tipo_recepcion.tipo}"
 
+    # ===================== SECCIONES COMPLETAS ===================== #
+    def get_secciones_completas(self):
+        """
+        Devuelve una lista de objetos SeccionFuncionario tales que
+        TODOS sus funcionarios pertenecen al conjunto de funcionarios
+        asignados a esta solicitud.
+
+        Regla:
+          - Sea S una sección con funcionarios F(S).
+          - Sea F(sol) el conjunto de funcionarios de la solicitud.
+          - S se considera "completa" si F(S) ⊆ F(sol) y F(S) no es vacío.
+          - Es válido que F(sol) tenga más funcionarios además de F(S).
+
+        Nota:
+          - Para secciones con incluye_todos=True, F(S) se considera como
+            el conjunto de *todos* los funcionarios del sistema.
+        """
+        from .models import SeccionFuncionario, Funcionario  # evitar import circular en algunos contextos
+
+        ids_sol = set(self.funcionarios_asignados.values_list("id", flat=True))
+        if not ids_sol:
+            return []
+
+        # Prefetch de funcionarios por sección para evitar N+1 en secciones
+        secciones = SeccionFuncionario.objects.all().prefetch_related("funcionarios")
+
+        secciones_completas = []
+        all_func_ids = None
+
+        for sec in secciones:
+            # Determinar el conjunto de funcionarios de la sección
+            if sec.incluye_todos:
+                if all_func_ids is None:
+                    all_func_ids = set(
+                        Funcionario.objects.values_list("id", flat=True)
+                    )
+                ids_sec = all_func_ids
+            else:
+                ids_sec = set(sec.funcionarios.values_list("id", flat=True))
+
+            if not ids_sec:
+                continue
+
+            # La sección es "completa" si todos sus funcionarios están en la solicitud
+            if ids_sec.issubset(ids_sol):
+                secciones_completas.append(sec)
+
+        return secciones_completas
+
 class SalidaSOLICITUD(models.Model):
     ingreso_solicitud = models.ForeignKey(
         'IngresoSOLICITUD',

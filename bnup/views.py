@@ -44,24 +44,61 @@ EXCLUDED_TIPO_IDS = (11, 12)
 
 def get_funcionarios_display_for_ingreso(ingreso):
     """
-    Devuelve el texto que se debe mostrar en la tabla para los funcionarios de un ingreso:
-      - Si el conjunto de funcionarios coincide EXACTAMENTE con alguna sección → nombre de la sección.
-      - En caso contrario → lista de nombres de funcionarios separados por coma.
+    Devuelve el texto que se debe mostrar en la tabla para un ingreso,
+    combinando:
+      - Nombres de SECCIONES COMPLETAS (todas sus personas están en la solicitud).
+      - Nombres individuales de funcionarios que NO pertenecen a ninguna sección completa.
+
+    Regla:
+      - Si existe al menos una sección completa:
+          • Mostrar esas secciones (sin repetir nombres).
+          • No mostrar funcionarios individuales de esas secciones.
+      - Funcionarios que solo pertenecen a secciones incompletas
+        (o sin sección) se muestran como nombres individuales.
     """
+    # Si desde la vista ya calculamos y cacheamos el display, úsalo directamente.
+    cached = getattr(ingreso, "funcionarios_display", None)
+    if cached is not None:
+        return cached
+
+    # Fallback genérico: recalcular para un solo ingreso (coste aceptable).
     ids_sol = set(ingreso.funcionarios_asignados.values_list("id", flat=True))
     if not ids_sol:
         return ""
 
-    # Revisamos todas las secciones configuradas
-    for sec in SeccionFuncionario.objects.all():
-        ids_sec = set(sec.get_funcionarios_queryset().values_list("id", flat=True))
-        if ids_sec and ids_sec == ids_sol:
-            return sec.nombre
+    # Cargamos secciones + funcionarios para este cálculo puntual
+    secciones = SeccionFuncionario.objects.all().prefetch_related("funcionarios")
+    from .models import Funcionario  # import local para evitar problemas en algunos contextos
 
-    # Fallback: lista de nombres
-    return ", ".join(
-        ingreso.funcionarios_asignados.values_list("nombre", flat=True)
+    all_func_qs = Funcionario.objects.all().only("id", "nombre")
+    funcs_by_id = {fid: nombre for fid, nombre in all_func_qs.values_list("id", "nombre")}
+    all_func_ids = set(funcs_by_id.keys()) if secciones else set()
+
+    secciones_completas = []
+    ids_completas = set()
+
+    for sec in secciones:
+        if sec.incluye_todos:
+            ids_sec = all_func_ids
+        else:
+            ids_sec = set(sec.funcionarios.values_list("id", flat=True))
+
+        if not ids_sec:
+            continue
+
+        if ids_sec.issubset(ids_sol):
+            secciones_completas.append(sec)
+            ids_completas.update(ids_sec)
+
+    ids_individuales = ids_sol - ids_completas
+
+    nombres_secciones = sorted({sec.nombre for sec in secciones_completas})
+    nombres_funcionarios = sorted(
+        {funcs_by_id[fid] for fid in ids_individuales if fid in funcs_by_id}
     )
+
+    partes = nombres_secciones + nombres_funcionarios
+    return ", ".join(partes)
 
 def expand_funcionarios_tokens(raw_values):
     """
@@ -561,28 +598,55 @@ def bnup_form(request):
         # Lo convertimos en lista para poder “anotar” atributos en memoria
         solicitudes = list(solicitudes_qs)
 
-        # Cargamos todas las secciones una sola vez
-        secciones = list(SeccionFuncionario.objects.all())
+        # Cargamos todas las secciones con sus funcionarios para evitar N+1
+        secciones = list(
+            SeccionFuncionario.objects.all().prefetch_related("funcionarios")
+        )
 
-        # Para cada solicitud, calculamos si coincide exactamente con alguna sección
+        # Cargamos todos los funcionarios una sola vez
+        funcionarios_qs = Funcionario.objects.all().order_by("nombre")
+        funcs_by_id = {f.id: f.nombre for f in funcionarios_qs}
+
+        # Conjunto de todos los funcionarios (se usa para secciones incluye_todos=True)
+        all_func_ids = set(funcs_by_id.keys()) if secciones else set()
+
+        # Para cada solicitud, calculamos las secciones COMPLETAS y el texto a mostrar
         for sol in solicitudes:
             ids_sol = set(sol.funcionarios_asignados.values_list("id", flat=True))
-            etiqueta = None
+            secciones_completas = []
+            ids_completas = set()
+
             if ids_sol:
                 for sec in secciones:
-                    # Todos los funcionarios de esa sección
-                    ids_sec = set(
-                        sec.get_funcionarios_queryset().values_list("id", flat=True)
-                    )
-                    # Coincidencia exacta: mismos funcionarios, ni más ni menos
-                    if ids_sec and ids_sec == ids_sol:
-                        etiqueta = sec.nombre
-                        break
-            # Guardamos la etiqueta “dinámica” en el objeto
-            sol.etiqueta_seccion = etiqueta
+                    if sec.incluye_todos:
+                        ids_sec = all_func_ids
+                    else:
+                        ids_sec = set(sec.funcionarios.values_list("id", flat=True))
+
+                    if not ids_sec:
+                        continue
+
+                    # Sección completa si todos sus funcionarios están en la solicitud
+                    if ids_sec.issubset(ids_sol):
+                        secciones_completas.append(sec)
+                        ids_completas.update(ids_sec)
+
+            ids_individuales = ids_sol - ids_completas
+
+            nombres_secciones = sorted({sec.nombre for sec in secciones_completas})
+            nombres_funcionarios = sorted(
+                {funcs_by_id[fid] for fid in ids_individuales if fid in funcs_by_id}
+            )
+
+            partes = nombres_secciones + nombres_funcionarios
+
+            # Cache para que otras funciones (como get_funcionarios_display_for_ingreso)
+            # puedan reutilizar este cálculo sin más lógica ni consultas.
+            sol.secciones_completas_cache = secciones_completas
+            sol.funcionarios_display = ", ".join(partes)
 
         departamentos = Departamento.objects.all().order_by("nombre")
-        funcionarios = Funcionario.objects.all().order_by("nombre")
+        funcionarios = funcionarios_qs
         tipos_recepcion = TipoRecepcion.objects.all().order_by("tipo")
         tipos_solicitud = TipoSolicitud.objects.all().order_by("tipo")
         secciones_funcionarios = SeccionFuncionario.objects.all().order_by("nombre")

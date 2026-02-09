@@ -308,7 +308,7 @@
                 <th class="shadow" data-type="number">N° Doc</th>
                 <th class="shadow" data-type="string">Tipo Solicitud</th>
                 <th class="shadow" data-type="string">Descripción</th>
-                <th class="shadow" data-type="string">Funcionario</th>
+                <th class="shadow" data-type="string">Funcionarios / Secciones</th>
                 <th class="shadow" data-type="string">Entradas</th>
                 <th class="shadow" data-type="string">Egresos</th>
               </tr> 
@@ -341,17 +341,17 @@
                     <div class="descripcion-preview"
                          data-fulltext="{{ solicitud.descripcion|escapejs }}"
                          onclick="openBNUPDescripcionModal(
-                           '{{ solicitud.descripcion|escapejs }}',
-                           '{{ solicitud.fecha_ingreso_au|date:"d/m/Y"|escapejs }}',
-                           '{{ solicitud.numero_ingreso|escapejs }}',
-                           '{{ solicitud.correo_solicitante|escapejs }}',
-                           '{{ solicitud.depto_solicitante.nombre|escapejs }}',
-                           '{% for funcionario in solicitud.funcionarios_asignados.all %}{{ funcionario.nombre }}{% if not forloop.last %}\n{% endif %}{% endfor %}',
-                           '{{ solicitud.tipo_recepcion.tipo|escapejs }}',
-                           '{{ solicitud.tipo_solicitud.tipo|escapejs }}',
-                           '{{ solicitud.numero_memo|default_if_none:""|escapejs }}',
-                           '{{ solicitud.fecha_solicitud|date:"d/m/Y"|escapejs }}',
-                           'tablaSolicitudes')">
+                          '{{ solicitud.descripcion|escapejs }}',
+                          '{{ solicitud.fecha_ingreso_au|date:"d/m/Y"|escapejs }}',
+                          '{{ solicitud.numero_ingreso|escapejs }}',
+                          '{{ solicitud.correo_solicitante|escapejs }}',
+                          '{{ solicitud.depto_solicitante.nombre|escapejs }}',
+                          '{{ solicitud.funcionarios_display|default_if_none:""|escapejs }}',
+                          '{{ solicitud.tipo_recepcion.tipo|escapejs }}',
+                          '{{ solicitud.tipo_solicitud.tipo|escapejs }}',
+                          '{{ solicitud.numero_memo|default_if_none:""|escapejs }}',
+                          '{{ solicitud.fecha_solicitud|date:"d/m/Y"|escapejs }}',
+                          'tablaSolicitudes')">
                       {{ solicitud.descripcion|truncatechars:20 }}
                       {% if solicitud.descripcion|length > 1 %}
                         <div class="icon-container"><span class="material-symbols-outlined">preview</span></div>
@@ -359,17 +359,7 @@
                     </div>
                   </td>
                   <td>
-                    {# Si la solicitud coincide exactamente con una sección, mostramos la sección #}
-                    {% if solicitud.etiqueta_seccion %}
-                      {{ solicitud.etiqueta_seccion }}
-                    {% else %}
-                      {# Si no, mostramos los funcionarios uno por uno, como siempre #}
-                      {% for funcionario in solicitud.funcionarios_asignados.all %}
-                        {{ funcionario.nombre }}{% if not forloop.last %}, {% endif %}
-                      {% empty %}
-                        <em>No hay funcionarios asignados</em>
-                      {% endfor %}
-                    {% endif %}
+                    {{ solicitud.funcionarios_display }}
                   </td>
                   <td>
                     {% if solicitud.archivo_adjunto_ingreso %}
@@ -477,7 +467,7 @@
         <strong>Solicitante:</strong> <span id="deptoSolicitante"></span>
       </div>
       <div class="modal-field modal-field-field">
-        <strong>Funcionarios Asignados:</strong> <span id="funcionarios_asignados"></span>
+        <strong>Funcionarios / Secciones:</strong> <span id="funcionarios_asignados"></span>
       </div>
       <div class="modal-field descripcionSalida">
         <strong>Descripción:</strong>
