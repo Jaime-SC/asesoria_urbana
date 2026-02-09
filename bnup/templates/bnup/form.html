@@ -315,7 +315,12 @@
             </thead>
             <tbody>
               {% for solicitud in solicitudes %}
-              <tr class="animate__animated" data-id="{{ solicitud.id }}" data-salidas="{% for salida in solicitud.salidas.all %}{{ salida.numero_salida }} {{ salida.fecha_salida|date:'d/m/Y' }} {% endfor %}" data-salidas-descripciones="{% for salida in solicitud.salidas.all %}{{ salida.descripcion|escapejs }} {% endfor %}" data-email="{{ solicitud.correo_solicitante|default:'' }}">
+              <tr class="animate__animated"
+                  data-id="{{ solicitud.id }}"
+                  data-salidas="{% for salida in solicitud.salidas.all %}{{ salida.numero_salida }} {{ salida.fecha_salida|date:'d/m/Y' }} {% endfor %}"
+                  data-salidas-descripciones="{% for salida in solicitud.salidas.all %}{{ salida.descripcion|escapejs }} {% endfor %}"
+                  data-email="{{ solicitud.correo_solicitante|default:'' }}"
+                  data-funcionarios="{% for f in solicitud.funcionarios_asignados.all %}{{ f.nombre|escape }}{% if not forloop.last %}, {% endif %}{% endfor %}">
                   {% if tipo_usuario == 'ADMIN' or tipo_usuario == 'SECRETARIA' or tipo_usuario == 'FUNCIONARIO' %}
                     <td>
                       <input type="checkbox" class="rowCheckbox" data-id="{{ solicitud.id }}" />
@@ -1100,4 +1105,42 @@
     {% endfor %}
   </optgroup>
 </select>
+
+{# Mapa global JS: sección -> lista de funcionarios (por nombre) y su inverso funcionario -> secciones #}
+<script>
+  (function() {
+    const mapa = {};
+    {% for sec in secciones_funcionarios %}
+      (function() {
+        const nombreSeccion = "{{ sec.nombre|escapejs }}";
+        const miembros = [];
+        {% if sec.incluye_todos %}
+          {% for f in funcionarios %}
+            miembros.push("{{ f.nombre|escapejs }}");
+          {% endfor %}
+        {% else %}
+          {% for f in sec.funcionarios.all %}
+            miembros.push("{{ f.nombre|escapejs }}");
+          {% endfor %}
+        {% endif %}
+        mapa[nombreSeccion] = miembros;
+      })();
+    {% endfor %}
+
+    window.SECCION_MIEMBROS_NOMBRE = mapa;
+
+    // Mapa inverso: funcionario (lowercase) -> array de secciones
+    const rev = {};
+    Object.entries(mapa).forEach(([secNombre, miembros]) => {
+      (miembros || []).forEach(nombre => {
+        const key = String(nombre).toLowerCase();
+        if (!rev[key]) {
+          rev[key] = [];
+        }
+        rev[key].push(secNombre);
+      });
+    });
+    window.SECCIONES_POR_FUNCIONARIO = rev;
+  })();
+</script>
 
