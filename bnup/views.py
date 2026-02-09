@@ -42,6 +42,11 @@ from django.urls import reverse
 
 EXCLUDED_TIPO_IDS = (11, 12)
 
+# ID de la sección global "DEPARTAMENTO DE ASESORIA URBANA".
+# Si esta sección está completa, se muestra solo ella (sin otras secciones ni funcionarios).
+SECCION_GLOBAL_ID = 2
+
+
 def get_funcionarios_display_for_ingreso(ingreso):
     """
     Devuelve el texto que se debe mostrar en la tabla para un ingreso,
@@ -92,6 +97,11 @@ def get_funcionarios_display_for_ingreso(ingreso):
 
     ids_individuales = ids_sol - ids_completas
 
+    # Prioridad: si la sección global (ID 2) está completa, mostrar solo esa.
+    for sec in secciones_completas:
+        if sec.id == SECCION_GLOBAL_ID:
+            return sec.nombre
+
     nombres_secciones = sorted({sec.nombre for sec in secciones_completas})
     nombres_funcionarios = sorted(
         {funcs_by_id[fid] for fid in ids_individuales if fid in funcs_by_id}
@@ -99,6 +109,7 @@ def get_funcionarios_display_for_ingreso(ingreso):
 
     partes = nombres_secciones + nombres_funcionarios
     return ", ".join(partes)
+
 
 def expand_funcionarios_tokens(raw_values):
     """
@@ -633,17 +644,25 @@ def bnup_form(request):
 
             ids_individuales = ids_sol - ids_completas
 
-            nombres_secciones = sorted({sec.nombre for sec in secciones_completas})
-            nombres_funcionarios = sorted(
-                {funcs_by_id[fid] for fid in ids_individuales if fid in funcs_by_id}
-            )
+            # Prioridad: si la sección global (ID 2) está completa, mostrar solo esa.
+            display_text = None
+            for sec in secciones_completas:
+                if sec.id == SECCION_GLOBAL_ID:
+                    display_text = sec.nombre
+                    break
 
-            partes = nombres_secciones + nombres_funcionarios
+            if display_text is None:
+                nombres_secciones = sorted({sec.nombre for sec in secciones_completas})
+                nombres_funcionarios = sorted(
+                    {funcs_by_id[fid] for fid in ids_individuales if fid in funcs_by_id}
+                )
+                partes = nombres_secciones + nombres_funcionarios
+                display_text = ", ".join(partes)
 
             # Cache para que otras funciones (como get_funcionarios_display_for_ingreso)
             # puedan reutilizar este cálculo sin más lógica ni consultas.
             sol.secciones_completas_cache = secciones_completas
-            sol.funcionarios_display = ", ".join(partes)
+            sol.funcionarios_display = display_text
 
         departamentos = Departamento.objects.all().order_by("nombre")
         funcionarios = funcionarios_qs
