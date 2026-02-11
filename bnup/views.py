@@ -32,7 +32,7 @@ from django.db import transaction, IntegrityError
 from dateutil.relativedelta import relativedelta
 from principal.models import PerfilUsuario
 from django.db.models import Prefetch
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from django.contrib import messages
 # from bnup.models import Funcionario
 from collections import defaultdict
@@ -214,6 +214,77 @@ def get_next_numero_ingreso_ano(anio_ingreso: int) -> int:
     # Si no hubo huecos, 'siguiente' será max+1 o 1 si no había nada
     return siguiente
 
+
+def get_next_numero_ingreso(request):
+    """
+    Endpoint AJAX para obtener el próximo N° de Ingreso disponible
+    para un año dado.
+
+    - Usa la misma función de cálculo que el guardado real
+      (`get_next_numero_ingreso_ano`), dentro de una transacción.
+    - No modifica datos: solo lee con `select_for_update` para ser
+      consistente con la lógica de concurrencia.
+    """
+
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"success": False, "error": "No autenticado."},
+            status=401,
+        )
+
+    perfil_usuario = PerfilUsuario.objects.filter(user=request.user).first()
+    tipo_usuario = perfil_usuario.tipo_usuario.nombre if perfil_usuario else None
+
+    # Restringimos igual que la creación: solo ADMIN / SECRETARIA
+    if tipo_usuario not in ["ADMIN", "SECRETARIA"]:
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "No tiene permiso para consultar el número de ingreso.",
+            },
+            status=403,
+        )
+
+    anio_str = (request.GET.get("anio") or "").strip()
+
+    if anio_str:
+        try:
+            anio = int(anio_str)
+        except (TypeError, ValueError):
+            return JsonResponse(
+                {"success": False, "error": "Año inválido."},
+                status=400,
+            )
+    else:
+        anio = date.today().year
+
+    # Pequeña validación de rango razonable
+    if anio < 1900 or anio > 2100:
+        return JsonResponse(
+            {"success": False, "error": "Año fuera de rango."},
+            status=400,
+        )
+
+    try:
+        with transaction.atomic():
+            siguiente = get_next_numero_ingreso_ano(anio)
+    except Exception:
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "No se pudo calcular el próximo número de ingreso.",
+            },
+            status=500,
+        )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "anio": anio,
+            "numero_ingreso": siguiente,
+        }
+    )
+
 def bnup_form(request):
     """
     Maneja la visualización y creación de solicitudes de BNUP.
@@ -361,6 +432,30 @@ def bnup_form(request):
             )
 
         anio_ingreso = fecha_ingreso_au.year
+
+        # ─── Regla de ventana de gracia para años anteriores ─────
+        # Se permite usar fechas de ingreso de años anteriores al año actual
+        # solo durante las primeras 2 semanas del año actual.
+        today = date.today()
+        current_year = today.year
+
+        if anio_ingreso < current_year:
+            # Inicio de año actual (1 de enero)
+            grace_start = date(current_year, 1, 1)
+            grace_end = grace_start + timedelta(days=14)  # día 15 (no incluido)
+
+            if today >= grace_end:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": (
+                            "No se permite ingresar solicitudes con fecha de ingreso "
+                            "del año anterior (solo permitido durante las primeras 2 "
+                            "semanas del año actual)."
+                        ),
+                    },
+                    status=400,
+                )
 
         # ─── Número de ingreso (manual < 2026, automático >= 2026) ─────────
         numero_ingreso_int = None
@@ -804,6 +899,21 @@ def edit_bnup_record(request):
             fecha_ingreso_au = datetime.strptime(fecha_ingreso_au_str, "%Y-%m-%d").date()
         except (TypeError, ValueError):
             return JsonResponse({"success": False, "error": "Fecha de ingreso inválida."})
+
+        # En edición: NO se permite establecer una fecha de ingreso
+        # de un año anterior al año actual (sin ventana de gracia).
+        today = date.today()
+        current_year = today.year
+        if fecha_ingreso_au.year < current_year:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": (
+                        "En edición no se permite establecer una fecha de ingreso "
+                        "de un año anterior al año actual."
+                    ),
+                }
+            )
 
         # Convertir fecha de solicitud
         fecha_solicitud = None

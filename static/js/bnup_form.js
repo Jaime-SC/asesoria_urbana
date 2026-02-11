@@ -21,73 +21,63 @@
         // BNUP ▸ inicialización: dejar el tipo de usuario disponible globalmente
         window.tipo_usuario = tipo_usuario;
 
-        // Referencias a inputs del formulario de ingreso
+        // Referencias a inputs del formulario de ingreso (CREAR)
         const fechaIngresoInput = document.getElementById("fecha_ingreso_au");
         const numeroIngresoInput = document.getElementById("numeroIngreso");
-        const mensajeAutoSpan = document.getElementById("ingresoAutoMsg");
 
-        // ===========================================================
-        // BLOQUEAR O PERMITIR "N° DE INGRESO" SEGÚN LA FECHA ELEGIDA
-        // ===========================================================
-        function actualizarNumeroIngresoSegunFecha() {
-            const fechaInput = document.getElementById("fecha_ingreso_au");
-            const numeroInput = document.getElementById("numeroIngreso");
-            if (!fechaInput || !numeroInput) return;
-
-            const fecha = fechaInput.value;
-            if (!fecha) return;
-
-            const year = parseInt(fecha.split("-")[0]);
-
-            if (year >= 2026) {
-                // Bloquear
-                numeroInput.readOnly = true;
-                numeroInput.style.background = '#f5f5f5';
-                numeroInput.style.cursor = 'not-allowed';
-                numeroInput.value = ""; // limpiar
-                numeroInput.removeAttribute("required");
-            } else {
-                // Habilitar
-                numeroInput.readOnly = false;
-                numeroInput.style.background = 'white';
-                numeroInput.style.cursor = 'text';
-                numeroInput.setAttribute("required", "required");
-            }
+        // Configurar el campo "N° de Ingreso" para que SIEMPRE sea automático
+        // y se alimente desde el backend al abrir/cambiar la fecha.
+        if (numeroIngresoInput) {
+            setupCreateNumeroIngresoAuto();
         }
 
-        // ===========================================================
-        // MENSAJE DINÁMICO DE "ASIGNADO AUTOMÁTICAMENTE"
-        // ===========================================================
-        function actualizarMensajeAuto() {
-            if (!fechaIngresoInput || !mensajeAutoSpan) return;
-
-            const fecha = fechaIngresoInput.value;
-            if (!fecha) {
-                mensajeAutoSpan.style.display = "none";
-                return;
-            }
-
-            const year = parseInt(fecha.split("-")[0], 10);
-
-            if (year >= 2026) {
-                mensajeAutoSpan.style.display = "block";
-            } else {
-                mensajeAutoSpan.style.display = "none";
-            }
-        }
-
-        // Solo enganchamos eventos si el input de fecha existe (evita el error)
+        // UX de fecha de ingreso (CREAR):
+        // - Usa min dinámico según ventana de gracia de 2 semanas.
+        // - Rechaza tecleo manual inválido (año anterior fuera de ventana) con revert + alert.
         if (fechaIngresoInput) {
-            fechaIngresoInput.addEventListener("change", function () {
-                actualizarNumeroIngresoSegunFecha();
-                actualizarMensajeAuto();
-            });
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const todayIso = today.toISOString().split('T')[0];
 
-            // Pequeño delay por si el modal se abre después
-            setTimeout(function () {
-                actualizarNumeroIngresoSegunFecha();
-                actualizarMensajeAuto();
-            }, 300);
+            // Ventana de gracia: primeros 14 días del año actual
+            const graceStart = new Date(currentYear, 0, 1); // 1 de enero
+            const graceEnd = new Date(graceStart.getTime());
+            graceEnd.setDate(graceEnd.getDate() + 14); // día 15 excluido
+
+            // Si ya pasó la ventana -> no permitir años anteriores
+            // Si aún estamos dentro -> permitir año anterior completo
+            if (today >= graceEnd) {
+                fechaIngresoInput.min = `${currentYear}-01-01`;
+            } else {
+                fechaIngresoInput.min = `${currentYear - 1}-01-01`;
+            }
+
+            // Guardar la última fecha válida para poder revertir
+            if (!fechaIngresoInput.dataset.prevValidDate) {
+                // Usa el valor actual o, en su defecto, hoy
+                fechaIngresoInput.dataset.prevValidDate = fechaIngresoInput.value || todayIso;
+            }
+
+            if (!fechaIngresoInput.dataset.boundCreateFechaRestrict) {
+                fechaIngresoInput.addEventListener('change', () => {
+                    const valor = fechaIngresoInput.value;
+                    if (!valor) return;
+
+                    const ventanaCheck = validateFechaIngresoYearWindow(valor);
+                    if (!ventanaCheck.ok) {
+                        // Revertir a la última fecha válida (o hoy como fallback)
+                        const prev = fechaIngresoInput.dataset.prevValidDate || todayIso;
+                        fechaIngresoInput.value = prev;
+                        showFechaIngresoInvalidaAlert(ventanaCheck.message, fechaIngresoInput);
+                        return;
+                    }
+
+                    // Fecha aceptada -> actualizar "última válida"
+                    fechaIngresoInput.dataset.prevValidDate = valor;
+                });
+
+                fechaIngresoInput.dataset.boundCreateFechaRestrict = '1';
+            }
         }
 
         // Inicializar componentes si el formulario BNUP está presente
@@ -374,6 +364,171 @@
         if (realFile) realFile.value = '';
         const list = document.getElementById('fileListContainer');
         if (list) list.innerHTML = '';
+
+        // 7) Reconfigurar el N° de Ingreso automático (siempre bloqueado)
+        if (typeof setupCreateNumeroIngresoAuto === 'function') {
+            setupCreateNumeroIngresoAuto();
+        }
+    }
+
+
+    /**
+     * Obtiene desde el backend el próximo número de ingreso para un año dado.
+     * Devuelve un número o null si falla.
+     */
+    async function fetchNextNumeroIngreso(anio) {
+        if (!anio) return null;
+
+        try {
+            const resp = await fetch(`/bnup/get_next_numero_ingreso/?anio=${encodeURIComponent(anio)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!resp.ok) {
+                console.error('Error HTTP al obtener próximo número de ingreso:', resp.status);
+                return null;
+            }
+
+            const data = await resp.json();
+            if (!data || !data.success || typeof data.numero_ingreso === 'undefined') {
+                console.error('Respuesta inválida al obtener próximo número de ingreso:', data);
+                return null;
+            }
+
+            return data.numero_ingreso;
+        } catch (err) {
+            console.error('Error al obtener próximo número de ingreso:', err);
+            return null;
+        }
+    }
+
+    /**
+     * Valida si una fecha de ingreso (ISO YYYY-MM-DD) corresponde a un año
+     * anterior al año actual y, en tal caso, si ya expiró la ventana de gracia
+     * de 2 semanas del año actual.
+     *
+     * Devuelve un objeto { ok: boolean, message: string|null }.
+     */
+    function validateFechaIngresoYearWindow(fechaISO) {
+        if (!fechaISO) {
+            return { ok: true, message: null };
+        }
+
+        const fecha = new Date(fechaISO);
+        if (Number.isNaN(fecha.getTime())) {
+            // Si la fecha es inválida, dejamos que otras validaciones se encarguen.
+            return { ok: true, message: null };
+        }
+
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const ingresoYear = fecha.getFullYear();
+
+        // Solo aplica si la fecha de ingreso es de un año anterior al actual
+        if (ingresoYear >= currentYear) {
+            return { ok: true, message: null };
+        }
+
+        // Inicio del año actual (1 de enero)
+        const graceStart = new Date(currentYear, 0, 1); // 0 = enero
+        const graceEnd = new Date(graceStart.getTime());
+        graceEnd.setDate(graceEnd.getDate() + 14); // fin de la ventana (día 15, excluido)
+
+        if (today >= graceEnd) {
+            return {
+                ok: false,
+                message:
+                    "No se permite ingresar solicitudes con fecha de ingreso del año anterior " +
+                    "(solo permitido durante las primeras 2 semanas del año actual).",
+            };
+        }
+
+        return { ok: true, message: null };
+    }
+
+    /**
+     * Muestra el SweetAlert estándar para fecha de ingreso inválida
+     * y devuelve el foco al input de fecha cuando el usuario cierra el alert.
+     */
+    function showFechaIngresoInvalidaAlert(message, fechaInput) {
+        Swal.fire({
+            heightAuto: false,
+            scrollbarPadding: false,
+            icon: 'error',
+            title: 'Fecha de ingreso inválida',
+            text: message || '',
+        }).then(() => {
+            if (fechaInput) {
+                fechaInput.focus();
+            }
+        });
+    }
+
+    /**
+     * Configura el campo de creación "N° de Ingreso" para que:
+     * - Siempre esté bloqueado (disabled).
+     * - Siempre muestre el próximo número correlativo según el año de la fecha de ingreso.
+     * - Envíe el valor mediante un input hidden espejo.
+     */
+    function setupCreateNumeroIngresoAuto() {
+        const numeroInput = document.getElementById('numeroIngreso');
+        const fechaInput = document.getElementById('fecha_ingreso_au');
+        if (!numeroInput) return;
+
+        // Bloqueo permanente en UI
+        numeroInput.setAttribute('disabled', 'disabled');
+        numeroInput.style.background = '#f5f5f5';
+        numeroInput.style.cursor = 'not-allowed';
+
+        // Asegura espejo hidden para que el valor viaje en el POST
+        ensureMirrorHiddenInput(numeroInput);
+
+        const aplicarParaFechaActual = async () => {
+            let year = null;
+
+            if (fechaInput && fechaInput.value) {
+                year = getYearFromISODate(fechaInput.value);
+            }
+
+            // Si no hay fecha, usar HOY y setear el input de fecha
+            if (!year) {
+                const hoy = new Date();
+                const isoHoy = hoy.toISOString().split('T')[0];
+
+                if (fechaInput) {
+                    fechaInput.value = isoHoy;
+                }
+
+                year = hoy.getFullYear();
+            }
+
+            const siguiente = await fetchNextNumeroIngreso(year);
+            if (siguiente == null) {
+                // Si falla, dejamos el campo vacío; el backend recalculará al guardar.
+                numeroInput.value = '';
+                ensureMirrorHiddenInput(numeroInput);
+                return;
+            }
+
+            numeroInput.value = siguiente;
+            ensureMirrorHiddenInput(numeroInput);
+        };
+
+        // Guardamos helper en el propio input para reusar si hace falta
+        numeroInput._aplicarNumeroIngresoAuto = aplicarParaFechaActual;
+
+        // Recalcular cada vez que cambie la fecha de ingreso (pero siempre bloqueado)
+        if (fechaInput && !fechaInput.dataset.boundAutoNumeroIngreso) {
+            fechaInput.addEventListener('change', () => {
+                aplicarParaFechaActual();
+            });
+            fechaInput.dataset.boundAutoNumeroIngreso = '1';
+        }
+
+        // Primera carga
+        aplicarParaFechaActual();
     }
 
 
@@ -638,6 +793,15 @@
             }
 
             // --------------------------
+            // VALIDACIÓN VENTANA AÑO ANTERIOR (frontend)
+            // --------------------------
+            const ventanaCheck = validateFechaIngresoYearWindow(fechaIngresoValor);
+            if (!ventanaCheck.ok) {
+                showFechaIngresoInvalidaAlert(ventanaCheck.message, fechaIngresoInput);
+                return;
+            }
+
+            // --------------------------
             // VALIDACIÓN DE CORREO (si tipo recepción 2 o 6)
             // --------------------------
             function esEmailValido(str) {
@@ -786,33 +950,41 @@
     }
 
     /**
-     * Regla:
-     * - Año <= 2025  -> editable (manual)
-     * - Año >= 2026  -> NO editable (automático)
+     * Regla de edición:
+     * - Si el ingreso se creó con año ORIGINAL >= 2026 (esquema automático),
+     *   el N° de Ingreso queda SIEMPRE bloqueado durante la edición,
+     *   aunque el usuario cambie la fecha en el modal.
+     * - Si el año original < 2026, el campo permanece editable.
+     *
+     * El año original se pasa explícitamente al llamar a esta función
+     * o se toma desde data-original-year en el input.
      */
-    function applyEditNumeroIngresoRule() {
+    function applyEditNumeroIngresoRule(options = {}) {
         const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
         const numeroIngresoField = document.getElementById('edit_numeroIngreso');
-        const msg = document.getElementById('edit_ingresoAutoMsg');
-
         if (!fechaIngresoField || !numeroIngresoField) return;
 
-        const year = getYearFromISODate(fechaIngresoField.value);
-        const isAuto = (year !== null && year >= 2026);
+        // Determinar año original del ingreso (no el que el usuario modifique ahora)
+        let originalYear = null;
+
+        if (typeof options.originalYear === 'number') {
+            originalYear = options.originalYear;
+        } else if (numeroIngresoField.dataset.originalYear) {
+            const parsed = parseInt(numeroIngresoField.dataset.originalYear, 10);
+            originalYear = Number.isFinite(parsed) ? parsed : null;
+        } else if (fechaIngresoField.dataset.originalFechaIngreso) {
+            originalYear = getYearFromISODate(fechaIngresoField.dataset.originalFechaIngreso);
+        }
+
+        const isAuto = (originalYear !== null && originalYear >= 2026);
 
         if (isAuto) {
             // Bloqueo real: disabled (para que no pueda teclear ni con flechas del number)
             numeroIngresoField.setAttribute('disabled', 'disabled');
-
-            // Mensaje visible
-            if (msg) msg.style.display = 'block';
-
-            // Como disabled no viaja en FormData -> espejo hidden con el mismo name
             ensureMirrorHiddenInput(numeroIngresoField);
         } else {
-            // Editable
+            // Editable (ingresos anteriores al esquema automático)
             numeroIngresoField.removeAttribute('disabled');
-            if (msg) msg.style.display = 'none';
             removeMirrorHiddenInput(numeroIngresoField);
         }
     }
@@ -906,10 +1078,50 @@
                 if (solicitudIdField) solicitudIdField.value = data.data.id;
 
                 const numeroIngresoField = document.getElementById('edit_numeroIngreso');
-                if (numeroIngresoField) numeroIngresoField.value = data.data.numero_ingreso ?? '';
+                if (numeroIngresoField) {
+                    numeroIngresoField.value = data.data.numero_ingreso ?? '';
+                }
 
                 const fechaIngresoField = document.getElementById('edit_fecha_ingreso_au');
-                if (fechaIngresoField) fechaIngresoField.value = data.data.fecha_ingreso_au ?? '';
+                if (fechaIngresoField) {
+                    fechaIngresoField.value = data.data.fecha_ingreso_au ?? '';
+                    // Guardar fecha original para la regla de bloqueo
+                    fechaIngresoField.dataset.originalFechaIngreso = data.data.fecha_ingreso_au ?? '';
+
+                    // En edición: NO se permite seleccionar fecha de ingreso
+                    // de un año anterior al año actual (sin ventana de gracia).
+                    const today = new Date();
+                    const currentYear = today.getFullYear();
+                    fechaIngresoField.min = `${currentYear}-01-01`;
+
+                    if (!fechaIngresoField.dataset.boundYearRestriction) {
+                        fechaIngresoField.addEventListener('change', () => {
+                            const valor = fechaIngresoField.value;
+                            if (!valor) return;
+
+                            const year = getYearFromISODate(valor);
+                            if (year === null) return;
+
+                            const nowYear = new Date().getFullYear();
+                            if (year < nowYear) {
+                                // Revertir a la fecha original o, en su defecto, a hoy
+                                const original = fechaIngresoField.dataset.originalFechaIngreso;
+                                if (original) {
+                                    fechaIngresoField.value = original;
+                                } else {
+                                    const hoyIso = new Date().toISOString().split('T')[0];
+                                    fechaIngresoField.value = hoyIso;
+                                }
+
+                                showFechaIngresoInvalidaAlert(
+                                    "En edición no se permite establecer una fecha de ingreso de un año anterior al año actual.",
+                                    fechaIngresoField
+                                );
+                            }
+                        });
+                        fechaIngresoField.dataset.boundYearRestriction = '1';
+                    }
+                }
 
                 const fechaSolicitudInput = document.getElementById('edit_fecha_solicitud');
                 if (fechaSolicitudInput) fechaSolicitudInput.value = data.data.fecha_solicitud ?? '';
@@ -941,16 +1153,12 @@
                 const btnFile = document.getElementById('openEditFileModal');
                 if (btnFile) btnFile.dataset.currentFile = data.data.archivo_adjunto_ingreso_url || '';
 
-                // ✅ APLICAR REGLA DE BLOQUEO 2026+ (después de precargar valores)
-                applyEditNumeroIngresoRule();
-
-                // ✅ Si el usuario cambia la fecha en el modal, recalculamos regla (una sola vez)
-                if (!fechaIngresoField.dataset.boundAutoRule) {
-                    fechaIngresoField.addEventListener('change', () => {
-                        applyEditNumeroIngresoRule();
-                    });
-                    fechaIngresoField.dataset.boundAutoRule = '1';
+                // ✅ APLICAR REGLA DE BLOQUEO BASADA EN EL AÑO ORIGINAL
+                const originalYear = getYearFromISODate(data.data.fecha_ingreso_au);
+                if (numeroIngresoField) {
+                    numeroIngresoField.dataset.originalYear = originalYear != null ? String(originalYear) : '';
                 }
+                applyEditNumeroIngresoRule({ originalYear });
 
                 // Multi-select funcionarios (tu lógica)
                 {
